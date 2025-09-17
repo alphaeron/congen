@@ -20,8 +20,10 @@ import org.springframework.http.ResponseEntity
 import org.springframework.security.access.AccessDeniedException
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PatchMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import reactor.core.publisher.Mono
@@ -208,6 +210,86 @@ class ConjugateWorkoutGeneratorController(
                         logger.error("Error retrieving exercise pool for user: {}", userId, error)
                     }
             }
+        }
+    }
+
+    /**
+     * Updates a generated workout with user's 1RM data to tailor weights appropriately.
+     *
+     * This endpoint takes a program ID and a list of 1RM inputs, then updates the workout
+     * to reflect the user's current abilities by adjusting weights for programmed sets/reps.
+     *
+     * @param programId The ID of the program to update
+     * @param request The request containing 1RM input data
+     * @return ResponseEntity containing the updated program
+     * @throws NoResultsFoundException if the program is not found
+     * @throws ValidationException if the request data is invalid
+     */
+    @PatchMapping("/{program_id}/update_with_1rm")
+    @PreAuthorize("isAuthenticated()")
+    @Operation(
+        summary = "Update workout with 1RM data",
+        description = "Updates a generated workout with user's 1RM data to tailor weights appropriately"
+    )
+    @ApiResponses(
+        value = [
+            ApiResponse(
+                responseCode = "200",
+                description = "Workout updated successfully",
+                content = [Content(mediaType = "application/json")]
+            ),
+            ApiResponse(
+                responseCode = "404",
+                description = "Program not found"
+            ),
+            ApiResponse(
+                responseCode = "422",
+                description = "Validation error"
+            )
+        ]
+    )
+    fun updateWorkoutWithOneRepMax(
+        @Parameter(description = "ID of the program to update", required = true)
+        @PathVariable("program_id") programId: Long
+    ): Mono<ResponseEntity<Program>> {
+        return keycloakUtil.getCurrentUserId().zipWith(keycloakUtil.getCurrentUserRoles()) { userId, roles ->
+            Pair(userId, roles)
+        }.flatMap { (userId, roles) ->
+            val isAdminOrService = roles.contains("admin") || roles.contains("service")
+            // First check if the program exists
+            programService.selectProgramById(programId)
+                .flatMap { program ->
+                    // Program exists, now check ownership
+                    val hasAccess = isAdminOrService || program.userId == userId
+                    if (hasAccess) {
+                        val consentUserIdMono =
+                            if (isAdminOrService) {
+                                Mono.just(program.userId)
+                            } else {
+                                Mono.just(userId)
+                            }
+                        consentUserIdMono.flatMap { ownerId ->
+                            gdprComplianceService.withUserConsent(ownerId) {
+                                conjugateWorkoutGeneratorService.updateWorkoutWithOneRepMax(programId)
+                                    .map { updatedProgram -> ResponseEntity.ok(updatedProgram) }
+                                    .doOnError(NoResultsFoundException::class.java) { error ->
+                                        logger.error("Error updating workout with 1RM data for program: {}", programId, error)
+                                    }
+                                    .doOnError(ValidationException::class.java) { error ->
+                                        logger.error("Validation error updating workout with 1RM data for program: {}", programId, error)
+                                    }
+                                    .doOnError { error ->
+                                        logger.error("Unexpected error updating workout with 1RM data for program: {}", programId, error)
+                                    }
+                            }
+                        }
+                    } else {
+                        Mono.error(AccessDeniedException("Access denied: User is not the owner of this program"))
+                    }
+                }
+                .doOnError { e ->
+                    logger.error("Error updating workout with 1RM data for program: {}", programId, e)
+                }
         }
     }
 }

@@ -153,12 +153,13 @@ class UserDALTest {
 
         whenever(encryptionUtil.encrypt(any())).thenReturn("encrypted-name")
         whenever(encryptionUtil.decrypt("encrypted-name")).thenReturn(newName)
-        val mockRow = mapOf(
-            "keycloak_id" to keycloakId,
-            "name" to "encrypted-name",
-            "created_at" to "2025-01-01T00:00:00Z",
-            "updated_at" to "2025-01-01T00:00:00Z"
-        )
+        val mockRow =
+            mapOf(
+                "keycloak_id" to keycloakId,
+                "name" to "encrypted-name",
+                "created_at" to "2025-01-01T00:00:00Z",
+                "updated_at" to "2025-01-01T00:00:00Z"
+            )
         whenever(
             postgresClient.update<Map<String, Any>>(
                 """

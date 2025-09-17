@@ -4,6 +4,8 @@ import com.congen.dal.ExerciseDAL
 import com.congen.dal.ExerciseEquipmentDAL
 import com.congen.dal.ExerciseMuscleDAL
 import com.congen.dal.ExerciseWorkoutTypeDAL
+import com.congen.dal.ProgrammedExerciseDAL
+import com.congen.exceptions.ExerciseSelectionException
 import com.congen.generator.ConjugateConstants.MAX_MUSCLES_FOR_WARMUP
 import com.congen.model.Exercise
 import com.congen.model.MovementType
@@ -22,6 +24,7 @@ class ExerciseSelectionService(
     private val exerciseMuscleDAL: ExerciseMuscleDAL,
     private val exerciseWorkoutTypeDAL: ExerciseWorkoutTypeDAL,
     private val exerciseEquipmentDAL: ExerciseEquipmentDAL,
+    private val programmedExerciseDAL: ProgrammedExerciseDAL,
     private val movementBalanceService: MovementBalanceService,
     private val exerciseMatchingService: ExerciseMatchingService
 ) {
@@ -89,7 +92,15 @@ class ExerciseSelectionService(
                     movementBalanceState
                 )
                 // No exercise found - this indicates a problem with filtering or pool management
-                Mono.error(IllegalStateException("No suitable exercise found for the given criteria"))
+                Mono.error(
+                    ExerciseSelectionException.noSuitableExerciseFound(
+                        targetMuscles = targetMuscles,
+                        isAccessory = isAccessory,
+                        workoutType = workoutType,
+                        dayType = dayType,
+                        movementBalanceState = movementBalanceState
+                    )
+                )
             }
         }
     }
@@ -125,7 +136,7 @@ class ExerciseSelectionService(
             movementBalanceState = movementBalanceState,
             isWarmup = isWarmup
         ).onErrorResume { error ->
-            if (error.message?.contains("No exercises available after workout-type filtering") == true) {
+            if (error is ExerciseSelectionException) {
                 logger.info("Pool refresh needed, refreshing and retrying exercise selection...")
                 val poolRefreshed = userExercisePool.refreshPool()
                 if (poolRefreshed) {
@@ -140,8 +151,8 @@ class ExerciseSelectionService(
                         isWarmup = isWarmup
                     )
                 } else {
-                    logger.error("Pool refresh failed, cannot retry exercise selection")
-                    Mono.error(error)
+                    logger.warn("Pool refresh failed, skipping exercise selection to continue workout generation")
+                    Mono.empty()
                 }
             } else {
                 Mono.error(error)
@@ -169,7 +180,11 @@ class ExerciseSelectionService(
 
             if (availableExercises.isEmpty()) {
                 logger.error("No available exercises found for isAccessory: {}", isAccessory)
-                return@defer Mono.error(IllegalStateException("No available exercises found for isAccessory: $isAccessory"))
+                return@defer Mono.error(
+                    ExerciseSelectionException(
+                        "No available exercises found for isAccessory: $isAccessory"
+                    )
+                )
             }
 
             // Apply day-type filtering first
@@ -252,9 +267,9 @@ class ExerciseSelectionService(
                             isAccessory
                         )
                         Mono.error(
-                            IllegalStateException(
-                                "No exercises available after workout-type filtering for " +
-                                    "workoutType: $workoutType and isAccessory: $isAccessory"
+                            ExerciseSelectionException.noExercisesAfterWorkoutTypeFiltering(
+                                workoutType = workoutType,
+                                isAccessory = isAccessory
                             )
                         )
                     } else {
@@ -279,40 +294,47 @@ class ExerciseSelectionService(
                             }
                         }
                         .flatMap { muscleCountFilteredExercises ->
-                            // For warmup exercises, be more flexible with muscle targeting
-                            if (isWarmup) {
-                                if (targetMuscles.isEmpty()) {
-                                    // No target muscles specified, use all available exercises
-                                    Mono.just(muscleCountFilteredExercises)
-                                } else {
-                                    // Try to find exercises with target muscles first
-                                    userExercisePool.filterExercisesByMuscles(
-                                        muscleCountFilteredExercises,
-                                        targetMuscles,
-                                        exerciseMuscleDAL
-                                    ).flatMap { muscleFilteredExercises ->
-                                        if (muscleFilteredExercises.isEmpty()) {
-                                            // If no exercises match target muscles, fall back to all exercises
-                                            // This ensures warmup exercises are always available
-                                            logger.info(
-                                                "No exercises found for target muscles: {} in warmup, " +
-                                                    "falling back to all {} available exercises",
-                                                targetMuscles,
-                                                muscleCountFilteredExercises.size
-                                            )
-                                            Mono.just(muscleCountFilteredExercises)
-                                        } else {
-                                            Mono.just(muscleFilteredExercises)
-                                        }
-                                    }
-                                }
+                            // Handle empty target muscles for both warmup and non-warmup exercises
+                            if (targetMuscles.isEmpty()) {
+                                // No target muscles specified, use all available exercises
+                                logger.debug(
+                                    "No target muscles specified, using all {} available exercises (isWarmup: {})",
+                                    muscleCountFilteredExercises.size,
+                                    isWarmup
+                                )
+                                Mono.just(muscleCountFilteredExercises)
                             } else {
-                                // For non-warmup exercises, use strict muscle filtering
+                                // Try to find exercises with target muscles first
                                 userExercisePool.filterExercisesByMuscles(
                                     muscleCountFilteredExercises,
                                     targetMuscles,
                                     exerciseMuscleDAL
-                                )
+                                ).flatMap { muscleFilteredExercises ->
+                                    if (muscleFilteredExercises.isEmpty()) {
+                                        if (isWarmup || !isAccessory) {
+                                            // If no exercises match target muscles, fall back to all exercises
+                                            // This ensures warmup exercises and primary exercises are always available
+                                            logger.info(
+                                                "No exercises found for target muscles: {} for {} exercise, " +
+                                                    "falling back to all {} available exercises",
+                                                targetMuscles,
+                                                if (isWarmup) "warmup" else "primary",
+                                                muscleCountFilteredExercises.size
+                                            )
+                                            Mono.just(muscleCountFilteredExercises)
+                                        } else {
+                                            // For accessory exercises, if no exercises match target muscles,
+                                            // this is an error condition
+                                            logger.error(
+                                                "No exercises found for target muscles: {} for accessory exercise",
+                                                targetMuscles
+                                            )
+                                            Mono.just(emptyList())
+                                        }
+                                    } else {
+                                        Mono.just(muscleFilteredExercises)
+                                    }
+                                }
                             }
                         }
                         .flatMap { filteredExercises ->
@@ -331,18 +353,36 @@ class ExerciseSelectionService(
                                     )
                                 }
                                 logger.error(
-                                    "No exercises found for target muscles: {} for isAccessory: {} (isWarmup: {})",
+                                    "No exercises found for target muscles: {} for isAccessory: {} (isWarmup: {}). " +
+                                        "Attempting to refresh pool and retry...",
                                     targetMuscles,
                                     isAccessory,
                                     isWarmup
                                 )
-                                // No exercises found for target muscles - this should not happen with proper filtering
-                                Mono.error(
-                                    IllegalStateException(
-                                        "No exercises found for target muscles: $targetMuscles " +
-                                            "for isAccessory: $isAccessory (isWarmup: $isWarmup)"
+                                // Try to refresh the pool and retry
+                                val poolRefreshed = userExercisePool.refreshPool()
+                                if (poolRefreshed) {
+                                    logger.info("Pool refreshed successfully, retrying exercise selection...")
+                                    // Retry the entire selection process with refreshed pool
+                                    selectRotatingExerciseInternal(
+                                        userExercisePool = userExercisePool,
+                                        targetMuscles = targetMuscles,
+                                        isAccessory = isAccessory,
+                                        workoutType = workoutType,
+                                        dayType = dayType,
+                                        movementBalanceState = movementBalanceState,
+                                        isWarmup = isWarmup
                                     )
-                                )
+                                } else {
+                                    logger.error("Pool refresh failed, cannot retry exercise selection")
+                                    Mono.error(
+                                        ExerciseSelectionException.noExercisesForTargetMuscles(
+                                            targetMuscles = targetMuscles,
+                                            isAccessory = isAccessory,
+                                            isWarmup = isWarmup
+                                        )
+                                    )
+                                }
                             } else {
                                 // No rotation logic - use all filtered exercises
                                 val exercisesToChooseFrom = filteredExercises
@@ -370,14 +410,78 @@ class ExerciseSelectionService(
                                         )
                                     )
                                 } else {
-                                    // Select a random exercise from the filtered list
-                                    val selectedExercise = finalExercises.random()
-                                    Mono.just(selectedExercise)
+                                    // Apply sliding window logic to select the least recently used exercise
+                                    selectLeastRecentlyUsedExercise(finalExercises, userExercisePool, isAccessory)
                                 }
                             }
                         }
                 }
         }
+    }
+
+    /**
+     * Selects the least recently used exercise from the available exercises using sliding window logic.
+     * 
+     * The sliding window works by:
+     * 1. Getting all exercises the user has used in previous workouts (sorted oldest to newest)
+     * 2. The sliding window size is the total number of available exercises
+     * 3. If we have fewer programmed exercises than available, return the first available exercise
+     * 4. Otherwise, return the exercise that was scheduled longest ago (first in the sorted list)
+     * 
+     * @param availableExercises List of exercises available for selection
+     * @param userExercisePool The user's exercise pool
+     * @param isAccessory Whether we're selecting accessory exercises
+     * @return Mono containing the least recently used exercise
+     */
+    private fun selectLeastRecentlyUsedExercise(
+        availableExercises: List<Exercise>,
+        userExercisePool: UserExercisePool,
+        isAccessory: Boolean
+    ): Mono<Exercise> {
+        val userId = userExercisePool.getUserId()
+        
+        if (userId.isEmpty()) {
+            // No user ID, return first available exercise
+            return Mono.just(availableExercises.first())
+        }
+
+        return programmedExerciseDAL.selectProgrammedExercisesByUserId(userId)
+            .map { userProgrammedExercises ->
+                if (userProgrammedExercises.isEmpty()) {
+                    // No previous exercises, return the first available exercise
+                    availableExercises.first()
+                } else {
+                    // Filter user's programmed exercises to only those that match our available exercises
+                    val matchingProgrammedExercises = userProgrammedExercises.filter { programmedExercise ->
+                        availableExercises.any { availableExercise ->
+                            availableExercise.name == programmedExercise.exerciseName
+                        }
+                    }
+
+                    // The sliding window size is the total number of available exercises
+                    val windowSize = availableExercises.size
+
+                    // If we have fewer programmed exercises than available, return the first available exercise
+                    if (matchingProgrammedExercises.size < windowSize) {
+                        availableExercises.first()
+                    } else {
+                        // Find the exercise that was scheduled longest ago (first in the sorted list)
+                        val leastRecentlyUsedExerciseName = matchingProgrammedExercises.first().exerciseName
+                        val leastRecentlyUsedExercise = availableExercises.find { exercise ->
+                            exercise.name == leastRecentlyUsedExerciseName
+                        } ?: availableExercises.first()
+
+                        logger.debug("Selected least recently used exercise: {} from {} available exercises, {} matching programmed exercises",
+                            leastRecentlyUsedExercise.name, availableExercises.size, matchingProgrammedExercises.size)
+
+                        leastRecentlyUsedExercise
+                    }
+                }
+            }
+            .onErrorResume { error ->
+                logger.warn("Error selecting least recently used exercise, returning first available: {}", error.message)
+                Mono.just(availableExercises.first())
+            }
     }
 
     /**

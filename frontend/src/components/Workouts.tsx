@@ -22,6 +22,7 @@ import { ExportButtons } from './ExportButtons';
 import { LoadingBackdrop } from './LoadingBackdrop';
 import { LoadingSpinner } from './LoadingSpinner';
 import { StreamChart } from './StreamChart';
+import { WorkoutGenerationWizard } from './WorkoutGenerationWizard';
 import { WorkoutWeekDetails } from './WorkoutWeekDetails';
 import { generateNextWeek } from '../api/conjugateWorkoutGenerator';
 import { getIndividualExercise } from '../api/exercise';
@@ -72,7 +73,7 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
   const [workouts, setWorkouts] = useState<ProgrammedWorkout[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [generateDialogOpen, setGenerateDialogOpen] = useState(false);
+  const [wizardOpen, setWizardOpen] = useState(false);
   const [selectedProgram, setSelectedProgram] = useState<Program | null>(null);
   const [exerciseData, setExerciseData] = useState<Map<string, Exercise>>(new Map());
   const [weightUnitPreferences, setWeightUnitPreferences] = useState<UserWeightUnitPreference[]>(
@@ -171,9 +172,9 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
       .sort((a, b) => a.weekNumber - b.weekNumber);
   }, [workouts, activeProgram]);
 
-  const openGenerateDialog = (program: Program) => {
+  const openWizard = (program: Program) => {
     setSelectedProgram(program);
-    setGenerateDialogOpen(true);
+    setWizardOpen(true);
   };
 
   const handleWeekClick = (weekNumber: number) => {
@@ -191,29 +192,23 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
     navigate(`/dashboard?${newSearchParams.toString()}`);
   };
 
-  const handleGenerateWorkouts = async () => {
-    if (!selectedProgram) return;
-
-    // Close dialog immediately and show loading state
-    setGenerateDialogOpen(false);
+  const handleWizardComplete = async (updatedProgram: Program) => {
+    // Refresh data after generation
+    const [programsData, workoutsData] = await Promise.all([
+      getProgramsWithPreferences(),
+      getProgrammedWorkouts(),
+    ]);
+    setProgramsWithPreferences(programsData);
+    setWorkouts(workoutsData);
+    
+    enqueueSnackbar('Workouts generated successfully!', { variant: 'success' });
+    setWizardOpen(false);
     setSelectedProgram(null);
-    setIsGenerating(true);
+  };
 
-    try {
-      await generateNextWeek(selectedProgram.id);
-
-      // Refresh data after generation
-      const [programsData, workoutsData] = await Promise.all([
-        getProgramsWithPreferences(),
-        getProgrammedWorkouts(),
-      ]);
-      setProgramsWithPreferences(programsData);
-      setWorkouts(workoutsData);
-    } catch {
-      enqueueSnackbar('Failed to generate workouts. Please try again.', { variant: 'error' });
-    } finally {
-      setIsGenerating(false);
-    }
+  const handleWizardClose = () => {
+    setWizardOpen(false);
+    setSelectedProgram(null);
   };
 
   // Render breadcrumbs
@@ -342,7 +337,7 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
                           <Button
                             variant="contained"
                             startIcon={<AddIcon />}
-                            onClick={() => openGenerateDialog(activeProgram.program)}
+                            onClick={() => openWizard(activeProgram.program)}
                             disabled={isGenerating}
                           >
                             {isGenerating ? 'Generating...' : 'Generate Next Week'}
@@ -414,16 +409,15 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
           />
         )}
 
-      {/* Generate Workouts Dialog */}
-      <ConfirmationDialog
-        open={generateDialogOpen}
-        onClose={() => setGenerateDialogOpen(false)}
-        onConfirm={handleGenerateWorkouts}
-        title="Generate Workouts"
-        message={`Generate next week's workouts for ${selectedProgram?.name}?`}
-        confirmText="Generate"
-        confirmColor="primary"
-      />
+      {/* Workout Generation Wizard */}
+      {selectedProgram && (
+        <WorkoutGenerationWizard
+          open={wizardOpen}
+          onClose={handleWizardClose}
+          onComplete={handleWizardComplete}
+          program={selectedProgram}
+        />
+      )}
 
       {/* Full-screen loading overlay during workout generation */}
       <LoadingBackdrop

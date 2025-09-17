@@ -4,6 +4,7 @@ import com.congen.dal.ExerciseDAL
 import com.congen.dal.ExerciseEquipmentDAL
 import com.congen.dal.ExerciseMuscleDAL
 import com.congen.dal.ExerciseWorkoutTypeDAL
+import com.congen.dal.ProgrammedExerciseDAL
 import com.congen.model.Exercise
 import com.congen.model.ExerciseWorkoutType
 import com.congen.model.MovementType
@@ -30,6 +31,7 @@ class ExerciseSelectionServiceTest {
     private lateinit var exerciseMuscleDAL: ExerciseMuscleDAL
     private lateinit var exerciseWorkoutTypeDAL: ExerciseWorkoutTypeDAL
     private lateinit var exerciseEquipmentDAL: ExerciseEquipmentDAL
+    private lateinit var programmedExerciseDAL: ProgrammedExerciseDAL
     private lateinit var movementBalanceService: MovementBalanceService
     private lateinit var exerciseMatchingService: ExerciseMatchingService
     private lateinit var exerciseSelectionService: ExerciseSelectionService
@@ -45,9 +47,12 @@ class ExerciseSelectionServiceTest {
         exerciseMuscleDAL = mock()
         exerciseWorkoutTypeDAL = mock()
         exerciseEquipmentDAL = mock()
+        programmedExerciseDAL = mock()
         movementBalanceService = mock()
         exerciseMatchingService = mock()
         userExercisePool = mock()
+        whenever(userExercisePool.getUserId()).thenReturn(USER_ID)
+        whenever(programmedExerciseDAL.selectProgrammedExercisesByUserId(any())).thenReturn(Mono.just(emptyList()))
 
         exerciseSelectionService =
             ExerciseSelectionService(
@@ -56,7 +61,8 @@ class ExerciseSelectionServiceTest {
                 exerciseWorkoutTypeDAL = exerciseWorkoutTypeDAL,
                 exerciseEquipmentDAL = exerciseEquipmentDAL,
                 movementBalanceService = movementBalanceService,
-                exerciseMatchingService = exerciseMatchingService
+                exerciseMatchingService = exerciseMatchingService,
+                programmedExerciseDAL = programmedExerciseDAL
             )
 
         // Mock the selectAllExerciseWorkoutTypes method to return workout types that include test exercises
@@ -156,8 +162,7 @@ class ExerciseSelectionServiceTest {
             )
 
         StepVerifier.create(result)
-            .expectError(IllegalStateException::class.java)
-            .verify()
+            .verifyComplete()
     }
 
     @Test
@@ -246,9 +251,13 @@ class ExerciseSelectionServiceTest {
                 dayType = dayType
             )
 
+        // With the new fallback logic, primary exercises should fall back to all available exercises
+        // when no exercises match the target muscles, so we expect to get the exercise back
         StepVerifier.create(result)
-            .expectError(IllegalStateException::class.java)
-            .verify()
+            .expectNext(exercise)
+            .verifyComplete()
+
+        verify(userExercisePool).markExerciseAsUsed(exercise.name)
     }
 
     @Test

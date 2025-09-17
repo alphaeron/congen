@@ -249,7 +249,7 @@ describe('Workouts', () => {
     );
   });
 
-  it('opens generate dialog when generate button is clicked', async () => {
+  it('opens wizard when generate button is clicked', async () => {
     mock.onGet('/program/with-preferences').reply(200, [mockProgramWithPreferences]);
     mock.onGet('/programmed_workout/').reply(200, [mockWorkout]);
     // Mock WorkoutAnalytics dependencies
@@ -278,16 +278,25 @@ describe('Workouts', () => {
       { timeout: 10000 }
     );
 
-    // Use getAllByText to handle multiple elements and check for dialog title specifically
-    const dialogTitles = screen.getAllByText('Generate Workouts');
-    expect(dialogTitles.some(title => title.tagName === 'H2')).toBe(true);
-    expect(screen.getByText(/Generate next week's workouts for/)).toBeInTheDocument();
+    // Check for wizard title (use role to be more specific)
+    expect(screen.getByRole('heading', { name: /Generate Workouts/ })).toBeInTheDocument();
+    expect(screen.getByText(/The next week's workouts will be generated/)).toBeInTheDocument();
   });
 
   it('generates workouts successfully', async () => {
     mock.onGet('/program/with-preferences').reply(200, [mockProgramWithPreferences]);
     mock.onGet('/programmed_workout/').reply(200, [mockWorkout]);
     mock.onPost('/conjugate_workout_generator/1').reply(200, mockProgramWithPreferences.program);
+    mock.onGet('/conjugate_workout_generator/exercise_pool').reply(200, {
+      user_id: 'test-user-id',
+      total_exercises: 10,
+      available_exercises: 8,
+      primary_exercises: [],
+      accessory_exercises: [],
+      user_equipment: [],
+      user_preferences: [],
+      previously_used_exercises: [],
+    });
     // Mock WorkoutAnalytics dependencies
     mock.onGet('/gdpr/export').reply(200, { training_programs: [], data_retention_policies: [] });
     mock.onGet('/user_weight_unit_preference/test-user-id').reply(200, []);
@@ -314,18 +323,18 @@ describe('Workouts', () => {
       { timeout: 10000 }
     );
 
-    // Check that the dialog opened
+    // Check that the wizard opened
     await waitFor(
       () => {
-        expect(screen.getByText('Generate Workouts')).toBeInTheDocument();
+        expect(screen.getByRole('heading', { name: /Generate Workouts/ })).toBeInTheDocument();
       },
       { timeout: 10000 }
     );
 
-    // Click the generate button in the dialog
+    // Click the generate button in the wizard
     await waitFor(
       () => {
-        const generateWorkoutsButton = screen.getByRole('button', { name: /generate/i });
+        const generateWorkoutsButton = screen.getByRole('button', { name: /generate workouts/i });
         fireEvent.click(generateWorkoutsButton);
       },
       { timeout: 10000 }

@@ -176,7 +176,7 @@ class TwoDayWorkoutStageGenerationServiceTest {
         whenever(
             exerciseSelectionService.selectExercise(
                 userExercisePool = any(),
-                targetMuscles = eq(listOf("triceps")), // Filtered from weakMuscles based on dayType
+                targetMuscles = eq(listOf("triceps")),
                 isAccessory = eq(true),
                 workoutType = any(),
                 dayType = any(),
@@ -321,7 +321,7 @@ class TwoDayWorkoutStageGenerationServiceTest {
         whenever(
             exerciseSelectionService.selectExercise(
                 userExercisePool = any(),
-                targetMuscles = eq(listOf("triceps")), // Filtered from weakMuscles based on dayType
+                targetMuscles = eq(listOf("triceps")),
                 isAccessory = eq(true),
                 workoutType = any(),
                 dayType = any(),
@@ -452,7 +452,7 @@ class TwoDayWorkoutStageGenerationServiceTest {
         whenever(
             exerciseSelectionService.selectExercise(
                 userExercisePool = any(),
-                targetMuscles = eq(listOf("triceps")), // Filtered from weakMuscles based on dayType
+                targetMuscles = eq(listOf("triceps")),
                 isAccessory = eq(true),
                 workoutType = any(),
                 dayType = any(),

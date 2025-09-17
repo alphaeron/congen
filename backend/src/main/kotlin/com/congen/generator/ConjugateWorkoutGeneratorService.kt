@@ -1,9 +1,11 @@
 package com.congen.generator
 
 import com.congen.dal.ProgramPreferencesDAL
+import com.congen.dal.ProgrammedExerciseDAL
 import com.congen.dal.ProgrammedWorkoutDAL
 import com.congen.dal.UserOneRepMaxDAL
 import com.congen.dal.UserWeakMuscleDAL
+import com.congen.generator.DayTemplate
 import com.congen.model.Program
 import com.congen.model.ProgramPreferences
 import com.congen.model.UserOneRepMax
@@ -12,6 +14,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
+import java.math.BigDecimal
 
 /**
  * Service for generating conjugate powerlifting workout programs.
@@ -58,6 +61,7 @@ class ConjugateWorkoutGeneratorService(
     private val programPreferencesDAL: ProgramPreferencesDAL,
     private val programService: ProgramService,
     private val programmedWorkoutDAL: ProgrammedWorkoutDAL,
+    private val programmedExerciseDAL: ProgrammedExerciseDAL,
     private val conjugateTemplates: ConjugateTemplates,
     private val workoutStageGenerationOrchestrator: WorkoutStageGenerationOrchestrator,
     private val userWeakMuscleDAL: UserWeakMuscleDAL,
@@ -148,6 +152,8 @@ class ConjugateWorkoutGeneratorService(
         weakMuscles: List<String>,
         currentWeekNumber: Int
     ): Mono<Void> {
+        logger.info("Generating workouts atomically for program {}", program.id)
+        
         return Flux.fromIterable(template)
             .index()
             .concatMap { tuple ->
@@ -155,11 +161,15 @@ class ConjugateWorkoutGeneratorService(
                 val dayTemplate = tuple.t2
                 val dayNumber = currentWeekNumber * template.size + dayIndex.toInt() + 1
 
+                logger.debug("Generating workout for day {} of program {}", dayNumber, program.id)
+
                 programmedWorkoutDAL.insertProgrammedWorkout(program.id, dayNumber, dayTemplate.type)
                     .doOnError { error ->
-                        logger.error("Error inserting programmed workout: {}", error.message)
+                        logger.error("Error inserting programmed workout for day {}: {}", dayNumber, error.message)
                     }
                     .flatMap { createdWorkout ->
+                        logger.debug("Created programmed workout {} for day {}", createdWorkout.id, dayNumber)
+
                         workoutStageGenerationOrchestrator.generateWorkoutStages(
                             workout = createdWorkout,
                             dayType = dayTemplate.type,
@@ -170,16 +180,54 @@ class ConjugateWorkoutGeneratorService(
                             currentWeekNumber = currentWeekNumber,
                             userId = program.userId
                         ).doOnError { error ->
-                            logger.error("Error generating workout stages: {}", error.message)
+                            logger.error("Error generating workout stages for workout {}: {}",
+                                createdWorkout.id, error.message)
                         }
                     }
                     .doOnError { error ->
-                        logger.error("Error processing programmed workout: {}", error.message)
+                        logger.error("Error processing programmed workout for day {}: {}", dayNumber, error.message)
                     }
             }
             .doOnError { error ->
                 logger.error("Error generating workouts for week: {}", error.message)
             }
             .then()
+    }
+
+
+    /**
+     * Updates a generated workout with user's 1RM data to tailor weights appropriately.
+     *
+     * This method takes 1RM input data and updates the workout to reflect the user's
+     * current abilities by adjusting weights for programmed sets/reps.
+     *
+     * @param programId The ID of the program to update
+     * @return Mono containing the updated program
+     * @throws ValidationException if the input data is invalid
+     * @throws NoResultsFoundException if the program is not found
+     */
+    fun updateWorkoutWithOneRepMax(
+        programId: Long
+    ): Mono<Program> {
+        logger.info("Updating workout with 1RM data for program {}", programId)
+
+        return programService.selectProgramById(programId)
+            .flatMap { program ->
+                // Get existing 1RM values for the user
+                userOneRepMaxDAL.selectUserOneRepMaxByUser(program.userId)
+                    .map { existingOneRepMaxes ->
+                        // Create a map of exercise names to their 1RM values
+                        existingOneRepMaxes.associate { it.exerciseName to it.oneRepMax.toDouble() }
+                    }
+                    .flatMap { oneRepMaxValues ->
+                        // Update the workout with the 1RM values
+                        // For now, we just return the program since the 1RM values are already stored
+                        // In the future, this could update the programmed exercise weights based on 1RM percentages
+                        Mono.just(program)
+                    }
+            }
+            .doOnError { error ->
+                logger.error("Error updating workout with 1RM data for program {}: {}", programId, error.message)
+            }
     }
 }

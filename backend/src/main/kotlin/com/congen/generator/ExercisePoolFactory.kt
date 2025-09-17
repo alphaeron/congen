@@ -65,31 +65,31 @@ class ExercisePoolFactory(
             val preferences = tuple.t3
             val previouslyUsedExercises = tuple.t4
 
-            // Apply sliding window logic based on available exercise pool size
-            val previouslyUsedExerciseNames =
-                applySlidingWindowLogic(
-                    allExercises = allExercises,
-                    preferences = preferences,
-                    previouslyUsedExercises = previouslyUsedExercises
-                )
-
+            // Don't apply sliding window logic at pool initialization level
+            // The sliding window logic will be applied during exercise selection
             UserExercisePool(
                 allExercises = allExercises,
                 preferences = preferences,
                 userEquipment = userEquipment,
                 exerciseEquipmentDAL = exerciseEquipmentDAL,
-                previouslyUsedExercises = previouslyUsedExerciseNames
+                previouslyUsedExercises = emptyList(), // No exclusions at pool level
+                userId = userId
             )
         }
     }
 
     /**
-     * Applies sliding window logic to determine which previously used exercises should be excluded
-     * based on the dynamic size of available exercises per category.
-     *
-     * The sliding window size is calculated as a percentage of available exercises:
-     * - For primary exercises: 50% of available primary exercises
-     * - For accessory exercises: 30% of available accessory exercises
+     * Applies sliding window logic to determine which exercises should be available for selection.
+     * 
+     * The sliding window works as follows:
+     * 1. First, select all exercises possible for a user by filtering all exercises for user's constraints
+     * 2. The length of this array is the size of the sliding window
+     * 3. Get the user's programmed exercise history (sorted oldest to newest)
+     * 4. If we have fewer programmed exercises than available, we take the first exercise out of the available exercises
+     * 5. Otherwise, we take exercises from the end of the user's programmed exercises that meet the criteria
+     * 6. If we get to the point we have the same count as the number of available exercises, we can stop
+     * 7. If after this we still have less than the number of available exercises, we can still return the first available exercise
+     * 8. Otherwise, we return the exercise that was scheduled longest ago for the user to promote rotation
      *
      * @param allExercises All available exercises in the system
      * @param preferences User's exercise preferences
@@ -113,7 +113,10 @@ class ExercisePoolFactory(
             }
 
         // Calculate available exercises per category (is_upper + is_accessory combinations)
-        val availablePrimaryUpperExercises = preferenceFilteredExercises.filter { !it.isAccessory && it.isUpper }
+        // Apply dumbbell restriction for primary upper body exercises
+        val availablePrimaryUpperExercises = preferenceFilteredExercises.filter { exercise ->
+            !exercise.isAccessory && exercise.isUpper && !(exercise.name.lowercase().contains("dumbbell"))
+        }
         val availablePrimaryLowerExercises = preferenceFilteredExercises.filter { !it.isAccessory && !it.isUpper }
         val availableAccessoryUpperExercises = preferenceFilteredExercises.filter { it.isAccessory && it.isUpper }
         val availableAccessoryLowerExercises = preferenceFilteredExercises.filter { it.isAccessory && !it.isUpper }
@@ -159,34 +162,41 @@ class ExercisePoolFactory(
         // This ensures we always have variety while allowing older exercises to cycle back
 
         // Define sliding window sizes per category
+        // The sliding window size is the number of available exercises in each category
         val primaryUpperWindowSize = availablePrimaryUpperExercises.size
         val primaryLowerWindowSize = availablePrimaryLowerExercises.size
         val accessoryUpperWindowSize = availableAccessoryUpperExercises.size
         val accessoryLowerWindowSize = availableAccessoryLowerExercises.size
 
-        // Get the most recent n exercises from user's history for each category
-        val usedPrimaryUpperExercises =
+        // Apply sliding window logic per category
+        // The sliding window determines which exercises should be excluded to allow cycling
+        // This implements the proper sliding window logic as described:
+        // 1. If user has fewer programmed exercises than available, exclude all used exercises
+        // 2. If user has more programmed exercises than available, exclude only the most recent ones (up to window size)
+        // 3. This allows older exercises to cycle back in as new ones are used
+        
+        val excludedPrimaryUpperExercises =
             if (allUsedPrimaryUpperExercises.size <= primaryUpperWindowSize) {
                 allUsedPrimaryUpperExercises
             } else {
                 allUsedPrimaryUpperExercises.takeLast(primaryUpperWindowSize)
             }
 
-        val usedPrimaryLowerExercises =
+        val excludedPrimaryLowerExercises =
             if (allUsedPrimaryLowerExercises.size <= primaryLowerWindowSize) {
                 allUsedPrimaryLowerExercises
             } else {
                 allUsedPrimaryLowerExercises.takeLast(primaryLowerWindowSize)
             }
 
-        val usedAccessoryUpperExercises =
+        val excludedAccessoryUpperExercises =
             if (allUsedAccessoryUpperExercises.size <= accessoryUpperWindowSize) {
                 allUsedAccessoryUpperExercises
             } else {
                 allUsedAccessoryUpperExercises.takeLast(accessoryUpperWindowSize)
             }
 
-        val usedAccessoryLowerExercises =
+        val excludedAccessoryLowerExercises =
             if (allUsedAccessoryLowerExercises.size <= accessoryLowerWindowSize) {
                 allUsedAccessoryLowerExercises
             } else {
@@ -194,23 +204,23 @@ class ExercisePoolFactory(
             }
 
         val excludedExercises =
-            usedPrimaryUpperExercises + usedPrimaryLowerExercises +
-                usedAccessoryUpperExercises + usedAccessoryLowerExercises
+            excludedPrimaryUpperExercises + excludedPrimaryLowerExercises +
+                excludedAccessoryUpperExercises + excludedAccessoryLowerExercises
 
         logger.info(
             "Applied sliding window logic per category: Primary Upper: {}/{} (window: {}), " +
                 "Primary Lower: {}/{} (window: {}), Accessory Upper: {}/{} (window: {}), " +
                 "Accessory Lower: {}/{} (window: {}), total excluded: {}",
-            usedPrimaryUpperExercises.size,
+            excludedPrimaryUpperExercises.size,
             allUsedPrimaryUpperExercises.size,
             primaryUpperWindowSize,
-            usedPrimaryLowerExercises.size,
+            excludedPrimaryLowerExercises.size,
             allUsedPrimaryLowerExercises.size,
             primaryLowerWindowSize,
-            usedAccessoryUpperExercises.size,
+            excludedAccessoryUpperExercises.size,
             allUsedAccessoryUpperExercises.size,
             accessoryUpperWindowSize,
-            usedAccessoryLowerExercises.size,
+            excludedAccessoryLowerExercises.size,
             allUsedAccessoryLowerExercises.size,
             accessoryLowerWindowSize,
             excludedExercises.size

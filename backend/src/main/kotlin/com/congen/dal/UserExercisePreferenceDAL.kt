@@ -102,7 +102,6 @@ class UserExercisePreferenceDAL(
         )
     }
 
-
     /**
      * Creates or updates a user-exercise preference in the database (upsert operation).
      *

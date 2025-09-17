@@ -31,7 +31,8 @@ class UserExercisePool(
     private val preferences: List<UserExercisePreference>,
     private val userEquipment: List<UserEquipment>,
     private val exerciseEquipmentDAL: ExerciseEquipmentDAL,
-    private val previouslyUsedExercises: List<String> = emptyList()
+    private val previouslyUsedExercises: List<String> = emptyList(),
+    private val userId: String = ""
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(UserExercisePool::class.java)
@@ -42,6 +43,14 @@ class UserExercisePool(
 
     /** Thread-safe set of used exercise names for tracking. */
     private val usedExerciseNames = ConcurrentHashMap.newKeySet<String>()
+
+    /**
+     * Gets the user ID for this exercise pool.
+     *
+     * @return The user ID
+     */
+    fun getUserId(): String = userId
+
 
     init {
         // Initialize available exercises with all exercises that match user preferences
@@ -59,10 +68,16 @@ class UserExercisePool(
                         else -> true
                     }
 
-                // Also exclude exercises that were used in previous weeks
-                val notPreviouslyUsed = !previouslyUsedExercises.contains(exercise.name)
+                // Don't exclude exercises based on previously used exercises at pool level
+                // The sliding window logic will be applied during exercise selection
+                val notPreviouslyUsed = true
 
-                shouldIncludeByPreference && notPreviouslyUsed
+                // For primary upper body exercises, exclude dumbbell exercises
+                val isPrimaryUpperBody = !exercise.isAccessory && exercise.isUpper
+                val isDumbbellExercise = exercise.name.lowercase().contains("dumbbell")
+                val shouldExcludeDumbbell = isPrimaryUpperBody && isDumbbellExercise
+
+                shouldIncludeByPreference && notPreviouslyUsed && !shouldExcludeDumbbell
             }
 
         preferenceFilteredExercises.forEach { exercise ->
@@ -193,12 +208,18 @@ class UserExercisePool(
                         preference?.shouldAvoid == false -> true
                         else -> true
                     }
-                // Add back exercises that are not currently available AND not used in the current week
-                // We allow exercises from the previously used list to be added back (sliding window cycling)
-                // but we prevent duplicates within the same week
+
+                // For primary upper body exercises, exclude dumbbell exercises
+                val isPrimaryUpperBody = !exercise.isAccessory && exercise.isUpper
+                val isDumbbellExercise = exercise.name.lowercase().contains("dumbbell")
+                val shouldExcludeDumbbell = isPrimaryUpperBody && isDumbbellExercise
+
+                // Add back exercises that are not currently available
+                // The sliding window logic in ExercisePoolFactory handles which exercises should be excluded
+                // based on the user's history, so we just need to add back exercises that aren't currently available
                 shouldInclude &&
-                    !availableExercises.containsKey(exercise.name) &&
-                    !usedExerciseNames.contains(exercise.name)
+                    !shouldExcludeDumbbell &&
+                    !availableExercises.containsKey(exercise.name)
             }
 
         exercisesToRefresh.forEach { exercise ->
@@ -252,8 +273,13 @@ class UserExercisePool(
                         val userEquipmentNames = userEquipment.map { it.equipmentName.lowercase() }.toSet()
                         val exerciseEquipmentNames = exerciseEquipment.map { it.equipmentName.lowercase() }.toSet()
 
-                        // Check if user has required equipment
-                        val hasRequiredEquipment = userEquipmentNames.any { userEq -> exerciseEquipmentNames.contains(userEq) }
+                        // If user has no equipment preferences, allow all exercises (fallback behavior)
+                        val hasRequiredEquipment =
+                            if (userEquipmentNames.isEmpty()) {
+                                true // Allow all exercises when user has no equipment preferences
+                            } else {
+                                userEquipmentNames.any { userEq -> exerciseEquipmentNames.contains(userEq) }
+                            }
 
                         // Apply dumbbell restriction for primary upper body exercises
                         val isDumbbellRestricted = isPrimaryExercise && isUpperBody && exerciseEquipmentNames.contains("dumbbells")
@@ -270,11 +296,11 @@ class UserExercisePool(
             .collectList()
             .flatMap { equipmentFilteredExercises ->
                 if (equipmentFilteredExercises.isEmpty()) {
-                    // Fallback: return all exercises if no equipment matches, but still respect dumbbell restrictions
+                    // Fallback: return all exercises if no equipment matches
+                    // But still respect dumbbell restrictions for primary upper body exercises
                     logger.warn("No exercises available with user's equipment, falling back to all exercises")
                     if (isPrimaryExercise && isUpperBody) {
-                        // For primary upper body exercises, we need to check equipment for each exercise
-                        // to properly filter out dumbbell exercises even in fallback
+                        // For primary upper body exercises, filter out dumbbell exercises even in fallback
                         Flux.fromIterable(exercises)
                             .flatMap { exercise ->
                                 exerciseEquipmentDAL.selectExerciseEquipmentByExercise(exercise.name)
@@ -282,13 +308,17 @@ class UserExercisePool(
                                         val exerciseEquipmentNames = exerciseEquipment.map { it.equipmentName.lowercase() }.toSet()
                                         val isDumbbellRestricted = exerciseEquipmentNames.contains("dumbbells")
                                         if (isDumbbellRestricted) {
-                                            Mono.empty<Exercise>() // Filter out dumbbell exercises
+                                            // Filter out dumbbell exercises
+                                            Mono.empty<Exercise>()
                                         } else {
                                             Mono.just(exercise)
                                         }
                                     }
                                     .flatMap { it }
-                                    .onErrorResume { Mono.empty<Exercise>() } // Exclude exercise if equipment check fails
+                                    .onErrorResume { 
+                                        logger.error("Error selecting exercise equipment for exercise: {}", exercise.name)
+                                        Mono.empty<Exercise>()
+                                    }
                             }
                             .collectList()
                     } else {

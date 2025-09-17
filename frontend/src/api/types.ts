@@ -351,3 +351,25 @@ export interface UserExercisePoolResponse {
   user_preferences: UserExercisePreference[];
   previously_used_exercises: string[];
 } // end interface UserExercisePoolResponse
+
+/**
+ * Wizard step enumeration for workout generation wizard.
+ */
+export enum WizardStep {
+  WORKOUT_GENERATION = 'workout_generation',
+  GENERATION_LOADING = 'generation_loading',
+  ONE_REP_MAX_INPUT = 'one_rep_max_input',
+  UPDATING_WORKOUT = 'updating_workout',
+  UPDATING_WORKOUT_WITH_1RM = 'updating_workout_with_1rm',
+}
+
+/**
+ * Form data for workout generation wizard.
+ */
+export interface WorkoutGenerationWizardData {
+  programId: number;
+  currentStep: WizardStep;
+  generatedWorkout?: Program;
+  declinedExercises: string[];
+  declineAll: boolean;
+}
