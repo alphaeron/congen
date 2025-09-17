@@ -169,7 +169,7 @@ class PostgresConfig(
         logger.debug("PostgreSQL connection configured - SSL Mode: {}", props.sslMode)
 
         return PgBuilder
-            .client()
+            .pool()
             .connectingTo(connectionOptions)
             .with(poolOptions)
             .using(vertx)

@@ -1,6 +1,7 @@
 package com.congen.service
 
 import com.congen.client.KeycloakClient
+import com.congen.client.PostgresClient
 import com.congen.dal.GdprComplianceDAL
 import com.congen.dal.ProgramDAL
 import com.congen.dal.ProgramPreferencesDAL
@@ -72,7 +73,8 @@ class GdprComplianceService(
     private val userWeightUnitPreferenceDAL: UserWeightUnitPreferenceDAL,
     private val programDAL: ProgramDAL,
     private val auditService: AuditService,
-    private val keycloakClient: KeycloakClient
+    private val keycloakClient: KeycloakClient,
+    private val postgresClient: PostgresClient
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(GdprComplianceService::class.java)
@@ -249,8 +251,11 @@ class GdprComplianceService(
             operation = "DATA_DELETION_STARTED",
             dataType = "ALL_USER_DATA"
         ).then(
-            // Delete the user which will cascade delete related data
-            userDAL.deleteUserByKeycloakId(keycloakId)
+            // Use transaction to ensure all database operations are atomic
+            postgresClient.withTransaction {
+                // Delete the user which will cascade delete related data
+                userDAL.deleteUserByKeycloakId(keycloakId)
+            }
         ).then(
             // Delete the user from Keycloak to complete the GDPR deletion
             keycloakClient.deleteUser(keycloakId)

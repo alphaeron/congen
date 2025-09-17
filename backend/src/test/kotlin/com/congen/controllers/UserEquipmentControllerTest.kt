@@ -1,5 +1,6 @@
 package com.congen.controllers
 
+import com.congen.client.PostgresClient
 import com.congen.createGdprComplianceServiceSpy
 import com.congen.dal.UserEquipmentDAL
 import com.congen.exceptions.DatabaseQueryException
@@ -9,6 +10,7 @@ import com.congen.util.KeycloakUtil
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
+import org.mockito.kotlin.doAnswer
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
@@ -48,7 +50,15 @@ class UserEquipmentControllerTest {
         userEquipmentDAL = mock()
         keycloakUtil = mock()
         gdprComplianceService = createGdprComplianceServiceSpy()
-        userEquipmentController = UserEquipmentController(userEquipmentDAL, keycloakUtil, gdprComplianceService)
+        val postgresClient = mock<PostgresClient>()
+        
+        // Mock PostgresClient.withTransaction to execute the block directly
+        doAnswer { invocation ->
+            val block = invocation.getArgument<() -> Mono<ResponseEntity<List<com.congen.model.UserEquipment>>>>(0)
+            block.invoke()
+        }.whenever(postgresClient).withTransaction(any<() -> Mono<ResponseEntity<List<com.congen.model.UserEquipment>>>>())
+        
+        userEquipmentController = UserEquipmentController(userEquipmentDAL, keycloakUtil, gdprComplianceService, postgresClient)
 
         // Mock KeycloakUtil methods for all tests
         doReturn(Mono.just(USER_ID)).whenever(keycloakUtil).getCurrentUserId()

@@ -1,5 +1,6 @@
 package com.congen.service
 
+import com.congen.client.PostgresClient
 import com.congen.dal.ProgrammedExerciseDAL
 import com.congen.dal.SetSchemeDAL
 import com.congen.dal.UserOneRepMaxDAL
@@ -20,6 +21,7 @@ import org.mockito.ArgumentMatchers.anyInt
 import org.mockito.ArgumentMatchers.anyLong
 import org.mockito.kotlin.any
 import org.mockito.kotlin.anyOrNull
+import org.mockito.kotlin.doAnswer
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.never
@@ -44,6 +46,7 @@ class SetSchemeServiceTest {
     private lateinit var programmedExerciseDAL: ProgrammedExerciseDAL
     private lateinit var userOneRepMaxDAL: UserOneRepMaxDAL
     private lateinit var unitConversionService: UnitConverter
+    private lateinit var postgresClient: PostgresClient
     private lateinit var setSchemeService: SetSchemeService
 
     private val now = sampleInstant()
@@ -62,14 +65,23 @@ class SetSchemeServiceTest {
         programmedExerciseDAL = mock()
         userOneRepMaxDAL = mock()
         unitConversionService = mock()
+        postgresClient = mock()
         val oneRepMaxCalculator = OneRepMaxCalculator()
+        
+        // Mock PostgresClient.withTransaction to execute the block directly
+        doAnswer { invocation ->
+            val block = invocation.getArgument<() -> Mono<kotlin.Unit>>(0)
+            block.invoke()
+        }.whenever(postgresClient).withTransaction(any<() -> Mono<kotlin.Unit>>())
+        
         setSchemeService =
             SetSchemeService(
                 setSchemeDAL,
                 programmedExerciseDAL,
                 userOneRepMaxDAL,
                 unitConversionService,
-                oneRepMaxCalculator
+                oneRepMaxCalculator,
+                postgresClient
             )
     }
 

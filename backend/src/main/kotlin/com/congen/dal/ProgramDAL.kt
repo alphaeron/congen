@@ -529,10 +529,11 @@ class ProgramDAL(
                 ($1, $2, $3, $4)
             """.trimIndent()
         return if (isActive) {
-            // If creating an active program, first deactivate all existing programs for this user
-            // Use flatMap to ensure deactivation completes before insertion
-            deactivateProgramsForUser(userId).flatMap {
-                postgresClient.update(insertQuery, userId, name, currentWeekNumber, isActive)
+            // If creating an active program, use transaction to ensure atomicity
+            postgresClient.withTransaction {
+                deactivateProgramsForUser(userId).flatMap {
+                    postgresClient.update(insertQuery, userId, name, currentWeekNumber, isActive)
+                }
             }
         } else {
             // If not active, just insert the program without deactivating others
@@ -575,21 +576,23 @@ class ProgramDAL(
         logger.debug("Updating program: {} with isActive: {}", id, isActive)
 
         return if (isActive) {
-            // If setting to active, first get the program to find the user ID, then deactivate others
-            selectProgramById(id).flatMap { program ->
-                deactivateOtherProgramsForUser(program.userId, id).then(
-                    postgresClient.update(
-                        """
-                        UPDATE program
-                        SET name=$2, current_week_number=$3, is_active=$4, updated_at=NOW()
-                        WHERE id=$1
-                        """.trimIndent(),
-                        id,
-                        name,
-                        currentWeekNumber,
-                        isActive,
+            // If setting to active, use transaction to ensure atomicity
+            postgresClient.withTransaction {
+                selectProgramById(id).flatMap { program ->
+                    deactivateOtherProgramsForUser(program.userId, id).then(
+                        postgresClient.update(
+                            """
+                            UPDATE program
+                            SET name=$2, current_week_number=$3, is_active=$4, updated_at=NOW()
+                            WHERE id=$1
+                            """.trimIndent(),
+                            id,
+                            name,
+                            currentWeekNumber,
+                            isActive,
+                        )
                     )
-                )
+                }
             }
         } else {
             // If setting to inactive, just update the program

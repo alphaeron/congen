@@ -2,6 +2,7 @@ package com.congen.dal
 
 import com.congen.client.PostgresClient
 import com.congen.mockUser
+import com.congen.model.User
 import com.congen.service.AuditService
 import com.congen.util.EncryptionUtil
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -9,6 +10,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
 import org.mockito.kotlin.anyOrNull
+import org.mockito.kotlin.doAnswer
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
@@ -16,6 +18,7 @@ import org.mockito.kotlin.whenever
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
 import java.time.Instant
+import kotlin.reflect.KClass
 
 class UserDALTest {
     private lateinit var postgresClient: PostgresClient
@@ -31,6 +34,13 @@ class UserDALTest {
         postgresClient = mock()
         encryptionUtil = mock()
         auditService = mock()
+        
+        // Mock PostgresClient.withTransaction to execute the block directly
+        doAnswer { invocation ->
+            val block = invocation.getArgument<() -> Mono<User>>(0)
+            block.invoke()
+        }.whenever(postgresClient).withTransaction(any<() -> Mono<User>>())
+        
         userDAL = UserDAL(postgresClient, encryptionUtil, auditService)
     }
 
@@ -60,10 +70,9 @@ class UserDALTest {
     @Test
     fun `insertUser should return inserted user`() {
         val insertUser = mockUser(keycloakId = "0", name = "Test User")
-        val mockRow = mapOf("id" to 1)
         whenever(encryptionUtil.encrypt(insertUser.name)).thenReturn("encrypted_name")
         whenever(
-            postgresClient.update<Map<String, Any>>(
+            postgresClient.update<User>(
                 """
                 INSERT INTO "user"
                     (keycloak_id, name)
@@ -72,8 +81,8 @@ class UserDALTest {
                 """.trimIndent(),
                 insertUser.keycloakId,
                 "encrypted_name"
-            ),
-        ).thenReturn(Mono.just(mockRow))
+            )
+        ).thenReturn(Mono.just(insertUser))
         whenever(
             auditService.logDataOperation(
                 any(),
@@ -106,17 +115,17 @@ class UserDALTest {
             )
 
         whenever(
-            postgresClient.selectIndividual<Map<String, Any>>(
+            postgresClient.selectIndividual<User>(
                 "SELECT * FROM \"user\" WHERE keycloak_id=$1",
                 keycloakId
             )
-        ).thenReturn(Mono.just(userData))
+        ).thenReturn(Mono.just(mockUser(keycloakId = keycloakId, name = "Test User")))
         whenever(
-            postgresClient.update<Map<String, Any>>(
+            postgresClient.update<User>(
                 "DELETE FROM \"user\" WHERE keycloak_id=$1",
                 keycloakId
             )
-        ).thenReturn(Mono.just(mapOf("deleted" to true)))
+        ).thenReturn(Mono.just(mockUser(keycloakId = keycloakId, name = "Test User")))
         whenever(auditService.logDataOperation(any(), any(), any(), anyOrNull(), anyOrNull()))
             .thenReturn(Mono.just(Unit))
         whenever(encryptionUtil.decrypt(any())).thenReturn("decrypted-name")
@@ -129,11 +138,11 @@ class UserDALTest {
             }
             .verifyComplete()
 
-        verify(postgresClient).selectIndividual<Map<String, Any>>(
+        verify(postgresClient).selectIndividual<User>(
             "SELECT * FROM \"user\" WHERE keycloak_id=$1",
             keycloakId
         )
-        verify(postgresClient).update<Map<String, Any>>(
+        verify(postgresClient).update<User>(
             "DELETE FROM \"user\" WHERE keycloak_id=$1",
             keycloakId
         )
@@ -150,18 +159,12 @@ class UserDALTest {
     fun `updateUser should update user successfully`() {
         val keycloakId = "test-keycloak-id"
         val newName = "Updated User"
+        val updatedUser = mockUser(keycloakId = keycloakId, name = newName)
 
         whenever(encryptionUtil.encrypt(any())).thenReturn("encrypted-name")
         whenever(encryptionUtil.decrypt("encrypted-name")).thenReturn(newName)
-        val mockRow =
-            mapOf(
-                "keycloak_id" to keycloakId,
-                "name" to "encrypted-name",
-                "created_at" to "2025-01-01T00:00:00Z",
-                "updated_at" to "2025-01-01T00:00:00Z"
-            )
         whenever(
-            postgresClient.update<Map<String, Any>>(
+            postgresClient.update<User>(
                 """
                 UPDATE "user"
                 SET name=$2, updated_at=NOW()
@@ -170,7 +173,7 @@ class UserDALTest {
                 keycloakId,
                 "encrypted-name"
             )
-        ).thenReturn(Mono.just(mockRow))
+        ).thenReturn(Mono.just(updatedUser))
         whenever(auditService.logDataOperation(any(), any(), any(), anyOrNull(), anyOrNull()))
             .thenReturn(Mono.just(Unit))
 
@@ -182,7 +185,7 @@ class UserDALTest {
             }
             .verifyComplete()
 
-        verify(postgresClient).update<Map<String, Any>>(
+        verify(postgresClient).update<User>(
             """
             UPDATE "user"
             SET name=$2, updated_at=NOW()

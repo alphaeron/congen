@@ -149,32 +149,35 @@ class UserDAL(
         // Encrypt sensitive data
         val encryptedName = encryptionUtil.encrypt(name)
 
-        return postgresClient.update<Map<String, Any>>(
-            """
-            INSERT INTO "user"
-                (keycloak_id, name)
-            VALUES
-                ($1, $2)
-            """.trimIndent(),
-            keycloakId,
-            encryptedName
-        ).flatMap {
-            // Log the data creation for GDPR audit
-            auditService.logDataOperation(
-                keycloakId = keycloakId,
-                operation = "DATA_CREATION",
-                dataType = "USER_PROFILE"
-            ).then(
-                // Return the user with decrypted data
-                Mono.fromCallable {
-                    User(
-                        keycloakId = keycloakId,
-                        name = name,
-                        createdAt = Instant.now(),
-                        updatedAt = Instant.now()
-                    )
-                }
-            )
+        // Use transaction to ensure user creation and audit logging are atomic
+        return postgresClient.withTransaction {
+            postgresClient.update<User>(
+                """
+                INSERT INTO "user"
+                    (keycloak_id, name)
+                VALUES
+                    ($1, $2)
+                """.trimIndent(),
+                keycloakId,
+                encryptedName
+            ).flatMap { insertedUser ->
+                // Log the data creation for GDPR audit
+                auditService.logDataOperation(
+                    keycloakId = keycloakId,
+                    operation = "DATA_CREATION",
+                    dataType = "USER_PROFILE"
+                ).then(
+                    // Return the user with decrypted data
+                    Mono.fromCallable {
+                        User(
+                            keycloakId = insertedUser.keycloakId,
+                            name = name,
+                            createdAt = insertedUser.createdAt,
+                            updatedAt = insertedUser.updatedAt
+                        )
+                    }
+                )
+            }
         }
     }
 
@@ -196,23 +199,31 @@ class UserDAL(
     fun deleteUserByKeycloakId(keycloakId: String): Mono<User> {
         logger.debug("Deleting user with Keycloak ID: {}", keycloakId)
 
-        return postgresClient.selectIndividual<Map<String, Any>>(
+        return postgresClient.selectIndividual<User>(
             "SELECT * FROM \"user\" WHERE keycloak_id=$1",
             keycloakId,
-        ).flatMap { row ->
-            // Log the data deletion for GDPR audit
-            auditService.logDataOperation(
-                keycloakId = keycloakId,
-                operation = "DATA_DELETION",
-                dataType = "USER_PROFILE"
-            ).flatMap {
-                // Delete the user - use the generic update method which automatically appends RETURNING *
-                postgresClient.update<Map<String, Any>>(
-                    "DELETE FROM \"user\" WHERE keycloak_id=$1",
-                    keycloakId,
-                ).map {
-                    // Return the deleted user with decrypted data
-                    decryptUserData(row)
+        ).flatMap {
+            // Use transaction to ensure audit logging and user deletion are atomic
+            postgresClient.withTransaction {
+                // Log the data deletion for GDPR audit
+                auditService.logDataOperation(
+                    keycloakId = keycloakId,
+                    operation = "DATA_DELETION",
+                    dataType = "USER_PROFILE"
+                ).flatMap {
+                    // Delete the user - use the generic update method which automatically appends RETURNING *
+                    postgresClient.update<User>(
+                        "DELETE FROM \"user\" WHERE keycloak_id=$1",
+                        keycloakId,
+                    ).map { deletedUser ->
+                        // Return the deleted user with decrypted data
+                        User(
+                            keycloakId = deletedUser.keycloakId,
+                            name = decryptField(deletedUser.name) ?: "",
+                            createdAt = deletedUser.createdAt,
+                            updatedAt = deletedUser.updatedAt
+                        )
+                    }
                 }
             }
         }
@@ -243,26 +254,34 @@ class UserDAL(
         // Encrypt sensitive data
         val encryptedName = encryptionUtil.encrypt(name)
 
-        return postgresClient.update<Map<String, Any>>(
-            """
-            UPDATE "user"
-            SET name=$2, updated_at=NOW()
-            WHERE keycloak_id=$1
-            """.trimIndent(),
-            keycloakId,
-            encryptedName
-        ).flatMap { row ->
-            // Log the data update for GDPR audit
-            auditService.logDataOperation(
-                keycloakId = keycloakId,
-                operation = "DATA_UPDATE",
-                dataType = "USER_PROFILE"
-            ).then(
-                // Return the updated user with decrypted data
-                Mono.fromCallable {
-                    decryptUserData(row)
-                }
-            )
+        // Use transaction to ensure user update and audit logging are atomic
+        return postgresClient.withTransaction {
+            postgresClient.update<User>(
+                """
+                UPDATE "user"
+                SET name=$2, updated_at=NOW()
+                WHERE keycloak_id=$1
+                """.trimIndent(),
+                keycloakId,
+                encryptedName
+            ).flatMap { updatedUser ->
+                // Log the data update for GDPR audit
+                auditService.logDataOperation(
+                    keycloakId = keycloakId,
+                    operation = "DATA_UPDATE",
+                    dataType = "USER_PROFILE"
+                ).then(
+                    // Return the updated user with decrypted data
+                    Mono.fromCallable {
+                        User(
+                            keycloakId = updatedUser.keycloakId,
+                            name = name,
+                            createdAt = updatedUser.createdAt,
+                            updatedAt = updatedUser.updatedAt
+                        )
+                    }
+                )
+            }
         }
     }
 

@@ -55,21 +55,23 @@ class DataRetentionDAL(
     fun executeCleanupExpiredData(): Mono<List<DataCleanupResult>> {
         logger.debug("Executing cleanup for all data types")
 
-        return executeAuditLogCleanup()
-            .map { auditResult ->
-                listOf(auditResult, DataCleanupResult("CONSENT_RECORDS", 0))
-            }
-            .doOnSuccess { results ->
-                val totalDeleted = results.sumOf { it.count }
-                logger.info(
-                    "Cleanup completed: {} records deleted across {} data types",
-                    totalDeleted,
-                    results.size
-                )
-            }
-            .doOnError { error ->
-                logger.error("Failed to execute cleanup operations", error)
-            }
+        return postgresClient.withTransaction {
+            executeAuditLogCleanup()
+                .map { auditResult ->
+                    listOf(auditResult, DataCleanupResult("CONSENT_RECORDS", 0))
+                }
+        }
+        .doOnSuccess { results ->
+            val totalDeleted = results.sumOf { it.count }
+            logger.info(
+                "Cleanup completed: {} records deleted across {} data types",
+                totalDeleted,
+                results.size
+            )
+        }
+        .doOnError { error ->
+            logger.error("Failed to execute cleanup operations", error)
+        }
     }
 
     /**

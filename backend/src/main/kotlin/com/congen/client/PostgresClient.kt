@@ -4,14 +4,19 @@ import com.congen.exceptions.DatabaseConnectionException
 import com.congen.exceptions.DatabaseQueryException
 import com.congen.exceptions.InvalidResultException
 import com.congen.exceptions.NoResultsFoundException
+import io.vertx.core.Future
+import io.vertx.sqlclient.Pool
 import io.vertx.sqlclient.Row
 import io.vertx.sqlclient.RowSet
 import io.vertx.sqlclient.SqlClient
+import io.vertx.sqlclient.SqlConnection
+import io.vertx.sqlclient.Transaction
 import io.vertx.sqlclient.Tuple
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Mono
 import java.net.ConnectException
+import java.time.Duration
 import java.util.concurrent.CompletionStage
 import kotlin.reflect.KClass
 
@@ -45,6 +50,25 @@ class PostgresClient(
     companion object {
         /** Logger instance for this class. */
         private val logger = LoggerFactory.getLogger(PostgresClient::class.java)
+        
+        /** Thread-local storage for the current transaction connection. */
+        private val currentConnection = ThreadLocal<SqlConnection?>()
+        
+        /**
+         * Sets the current transaction connection for this thread.
+         * This is used internally by the transaction methods.
+         */
+        internal fun setCurrentConnection(connection: SqlConnection?) {
+            currentConnection.set(connection)
+        }
+        
+        /**
+         * Gets the current transaction connection for this thread.
+         * Returns null if no transaction is active.
+         */
+        internal fun getCurrentConnection(): SqlConnection? {
+            return currentConnection.get()
+        }
     }
 
     /**
@@ -211,7 +235,12 @@ class PostgresClient(
         vararg queryArgs: Any?,
     ): Mono<T> {
         logger.debug("Executing individual query: {}", query)
-        return query(sqlClient, query, cls, *queryArgs)
+        
+        // Check if we're in a transaction context
+        val currentConnection = getCurrentConnection()
+        val clientToUse = currentConnection ?: sqlClient
+        
+        return query(clientToUse, query, cls, *queryArgs)
             .map {
                 if (it.size > 1) {
                     logger.error("Query returned multiple results when expecting single: {}", query)
@@ -246,8 +275,13 @@ class PostgresClient(
         vararg queryArgs: Any?,
     ): Mono<List<T>> {
         logger.debug("Executing query: {}", query)
+        
+        // Check if we're in a transaction context
+        val currentConnection = getCurrentConnection()
+        val clientToUse = currentConnection ?: sqlClient
+        
         return Mono.fromCompletionStage(
-            beginQuery(sqlClient, query, *queryArgs)
+            beginQuery(clientToUse, query, *queryArgs)
                 .thenApply { rowSet ->
                     rowSet
                         .toList()
@@ -291,5 +325,114 @@ class PostgresClient(
                 }
             }
             .toCompletionStage()
+    }
+
+    /**
+     * Executes a block of operations within a transaction.
+     *
+     * This method provides a way to execute multiple database operations
+     * atomically within a single transaction. If any operation fails,
+     * the entire transaction is rolled back.
+     *
+     * @param T The type of the result returned by the transaction block
+     * @param block The block of operations to execute within the transaction
+     * @return Mono<T> containing the result of the transaction block
+     */
+    fun <T : Any> withTransaction(block: () -> Mono<T>): Mono<T> {
+        return withWriterTransaction(block)
+    }
+
+    /**
+     * Executes a block of operations within a transaction using the writer connection.
+     *
+     * @param T The type of the result returned by the transaction block
+     * @param block The block of operations to execute within the transaction
+     * @return Mono<T> containing the result of the transaction block
+     */
+    fun <T : Any> withWriterTransaction(block: () -> Mono<T>): Mono<T> {
+        return withConnectionTransaction(postgresDBWriter, block)
+    }
+
+    /**
+     * Executes a block of operations within a transaction using the reader connection.
+     *
+     * @param T The type of the result returned by the transaction block
+     * @param block The block of operations to execute within the transaction
+     * @return Mono<T> containing the result of the transaction block
+     */
+    fun <T : Any> withReaderTransaction(block: () -> Mono<T>): Mono<T> {
+        return withConnectionTransaction(postgresDBReader, block)
+    }
+
+    /**
+     * Private helper method to execute a transaction block with a given SQL client.
+     *
+     * This method uses the pool's built-in withTransaction method which properly
+     * handles pipelined pools and connection management. It checks for existing
+     * transaction context to avoid nested transactions.
+     *
+     * @param T The type of the result returned by the transaction block
+     * @param sqlClient The SQL client (which is actually a pool) to get connections from
+     * @param block The block of operations to execute within the transaction
+     * @return Mono<T> containing the result of the transaction block
+     */
+    private fun <T : Any> withConnectionTransaction(
+        sqlClient: SqlClient,
+        block: () -> Mono<T>
+    ): Mono<T> {
+        // Cast to Pool since the SqlClient from PgBuilder.client() is actually a pool
+        val pool = sqlClient as Pool
+        
+        // Check if we're already in a transaction context to avoid nested transactions
+        val existingConnection = getCurrentConnection()
+        if (existingConnection != null) {
+            // We're already in a transaction, just execute the block
+            logger.debug("Reusing existing transaction connection")
+            return block()
+        }
+        
+        // Use the pool's built-in withTransaction method for proper pipelined pool support
+        return Mono.fromCompletionStage(
+            pool.withTransaction<T> { sqlConnection ->
+                logger.debug("Transaction begun using pool.withTransaction")
+                
+                // Set the transaction context for this thread
+                setCurrentConnection(sqlConnection)
+                
+                try {
+                    // Execute the transaction block and convert to Future
+                    val future = block().toFuture()
+                    future.whenComplete { result, throwable ->
+                        // Clear the transaction context
+                        setCurrentConnection(null)
+                        
+                        if (throwable != null) {
+                            logger.warn("Transaction failed: {}", throwable.message)
+                        } else {
+                            logger.debug("Transaction completed successfully")
+                        }
+                    }
+                    // Convert CompletableFuture to Vert.x Future
+                    Future.fromCompletionStage(future)
+                } catch (e: Exception) {
+                    // Clear the transaction context on exception
+                    setCurrentConnection(null)
+                    logger.warn("Transaction failed with exception: {}", e.message)
+                    Future.failedFuture(e)
+                }
+            }.toCompletionStage()
+        )
+        .onErrorMap { throwable ->
+            when (throwable) {
+                is ConnectException -> {
+                    logger.error("Database connection error during transaction", throwable)
+                    DatabaseConnectionException(throwable)
+                }
+                else -> {
+                    logger.error("Database query error during transaction", throwable)
+                    DatabaseQueryException("Transaction failed", throwable)
+                }
+            }
+        }
     }
 }

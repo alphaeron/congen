@@ -1,6 +1,7 @@
 package com.congen.service
 
 import com.congen.client.KeycloakClient
+import com.congen.client.PostgresClient
 import com.congen.dal.GdprComplianceDAL
 import com.congen.dal.ProgramDAL
 import com.congen.dal.ProgramPreferencesDAL
@@ -15,6 +16,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
 import org.mockito.kotlin.anyOrNull
+import org.mockito.kotlin.doAnswer
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
@@ -57,6 +59,13 @@ class GdprComplianceServiceTest {
         userWeightUnitPreferenceDAL = mock()
         programDAL = mock()
         keycloakClient = mock()
+        val postgresClient = mock<PostgresClient>()
+        
+        // Mock PostgresClient.withTransaction to execute the block directly
+        doAnswer { invocation ->
+            val block = invocation.getArgument<() -> reactor.core.publisher.Mono<kotlin.Unit>>(0)
+            block.invoke()
+        }.whenever(postgresClient).withTransaction(any<() -> reactor.core.publisher.Mono<kotlin.Unit>>())
 
         gdprComplianceService =
             GdprComplianceService(
@@ -69,7 +78,8 @@ class GdprComplianceServiceTest {
                 userWeightUnitPreferenceDAL = userWeightUnitPreferenceDAL,
                 programDAL = programDAL,
                 auditService = auditService,
-                keycloakClient = keycloakClient
+                keycloakClient = keycloakClient,
+                postgresClient = postgresClient
             )
     }
 

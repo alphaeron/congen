@@ -524,7 +524,8 @@ fun createGdprComplianceServiceSpy(): GdprComplianceService {
             userWeightUnitPreferenceDAL = userWeightUnitPreferenceDAL,
             programDAL = programDAL,
             auditService = auditService,
-            keycloakClient = keycloakClient
+            keycloakClient = keycloakClient,
+            postgresClient = mock()
         )
 
     return spy(gdprComplianceService)

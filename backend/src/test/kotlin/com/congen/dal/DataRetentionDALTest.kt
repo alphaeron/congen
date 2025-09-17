@@ -5,9 +5,11 @@ import com.congen.model.DataRetentionPolicy
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.mockito.Mockito.mock
-import org.mockito.Mockito.verify
-import org.mockito.Mockito.`when`
+import org.mockito.kotlin.any
+import org.mockito.kotlin.doAnswer
+import org.mockito.kotlin.mock
+import org.mockito.kotlin.verify
+import org.mockito.kotlin.whenever
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
 
@@ -23,14 +25,21 @@ class DataRetentionDALTest {
 
     @BeforeEach
     fun setUp() {
-        postgresClient = mock(PostgresClient::class.java)
+        postgresClient = mock()
+        
+        // Mock PostgresClient.withTransaction to execute the block directly
+        doAnswer { invocation ->
+            val block = invocation.getArgument<() -> Mono<List<com.congen.model.DataCleanupResult>>>(0)
+            block.invoke()
+        }.whenever(postgresClient).withTransaction(any<() -> Mono<List<com.congen.model.DataCleanupResult>>>())
+        
         dataRetentionDAL = DataRetentionDAL(postgresClient)
     }
 
     @Test
     fun `executeCleanupExpiredData should return cleanup results`() {
         // Mock the audit log cleanup operation
-        `when`(
+        whenever(
             postgresClient.selectIndividual<Int>(
                 """
                 WITH deleted_audit_logs AS (
@@ -91,7 +100,7 @@ class DataRetentionDALTest {
                 )
             )
 
-        `when`(postgresClient.select<DataRetentionPolicy>("SELECT * FROM data_retention_policy ORDER BY data_type"))
+        whenever(postgresClient.select<DataRetentionPolicy>("SELECT * FROM data_retention_policy ORDER BY data_type"))
             .thenReturn(
                 Mono.just(
                     listOf(
@@ -118,7 +127,7 @@ class DataRetentionDALTest {
         val description = "Updated to 5 years"
 
         val mockPolicy = DataRetentionPolicy(dataType, retentionPeriodDays, description ?: "Updated policy")
-        `when`(
+        whenever(
             postgresClient.update<DataRetentionPolicy>(
                 """
                 INSERT INTO data_retention_policy (data_type, retention_period_days, description)
@@ -161,7 +170,7 @@ class DataRetentionDALTest {
     fun `estimateAuditLogCleanup should return count estimate`() {
         val mockResult: Map<String, Any> = mapOf("count_estimate" to 42L)
 
-        `when`(
+        whenever(
             postgresClient.selectIndividual<Int>(
                 """
                 SELECT COUNT(*)
@@ -183,7 +192,7 @@ class DataRetentionDALTest {
     fun `estimateConsentHistoryCleanup should return count estimate`() {
         val mockResult: Map<String, Any> = mapOf("count_estimate" to 15L)
 
-        `when`(
+        whenever(
             postgresClient.selectIndividual<Int>(
                 """
                 SELECT COUNT(*)
@@ -203,7 +212,7 @@ class DataRetentionDALTest {
 
     @Test
     fun `estimateAuditLogCleanup should return 0 on error`() {
-        `when`(
+        whenever(
             postgresClient.selectIndividual<Int>(
                 """
                 SELECT COUNT(*)
@@ -222,7 +231,7 @@ class DataRetentionDALTest {
     @Test
     fun `executeCleanupForDataType should cleanup audit logs`() {
         // Mock the audit log cleanup operation
-        `when`(
+        whenever(
             postgresClient.selectIndividual<Int>(
                 """
                 WITH deleted_audit_logs AS (
@@ -278,7 +287,7 @@ class DataRetentionDALTest {
                 "description" to "Audit logs retained for 7 years"
             )
 
-        `when`(
+        whenever(
             postgresClient.selectIndividual<DataRetentionPolicy>(
                 "SELECT * FROM data_retention_policy WHERE data_type = $1",
                 dataType
@@ -298,7 +307,7 @@ class DataRetentionDALTest {
     fun `getRetentionPolicy should return empty when not found`() {
         val dataType = "NON_EXISTENT"
 
-        `when`(
+        whenever(
             postgresClient.selectIndividual<DataRetentionPolicy>(
                 "SELECT * FROM data_retention_policy WHERE data_type = $1",
                 dataType
@@ -314,7 +323,7 @@ class DataRetentionDALTest {
     fun `deleteRetentionPolicy should delete policy successfully`() {
         val dataType = "AUDIT_LOGS"
 
-        `when`(
+        whenever(
             postgresClient.updateLiteral(
                 "DELETE FROM data_retention_policy WHERE data_type = $1",
                 Map::class,

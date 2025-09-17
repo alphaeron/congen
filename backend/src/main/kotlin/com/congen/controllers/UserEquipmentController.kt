@@ -1,5 +1,6 @@
 package com.congen.controllers
 
+import com.congen.client.PostgresClient
 import com.congen.dal.UserEquipmentDAL
 import com.congen.model.UserEquipment
 import com.congen.service.GdprComplianceService
@@ -60,7 +61,8 @@ import reactor.core.publisher.Mono
 class UserEquipmentController(
     private val userEquipmentDAL: UserEquipmentDAL,
     private val keycloakUtil: KeycloakUtil,
-    private val gdprComplianceService: GdprComplianceService
+    private val gdprComplianceService: GdprComplianceService,
+    private val postgresClient: PostgresClient
 ) {
     companion object {
         /** Logger instance for this class. */
@@ -315,15 +317,17 @@ class UserEquipmentController(
                 consentUserIdMono.flatMap { ownerId ->
                     gdprComplianceService.withUserConsent(ownerId) {
                         logger.info("Saving bulk user equipment: {} - {}", userId, equipmentNames)
-                        Flux.fromIterable(equipmentNames)
-                            .flatMap { equipmentName ->
-                                userEquipmentDAL.insertUserEquipment(userId, equipmentName)
-                            }
-                            .collectList()
-                            .map { ResponseEntity.ok(it) }
-                            .doOnError { e ->
-                                logger.error("Error saving bulk user equipment: {} - {}", userId, equipmentNames, e)
-                            }
+                        postgresClient.withTransaction {
+                            Flux.fromIterable(equipmentNames)
+                                .flatMap { equipmentName ->
+                                    userEquipmentDAL.insertUserEquipment(userId, equipmentName)
+                                }
+                                .collectList()
+                                .map { ResponseEntity.ok(it) }
+                        }
+                        .doOnError { e ->
+                            logger.error("Error saving bulk user equipment: {} - {}", userId, equipmentNames, e)
+                        }
                     }
                 }
             } else {

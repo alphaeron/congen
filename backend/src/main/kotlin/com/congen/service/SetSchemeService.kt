@@ -1,5 +1,6 @@
 package com.congen.service
 
+import com.congen.client.PostgresClient
 import com.congen.dal.ProgrammedExerciseDAL
 import com.congen.dal.SetSchemeDAL
 import com.congen.dal.UserOneRepMaxDAL
@@ -44,6 +45,7 @@ import reactor.core.publisher.Mono
  * @param userOneRepMaxDAL Data access layer for user one rep max operations
  * @param unitConverter Service for unit conversions
  * @param oneRepMaxCalculator Service for one rep max calculations
+ * @param postgresClient Database client with transaction support
  *
  * @author Congen Development Team
  * @since 1.0.0
@@ -54,7 +56,8 @@ class SetSchemeService(
     private val programmedExerciseDAL: ProgrammedExerciseDAL,
     private val userOneRepMaxDAL: UserOneRepMaxDAL,
     private val unitConverter: UnitConverter,
-    private val oneRepMaxCalculator: OneRepMaxCalculator
+    private val oneRepMaxCalculator: OneRepMaxCalculator,
+    private val postgresClient: PostgresClient
 ) {
     companion object {
         /** Logger instance for this class. */
@@ -362,50 +365,53 @@ class SetSchemeService(
                             // Calculate estimated 1RM from performed weight and reps
                             val estimatedOneRepMax = oneRepMaxCalculator.estimateOneRepMax(performedWeight, performedReps)
 
-                            // Check if user has a 1RM for this exercise
-                            userOneRepMaxDAL.selectUserOneRepMax(userId, exerciseName)
-                                .flatMap { currentOneRepMax ->
-                                    // Update 1RM if estimated 1RM is greater than current
-                                    if (estimatedOneRepMax > currentOneRepMax.oneRepMax) {
-                                        userOneRepMaxDAL.updateUserOneRepMax(userId, exerciseName, estimatedOneRepMax)
+                            // Use transaction to prevent race conditions in read-then-update
+                            postgresClient.withTransaction {
+                                // Check if user has a 1RM for this exercise
+                                userOneRepMaxDAL.selectUserOneRepMax(userId, exerciseName)
+                                    .flatMap { currentOneRepMax ->
+                                        // Update 1RM if estimated 1RM is greater than current
+                                        if (estimatedOneRepMax > currentOneRepMax.oneRepMax) {
+                                            userOneRepMaxDAL.updateUserOneRepMax(userId, exerciseName, estimatedOneRepMax)
+                                                .doOnSuccess {
+                                                    logger.info(
+                                                        "Updated 1RM for user {} exercise {} from {} to {} (calculated from {} lbs × {} reps)",
+                                                        userId,
+                                                        exerciseName,
+                                                        currentOneRepMax.oneRepMax,
+                                                        estimatedOneRepMax,
+                                                        performedWeight,
+                                                        performedReps
+                                                    )
+                                                }
+                                                .then()
+                                        } else {
+                                            logger.debug(
+                                                "No 1RM update needed for user {} exercise {} - estimated {} not greater than current {}",
+                                                userId,
+                                                exerciseName,
+                                                estimatedOneRepMax,
+                                                currentOneRepMax.oneRepMax
+                                            )
+                                            Mono.empty<Void>()
+                                        }
+                                    }
+                                    .onErrorResume(NoResultsFoundException::class.java) {
+                                        // No existing 1RM, create new one with estimated value
+                                        userOneRepMaxDAL.insertUserOneRepMax(userId, exerciseName, estimatedOneRepMax)
                                             .doOnSuccess {
                                                 logger.info(
-                                                    "Updated 1RM for user {} exercise {} from {} to {} (calculated from {} lbs × {} reps)",
+                                                    "Created new 1RM for user {} exercise {}: {} (calculated from {} lbs × {} reps)",
                                                     userId,
                                                     exerciseName,
-                                                    currentOneRepMax.oneRepMax,
                                                     estimatedOneRepMax,
                                                     performedWeight,
                                                     performedReps
                                                 )
                                             }
                                             .then()
-                                    } else {
-                                        logger.debug(
-                                            "No 1RM update needed for user {} exercise {} - estimated {} not greater than current {}",
-                                            userId,
-                                            exerciseName,
-                                            estimatedOneRepMax,
-                                            currentOneRepMax.oneRepMax
-                                        )
-                                        Mono.empty<Void>()
                                     }
-                                }
-                                .onErrorResume(NoResultsFoundException::class.java) {
-                                    // No existing 1RM, create new one with estimated value
-                                    userOneRepMaxDAL.insertUserOneRepMax(userId, exerciseName, estimatedOneRepMax)
-                                        .doOnSuccess {
-                                            logger.info(
-                                                "Created new 1RM for user {} exercise {}: {} (calculated from {} lbs × {} reps)",
-                                                userId,
-                                                exerciseName,
-                                                estimatedOneRepMax,
-                                                performedWeight,
-                                                performedReps
-                                            )
-                                        }
-                                        .then()
-                                }
+                            }
                         }
                     }
             }
