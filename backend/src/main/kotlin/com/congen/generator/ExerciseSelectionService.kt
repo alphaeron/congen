@@ -138,7 +138,8 @@ class ExerciseSelectionService(
             isWarmup = isWarmup,
             exerciseWorkoutTypeMappings = exerciseWorkoutTypeMappings,
             exerciseMuscleMappings = exerciseMuscleMappings,
-            exerciseEquipmentMappings = exerciseEquipmentMappings
+            exerciseEquipmentMappings = exerciseEquipmentMappings,
+            isSecondary = false
         ).onErrorResume { error ->
             if (error is ExerciseSelectionException) {
                 logger.info("Pool refresh needed, refreshing and retrying exercise selection...")
@@ -155,7 +156,8 @@ class ExerciseSelectionService(
                         isWarmup = isWarmup,
                         exerciseWorkoutTypeMappings = exerciseWorkoutTypeMappings,
                         exerciseMuscleMappings = exerciseMuscleMappings,
-                        exerciseEquipmentMappings = exerciseEquipmentMappings
+                        exerciseEquipmentMappings = exerciseEquipmentMappings,
+                        isSecondary = false
                     )
                 } else {
                     logger.warn("Pool refresh failed, skipping exercise selection to continue workout generation")
@@ -177,7 +179,8 @@ class ExerciseSelectionService(
         isWarmup: Boolean = false,
         exerciseWorkoutTypeMappings: Map<String, List<String>>,
         exerciseMuscleMappings: Map<String, List<ExerciseMuscle>>,
-        exerciseEquipmentMappings: Map<String, List<ExerciseEquipment>>
+        exerciseEquipmentMappings: Map<String, List<ExerciseEquipment>>,
+        isSecondary: Boolean = false
     ): Mono<Exercise?> {
         return Mono.defer {
             // Get fresh available exercises from the pool each time this method is called
@@ -290,11 +293,18 @@ class ExerciseSelectionService(
                     }
                 }
                 .flatMap { workoutTypeFilteredExercises ->
+                    // Apply banded exercise restrictions
+                    val bandedFilteredExercises = applyBandedExerciseRestrictions(
+                        workoutTypeFilteredExercises,
+                        dayType = dayType,
+                        isSecondary = isSecondary,
+                        isAccessory = isAccessory
+                    )
 
                     // Filter exercises by equipment and muscles reactively
                     userExercisePool
                         .filterExercisesByEquipment(
-                            workoutTypeFilteredExercises,
+                            bandedFilteredExercises,
                             isPrimaryExercise = !isAccessory,
                             isUpperBody = dayType.contains("Upper")
                         )
@@ -524,18 +534,21 @@ class ExerciseSelectionService(
         val primaryExerciseMuscles = exerciseMuscleMappings[primaryExercise.name] ?: emptyList()
         val primaryMuscles = primaryExerciseMuscles.map { it.muscleName }
         
-        // Use the main entry point for exercise selection (handles removal automatically)
-        return selectExercise(
+        // Use the specialized secondary exercise selection method that applies banded exercise restrictions
+        return selectSecondaryExerciseInternal(
             userExercisePool = userExercisePool,
             targetMuscles = primaryMuscles,
-            isAccessory = false,
             workoutType = workoutType,
             dayType = dayType,
             movementBalanceState = movementBalanceState,
             exerciseWorkoutTypeMappings = exerciseWorkoutTypeMappings,
             exerciseMuscleMappings = exerciseMuscleMappings,
             exerciseEquipmentMappings = exerciseEquipmentMappings
-        )
+        ).flatMap { selectedExercise ->
+            // Mark the exercise as used and removed from the pool
+            userExercisePool.markExerciseAsUsed(selectedExercise.name)
+            Mono.just(selectedExercise)
+        }
             .onErrorResume { error ->
                 logger.error(
                     "Failed to select similar secondary exercise for primary exercise: {}. Error: {}",
@@ -667,6 +680,159 @@ class ExerciseSelectionService(
 
         logger.debug("Filtered {} exercises for workout type '{}' from {} total exercises", filteredExercises.size, workoutType, exercises.size)
         return Mono.just(filteredExercises)
+    }
+
+    /**
+     * Filters out banded exercises for secondary movements.
+     * Banded exercises should only be used for primary movements.
+     *
+     * @param exercises List of exercises to filter
+     * @param isSecondary Whether this is for a secondary movement
+     * @return Filtered list of exercises
+     */
+    fun filterBandedExercisesForSecondary(
+        exercises: List<Exercise>,
+        isSecondary: Boolean
+    ): List<Exercise> {
+        if (!isSecondary) {
+            return exercises
+        }
+
+        val filteredExercises = exercises.filter { exercise ->
+            !exercise.name.contains("Banded", ignoreCase = true)
+        }
+
+        if (filteredExercises.size != exercises.size) {
+            val removedBandedExercises = exercises.filter { it.name.contains("Banded", ignoreCase = true) }
+            logger.info(
+                "Filtered out {} banded exercises from secondary movement selection: {}",
+                removedBandedExercises.size,
+                removedBandedExercises.map { it.name }
+            )
+        }
+
+        return filteredExercises
+    }
+
+    /**
+     * Filters banded exercises to only be used on DE (Dynamic Effort) day types.
+     * Banded exercises should only be used on DE days, not on ME (Maximal Effort) days.
+     *
+     * @param exercises List of exercises to filter
+     * @param dayType The day type (e.g., "ME_Upper", "DE_Lower")
+     * @return Filtered list of exercises
+     */
+    fun filterBandedExercisesForDayType(
+        exercises: List<Exercise>,
+        dayType: String
+    ): List<Exercise> {
+        val isDEDay = dayType.contains("DE", ignoreCase = true)
+        
+        if (isDEDay) {
+            return exercises
+        }
+
+        val filteredExercises = exercises.filter { exercise ->
+            !exercise.name.contains("Banded", ignoreCase = true)
+        }
+
+        if (filteredExercises.size != exercises.size) {
+            val removedBandedExercises = exercises.filter { it.name.contains("Banded", ignoreCase = true) }
+            logger.info(
+                "Filtered out {} banded exercises from non-DE day type '{}': {}",
+                removedBandedExercises.size,
+                dayType,
+                removedBandedExercises.map { it.name }
+            )
+        }
+
+        return filteredExercises
+    }
+
+    /**
+     * Applies banded exercise restrictions based on day type and movement role.
+     * 
+     * Rules:
+     * 1. Banded exercises should only be used on DE (Dynamic Effort) day types
+     * 2. Banded exercises should only be used for primary movements, never secondary or accessory
+     *
+     * @param exercises List of exercises to filter
+     * @param dayType The day type (e.g., "ME_Upper", "DE_Lower")
+     * @param isSecondary Whether this is for a secondary movement
+     * @param isAccessory Whether this is for an accessory movement
+     * @return Filtered list of exercises
+     */
+    private fun applyBandedExerciseRestrictions(
+        exercises: List<Exercise>,
+        dayType: String,
+        isSecondary: Boolean,
+        isAccessory: Boolean
+    ): List<Exercise> {
+        var filteredExercises = exercises
+
+        // Rule 1: Banded exercises only on DE days (applies to all exercise types)
+        filteredExercises = filterBandedExercisesForDayType(filteredExercises, dayType)
+
+        // Rule 2: Banded exercises only for primary movements (not secondary or accessory)
+        if (isSecondary || isAccessory) {
+            filteredExercises = filterBandedExercisesForSecondary(filteredExercises, isSecondary = true)
+        }
+
+        return filteredExercises
+    }
+
+    /**
+     * Internal method for selecting secondary exercises with proper banded exercise restrictions.
+     * This method applies the same filtering logic as the main selection method but with
+     * isSecondary = true to ensure banded exercises are excluded from secondary movements.
+     *
+     * @param userExercisePool The user's exercise pool
+     * @param targetMuscles List of target muscles to focus on
+     * @param workoutType The workout type (e.g., "maximal_effort", "dynamic_effort")
+     * @param dayType The day type (e.g., "ME_Upper", "DE_Lower")
+     * @param movementBalanceState Current movement balance state (optional)
+     * @param exerciseWorkoutTypeMappings Pre-computed mappings of exercise names to their workout types
+     * @param exerciseMuscleMappings Pre-computed mappings of exercise names to their muscle targets
+     * @param exerciseEquipmentMappings Pre-computed mappings of exercise names to their equipment requirements
+     * @return Mono containing selected exercise or null if none available
+     */
+    private fun selectSecondaryExerciseInternal(
+        userExercisePool: UserExercisePool,
+        targetMuscles: List<String>,
+        workoutType: String,
+        dayType: String,
+        movementBalanceState: MovementBalanceService.MovementBalanceState? = null,
+        exerciseWorkoutTypeMappings: Map<String, List<String>>,
+        exerciseMuscleMappings: Map<String, List<ExerciseMuscle>>,
+        exerciseEquipmentMappings: Map<String, List<ExerciseEquipment>>
+    ): Mono<Exercise> {
+        return selectRotatingExerciseInternalImpl(
+            userExercisePool = userExercisePool,
+            targetMuscles = targetMuscles,
+            isAccessory = false,
+            workoutType = workoutType,
+            dayType = dayType,
+            movementBalanceState = movementBalanceState,
+            isWarmup = false,
+            exerciseWorkoutTypeMappings = exerciseWorkoutTypeMappings,
+            exerciseMuscleMappings = exerciseMuscleMappings,
+            exerciseEquipmentMappings = exerciseEquipmentMappings,
+            isSecondary = true // This ensures banded exercises are filtered out
+        ).flatMap { selectedExercise ->
+            if (selectedExercise != null) {
+                Mono.just(selectedExercise)
+            } else {
+                Mono.error(
+                    ExerciseSelectionException.noSuitableExerciseFound(
+                        targetMuscles = targetMuscles,
+                        isAccessory = false,
+                        workoutType = workoutType,
+                        dayType = dayType,
+                        movementBalanceState = movementBalanceState
+                    )
+                )
+            }
+        }
     }
 
     /**

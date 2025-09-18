@@ -175,6 +175,110 @@ class ExerciseSelectionServiceTest {
             .verifyComplete()
     }
 
+    @Test
+    fun `filterBandedExercisesForSecondary should exclude banded exercises for secondary movements`() {
+        val bandedExercise = createSampleExercise("Banded Bench Press", MovementType.HORIZONTAL_PUSH)
+        val regularExercise = createSampleExercise("Bench Press", MovementType.HORIZONTAL_PUSH)
+        val exercises = listOf(bandedExercise, regularExercise)
+
+        val result = exerciseSelectionService.filterBandedExercisesForSecondary(exercises, isSecondary = true)
+
+        assert(result.size == 1)
+        assert(result.contains(regularExercise))
+        assert(!result.contains(bandedExercise))
+    }
+
+    @Test
+    fun `filterBandedExercisesForSecondary should include all exercises for primary movements`() {
+        val bandedExercise = createSampleExercise("Banded Bench Press", MovementType.HORIZONTAL_PUSH)
+        val regularExercise = createSampleExercise("Bench Press", MovementType.HORIZONTAL_PUSH)
+        val exercises = listOf(bandedExercise, regularExercise)
+
+        val result = exerciseSelectionService.filterBandedExercisesForSecondary(exercises, isSecondary = false)
+
+        assert(result.size == 2)
+        assert(result.contains(regularExercise))
+        assert(result.contains(bandedExercise))
+    }
+
+    @Test
+    fun `filterBandedExercisesForDayType should exclude banded exercises on non-DE days`() {
+        val bandedExercise = createSampleExercise("Banded Bench Press", MovementType.HORIZONTAL_PUSH)
+        val regularExercise = createSampleExercise("Bench Press", MovementType.HORIZONTAL_PUSH)
+        val exercises = listOf(bandedExercise, regularExercise)
+
+        val result = exerciseSelectionService.filterBandedExercisesForDayType(exercises, dayType = "ME_Upper")
+
+        assert(result.size == 1)
+        assert(result.contains(regularExercise))
+        assert(!result.contains(bandedExercise))
+    }
+
+    @Test
+    fun `filterBandedExercisesForDayType should include banded exercises on DE days`() {
+        val bandedExercise = createSampleExercise("Banded Bench Press", MovementType.HORIZONTAL_PUSH)
+        val regularExercise = createSampleExercise("Bench Press", MovementType.HORIZONTAL_PUSH)
+        val exercises = listOf(bandedExercise, regularExercise)
+
+        val result = exerciseSelectionService.filterBandedExercisesForDayType(exercises, dayType = "DE_Upper")
+
+        assert(result.size == 2)
+        assert(result.contains(regularExercise))
+        assert(result.contains(bandedExercise))
+    }
+
+    @Test
+    fun `filterBandedExercisesForDayType should include banded exercises on combined ME+DE days`() {
+        val bandedExercise = createSampleExercise("Banded Bench Press", MovementType.HORIZONTAL_PUSH)
+        val regularExercise = createSampleExercise("Bench Press", MovementType.HORIZONTAL_PUSH)
+        val exercises = listOf(bandedExercise, regularExercise)
+
+        val result = exerciseSelectionService.filterBandedExercisesForDayType(exercises, dayType = "ME+DE_Upper")
+
+        assert(result.size == 2)
+        assert(result.contains(regularExercise))
+        assert(result.contains(bandedExercise))
+    }
+
+    @Test
+    fun `selectSimilarSecondaryExercise should exclude banded exercises for secondary movements`() {
+        val primaryExercise = createSampleExercise("Bench Press", MovementType.HORIZONTAL_PUSH)
+        val bandedExercise = createSampleExercise("Banded Bench Press", MovementType.HORIZONTAL_PUSH)
+        val regularExercise = createSampleExercise("Incline Bench Press", MovementType.HORIZONTAL_PUSH)
+        
+        // Use a real UserExercisePool with both banded and regular exercises
+        val realUserExercisePool = UserExercisePool(
+            allExercises = listOf(bandedExercise, regularExercise),
+            preferences = emptyList(),
+            userEquipment = createSampleUserEquipment(),
+            exerciseEquipmentMappings = createSampleExerciseEquipmentMappings(),
+            exerciseMuscleMappings = createSampleExerciseMuscleMappings(),
+            previouslyUsedExercises = emptyList(),
+            userId = USER_ID
+        )
+
+        // Create workout type mappings that include both exercises
+        val exerciseWorkoutTypeMappings = mapOf(
+            "Bench Press" to listOf("maximal_effort"),
+            "Banded Bench Press" to listOf("maximal_effort"),
+            "Incline Bench Press" to listOf("maximal_effort")
+        )
+        
+        val result = exerciseSelectionService.selectSimilarSecondaryExercise(
+            primaryExercise = primaryExercise,
+            userExercisePool = realUserExercisePool,
+            workoutType = "maximal_effort",
+            dayType = "ME_Upper",
+            exerciseMuscleMappings = createSampleExerciseMuscleMappings(),
+            exerciseWorkoutTypeMappings = exerciseWorkoutTypeMappings,
+            exerciseEquipmentMappings = createSampleExerciseEquipmentMappings()
+        )
+
+        StepVerifier.create(result)
+            .expectNext(regularExercise) // Should select regular exercise, not banded
+            .verifyComplete()
+    }
+
     private fun createSampleExercise(name: String, movementType: MovementType): Exercise {
         return Exercise(
             name = name,

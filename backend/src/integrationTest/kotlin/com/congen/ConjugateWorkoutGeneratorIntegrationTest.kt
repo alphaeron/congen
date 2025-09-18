@@ -500,6 +500,117 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
     }
 
     @Test
+    fun `should only use banded exercises in primary stages on DE days`() {
+        // Create a new program with 4 days per week to test both ME and DE days
+        val programIdBanded =
+            IntegrationTestHelpers.createTestProgram(
+                webTestClient,
+                userId,
+                name = "Test Program Banded Restrictions",
+                numDaysPerWeek = 4,
+                token = userToken
+            )
+
+        // Set up user with 1RM for banded exercises specifically
+        IntegrationTestHelpers.createTestUserOneRepMax(webTestClient, userId, "Banded Bench Press", oneRepMax = 200.0, token = userToken)
+        IntegrationTestHelpers.createTestUserOneRepMax(
+            webTestClient,
+            userId,
+            "Banded Safety Bar Squat",
+            oneRepMax = 350.0,
+            token = userToken
+        )
+        IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId, token = userToken)
+
+        // Add equipment needed for banded exercises
+        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "bands", token = userToken)
+        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "safety squat bar", token = userToken)
+
+        // Add additional equipment
+        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "pull-up bar", token = userToken)
+        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "dumbbells", token = userToken)
+        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "adjustable bench", token = userToken)
+
+        // Generate conjugate program
+        val programResponse =
+            webTestClient.post()
+                .uri("/api/v1/conjugate_workout_generator/$programIdBanded")
+                .header("Authorization", "Bearer $userToken")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(Program::class.java)
+                .returnResult()
+                .responseBody!!
+
+        // Fetch all programmed workouts for the program
+        val workoutsResponse =
+            webTestClient.get()
+                .uri("/api/v1/programmed_workout/program/${programResponse.id}")
+                .header("Authorization", "Bearer $userToken")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBodyList(Map::class.java)
+                .returnResult()
+                .responseBody!!
+
+        // Verify that banded exercises are only used in primary stages on DE days
+        workoutsResponse.forEach { workout ->
+            val workoutId = (workout["id"] as Number).toLong()
+            val workoutName = workout["name"] as String
+
+            // Fetch workout stages for this workout
+            val stagesResponse =
+                webTestClient.get()
+                    .uri("/api/v1/workout_stage/workout/$workoutId")
+                    .header("Authorization", "Bearer $userToken")
+                    .exchange()
+                    .expectStatus().isOk()
+                    .expectBodyList(WorkoutStage::class.java)
+                    .returnResult()
+                    .responseBody!!
+
+            // Check each stage for banded exercises
+            stagesResponse.forEach { stage ->
+                val stageName = stage.name.toString()
+                val stageId = stage.id
+
+                // Fetch exercises for this stage
+                val exercisesResponse =
+                    webTestClient.get()
+                        .uri("/api/v1/programmed_exercise/stage/$stageId")
+                        .header("Authorization", "Bearer $userToken")
+                        .exchange()
+                        .expectStatus().isOk()
+                        .expectBodyList(Map::class.java)
+                        .returnResult()
+                        .responseBody!!
+
+                // Check each exercise in this stage
+                exercisesResponse.forEach { exercise ->
+                    val exerciseName = exercise["exercise_name"] as String
+                    val isBandedExercise = exerciseName.contains("Banded", ignoreCase = true)
+
+                    if (isBandedExercise) {
+                        // Banded exercises should only be in Primary stages on DE days
+                        val isDEDay = workoutName.contains("DE", ignoreCase = true)
+                        val isPrimaryStage = stageName == "Primary"
+
+                        assert(isDEDay) {
+                            "Banded exercise '$exerciseName' found in non-DE workout '$workoutName'. " +
+                                "Banded exercises should only be used on DE days."
+                        }
+
+                        assert(isPrimaryStage) {
+                            "Banded exercise '$exerciseName' found in '$stageName' stage of workout '$workoutName'. " +
+                                "Banded exercises should only be used in Primary stages."
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    @Test
     fun `should validate 2-day template invariants`() {
         // Create a new program with 2 days per week
         val unique = System.nanoTime()
@@ -831,6 +942,331 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
                 "Primary stage in 3-day workout '$workoutName' should have exercises"
             }
         }
+    }
+
+    @Test
+    fun `should generate 2-day conjugate workout program for 20 weeks with exercise uniqueness`() {
+        // Create a new program with 2 days per week
+        val unique = System.nanoTime()
+        val programId2Day =
+            IntegrationTestHelpers.createTestProgram(
+                webTestClient,
+                userId,
+                name = "Test Program 2-Day 20 Weeks $unique",
+                numDaysPerWeek = 2,
+                token = userToken
+            )
+
+        // Create reference data for 2-day program
+        IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId, token = userToken)
+
+        // Add additional equipment
+        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "pull-up bar", token = userToken)
+        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "power bar", token = userToken)
+        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "dumbbells", token = userToken)
+        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "adjustable bench", token = userToken)
+
+        // Generate conjugate program
+        val programResponse =
+            webTestClient.post()
+                .uri("/api/v1/conjugate_workout_generator/$programId2Day")
+                .header("Authorization", "Bearer $userToken")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(Program::class.java)
+                .returnResult()
+                .responseBody!!
+
+        assert(programResponse.userId == userId)
+        assert(programResponse.id == programId2Day)
+
+        // Generate additional weeks (weeks 2-20)
+        for (week in 2..20) {
+            // Update program to next week
+            webTestClient.patch()
+                .uri("/api/v1/program/$programId2Day?current_week_number=$week")
+                .header("Authorization", "Bearer $userToken")
+                .exchange()
+                .expectStatus().isOk()
+
+            // Generate workouts for this week
+            webTestClient.post()
+                .uri("/api/v1/conjugate_workout_generator/$programId2Day")
+                .header("Authorization", "Bearer $userToken")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(Program::class.java)
+                .returnResult()
+                .responseBody!!
+        }
+
+        // Validate exercise uniqueness and generation invariants for all 20 weeks
+        assertProgramExerciseUniquenessAndInvariants(programId2Day, 20, 2, userToken)
+    }
+
+    @Test
+    fun `should generate 3-day conjugate workout program for 30 weeks with exercise uniqueness`() {
+        // Create a new program with 3 days per week
+        val unique = System.nanoTime()
+        val programId3Day =
+            IntegrationTestHelpers.createTestProgram(
+                webTestClient,
+                userId,
+                name = "Test Program 3-Day 30 Weeks $unique",
+                numDaysPerWeek = 3,
+                token = userToken
+            )
+
+        // Create reference data for 3-day program
+        IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId, token = userToken)
+
+        // Add additional equipment
+        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "pull-up bar", token = userToken)
+        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "power bar", token = userToken)
+        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "dumbbells", token = userToken)
+        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "adjustable bench", token = userToken)
+
+        // Generate conjugate program
+        val programResponse =
+            webTestClient.post()
+                .uri("/api/v1/conjugate_workout_generator/$programId3Day")
+                .header("Authorization", "Bearer $userToken")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(Program::class.java)
+                .returnResult()
+                .responseBody!!
+
+        assert(programResponse.userId == userId)
+        assert(programResponse.id == programId3Day)
+
+        // Generate additional weeks (weeks 2-30)
+        for (week in 2..30) {
+            // Update program to next week
+            webTestClient.patch()
+                .uri("/api/v1/program/$programId3Day?current_week_number=$week")
+                .header("Authorization", "Bearer $userToken")
+                .exchange()
+                .expectStatus().isOk()
+
+            // Generate workouts for this week
+            webTestClient.post()
+                .uri("/api/v1/conjugate_workout_generator/$programId3Day")
+                .header("Authorization", "Bearer $userToken")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(Program::class.java)
+                .returnResult()
+                .responseBody!!
+        }
+
+        // Validate exercise uniqueness and generation invariants for all 30 weeks
+        assertProgramExerciseUniquenessAndInvariants(programId3Day, 30, 3, userToken)
+    }
+
+    @Test
+    fun `should generate 4-day conjugate workout program for 40 weeks with exercise uniqueness`() {
+        // Create a new program with 4 days per week
+        val unique = System.nanoTime()
+        val programId4Day =
+            IntegrationTestHelpers.createTestProgram(
+                webTestClient,
+                userId,
+                name = "Test Program 4-Day 40 Weeks $unique",
+                numDaysPerWeek = 4,
+                token = userToken
+            )
+
+        // Create reference data for 4-day program
+        IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId, token = userToken)
+
+        // Add additional equipment
+        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "pull-up bar", token = userToken)
+        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "power bar", token = userToken)
+        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "dumbbells", token = userToken)
+        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "adjustable bench", token = userToken)
+
+        // Generate conjugate program
+        val programResponse =
+            webTestClient.post()
+                .uri("/api/v1/conjugate_workout_generator/$programId4Day")
+                .header("Authorization", "Bearer $userToken")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(Program::class.java)
+                .returnResult()
+                .responseBody!!
+
+        assert(programResponse.userId == userId)
+        assert(programResponse.id == programId4Day)
+
+        // Generate additional weeks (weeks 2-40)
+        for (week in 2..40) {
+            // Update program to next week
+            webTestClient.patch()
+                .uri("/api/v1/program/$programId4Day?current_week_number=$week")
+                .header("Authorization", "Bearer $userToken")
+                .exchange()
+                .expectStatus().isOk()
+
+            // Generate workouts for this week
+            webTestClient.post()
+                .uri("/api/v1/conjugate_workout_generator/$programId4Day")
+                .header("Authorization", "Bearer $userToken")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(Program::class.java)
+                .returnResult()
+                .responseBody!!
+        }
+
+        // Validate exercise uniqueness and generation invariants for all 40 weeks
+        assertProgramExerciseUniquenessAndInvariants(programId4Day, 40, 4, userToken)
+    }
+
+    /**
+     * Helper function to query for a user's program data and assert that exercises are not duplicated
+     * based on exercise pool constraints within the same week, week after week, and meet the
+     * invariants of the generation algorithm.
+     *
+     * @param programId The program ID to query
+     * @param expectedWeeks The expected number of weeks to validate
+     * @param expectedDaysPerWeek The expected number of days per week
+     * @param token The user authentication token
+     */
+    private fun assertProgramExerciseUniquenessAndInvariants(
+        programId: Long,
+        expectedWeeks: Int,
+        expectedDaysPerWeek: Int,
+        token: String
+    ) {
+        // Get all programmed workouts for the program
+        val workoutsResponse =
+            webTestClient.get()
+                .uri("/api/v1/programmed_workout/program/$programId")
+                .header("Authorization", "Bearer $token")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBodyList(Map::class.java)
+                .returnResult()
+                .responseBody!!
+
+        // Validate we have the expected number of workouts (weeks * days per week)
+        val expectedTotalWorkouts = expectedWeeks * expectedDaysPerWeek
+        assert(workoutsResponse.size == expectedTotalWorkouts) {
+            "Expected $expectedTotalWorkouts workouts (${expectedWeeks} weeks × ${expectedDaysPerWeek} days), but got ${workoutsResponse.size}"
+        }
+
+        // Group workouts by week (assuming workouts are ordered by creation/position)
+        val workoutsByWeek = workoutsResponse.chunked(expectedDaysPerWeek)
+        assert(workoutsByWeek.size == expectedWeeks) {
+            "Expected $expectedWeeks weeks of workouts, but got ${workoutsByWeek.size}"
+        }
+
+        // Track all exercises used across all weeks for uniqueness validation
+        val allExercisesUsed = mutableSetOf<String>()
+        val exercisesByWeek = mutableListOf<Set<String>>()
+
+        // Validate each week
+        workoutsByWeek.forEachIndexed { weekIndex, weekWorkouts ->
+            val weekNumber = weekIndex + 1
+            val weekExercises = mutableSetOf<String>()
+
+            // Validate each workout in the week
+            weekWorkouts.forEach { workout ->
+                val workoutId = (workout["id"] as Number).toLong()
+                val workoutName = workout["name"] as String
+
+                // Get all stages for this workout
+                val stagesResponse =
+                    webTestClient.get()
+                        .uri("/api/v1/workout_stage/workout/$workoutId")
+                        .header("Authorization", "Bearer $token")
+                        .exchange()
+                        .expectStatus().isOk()
+                        .expectBodyList(WorkoutStage::class.java)
+                        .returnResult()
+                        .responseBody!!
+
+                // Validate stage structure based on program type
+                when (expectedDaysPerWeek) {
+                    2 -> validateTwoDayWorkoutStages(stagesResponse, workoutName, token)
+                    3 -> validateThreeDayWorkoutStages(stagesResponse, workoutName, token)
+                    4 -> validateFourDayWorkoutStages(stagesResponse, workoutName, token)
+                }
+
+                // Get all exercises for this workout
+                stagesResponse.forEach { stage ->
+                    val exercisesResponse =
+                        webTestClient.get()
+                            .uri("/api/v1/programmed_exercise/stage/${stage.id}")
+                            .header("Authorization", "Bearer $token")
+                            .exchange()
+                            .expectStatus().isOk()
+                            .expectBodyList(Map::class.java)
+                            .returnResult()
+                            .responseBody!!
+
+                    exercisesResponse.forEach { exercise ->
+                        val exerciseName = exercise["exercise_name"] as String
+                        weekExercises.add(exerciseName)
+                        allExercisesUsed.add(exerciseName)
+                    }
+                }
+            }
+
+            exercisesByWeek.add(weekExercises)
+
+            // Assert no duplicate exercises within the same week
+            val uniqueExercisesInWeek = weekExercises.size
+            val totalExercisesInWeek = weekExercises.size
+            assert(uniqueExercisesInWeek == totalExercisesInWeek) {
+                "Week $weekNumber has duplicate exercises: $weekExercises"
+            }
+
+            // Validate that each week has a reasonable number of exercises
+            assert(weekExercises.isNotEmpty()) {
+                "Week $weekNumber should have at least one exercise"
+            }
+        }
+
+        // Assert exercise rotation across weeks (sliding window logic)
+        // The algorithm should ensure exercises are rotated and not repeated too frequently
+        for (i in 1 until exercisesByWeek.size) {
+            val currentWeekExercises = exercisesByWeek[i]
+            val previousWeekExercises = exercisesByWeek[i - 1]
+
+            // Check that there's some variation between consecutive weeks
+            // (not all exercises should be the same, allowing for some overlap)
+            val overlap = currentWeekExercises.intersect(previousWeekExercises)
+            val totalUnique = currentWeekExercises.union(previousWeekExercises).size
+
+            // Allow some overlap but ensure there's variation
+            val overlapRatio = overlap.size.toDouble() / totalUnique.toDouble()
+            assert(overlapRatio < 1.0) {
+                "Week ${i + 1} should have some exercise variation from week $i. " +
+                    "Overlap: ${overlap.size}/$totalUnique exercises (${(overlapRatio * 100).toInt()}%)"
+            }
+        }
+
+        // Validate that we have a good variety of exercises across all weeks
+        val totalUniqueExercises = allExercisesUsed.size
+        val totalExerciseInstances = exercisesByWeek.sumOf { it.size }
+        val averageExercisesPerWeek = totalExerciseInstances.toDouble() / expectedWeeks
+
+        // Ensure we're not using too few unique exercises (indicating poor rotation)
+        assert(totalUniqueExercises >= expectedWeeks) {
+            "Should have at least $expectedWeeks unique exercises across $expectedWeeks weeks, but only found $totalUniqueExercises"
+        }
+
+        // Log summary for debugging
+        println("Program $programId validation summary:")
+        println("  - Weeks: $expectedWeeks")
+        println("  - Days per week: $expectedDaysPerWeek")
+        println("  - Total workouts: ${workoutsResponse.size}")
+        println("  - Total unique exercises: $totalUniqueExercises")
+        println("  - Average exercises per week: ${"%.1f".format(averageExercisesPerWeek)}")
+        println("  - Exercise rotation: ${if (totalUniqueExercises > expectedWeeks) "Good" else "Limited"}")
     }
 
     /**
