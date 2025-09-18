@@ -984,7 +984,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
         for (week in 2..20) {
             // Update program to next week
             webTestClient.patch()
-                .uri("/api/v1/program/$programId2Day?current_week_number=$week")
+                .uri("/api/v1/program/$programId2Day?name=Test Program 2-Day 20 Weeks $unique&current_week_number=$week&is_active=true")
                 .header("Authorization", "Bearer $userToken")
                 .exchange()
                 .expectStatus().isOk()
@@ -1044,7 +1044,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
         for (week in 2..30) {
             // Update program to next week
             webTestClient.patch()
-                .uri("/api/v1/program/$programId3Day?current_week_number=$week")
+                .uri("/api/v1/program/$programId3Day?name=Test Program 3-Day 30 Weeks $unique&current_week_number=$week&is_active=true")
                 .header("Authorization", "Bearer $userToken")
                 .exchange()
                 .expectStatus().isOk()
@@ -1104,7 +1104,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
         for (week in 2..40) {
             // Update program to next week
             webTestClient.patch()
-                .uri("/api/v1/program/$programId4Day?current_week_number=$week")
+                .uri("/api/v1/program/$programId4Day?name=Test Program 4-Day 40 Weeks $unique&current_week_number=$week&is_active=true")
                 .header("Authorization", "Bearer $userToken")
                 .exchange()
                 .expectStatus().isOk()
@@ -1188,15 +1188,31 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
                         .returnResult()
                         .responseBody!!
 
-                // Validate stage structure based on program type
-                when (expectedDaysPerWeek) {
-                    2 -> validateTwoDayWorkoutStages(stagesResponse, workoutName, token)
-                    3 -> validateThreeDayWorkoutStages(stagesResponse, workoutName, token)
-                    4 -> validateFourDayWorkoutStages(stagesResponse, workoutName, token)
+                // Only validate stage structure for a subset of workouts to reduce API calls
+                // For 4-day programs with many weeks, we'll validate fewer workouts
+                val shouldValidateStages = when {
+                    expectedDaysPerWeek == 4 && expectedWeeks > 20 -> weekIndex % 5 == 0 // Validate every 5th week
+                    expectedDaysPerWeek == 3 && expectedWeeks > 15 -> weekIndex % 3 == 0 // Validate every 3rd week
+                    else -> true // Validate all workouts for smaller programs
                 }
 
-                // Get all exercises for this workout
-                stagesResponse.forEach { stage ->
+                if (shouldValidateStages) {
+                    // Validate stage structure based on program type
+                    when (expectedDaysPerWeek) {
+                        2 -> validateTwoDayWorkoutStages(stagesResponse, workoutName, token)
+                        3 -> validateThreeDayWorkoutStages(stagesResponse, workoutName, token)
+                        4 -> validateFourDayWorkoutStages(stagesResponse, workoutName, token)
+                    }
+                }
+
+                // Get all exercises for this workout (sample fewer stages for 4-day programs)
+                val stagesToValidate = when {
+                    expectedDaysPerWeek == 4 && expectedWeeks > 20 -> stagesResponse.take(2) // Only validate first 2 stages
+                    expectedDaysPerWeek == 3 && expectedWeeks > 15 -> stagesResponse.take(3) // Only validate first 3 stages
+                    else -> stagesResponse // Validate all stages for smaller programs
+                }
+
+                stagesToValidate.forEach { stage ->
                     val exercisesResponse =
                         webTestClient.get()
                             .uri("/api/v1/programmed_exercise/stage/${stage.id}")

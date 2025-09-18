@@ -220,25 +220,83 @@ class ExerciseSelectionService(
                 val poolRefreshed = userExercisePool.refreshPool()
                 if (poolRefreshed) {
                     logger.info("Pool refreshed successfully, retrying exercise selection...")
-                    // Retry the entire selection process with refreshed pool
-                    return@defer selectRotatingExerciseInternal(
-                        userExercisePool = userExercisePool,
-                        dayType = dayType,
-                        workoutType = workoutType,
-                        isAccessory = isAccessory,
-                        isWarmup = isWarmup,
-                        targetMuscles = targetMuscles,
-                        exerciseWorkoutTypeMappings = exerciseWorkoutTypeMappings,
-                        exerciseMuscleMappings = exerciseMuscleMappings,
-                        exerciseEquipmentMappings = exerciseEquipmentMappings
-                    )
+                    // Retry with refreshed pool
+                    val refreshedAvailableExercises = if (isAccessory) {
+                        userExercisePool.getAvailableAccessoryExercises()
+                    } else {
+                        userExercisePool.getAvailablePrimaryExercises()
+                    }
+                    val refreshedDayTypeFilteredExercises = filterExercisesByDayType(refreshedAvailableExercises, dayType)
+                    if (refreshedDayTypeFilteredExercises.isEmpty()) {
+                        // For primary exercises, we must have at least one exercise available
+                        // If day-type filtering fails even after pool refresh, fall back to any available primary exercise
+                        if (!isAccessory) {
+                            logger.warn("No exercises available after day-type filtering for primary exercise even after pool refresh, falling back to any available primary exercise")
+                            val fallbackExercises = refreshedAvailableExercises.filter { !it.isAccessory }
+                            if (fallbackExercises.isNotEmpty()) {
+                                dayTypeFilteredExercises = fallbackExercises
+                                logger.info("Using fallback primary exercise: {}", fallbackExercises.first().name)
+                            } else {
+                                logger.error("No primary exercises available even after fallback")
+                                return@defer Mono.error(
+                                    ExerciseSelectionException.noSuitableExerciseFound(
+                                        targetMuscles = targetMuscles,
+                                        isAccessory = isAccessory,
+                                        workoutType = workoutType,
+                                        dayType = dayType,
+                                        movementBalanceState = movementBalanceState
+                                    )
+                                )
+                            }
+                        } else {
+                            logger.error("No exercises available after day-type filtering for dayType: {} and isAccessory: {} even after pool refresh", dayType, isAccessory)
+                            return@defer Mono.error(
+                                ExerciseSelectionException.noSuitableExerciseFound(
+                                    targetMuscles = targetMuscles,
+                                    isAccessory = isAccessory,
+                                    workoutType = workoutType,
+                                    dayType = dayType,
+                                    movementBalanceState = movementBalanceState
+                                )
+                            )
+                        }
+                    } else {
+                        // Continue with refreshed exercises
+                        dayTypeFilteredExercises = refreshedDayTypeFilteredExercises
+                    }
                 } else {
-                    logger.error("Pool refresh failed for dayType: {} and isAccessory: {}", dayType, isAccessory)
-                    return@defer Mono.error(
-                        IllegalStateException(
-                            "No exercises available after day-type filtering for dayType: $dayType and isAccessory: $isAccessory"
+                    // For primary exercises, we must have at least one exercise available
+                    // If pool refresh fails, fall back to any available primary exercise
+                    if (!isAccessory) {
+                        logger.warn("Pool refresh failed for primary exercise, falling back to any available primary exercise")
+                        val fallbackExercises = availableExercises.filter { !it.isAccessory }
+                        if (fallbackExercises.isNotEmpty()) {
+                            dayTypeFilteredExercises = fallbackExercises
+                            logger.info("Using fallback primary exercise: {}", fallbackExercises.first().name)
+                        } else {
+                            logger.error("No primary exercises available even after fallback")
+                            return@defer Mono.error(
+                                ExerciseSelectionException.noSuitableExerciseFound(
+                                    targetMuscles = targetMuscles,
+                                    isAccessory = isAccessory,
+                                    workoutType = workoutType,
+                                    dayType = dayType,
+                                    movementBalanceState = movementBalanceState
+                                )
+                            )
+                        }
+                    } else {
+                        logger.error("Pool refresh failed for dayType: {} and isAccessory: {}", dayType, isAccessory)
+                        return@defer Mono.error(
+                            ExerciseSelectionException.noSuitableExerciseFound(
+                                targetMuscles = targetMuscles,
+                                isAccessory = isAccessory,
+                                workoutType = workoutType,
+                                dayType = dayType,
+                                movementBalanceState = movementBalanceState
+                            )
                         )
-                    )
+                    }
                 }
             }
 
@@ -331,32 +389,7 @@ class ExerciseSelectionService(
                                 userExercisePool.filterExercisesByMuscles(
                                     muscleCountFilteredExercises,
                                     targetMuscles
-                                ).flatMap { muscleFilteredExercises ->
-                                    if (muscleFilteredExercises.isEmpty()) {
-                                        if (isWarmup || !isAccessory) {
-                                            // If no exercises match target muscles, fall back to all exercises
-                                            // This ensures warmup exercises and primary exercises are always available
-                                            logger.info(
-                                                "No exercises found for target muscles: {} for {} exercise, " +
-                                                    "falling back to all {} available exercises",
-                                                targetMuscles,
-                                                if (isWarmup) "warmup" else "primary",
-                                                muscleCountFilteredExercises.size
-                                            )
-                                            Mono.just(muscleCountFilteredExercises)
-                                        } else {
-                                            // For accessory exercises, if no exercises match target muscles,
-                                            // this is an error condition
-                                            logger.error(
-                                                "No exercises found for target muscles: {} for accessory exercise",
-                                                targetMuscles
-                                            )
-                                            Mono.just(emptyList())
-                                        }
-                                    } else {
-                                        Mono.just(muscleFilteredExercises)
-                                    }
-                                }
+                                )
                             }
                         }
                         .flatMap { filteredExercises ->
@@ -366,78 +399,35 @@ class ExerciseSelectionService(
                                 targetMuscles,
                                 isAccessory
                             )
-                            if (filteredExercises.isEmpty()) {
-                                // This should not happen for warmup exercises due to fallback logic above
-                                if (isWarmup) {
-                                    logger.error(
-                                        "Unexpected: No exercises available for warmup after fallback logic. " +
-                                            "This indicates a deeper issue with exercise filtering."
+                            // UserExercisePool.filterExercisesByMuscles should never return empty list due to fallback logic
+                            // No rotation logic - use all filtered exercises
+                            val exercisesToChooseFrom = filteredExercises
+
+                            // Apply movement balance constraints if available
+                            val finalExercises =
+                                if (movementBalanceState != null) {
+                                    movementBalanceService.prioritizeExercisesForBalance(
+                                        exercises = exercisesToChooseFrom,
+                                        currentState = movementBalanceState
                                     )
+                                } else {
+                                    exercisesToChooseFrom
                                 }
+
+                            if (finalExercises.isEmpty()) {
                                 logger.error(
-                                    "No exercises found for target muscles: {} for isAccessory: {} (isWarmup: {}). " +
-                                        "Attempting to refresh pool and retry...",
-                                    targetMuscles,
-                                    isAccessory,
-                                    isWarmup
+                                    "No exercises available after movement balance constraints for isAccessory: {}",
+                                    isAccessory
                                 )
-                                // Try to refresh the pool and retry
-                                val poolRefreshed = userExercisePool.refreshPool()
-                                if (poolRefreshed) {
-                                    logger.info("Pool refreshed successfully, retrying exercise selection...")
-                                    // Retry the entire selection process with refreshed pool
-                                    selectRotatingExerciseInternal(
-                                        userExercisePool = userExercisePool,
-                                        targetMuscles = targetMuscles,
-                                        isAccessory = isAccessory,
-                                        workoutType = workoutType,
-                                        dayType = dayType,
-                                        movementBalanceState = movementBalanceState,
-                                        isWarmup = isWarmup,
-                                        exerciseWorkoutTypeMappings = exerciseWorkoutTypeMappings,
-                                        exerciseMuscleMappings = exerciseMuscleMappings,
-                                        exerciseEquipmentMappings = exerciseEquipmentMappings
+                                // No exercises available after movement balance constraints
+                                Mono.error(
+                                    IllegalStateException(
+                                        "No exercises available after movement balance constraints for isAccessory: $isAccessory"
                                     )
-                                } else {
-                                    logger.error("Pool refresh failed, cannot retry exercise selection")
-                                    Mono.error(
-                                        ExerciseSelectionException.noExercisesForTargetMuscles(
-                                            targetMuscles = targetMuscles,
-                                            isAccessory = isAccessory,
-                                            isWarmup = isWarmup
-                                        )
-                                    )
-                                }
+                                )
                             } else {
-                                // No rotation logic - use all filtered exercises
-                                val exercisesToChooseFrom = filteredExercises
-
-                                // Apply movement balance constraints if available
-                                val finalExercises =
-                                    if (movementBalanceState != null) {
-                                        movementBalanceService.prioritizeExercisesForBalance(
-                                            exercises = exercisesToChooseFrom,
-                                            currentState = movementBalanceState
-                                        )
-                                    } else {
-                                        exercisesToChooseFrom
-                                    }
-
-                                if (finalExercises.isEmpty()) {
-                                    logger.error(
-                                        "No exercises available after movement balance constraints for isAccessory: {}",
-                                        isAccessory
-                                    )
-                                    // No exercises available after movement balance constraints
-                                    Mono.error(
-                                        IllegalStateException(
-                                            "No exercises available after movement balance constraints for isAccessory: $isAccessory"
-                                        )
-                                    )
-                                } else {
-                                    // Apply sliding window logic to select the least recently used exercise
-                                    selectLeastRecentlyUsedExercise(finalExercises, userExercisePool, isAccessory)
-                                }
+                                // Apply sliding window logic to select the least recently used exercise
+                                selectLeastRecentlyUsedExercise(finalExercises, userExercisePool, isAccessory)
                             }
                         }
                 }
@@ -490,17 +480,38 @@ class ExerciseSelectionService(
             // The sliding window size is the total number of available exercises
             val windowSize = availableExercises.size
 
-            // If we have fewer previously used exercises than available, return the first available exercise
+            // Implement robust cycling logic that ensures all exercises are used before repetition
+            // but never runs out of exercises to choose from
             return if (matchingPreviouslyUsedExercises.size < windowSize) {
-                Mono.just(availableExercises.first())
+                // Not all exercises have been used yet - prioritize unused exercises
+                val unusedExercises = availableExercises.filter { exercise ->
+                    !matchingPreviouslyUsedExercises.contains(exercise.name)
+                }
+                
+                val selectedExercise = if (unusedExercises.isNotEmpty()) {
+                    // Prefer unused exercises to ensure variety
+                    unusedExercises.first()
+                } else {
+                    // If all available exercises have been used, select the least recently used one
+                    val leastRecentlyUsedExerciseName = matchingPreviouslyUsedExercises.first()
+                    availableExercises.find { exercise ->
+                        exercise.name == leastRecentlyUsedExerciseName
+                    } ?: availableExercises.first()
+                }
+                
+                logger.debug("Selected exercise for variety: {} from {} available exercises, {} unused exercises, {} matching previously used exercises",
+                    selectedExercise.name, availableExercises.size, unusedExercises.size, matchingPreviouslyUsedExercises.size)
+                
+                Mono.just(selectedExercise)
             } else {
+                // All exercises have been used - implement proper cycling
                 // Find the exercise that was scheduled longest ago (first in the sorted list)
                 val leastRecentlyUsedExerciseName = matchingPreviouslyUsedExercises.first()
                 val leastRecentlyUsedExercise = availableExercises.find { exercise ->
                     exercise.name == leastRecentlyUsedExerciseName
                 } ?: availableExercises.first()
 
-                logger.debug("Selected least recently used exercise: {} from {} available exercises, {} matching previously used exercises",
+                logger.debug("Selected least recently used exercise for cycling: {} from {} available exercises, {} matching previously used exercises",
                     leastRecentlyUsedExercise.name, availableExercises.size, matchingPreviouslyUsedExercises.size)
 
                 Mono.just(leastRecentlyUsedExercise)
@@ -622,6 +633,16 @@ class ExerciseSelectionService(
                 }
             }
 
+        // If no exercises are available for the specific day type, fall back to all exercises
+        // This prevents the algorithm from failing when the exercise pool is limited
+        if (filteredExercises.isEmpty()) {
+            logger.warn(
+                "No exercises available for day type '{}', falling back to all {} available exercises to prevent algorithm failure",
+                dayType, exercises.size
+            )
+            return exercises
+        }
+
         return filteredExercises
     }
 
@@ -678,6 +699,16 @@ class ExerciseSelectionService(
             suitableExerciseNames.contains(exercise.name)
         }
 
+        // If no exercises are available for the specific workout type, fall back to all exercises
+        // This prevents the algorithm from failing when the exercise pool is limited
+        if (filteredExercises.isEmpty()) {
+            logger.warn(
+                "No exercises available for workout type '{}', falling back to all {} available exercises to prevent algorithm failure",
+                workoutType, exercises.size
+            )
+            return Mono.just(exercises)
+        }
+
         logger.debug("Filtered {} exercises for workout type '{}' from {} total exercises", filteredExercises.size, workoutType, exercises.size)
         return Mono.just(filteredExercises)
     }
@@ -698,20 +729,30 @@ class ExerciseSelectionService(
             return exercises
         }
 
+        val bandedExercises = exercises.filter { exercise ->
+            exercise.name.contains("Banded", ignoreCase = true)
+        }
+        
         val filteredExercises = exercises.filter { exercise ->
             !exercise.name.contains("Banded", ignoreCase = true)
         }
 
-        if (filteredExercises.size != exercises.size) {
-            val removedBandedExercises = exercises.filter { it.name.contains("Banded", ignoreCase = true) }
+        // Only filter out banded exercises if we have enough non-banded exercises available
+        if (filteredExercises.isNotEmpty()) {
             logger.info(
                 "Filtered out {} banded exercises from secondary movement selection: {}",
-                removedBandedExercises.size,
-                removedBandedExercises.map { it.name }
+                bandedExercises.size,
+                bandedExercises.map { it.name }
             )
+            return filteredExercises
+        } else {
+            logger.warn(
+                "All {} exercises are banded for secondary movement selection, allowing banded exercises to prevent algorithm failure: {}",
+                exercises.size,
+                exercises.map { it.name }
+            )
+            return exercises
         }
-
-        return filteredExercises
     }
 
     /**
@@ -732,21 +773,32 @@ class ExerciseSelectionService(
             return exercises
         }
 
+        val bandedExercises = exercises.filter { exercise ->
+            exercise.name.contains("Banded", ignoreCase = true)
+        }
+        
         val filteredExercises = exercises.filter { exercise ->
             !exercise.name.contains("Banded", ignoreCase = true)
         }
 
-        if (filteredExercises.size != exercises.size) {
-            val removedBandedExercises = exercises.filter { it.name.contains("Banded", ignoreCase = true) }
+        // Only filter out banded exercises if we have enough non-banded exercises available
+        if (filteredExercises.isNotEmpty()) {
             logger.info(
                 "Filtered out {} banded exercises from non-DE day type '{}': {}",
-                removedBandedExercises.size,
+                bandedExercises.size,
                 dayType,
-                removedBandedExercises.map { it.name }
+                bandedExercises.map { it.name }
             )
+            return filteredExercises
+        } else {
+            logger.warn(
+                "All {} exercises are banded for non-DE day type '{}', allowing banded exercises to prevent algorithm failure: {}",
+                exercises.size,
+                dayType,
+                exercises.map { it.name }
+            )
+            return exercises
         }
-
-        return filteredExercises
     }
 
     /**

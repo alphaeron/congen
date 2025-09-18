@@ -34,7 +34,8 @@ class UserExercisePool(
     private val exerciseEquipmentMappings: Map<String, List<ExerciseEquipment>>,
     private val exerciseMuscleMappings: Map<String, List<ExerciseMuscle>>,
     private val previouslyUsedExercises: List<String> = emptyList(),
-    private val userId: String = ""
+    private val userId: String = "",
+    private val excludedExercises: Set<String> = emptySet()
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(UserExercisePool::class.java)
@@ -70,16 +71,15 @@ class UserExercisePool(
                         else -> true
                     }
 
-                // Don't exclude exercises based on previously used exercises at pool level
-                // The sliding window logic will be applied during exercise selection
-                val notPreviouslyUsed = true
+                // Apply sliding window exclusions that were calculated in ExercisePoolFactory
+                val isExcludedBySlidingWindow = excludedExercises.contains(exercise.name)
 
                 // For primary upper body exercises, exclude dumbbell exercises
                 val isPrimaryUpperBody = !exercise.isAccessory && exercise.isUpper
                 val isDumbbellExercise = exercise.name.lowercase().contains("dumbbell")
                 val shouldExcludeDumbbell = isPrimaryUpperBody && isDumbbellExercise
 
-                shouldIncludeByPreference && notPreviouslyUsed && !shouldExcludeDumbbell
+                shouldIncludeByPreference && !isExcludedBySlidingWindow && !shouldExcludeDumbbell
             }
 
         preferenceFilteredExercises.forEach { exercise ->
@@ -87,18 +87,9 @@ class UserExercisePool(
         }
 
         logger.info(
-            "Initialized UserExercisePool with {} exercises (filtered by preferences and {} previously used exercises excluded)",
-            availableExercises.size,
-            previouslyUsedExercises.size
+            "Initialized UserExercisePool with {} exercises (filtered by preferences and {} excluded by sliding window)",
+            availableExercises.size, excludedExercises.size
         )
-
-        // Log available exercise names for debugging
-        val availableExerciseNames = availableExercises.keys.sorted()
-        logger.info("Available exercises: {}", availableExerciseNames)
-
-        // Log excluded exercise names for debugging
-        val excludedExerciseNames = allExercises.filter { !availableExercises.containsKey(it.name) }.map { it.name }.sorted()
-        logger.info("Excluded exercises: {}", excludedExerciseNames)
     }
 
     /**
@@ -199,8 +190,9 @@ class UserExercisePool(
     fun refreshPool(): Boolean {
         val currentUsedCount = usedExerciseNames.size
 
-        // Add back exercises that are not currently available, but respect the sliding window exclusions
-        // This allows exercise cycling across weeks while preventing duplicates within the same week
+        // Simple refresh: add back exercises that are not currently available
+        // The sliding window exclusions are handled by the ExercisePoolFactory when creating the pool
+        // When we refresh, we want to restore the pool to its original state (minus current week usage)
         val exercisesToRefresh =
             allExercises.filter { exercise ->
                 val preference = preferences.find { pref -> pref.exerciseName == exercise.name }
@@ -216,10 +208,12 @@ class UserExercisePool(
                 val isDumbbellExercise = exercise.name.lowercase().contains("dumbbell")
                 val shouldExcludeDumbbell = isPrimaryUpperBody && isDumbbellExercise
 
-                // Add back exercises that are not currently available
-                // The sliding window logic in ExercisePoolFactory handles which exercises should be excluded
-                // based on the user's history, so we just need to add back exercises that aren't currently available
+                // Apply sliding window exclusions that were calculated in ExercisePoolFactory
+                val isExcludedBySlidingWindow = excludedExercises.contains(exercise.name)
+
+                // Add back exercises that are not currently available and not excluded by sliding window
                 shouldInclude &&
+                    !isExcludedBySlidingWindow &&
                     !shouldExcludeDumbbell &&
                     !availableExercises.containsKey(exercise.name)
             }
@@ -346,10 +340,10 @@ class UserExercisePool(
         }
 
         return if (muscleFilteredExercises.isEmpty()) {
-            // For accessory exercises with weak muscles, be more strict about targeting
-            // Only fall back if there are truly no exercises available
-            logger.warn("No exercises available for target muscles: {}, returning empty list to force fallback", targetMuscles)
-            Mono.just(emptyList())
+            // If no exact muscle matches found, fall back to all available exercises
+            // This ensures we don't get stuck when muscle targeting is too specific
+            logger.warn("No exercises available for target muscles: {}, falling back to all available exercises", targetMuscles)
+            Mono.just(exercises)
         } else {
             Mono.just(muscleFilteredExercises)
         }
