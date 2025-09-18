@@ -1,16 +1,11 @@
 package com.congen.generator
 
-import com.congen.dal.ExerciseEquipmentDAL
-import com.congen.exceptions.DatabaseException
 import com.congen.model.ExerciseEquipment
 import com.congen.model.WeightUnit
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
-import org.mockito.Mock
 import org.mockito.junit.jupiter.MockitoExtension
-import org.mockito.kotlin.whenever
-import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
 import java.math.BigDecimal
 import java.math.RoundingMode
@@ -29,14 +24,11 @@ import java.math.RoundingMode
  */
 @ExtendWith(MockitoExtension::class)
 class SupportedEquipmentWeightRoundingServiceTest {
-    @Mock
-    private lateinit var exerciseEquipmentDAL: ExerciseEquipmentDAL
-
     private lateinit var supportedEquipmentWeightRoundingService: SupportedEquipmentWeightRoundingService
 
     @BeforeEach
     fun setUp() {
-        supportedEquipmentWeightRoundingService = SupportedEquipmentWeightRoundingService(exerciseEquipmentDAL)
+        supportedEquipmentWeightRoundingService = SupportedEquipmentWeightRoundingService()
     }
 
     @Test
@@ -50,10 +42,9 @@ class SupportedEquipmentWeightRoundingServiceTest {
                 ExerciseEquipment(exerciseName, "bench")
             )
 
-        whenever(exerciseEquipmentDAL.selectExerciseEquipmentByExercise(exerciseName))
-            .thenReturn(Mono.just(equipment))
+        val exerciseEquipmentMappings = mapOf(exerciseName to equipment)
 
-        val result = supportedEquipmentWeightRoundingService.roundWeightForExercise(exerciseName, targetWeight, weightUnit)
+        val result = supportedEquipmentWeightRoundingService.roundWeightForExercise(exerciseName, targetWeight, weightUnit, exerciseEquipmentMappings)
 
         StepVerifier.create(result)
             .expectNext(BigDecimal("185.00")) // 45lb bar + 2x45lb + 2x25lb plates = 185lbs
@@ -70,10 +61,9 @@ class SupportedEquipmentWeightRoundingServiceTest {
                 ExerciseEquipment(exerciseName, "power bar")
             )
 
-        whenever(exerciseEquipmentDAL.selectExerciseEquipmentByExercise(exerciseName))
-            .thenReturn(Mono.just(equipment))
+        val exerciseEquipmentMappings = mapOf(exerciseName to equipment)
 
-        val result = supportedEquipmentWeightRoundingService.roundWeightForExercise(exerciseName, targetWeight, weightUnit)
+        val result = supportedEquipmentWeightRoundingService.roundWeightForExercise(exerciseName, targetWeight, weightUnit, exerciseEquipmentMappings)
 
         StepVerifier.create(result)
             .expectNext(BigDecimal("45.00")) // Should return bar weight
@@ -90,10 +80,9 @@ class SupportedEquipmentWeightRoundingServiceTest {
                 ExerciseEquipment(exerciseName, "kettlebell")
             )
 
-        whenever(exerciseEquipmentDAL.selectExerciseEquipmentByExercise(exerciseName))
-            .thenReturn(Mono.just(equipment))
+        val exerciseEquipmentMappings = mapOf(exerciseName to equipment)
 
-        val result = supportedEquipmentWeightRoundingService.roundWeightForExercise(exerciseName, targetWeight, weightUnit)
+        val result = supportedEquipmentWeightRoundingService.roundWeightForExercise(exerciseName, targetWeight, weightUnit, exerciseEquipmentMappings)
 
         StepVerifier.create(result)
             .expectNext(BigDecimal("35.00")) // Should match available kettlebell weight
@@ -110,10 +99,9 @@ class SupportedEquipmentWeightRoundingServiceTest {
                 ExerciseEquipment(exerciseName, "kettlebell")
             )
 
-        whenever(exerciseEquipmentDAL.selectExerciseEquipmentByExercise(exerciseName))
-            .thenReturn(Mono.just(equipment))
+        val exerciseEquipmentMappings = mapOf(exerciseName to equipment)
 
-        val result = supportedEquipmentWeightRoundingService.roundWeightForExercise(exerciseName, targetWeight, weightUnit)
+        val result = supportedEquipmentWeightRoundingService.roundWeightForExercise(exerciseName, targetWeight, weightUnit, exerciseEquipmentMappings)
 
         // 37 is closer to 35 (difference of 2) than to 40 (difference of 3)
         StepVerifier.create(result)
@@ -131,10 +119,9 @@ class SupportedEquipmentWeightRoundingServiceTest {
                 ExerciseEquipment(exerciseName, "dumbbells")
             )
 
-        whenever(exerciseEquipmentDAL.selectExerciseEquipmentByExercise(exerciseName))
-            .thenReturn(Mono.just(equipment))
+        val exerciseEquipmentMappings = mapOf(exerciseName to equipment)
 
-        val result = supportedEquipmentWeightRoundingService.roundWeightForExercise(exerciseName, targetWeight, weightUnit)
+        val result = supportedEquipmentWeightRoundingService.roundWeightForExercise(exerciseName, targetWeight, weightUnit, exerciseEquipmentMappings)
 
         StepVerifier.create(result)
             .expectNext(BigDecimal("30.00")) // Should round to nearest 5lb increment
@@ -151,10 +138,9 @@ class SupportedEquipmentWeightRoundingServiceTest {
                 ExerciseEquipment(exerciseName, "dumbbells")
             )
 
-        whenever(exerciseEquipmentDAL.selectExerciseEquipmentByExercise(exerciseName))
-            .thenReturn(Mono.just(equipment))
+        val exerciseEquipmentMappings = mapOf(exerciseName to equipment)
 
-        val result = supportedEquipmentWeightRoundingService.roundWeightForExercise(exerciseName, targetWeight, weightUnit)
+        val result = supportedEquipmentWeightRoundingService.roundWeightForExercise(exerciseName, targetWeight, weightUnit, exerciseEquipmentMappings)
 
         StepVerifier.create(result)
             .expectNext(BigDecimal("12.50")) // Should round to nearest 2.5kg increment
@@ -168,10 +154,9 @@ class SupportedEquipmentWeightRoundingServiceTest {
         val weightUnit = WeightUnit.LBS
         val equipment = emptyList<ExerciseEquipment>()
 
-        whenever(exerciseEquipmentDAL.selectExerciseEquipmentByExercise(exerciseName))
-            .thenReturn(Mono.just(equipment))
+        val exerciseEquipmentMappings = mapOf(exerciseName to equipment)
 
-        val result = supportedEquipmentWeightRoundingService.roundWeightForExercise(exerciseName, targetWeight, weightUnit)
+        val result = supportedEquipmentWeightRoundingService.roundWeightForExercise(exerciseName, targetWeight, weightUnit, exerciseEquipmentMappings)
 
         StepVerifier.create(result)
             .expectNext(targetWeight.setScale(2, RoundingMode.HALF_UP)) // Should return original weight with proper scale
@@ -179,18 +164,17 @@ class SupportedEquipmentWeightRoundingServiceTest {
     }
 
     @Test
-    fun `roundWeightForExercise should handle database errors gracefully`() {
+    fun `roundWeightForExercise should handle missing equipment mappings gracefully`() {
         val exerciseName = "Bench Press"
         val targetWeight = BigDecimal("185.0")
         val weightUnit = WeightUnit.LBS
 
-        whenever(exerciseEquipmentDAL.selectExerciseEquipmentByExercise(exerciseName))
-            .thenReturn(Mono.error(DatabaseException("Database error")))
+        val exerciseEquipmentMappings = emptyMap<String, List<ExerciseEquipment>>()
 
-        val result = supportedEquipmentWeightRoundingService.roundWeightForExercise(exerciseName, targetWeight, weightUnit)
+        val result = supportedEquipmentWeightRoundingService.roundWeightForExercise(exerciseName, targetWeight, weightUnit, exerciseEquipmentMappings)
 
         StepVerifier.create(result)
-            .expectNext(targetWeight.setScale(2, RoundingMode.HALF_UP)) // Should return original weight on error with proper scale
+            .expectNext(targetWeight.setScale(2, RoundingMode.HALF_UP)) // Should return original weight when no equipment found
             .verifyComplete()
     }
 
@@ -204,10 +188,9 @@ class SupportedEquipmentWeightRoundingServiceTest {
                 ExerciseEquipment(exerciseName, "power bar")
             )
 
-        whenever(exerciseEquipmentDAL.selectExerciseEquipmentByExercise(exerciseName))
-            .thenReturn(Mono.just(equipment))
+        val exerciseEquipmentMappings = mapOf(exerciseName to equipment)
 
-        val result = supportedEquipmentWeightRoundingService.roundWeightForExercise(exerciseName, targetWeight, weightUnit)
+        val result = supportedEquipmentWeightRoundingService.roundWeightForExercise(exerciseName, targetWeight, weightUnit, exerciseEquipmentMappings)
 
         StepVerifier.create(result)
             .expectNext(BigDecimal("100.00")) // 20kg bar + 2x25kg + 2x15kg plates = 100kg
@@ -224,10 +207,9 @@ class SupportedEquipmentWeightRoundingServiceTest {
                 ExerciseEquipment(exerciseName, "kettlebell")
             )
 
-        whenever(exerciseEquipmentDAL.selectExerciseEquipmentByExercise(exerciseName))
-            .thenReturn(Mono.just(equipment))
+        val exerciseEquipmentMappings = mapOf(exerciseName to equipment)
 
-        val result = supportedEquipmentWeightRoundingService.roundWeightForExercise(exerciseName, targetWeight, weightUnit)
+        val result = supportedEquipmentWeightRoundingService.roundWeightForExercise(exerciseName, targetWeight, weightUnit, exerciseEquipmentMappings)
 
         StepVerifier.create(result)
             .expectNext(BigDecimal("18.00")) // Should match available kettlebell weight
@@ -244,10 +226,9 @@ class SupportedEquipmentWeightRoundingServiceTest {
                 ExerciseEquipment(exerciseName, "trap bar")
             )
 
-        whenever(exerciseEquipmentDAL.selectExerciseEquipmentByExercise(exerciseName))
-            .thenReturn(Mono.just(equipment))
+        val exerciseEquipmentMappings = mapOf(exerciseName to equipment)
 
-        val result = supportedEquipmentWeightRoundingService.roundWeightForExercise(exerciseName, targetWeight, weightUnit)
+        val result = supportedEquipmentWeightRoundingService.roundWeightForExercise(exerciseName, targetWeight, weightUnit, exerciseEquipmentMappings)
 
         StepVerifier.create(result)
             .expectNext(BigDecimal("225.00")) // Should use barbell plate logic
@@ -265,10 +246,9 @@ class SupportedEquipmentWeightRoundingServiceTest {
                 ExerciseEquipment(exerciseName, "power bar")
             )
 
-        whenever(exerciseEquipmentDAL.selectExerciseEquipmentByExercise(exerciseName))
-            .thenReturn(Mono.just(equipment))
+        val exerciseEquipmentMappings = mapOf(exerciseName to equipment)
 
-        val result = supportedEquipmentWeightRoundingService.roundWeightForExercise(exerciseName, targetWeight, weightUnit)
+        val result = supportedEquipmentWeightRoundingService.roundWeightForExercise(exerciseName, targetWeight, weightUnit, exerciseEquipmentMappings)
 
         StepVerifier.create(result)
             .expectNext(BigDecimal("135.00")) // Should use barbell plate logic

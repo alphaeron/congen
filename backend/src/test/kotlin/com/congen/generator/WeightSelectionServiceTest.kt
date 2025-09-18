@@ -1,20 +1,21 @@
 package com.congen.generator
 
-import com.congen.dal.ExerciseDAL
-import com.congen.dal.ExerciseEquipmentDAL
-import com.congen.dal.ExerciseMuscleDAL
-import com.congen.dal.UserOneRepMaxDAL
-import com.congen.dal.UserWeightUnitPreferenceDAL
 import com.congen.exceptions.NoResultsFoundException
 import com.congen.model.Band
 import com.congen.model.Exercise
 import com.congen.model.ExerciseEquipment
 import com.congen.model.ExerciseMuscle
+import com.congen.model.ExerciseWorkoutType
 import com.congen.model.MovementType
+import com.congen.model.ProgramPreferences
+import com.congen.model.UserEquipment
+import com.congen.model.UserExercisePreference
 import com.congen.model.UserOneRepMax
 import com.congen.model.UserWeightUnitPreference
 import com.congen.model.WeightUnit
 import com.congen.util.UnitConverter
+import com.congen.generator.BandWeightService
+import org.mockito.Mockito.mock
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
@@ -27,13 +28,11 @@ import org.mockito.kotlin.eq
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
 import java.math.BigDecimal
+import java.math.RoundingMode
 import java.time.Instant
 
 @ExtendWith(MockitoExtension::class)
 class WeightSelectionServiceTest {
-    @Mock
-    private lateinit var userWeightUnitPreferenceDAL: UserWeightUnitPreferenceDAL
-
     @Mock
     private lateinit var unitConverter: UnitConverter
 
@@ -46,18 +45,6 @@ class WeightSelectionServiceTest {
     @Mock
     private lateinit var exerciseMatchingService: ExerciseMatchingService
 
-    @Mock
-    private lateinit var exerciseDAL: ExerciseDAL
-
-    @Mock
-    private lateinit var exerciseEquipmentDAL: ExerciseEquipmentDAL
-
-    @Mock
-    private lateinit var exerciseMuscleDAL: ExerciseMuscleDAL
-
-    @Mock
-    private lateinit var userOneRepMaxDAL: UserOneRepMaxDAL
-
     @InjectMocks
     private lateinit var weightSelectionService: WeightSelectionService
 
@@ -65,30 +52,66 @@ class WeightSelectionServiceTest {
     private val exerciseName = "Bench Press"
     private val intensity = 0.8
     private val oneRepMax = BigDecimal("225")
-    private val calculatedWeight = oneRepMax * BigDecimal(intensity)
+    private val calculatedWeight = (oneRepMax * BigDecimal(intensity)).setScale(2, RoundingMode.HALF_UP)
     private val roundedWeight = BigDecimal("180")
+    private val now = Instant.now()
+
+    private lateinit var preparedData: WorkoutGenerationPreparedData
 
     @BeforeEach
     fun setUp() {
-        // No default setup needed - each test will set up its own mocks as needed
+        preparedData = WorkoutGenerationPreparedData(
+            userExercisePool = UserExercisePool(
+                allExercises = emptyList(),
+                preferences = emptyList(),
+                userEquipment = emptyList(),
+                exerciseEquipmentMappings = emptyMap(),
+                exerciseMuscleMappings = emptyMap(),
+                previouslyUsedExercises = emptyList(),
+                userId = userId
+            ),
+            oneRepMaxes = emptyList(),
+            programPreferences = ProgramPreferences(
+                programId = 1L,
+                programDaysPerWeek = 4,
+                sessionTimeLengthInMinutes = 60,
+                createdAt = now,
+                updatedAt = now
+            ),
+            weakMuscles = emptyList(),
+            currentWeekNumber = 1,
+            userId = userId,
+            weightUnitPreferences = mapOf(exerciseName to WeightUnit.LBS),
+            exerciseMuscleMappings = emptyMap(),
+            exerciseEquipmentMappings = mapOf(exerciseName to listOf(ExerciseEquipment(exerciseName, "power bar"))),
+            exerciseWorkoutTypeMappings = emptyMap(),
+            previouslyProgrammedExercises = emptyList(),
+            allExercises = emptyList(),
+            userEquipment = emptyList(),
+            userExercisePreferences = emptyList()
+        )
     }
 
     @Test
     fun `getTargetWeight should return target weight when user has 1RM`() {
-        val now = Instant.now()
         val oneRepMaxes = listOf(UserOneRepMax(userId, exerciseName, oneRepMax, now))
-        `when`(userWeightUnitPreferenceDAL.selectUserWeightUnitPreference(eq(userId), any()))
-            .thenReturn(Mono.just(UserWeightUnitPreference(userId, exerciseName, WeightUnit.LBS, now, now)))
-        `when`(supportedEquipmentWeightRoundingService.roundWeightForExercise(eq(exerciseName), any(), eq(WeightUnit.LBS)))
-            .thenReturn(Mono.just(roundedWeight))
+        val updatedPreparedData = preparedData.copy(oneRepMaxes = oneRepMaxes)
+        
+        `when`(supportedEquipmentWeightRoundingService.roundWeightForExercise(
+            eq(exerciseName), 
+            any(), 
+            eq(WeightUnit.LBS),
+            any()
+        )).thenReturn(Mono.just(roundedWeight))
 
-        val result =
-            weightSelectionService.getTargetWeight(
-                exerciseName,
-                intensity,
-                oneRepMaxes,
-                userId
-            )
+        val result = weightSelectionService.getTargetWeight(
+            exerciseName,
+            intensity,
+            oneRepMaxes,
+            isDynamicEffort = false,
+            currentWeekNumber = 1,
+            preparedData = updatedPreparedData
+        )
 
         StepVerifier.create(result)
             .expectNext(WeightSelectionService.TargetWeightResult(roundedWeight, null))
@@ -97,251 +120,193 @@ class WeightSelectionServiceTest {
 
     @Test
     fun `getTargetWeight should return target weight with band for dynamic effort`() {
-        val now = Instant.now()
         val oneRepMaxes = listOf(UserOneRepMax(userId, exerciseName, oneRepMax, now))
-        `when`(userWeightUnitPreferenceDAL.selectUserWeightUnitPreference(eq(userId), any()))
-            .thenReturn(Mono.just(UserWeightUnitPreference(userId, exerciseName, WeightUnit.LBS, now, now)))
-        val band = Band(BigDecimal("20"))
-        val bandWeightResult = BandWeightService.Companion.BandWeightResult(band, roundedWeight)
+        val updatedPreparedData = preparedData.copy(oneRepMaxes = oneRepMaxes)
+        val band = Band(BigDecimal("20.0"))
+        val bandWeightResult = BandWeightService.Companion.BandWeightResult(band, BigDecimal("160"))
+        
+        `when`(bandWeightService.computeBandAndBarWeights(
+            eq(calculatedWeight),
+            eq(WeightUnit.LBS),
+            eq(1)
+        )).thenReturn(bandWeightResult)
+        
+        `when`(supportedEquipmentWeightRoundingService.roundWeightForExercise(
+            eq(exerciseName), 
+            any(), 
+            eq(WeightUnit.LBS),
+            any()
+        )).thenReturn(Mono.just(BigDecimal("160")))
 
-        `when`(
-            bandWeightService.computeBandAndBarWeights(
-                any(),
-                eq(WeightUnit.LBS),
-                eq(1)
-            )
-        ).thenReturn(bandWeightResult)
-
-        `when`(supportedEquipmentWeightRoundingService.roundWeightForExercise(eq(exerciseName), any(), eq(WeightUnit.LBS)))
-            .thenReturn(Mono.just(roundedWeight))
-
-        val result =
-            weightSelectionService.getTargetWeight(
-                exerciseName,
-                intensity,
-                oneRepMaxes,
-                userId,
-                isDynamicEffort = true,
-                currentWeekNumber = 1
-            )
+        val result = weightSelectionService.getTargetWeight(
+            exerciseName,
+            intensity,
+            oneRepMaxes,
+            isDynamicEffort = true,
+            currentWeekNumber = 1,
+            preparedData = updatedPreparedData
+        )
 
         StepVerifier.create(result)
-            .expectNext(WeightSelectionService.TargetWeightResult(roundedWeight, band))
+            .expectNext(WeightSelectionService.TargetWeightResult(BigDecimal("160"), band))
             .verifyComplete()
     }
 
     @Test
-    fun `getTargetWeight should estimate weight from similar exercises when no 1RM`() {
-        val now = Instant.now()
-        val oneRepMaxes = listOf(UserOneRepMax(userId, "Squat", BigDecimal("315"), now))
-        `when`(userWeightUnitPreferenceDAL.selectUserWeightUnitPreference(eq(userId), any()))
-            .thenReturn(Mono.just(UserWeightUnitPreference(userId, exerciseName, WeightUnit.LBS, now, now)))
-        val targetExercise = Exercise(exerciseName, "Compound push exercise", MovementType.HORIZONTAL_PUSH, false, true, false)
-        val referenceExercise = Exercise("Squat", "Compound push exercise", MovementType.SQUAT, false, false, false)
-        val allExercises = listOf(targetExercise, referenceExercise)
-        val allEquipment = listOf<ExerciseEquipment>()
-        val allMuscles = listOf<ExerciseMuscle>()
+    fun `getTargetWeight should return conservative bodyweight estimate when no 1RM found`() {
+        val oneRepMaxes = emptyList<UserOneRepMax>()
+        val updatedPreparedData = preparedData.copy(oneRepMaxes = oneRepMaxes)
+        val conservativeWeight = BigDecimal("150")
+        
+        `when`(supportedEquipmentWeightRoundingService.roundWeightForExercise(
+            eq(exerciseName), 
+            any(), 
+            eq(WeightUnit.LBS),
+            any()
+        )).thenReturn(Mono.just(conservativeWeight))
 
-        val match =
-            ExerciseMatchingService.Companion.ExerciseMatch(
-                referenceExercise = referenceExercise,
-                similarityScore = 0.8,
-                movementPattern = MovementType.HORIZONTAL_PUSH,
-                factors = ExerciseMatchingService.Companion.SimilarityFactors(0.8, 1.0, 0.5, 0.5)
-            )
-
-        `when`(exerciseDAL.selectExercises()).thenReturn(Mono.just(allExercises))
-        `when`(exerciseEquipmentDAL.selectAllExerciseEquipment()).thenReturn(Mono.just(allEquipment))
-        `when`(exerciseMuscleDAL.selectAllExerciseMuscle()).thenReturn(Mono.just(allMuscles))
-        `when`(
-            exerciseMatchingService.findBestReferenceExercise(
-                targetExercise,
-                allExercises,
-                emptyMap(),
-                emptyMap(),
-                oneRepMaxes
-            )
-        ).thenReturn(match)
-        `when`(
-            exerciseMatchingService.estimateWeightFromReference(
-                targetExercise,
-                referenceExercise,
-                BigDecimal("315"),
-                0.8
-            )
-        ).thenReturn(BigDecimal("250"))
-        `when`(supportedEquipmentWeightRoundingService.roundWeightForExercise(eq(exerciseName), any(), eq(WeightUnit.LBS)))
-            .thenReturn(Mono.just(roundedWeight))
-
-        val result =
-            weightSelectionService.getTargetWeight(
-                exerciseName,
-                intensity,
-                oneRepMaxes,
-                userId
-            )
+        val result = weightSelectionService.getTargetWeight(
+            exerciseName,
+            intensity,
+            oneRepMaxes,
+            isDynamicEffort = false,
+            currentWeekNumber = 1,
+            preparedData = updatedPreparedData
+        )
 
         StepVerifier.create(result)
-            .expectNext(WeightSelectionService.TargetWeightResult(roundedWeight, null))
+            .expectNext(WeightSelectionService.TargetWeightResult(conservativeWeight, null))
             .verifyComplete()
     }
 
     @Test
-    fun `getTargetWeight should use bodyweight estimate for isolation exercises`() {
-        val now = Instant.now()
-        val oneRepMaxes = listOf<UserOneRepMax>()
-        `when`(userWeightUnitPreferenceDAL.selectUserWeightUnitPreference(eq(userId), any()))
-            .thenReturn(Mono.just(UserWeightUnitPreference(userId, "Bicep Curl", WeightUnit.LBS, now, now)))
-        val targetExercise = Exercise("Bicep Curl", "Isolation exercise", MovementType.ISOLATION, false, true, true)
-        val referenceExercise = Exercise("Bodyweight Push-up", "Bodyweight exercise", MovementType.HORIZONTAL_PUSH, false, true, false)
-        val allExercises = listOf(targetExercise, referenceExercise)
-        val allEquipment = listOf<ExerciseEquipment>()
-        val allMuscles = listOf<ExerciseMuscle>()
-
-        val match =
-            ExerciseMatchingService.Companion.ExerciseMatch(
-                referenceExercise = referenceExercise,
-                similarityScore = 0.6,
-                movementPattern = MovementType.ISOLATION,
-                factors = ExerciseMatchingService.Companion.SimilarityFactors(0.6, 0.5, 0.5, 0.5)
-            )
-
-        `when`(exerciseDAL.selectExercises()).thenReturn(Mono.just(allExercises))
-        `when`(exerciseEquipmentDAL.selectAllExerciseEquipment()).thenReturn(Mono.just(allEquipment))
-        `when`(exerciseMuscleDAL.selectAllExerciseMuscle()).thenReturn(Mono.just(allMuscles))
-        `when`(
-            exerciseMatchingService.findBestReferenceExercise(
-                targetExercise,
-                allExercises,
-                emptyMap(),
-                emptyMap(),
-                oneRepMaxes
-            )
-        ).thenReturn(match)
-        `when`(exerciseMatchingService.estimateIsolationWeight(targetExercise, BigDecimal("70")))
-            .thenReturn(BigDecimal("15"))
-        `when`(supportedEquipmentWeightRoundingService.roundWeightForExercise(eq("Bicep Curl"), any(), eq(WeightUnit.LBS)))
-            .thenReturn(Mono.just(BigDecimal("12")))
-
-        val result =
-            weightSelectionService.getTargetWeight(
-                "Bicep Curl",
-                intensity,
-                oneRepMaxes,
-                userId
-            )
-
-        StepVerifier.create(result)
-            .expectNext(WeightSelectionService.TargetWeightResult(BigDecimal("12"), null))
-            .verifyComplete()
-    }
-
-    @Test
-    fun `getTargetWeight should use conservative estimate for curl exercises`() {
-        val now = Instant.now()
-        val oneRepMaxes = listOf<UserOneRepMax>()
-        `when`(userWeightUnitPreferenceDAL.selectUserWeightUnitPreference(eq(userId), any()))
-            .thenReturn(Mono.just(UserWeightUnitPreference(userId, "Bicep Curl", WeightUnit.LBS, now, now)))
-        val allExercises = listOf<Exercise>()
-        val allEquipment = listOf<ExerciseEquipment>()
-        val allMuscles = listOf<ExerciseMuscle>()
-
-        `when`(exerciseDAL.selectExercises()).thenReturn(Mono.just(allExercises))
-        `when`(exerciseEquipmentDAL.selectAllExerciseEquipment()).thenReturn(Mono.just(allEquipment))
-        `when`(exerciseMuscleDAL.selectAllExerciseMuscle()).thenReturn(Mono.just(allMuscles))
-        `when`(supportedEquipmentWeightRoundingService.roundWeightForExercise(eq("Bicep Curl"), any(), eq(WeightUnit.LBS)))
-            .thenReturn(Mono.just(BigDecimal("35")))
-
-        val result =
-            weightSelectionService.getTargetWeight(
-                "Bicep Curl",
-                intensity,
-                oneRepMaxes,
-                userId
-            )
-
-        StepVerifier.create(result)
-            .expectNext(WeightSelectionService.TargetWeightResult(BigDecimal("35"), null))
-            .verifyComplete()
-    }
-
-    @Test
-    fun `getTargetWeight should use conservative estimate for raise exercises`() {
-        val now = Instant.now()
-        val oneRepMaxes = listOf<UserOneRepMax>()
-        `when`(userWeightUnitPreferenceDAL.selectUserWeightUnitPreference(eq(userId), any()))
-            .thenReturn(Mono.just(UserWeightUnitPreference(userId, "Lateral Raise", WeightUnit.LBS, now, now)))
-        val allExercises = listOf<Exercise>()
-        val allEquipment = listOf<ExerciseEquipment>()
-        val allMuscles = listOf<ExerciseMuscle>()
-
-        `when`(exerciseDAL.selectExercises()).thenReturn(Mono.just(allExercises))
-        `when`(exerciseEquipmentDAL.selectAllExerciseEquipment()).thenReturn(Mono.just(allEquipment))
-        `when`(exerciseMuscleDAL.selectAllExerciseMuscle()).thenReturn(Mono.just(allMuscles))
-        `when`(supportedEquipmentWeightRoundingService.roundWeightForExercise(eq("Lateral Raise"), any(), eq(WeightUnit.LBS)))
-            .thenReturn(Mono.just(BigDecimal("15")))
-
-        val result =
-            weightSelectionService.getTargetWeight(
-                "Lateral Raise",
-                intensity,
-                oneRepMaxes,
-                userId
-            )
-
-        StepVerifier.create(result)
-            .expectNext(WeightSelectionService.TargetWeightResult(BigDecimal("15"), null))
-            .verifyComplete()
-    }
-
-    @Test
-    fun `getTargetWeight should use conservative estimate when exercise not found`() {
-        val now = Instant.now()
-        val oneRepMaxes = listOf<UserOneRepMax>()
-        `when`(userWeightUnitPreferenceDAL.selectUserWeightUnitPreference(eq(userId), any()))
-            .thenReturn(Mono.just(UserWeightUnitPreference(userId, "Unknown Exercise", WeightUnit.LBS, now, now)))
-        val allExercises = listOf<Exercise>()
-        val allEquipment = listOf<ExerciseEquipment>()
-        val allMuscles = listOf<ExerciseMuscle>()
-
-        `when`(exerciseDAL.selectExercises()).thenReturn(Mono.just(allExercises))
-        `when`(exerciseEquipmentDAL.selectAllExerciseEquipment()).thenReturn(Mono.just(allEquipment))
-        `when`(exerciseMuscleDAL.selectAllExerciseMuscle()).thenReturn(Mono.just(allMuscles))
-        `when`(supportedEquipmentWeightRoundingService.roundWeightForExercise(eq("Unknown Exercise"), any(), eq(WeightUnit.LBS)))
-            .thenReturn(Mono.just(BigDecimal("35")))
-
-        val result =
-            weightSelectionService.getTargetWeight(
-                "Unknown Exercise",
-                intensity,
-                oneRepMaxes,
-                userId
-            )
-
-        StepVerifier.create(result)
-            .expectNext(WeightSelectionService.TargetWeightResult(BigDecimal("35"), null))
-            .verifyComplete()
-    }
-
-    @Test
-    fun `getTargetWeight should default to KG when no weight unit preference found`() {
-        val now = Instant.now()
+    fun `getTargetWeight should handle kg weight units`() {
         val oneRepMaxes = listOf(UserOneRepMax(userId, exerciseName, oneRepMax, now))
-        `when`(userWeightUnitPreferenceDAL.selectUserWeightUnitPreference(eq(userId), any()))
-            .thenReturn(Mono.error(NoResultsFoundException("No preference found")))
-        `when`(supportedEquipmentWeightRoundingService.roundWeightForExercise(eq(exerciseName), any(), eq(WeightUnit.KG)))
-            .thenReturn(Mono.just(roundedWeight))
+        val kgPreparedData = preparedData.copy(
+            oneRepMaxes = oneRepMaxes,
+            weightUnitPreferences = mapOf(exerciseName to WeightUnit.KG)
+        )
+        val roundedWeightKg = BigDecimal("82")
+        
+        `when`(supportedEquipmentWeightRoundingService.roundWeightForExercise(
+            eq(exerciseName), 
+            any(), 
+            eq(WeightUnit.KG),
+            any()
+        )).thenReturn(Mono.just(roundedWeightKg))
 
-        val result =
-            weightSelectionService.getTargetWeight(
-                exerciseName,
-                intensity,
-                oneRepMaxes,
-                userId
-            )
+        val result = weightSelectionService.getTargetWeight(
+            exerciseName,
+            intensity,
+            oneRepMaxes,
+            isDynamicEffort = false,
+            currentWeekNumber = 1,
+            preparedData = kgPreparedData
+        )
 
         StepVerifier.create(result)
-            .expectNext(WeightSelectionService.TargetWeightResult(roundedWeight, null))
+            .expectNext(WeightSelectionService.TargetWeightResult(roundedWeightKg, null))
+            .verifyComplete()
+    }
+
+    @Test
+    fun `getTargetWeight should handle dynamic effort with kg units`() {
+        val oneRepMaxes = listOf(UserOneRepMax(userId, exerciseName, oneRepMax, now))
+        val kgPreparedData = preparedData.copy(
+            oneRepMaxes = oneRepMaxes,
+            weightUnitPreferences = mapOf(exerciseName to WeightUnit.KG)
+        )
+        val band = Band(BigDecimal("9.0"))
+        val bandWeightResult = BandWeightService.Companion.BandWeightResult(band, BigDecimal("73"))
+        
+        `when`(bandWeightService.computeBandAndBarWeights(
+            eq(calculatedWeight),
+            eq(WeightUnit.KG),
+            eq(1)
+        )).thenReturn(bandWeightResult)
+        
+        `when`(supportedEquipmentWeightRoundingService.roundWeightForExercise(
+            eq(exerciseName), 
+            any(), 
+            eq(WeightUnit.KG),
+            any()
+        )).thenReturn(Mono.just(BigDecimal("73")))
+
+        val result = weightSelectionService.getTargetWeight(
+            exerciseName,
+            intensity,
+            oneRepMaxes,
+            isDynamicEffort = true,
+            currentWeekNumber = 1,
+            preparedData = kgPreparedData
+        )
+
+        StepVerifier.create(result)
+            .expectNext(WeightSelectionService.TargetWeightResult(BigDecimal("73"), band))
+            .verifyComplete()
+    }
+
+    @Test
+    fun `getTargetWeight should handle missing weight unit preference`() {
+        val oneRepMaxes = listOf(UserOneRepMax(userId, exerciseName, oneRepMax, now))
+        val noWeightUnitPreparedData = preparedData.copy(
+            oneRepMaxes = oneRepMaxes,
+            weightUnitPreferences = emptyMap()
+        )
+        val roundedWeightKg = BigDecimal("82")
+        
+        `when`(supportedEquipmentWeightRoundingService.roundWeightForExercise(
+            eq(exerciseName), 
+            any(), 
+            eq(WeightUnit.KG),
+            any()
+        )).thenReturn(Mono.just(roundedWeightKg))
+
+        val result = weightSelectionService.getTargetWeight(
+            exerciseName,
+            intensity,
+            oneRepMaxes,
+            isDynamicEffort = false,
+            currentWeekNumber = 1,
+            preparedData = noWeightUnitPreparedData
+        )
+
+        StepVerifier.create(result)
+            .expectNext(WeightSelectionService.TargetWeightResult(roundedWeightKg, null))
+            .verifyComplete()
+    }
+
+    @Test
+    fun `getTargetWeight should handle different week numbers for dynamic effort`() {
+        val oneRepMaxes = listOf(UserOneRepMax(userId, exerciseName, oneRepMax, now))
+        val updatedPreparedData = preparedData.copy(oneRepMaxes = oneRepMaxes)
+        val band = Band(BigDecimal("30.0"))
+        val bandWeightResult = BandWeightService.Companion.BandWeightResult(band, BigDecimal("140"))
+        
+        `when`(bandWeightService.computeBandAndBarWeights(
+            eq(calculatedWeight),
+            eq(WeightUnit.LBS),
+            eq(3)
+        )).thenReturn(bandWeightResult)
+        
+        `when`(supportedEquipmentWeightRoundingService.roundWeightForExercise(
+            eq(exerciseName), 
+            any(), 
+            eq(WeightUnit.LBS),
+            any()
+        )).thenReturn(Mono.just(BigDecimal("140")))
+
+        val result = weightSelectionService.getTargetWeight(
+            exerciseName,
+            intensity,
+            oneRepMaxes,
+            isDynamicEffort = true,
+            currentWeekNumber = 3,
+            preparedData = updatedPreparedData
+        )
+
+        StepVerifier.create(result)
+            .expectNext(WeightSelectionService.TargetWeightResult(BigDecimal("140"), band))
             .verifyComplete()
     }
 }

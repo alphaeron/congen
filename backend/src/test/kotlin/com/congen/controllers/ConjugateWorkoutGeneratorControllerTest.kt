@@ -59,7 +59,14 @@ class ConjugateWorkoutGeneratorControllerTest {
                 exercisePoolFactory,
                 programService,
                 keycloakUtil,
-                gdprComplianceService
+                gdprComplianceService,
+                mock(),
+                mock(),
+                mock(),
+                mock(),
+                mock(),
+                mock(),
+                mock()
             )
 
         // Mock KeycloakUtil methods for all tests

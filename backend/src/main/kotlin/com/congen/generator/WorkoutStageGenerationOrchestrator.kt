@@ -1,14 +1,5 @@
 package com.congen.generator
 
-import com.congen.dal.ProgrammedExerciseDAL
-import com.congen.dal.SetSchemeDAL
-import com.congen.dal.UserWeightUnitPreferenceDAL
-import com.congen.dal.WorkoutStageDAL
-import com.congen.dal.WorkoutStageTypeDAL
-import com.congen.model.ProgramPreferences
-import com.congen.model.ProgrammedWorkout
-import com.congen.model.UserOneRepMax
-import com.congen.service.SetSchemeService
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Mono
 
@@ -23,14 +14,6 @@ import reactor.core.publisher.Mono
  * - Business logic concerns: handled by modular services
  * - Orchestration concerns: handled by this class
  *
- * @param workoutStageDAL Data access layer for workout stage operations
- * @param workoutStageTypeDAL Data access layer for workout stage type operations
- * @param programmedExerciseDAL Data access layer for programmed exercise operations
- * @param setSchemeDAL Data access layer for set scheme operations
- * @param setSchemeService Service for set scheme operations
- * @param prilepinGuidelinesService Service for Prilepin-based guidelines
- * @param weightSelectionService Service for conjugate-specific weight selection
- * @param userWeightUnitPreferenceDAL Data access layer for user weight unit preferences
  * @param workoutStageGenerationServiceFactory Factory for selecting appropriate business logic service
  *
  * @author Congen Development Team
@@ -38,63 +21,40 @@ import reactor.core.publisher.Mono
  */
 @Component
 class WorkoutStageGenerationOrchestrator(
-    private val workoutStageDAL: WorkoutStageDAL,
-    private val workoutStageTypeDAL: WorkoutStageTypeDAL,
-    private val programmedExerciseDAL: ProgrammedExerciseDAL,
-    private val setSchemeDAL: SetSchemeDAL,
-    private val setSchemeService: SetSchemeService,
-    private val prilepinGuidelinesService: PrilepinGuidelinesService,
-    private val weightSelectionService: WeightSelectionService,
-    private val userWeightUnitPreferenceDAL: UserWeightUnitPreferenceDAL,
     private val workoutStageGenerationServiceFactory: WorkoutStageGenerationServiceFactory,
 ) {
     /**
-     * Generates complete workout stages for a given workout and day type.
+     * Generates complete workout stages for a given workout and day type using prepared data.
      *
-     * This method orchestrates the entire workout stage generation process:
-     * 1. Creates a UserExercisePool for thread-safe exercise management
-     * 2. Selects the appropriate business logic service based on program days
-     * 3. Delegates to the service for exercise selection and stage planning
-     * 4. Uses the infrastructure layer for actual creation of stages, exercises, and set schemes
+     * This method orchestrates the workout stage generation process using pre-prepared data:
+     * 1. Selects the appropriate business logic service based on program days
+     * 2. Delegates to the service for exercise selection and stage planning using prepared data
+     * 3. Returns the complete workout generation result with prepared data
      *
-     * @param workout The workout to generate stages for
+     * @param programId The program ID
+     * @param dayNumber The day number
      * @param dayType The type of workout day (e.g., "ME_Upper", "DE_Lower")
-     * @param userExercisePool Pool of available exercises for the user
-     * @param oneRepMaxes User's one rep max values
-     * @param programPreferences User's program preferences
-     * @param weakMuscles User's weak muscle groups
-     * @param currentWeekNumber Current week in the program
-     * @param userId User ID
-     * @return Mono indicating completion
+     * @param preparedData The prepared data containing all required information
+     * @return Mono containing the workout generation result
      */
     fun generateWorkoutStages(
         programId: Long,
         dayNumber: Int,
         dayType: String,
-        userExercisePool: UserExercisePool,
-        oneRepMaxes: List<UserOneRepMax>,
-        programPreferences: ProgramPreferences,
-        weakMuscles: List<String>,
-        currentWeekNumber: Int,
-        userId: String,
+        preparedData: WorkoutGenerationPreparedData,
     ): Mono<WorkoutGenerationResult> {
         // Get the appropriate business logic service based on program days
         val service =
             workoutStageGenerationServiceFactory.getWorkoutStageGenerationService(
-                programDaysPerWeek = programPreferences.programDaysPerWeek
+                programDaysPerWeek = preparedData.programPreferences.programDaysPerWeek
             )
 
-        // Delegate to the service for business logic (exercise selection, stage planning)
+        // Delegate to the service for business logic using prepared data
         return service.generateWorkoutStages(
             programId = programId,
             dayNumber = dayNumber,
             dayType = dayType,
-            userExercisePool = userExercisePool,
-            oneRepMaxes = oneRepMaxes,
-            programPreferences = programPreferences,
-            weakMuscles = weakMuscles,
-            currentWeekNumber = currentWeekNumber,
-            userId = userId,
+            preparedData = preparedData
         )
     }
 }

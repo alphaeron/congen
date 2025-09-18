@@ -127,7 +127,6 @@ class AtomicWorkoutWriterTest {
         verify(workoutStageTypeDAL).selectWorkoutStageTypeByEnum(WorkoutStageTypeEnum.PRIMARY)
         verify(workoutStageDAL).insertWorkoutStage(1, 1, 1, "Primary Movement")
         verify(programmedExerciseDAL).insertProgrammedExercise(1, "Bench Press", 1, null)
-        verify(userWeightUnitPreferenceDAL).selectUserWeightUnitPreference(userId, "Bench Press")
         verify(setSchemeService).insertSetScheme(
             programmedExerciseId = 1,
             setNumber = 1,
@@ -198,7 +197,8 @@ class AtomicWorkoutWriterTest {
             dayNumber = dayNumber,
             dayType = dayType,
             userId = userId,
-            stages = emptyList()
+            stages = emptyList(),
+            preparedData = createSamplePreparedData()
         )
         val expectedWorkout = createMockProgrammedWorkout(id = 1, programId = programId, dayNumber = dayNumber, name = dayType)
 
@@ -299,7 +299,8 @@ class AtomicWorkoutWriterTest {
             dayNumber = dayNumber,
             dayType = dayType,
             userId = userId,
-            stages = listOf(stageData)
+            stages = listOf(stageData),
+            preparedData = createSamplePreparedData()
         )
     }
 
@@ -397,6 +398,25 @@ class AtomicWorkoutWriterTest {
             preferredUnit = preferredUnit,
             createdAt = java.time.Instant.now(),
             updatedAt = java.time.Instant.now()
+        )
+    }
+
+    private fun createSamplePreparedData(): WorkoutGenerationPreparedData {
+        return WorkoutGenerationPreparedData(
+            userExercisePool = mock(),
+            oneRepMaxes = emptyList(),
+            programPreferences = mock(),
+            weakMuscles = emptyList(),
+            currentWeekNumber = 1,
+            userId = "user-123",
+            weightUnitPreferences = emptyMap(),
+            exerciseMuscleMappings = emptyMap(),
+            exerciseWorkoutTypeMappings = emptyMap(),
+            exerciseEquipmentMappings = emptyMap(),
+            previouslyProgrammedExercises = emptyList(),
+            allExercises = emptyList(),
+            userEquipment = emptyList(),
+            userExercisePreferences = emptyList()
         )
     }
 }

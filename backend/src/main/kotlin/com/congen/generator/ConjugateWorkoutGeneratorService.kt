@@ -7,11 +7,23 @@ import com.congen.dal.SetSchemeDAL
 import com.congen.dal.UserOneRepMaxDAL
 import com.congen.dal.UserWeakMuscleDAL
 import com.congen.dal.UserWeightUnitPreferenceDAL
+import com.congen.dal.ExerciseDAL
+import com.congen.dal.ExerciseEquipmentDAL
+import com.congen.dal.ExerciseMuscleDAL
+import com.congen.dal.ExerciseWorkoutTypeDAL
+import com.congen.dal.UserEquipmentDAL
+import com.congen.dal.UserExercisePreferenceDAL
 import com.congen.model.Program
 import com.congen.model.ProgramPreferences
 import com.congen.model.SetScheme
 import com.congen.model.UserOneRepMax
 import com.congen.model.WeightUnit
+import com.congen.model.Exercise
+import com.congen.model.ExerciseEquipment
+import com.congen.model.ExerciseMuscle
+import com.congen.model.ExerciseWorkoutType
+import com.congen.model.UserEquipment
+import com.congen.model.UserExercisePreference
 import com.congen.service.ProgramService
 import com.congen.service.SetSchemeService
 import org.slf4j.LoggerFactory
@@ -73,6 +85,12 @@ class ConjugateWorkoutGeneratorService(
     private val exercisePoolFactory: ExercisePoolFactory,
     private val setSchemeService: SetSchemeService,
     private val userWeightUnitPreferenceDAL: UserWeightUnitPreferenceDAL,
+    private val exerciseDAL: ExerciseDAL,
+    private val exerciseEquipmentDAL: ExerciseEquipmentDAL,
+    private val exerciseMuscleDAL: ExerciseMuscleDAL,
+    private val exerciseWorkoutTypeDAL: ExerciseWorkoutTypeDAL,
+    private val userEquipmentDAL: UserEquipmentDAL,
+    private val userExercisePreferenceDAL: UserExercisePreferenceDAL,
 ) {
     companion object {
         /** Logger instance for this class. */
@@ -98,31 +116,109 @@ class ConjugateWorkoutGeneratorService(
                 Mono.zip(
                     userOneRepMaxDAL.selectUserOneRepMaxByUser(program.userId),
                     programPreferencesDAL.selectProgramPreferences(program.id),
-                    userWeakMuscleDAL.selectUserWeakMusclesByUser(program.userId)
+                    userWeakMuscleDAL.selectUserWeakMusclesByUser(program.userId),
+                    userWeightUnitPreferenceDAL.selectUserWeightUnitPreferencesByUser(program.userId),
+                    exerciseDAL.selectExercises(),
+                    exerciseEquipmentDAL.selectAllExerciseEquipment(),
+                    exerciseMuscleDAL.selectAllExerciseMuscle(),
+                    exerciseWorkoutTypeDAL.selectAllExerciseWorkoutTypes()
                 ).flatMap { tuple ->
                     val oneRepMaxes = tuple.t1
                     val programPreferences = tuple.t2
                     val userWeakMuscles = tuple.t3
+                    val weightUnitPreferences = tuple.t4
+                    val allExercises = tuple.t5
+                    val allExerciseEquipment = tuple.t6
+                    val allExerciseMuscles = tuple.t7
+                    val allExerciseWorkoutTypes = tuple.t8
 
-                    val weakMuscles =
-                        if (userWeakMuscles.isNotEmpty()) {
-                            userWeakMuscles.map { it.muscleName }
-                        } else {
-                            ConjugateConstants.DEFAULT_WEAK_MUSCLES
-                        }
-                    val template = conjugateTemplates.selectTemplate(programPreferences.programDaysPerWeek)
+                    Mono.zip(
+                        programmedExerciseDAL.selectProgrammedExercisesByUserId(program.userId),
+                        userEquipmentDAL.selectUserEquipmentByUser(program.userId),
+                        userExercisePreferenceDAL.selectUserExercisePreferencesByUser(program.userId)
+                    ).flatMap { secondTuple ->
+                        val previouslyProgrammedExercises = secondTuple.t1
+                        val userEquipment = secondTuple.t2
+                        val userExercisePreferences = secondTuple.t3
 
-                    exercisePoolFactory.createPoolForUser(program.userId)
-                        .flatMap { userExercisePool ->
-                            generateWorkoutsForWeek(
-                                program = program,
-                                userExercisePool = userExercisePool,
-                                oneRepMaxes = oneRepMaxes,
-                                programPreferences = programPreferences,
-                                template = template,
-                                weakMuscles = weakMuscles,
-                                currentWeekNumber = program.currentWeekNumber
-                            ).then(
+                        val weakMuscles =
+                            if (userWeakMuscles.isNotEmpty()) {
+                                userWeakMuscles.map { it.muscleName }
+                            } else {
+                                ConjugateConstants.DEFAULT_WEAK_MUSCLES
+                            }
+                        val template = conjugateTemplates.selectTemplate(programPreferences.programDaysPerWeek)
+
+                        // Convert weight unit preferences to a map for easy lookup
+                        val weightUnitMap = weightUnitPreferences.associate { it.exerciseName to it.preferredUnit }
+
+                        // Create mappings for exercise relationships
+                        val exerciseEquipmentMappings = allExerciseEquipment.groupBy { it.exerciseName }
+                        val exerciseMuscleMappings = allExerciseMuscles.groupBy { it.exerciseName }
+                        val exerciseWorkoutTypeMappings = allExerciseWorkoutTypes.groupBy { it.exerciseName }
+                            .mapValues { (_, workoutTypes) -> workoutTypes.map { it.workoutType } }
+
+                        // Extract exercise names from previously programmed exercises
+                        val previouslyProgrammedExerciseNames = previouslyProgrammedExercises.map { it.exerciseName }
+
+                        // Create user exercise pool from prepared data
+                        val userExercisePool = exercisePoolFactory.createPoolFromPreparedData(
+                            allExercises = allExercises,
+                            userEquipment = userEquipment,
+                            userExercisePreferences = userExercisePreferences,
+                            previouslyUsedExercises = previouslyProgrammedExercises,
+                            exerciseEquipmentMappings = exerciseEquipmentMappings,
+                            exerciseMuscleMappings = exerciseMuscleMappings,
+                            userId = program.userId
+                        )
+
+                        // Stage 1: Data Preparation - Prepare all required data upfront
+                        val preparedData = WorkoutGenerationPreparedData(
+                            userExercisePool = userExercisePool,
+                            oneRepMaxes = oneRepMaxes,
+                            programPreferences = programPreferences,
+                            weakMuscles = weakMuscles,
+                            currentWeekNumber = program.currentWeekNumber,
+                            userId = program.userId,
+                            weightUnitPreferences = weightUnitMap,
+                            exerciseMuscleMappings = exerciseMuscleMappings,
+                            exerciseWorkoutTypeMappings = exerciseWorkoutTypeMappings,
+                            exerciseEquipmentMappings = exerciseEquipmentMappings,
+                            previouslyProgrammedExercises = previouslyProgrammedExerciseNames,
+                            allExercises = allExercises,
+                            userEquipment = userEquipment,
+                            userExercisePreferences = userExercisePreferences
+                        )
+
+                        // Stage 2: Workout Generation - Generate all workouts using prepared data
+                        Flux.fromIterable(template)
+                            .index()
+                            .concatMap { workoutTuple ->
+                                val dayIndex = workoutTuple.t1
+                                val dayTemplate = workoutTuple.t2
+                                val dayNumber = program.currentWeekNumber * template.size + dayIndex.toInt() + 1
+
+                                logger.debug("Generating workout for day {} of program {}", dayNumber, program.id)
+
+                                // Generate workout stages using prepared data
+                                workoutStageGenerationOrchestrator.generateWorkoutStages(
+                                    programId = program.id,
+                                    dayNumber = dayNumber,
+                                    dayType = dayTemplate.type,
+                                    preparedData = preparedData
+                                )
+                            }
+                            .collectList()
+                            .flatMap { workoutResults ->
+                                // Stage 3: Atomic Writing - Write all generated data atomically
+                                logger.info("Writing {} workouts atomically for program {}", workoutResults.size, program.id)
+                                Flux.fromIterable(workoutResults)
+                                    .concatMap { workoutResult ->
+                                        atomicWorkoutWriter.writeWorkoutAtomically(workoutResult)
+                                    }
+                                    .then()
+                            }
+                            .then(
                                 programService.updateProgram(
                                     program.id,
                                     program.name,
@@ -130,70 +226,13 @@ class ConjugateWorkoutGeneratorService(
                                     program.isActive
                                 )
                             )
-                        }
+                            .doOnError { error ->
+                                logger.error("Error generating workouts for week: {}", error.message)
+                            }
+                    }
                 }
             }
     }
-
-    /**
-     * Generates workouts for the specified week.
-     *
-     * This method processes each workout day sequentially, ensuring that exercise selection
-     * is properly tracked and no duplicates occur within the week.
-     *
-     * @param program The program to generate workouts for
-     * @param userExercisePool The user's exercise pool for the week
-     * @param oneRepMaxes User's one rep max values
-     * @param programPreferences User's program preferences
-     * @param template The workout template for the week
-     * @param weakMuscles Target weak muscles
-     * @param currentWeekNumber Current week number
-     * @return Mono<Void> indicating completion
-     */
-    private fun generateWorkoutsForWeek(
-        program: Program,
-        userExercisePool: UserExercisePool,
-        oneRepMaxes: List<UserOneRepMax>,
-        programPreferences: ProgramPreferences,
-        template: List<DayTemplate>,
-        weakMuscles: List<String>,
-        currentWeekNumber: Int
-    ): Mono<Void> {
-        logger.info("Generating workouts atomically for program {}", program.id)
-        
-        return Flux.fromIterable(template)
-            .index()
-            .concatMap { tuple ->
-                val dayIndex = tuple.t1
-                val dayTemplate = tuple.t2
-                val dayNumber = currentWeekNumber * template.size + dayIndex.toInt() + 1
-
-                logger.debug("Generating workout for day {} of program {}", dayNumber, program.id)
-
-                // Generate workout stages and write everything atomically
-                workoutStageGenerationOrchestrator.generateWorkoutStages(
-                    programId = program.id,
-                    dayNumber = dayNumber,
-                    dayType = dayTemplate.type,
-                    userExercisePool = userExercisePool,
-                    oneRepMaxes = oneRepMaxes,
-                    programPreferences = programPreferences,
-                    weakMuscles = weakMuscles,
-                    currentWeekNumber = currentWeekNumber,
-                    userId = program.userId
-                ).flatMap { workoutResult ->
-                    // Write all workout data atomically (including programmed workout creation)
-                    atomicWorkoutWriter.writeWorkoutAtomically(workoutResult)
-                }.doOnError { error ->
-                    logger.error("Error generating workout for day {}: {}", dayNumber, error.message)
-                }
-            }
-            .doOnError { error ->
-                logger.error("Error generating workouts for week: {}", error.message)
-            }
-            .then()
-    }
-
 
     /**
      * Updates a generated workout with user's 1RM data to tailor weights appropriately.
@@ -315,7 +354,7 @@ class ConjugateWorkoutGeneratorService(
                             targetRepCount = setScheme.targetRepCount,
                             performedRepCount = setScheme.performedRepCount,
                             restSeconds = setScheme.restSeconds,
-                            unit = weightUnit.name, // Use user's preferred unit for this exercise
+                            unit = weightUnit.name,
                             band = setScheme.band
                         )
                     }

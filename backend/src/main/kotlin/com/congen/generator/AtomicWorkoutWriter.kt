@@ -90,30 +90,25 @@ class AtomicWorkoutWriter(
             workoutResult.dayType
         )
             .flatMap { createdWorkout ->
-                writeWorkoutStages(createdWorkout.id, workoutResult.stages, workoutResult.userId)
+                writeWorkoutStages(createdWorkout.id, workoutResult.stages, workoutResult.preparedData)
                     .then(Mono.just(createdWorkout))
             }
     }
 
 
     /**
-     * Gets the weight unit preference for an exercise.
+     * Gets the weight unit preference for an exercise from prepared data.
      *
-     * @param userId The user ID for weight unit preferences
+     * @param preparedData The prepared data containing weight unit preferences
      * @param exerciseName The name of the exercise
      * @return Mono containing the weight unit preference, defaulting to KG if not found
      */
     private fun getWeightUnitForExercise(
-        userId: String,
+        preparedData: WorkoutGenerationPreparedData,
         exerciseName: String
     ): Mono<WeightUnit> {
-        return userWeightUnitPreferenceDAL.selectUserWeightUnitPreference(userId, exerciseName)
-            .map { it.preferredUnit }
-            .switchIfEmpty(Mono.just(WeightUnit.KG))
-            .onErrorResume {
-                logger.debug("No weight unit preference found for user {} and exercise {}, using KG", userId, exerciseName)
-                Mono.just(WeightUnit.KG)
-            }
+        val preferredUnit = preparedData.weightUnitPreferences[exerciseName] ?: WeightUnit.KG
+        return Mono.just(preferredUnit)
     }
 
     /**
@@ -128,11 +123,11 @@ class AtomicWorkoutWriter(
     private fun writeWorkoutStages(
         workoutId: Long, 
         stagesData: List<WorkoutStageData>, 
-        userId: String
+        preparedData: WorkoutGenerationPreparedData
     ): Mono<Void> {
         return reactor.core.publisher.Flux.fromIterable(stagesData)
             .concatMap { stageData ->
-                writeWorkoutStage(workoutId, stageData, userId)
+                writeWorkoutStage(workoutId, stageData, preparedData)
             }
             .then()
     }
@@ -149,7 +144,7 @@ class AtomicWorkoutWriter(
     private fun writeWorkoutStage(
         workoutId: Long, 
         stageData: WorkoutStageData, 
-        userId: String
+        preparedData: WorkoutGenerationPreparedData
     ): Mono<Void> {
         return workoutStageTypeDAL.selectWorkoutStageTypeByEnum(stageData.stageType)
             .flatMap { workoutStageType ->
@@ -161,7 +156,7 @@ class AtomicWorkoutWriter(
                 )
             }
             .flatMap { createdStage ->
-                writeProgrammedExercises(createdStage.id, stageData.exercises, userId)
+                writeProgrammedExercises(createdStage.id, stageData.exercises, preparedData)
             }
     }
 
@@ -177,11 +172,11 @@ class AtomicWorkoutWriter(
     private fun writeProgrammedExercises(
         stageId: Long, 
         exercisesData: List<ProgrammedExerciseData>, 
-        userId: String
+        preparedData: WorkoutGenerationPreparedData
     ): Mono<Void> {
         return reactor.core.publisher.Flux.fromIterable(exercisesData)
             .concatMap { exerciseData ->
-                writeProgrammedExercise(stageId, exerciseData, userId)
+                writeProgrammedExercise(stageId, exerciseData, preparedData)
             }
             .then()
     }
@@ -198,7 +193,7 @@ class AtomicWorkoutWriter(
     private fun writeProgrammedExercise(
         stageId: Long, 
         exerciseData: ProgrammedExerciseData, 
-        userId: String
+        preparedData: WorkoutGenerationPreparedData
     ): Mono<Void> {
         return programmedExerciseDAL.insertProgrammedExercise(
             stageId,
@@ -207,7 +202,7 @@ class AtomicWorkoutWriter(
             exerciseData.notes
         )
             .flatMap { createdExercise ->
-                writeSetSchemes(createdExercise.id, exerciseData.setSchemes, exerciseData.exerciseName, userId)
+                writeSetSchemes(createdExercise.id, exerciseData.setSchemes, exerciseData.exerciseName, preparedData)
             }
     }
 
@@ -225,11 +220,11 @@ class AtomicWorkoutWriter(
         exerciseId: Long, 
         setSchemesData: List<SetSchemeParams>, 
         exerciseName: String, 
-        userId: String
+        preparedData: WorkoutGenerationPreparedData
     ): Mono<Void> {
         return reactor.core.publisher.Flux.fromIterable(setSchemesData)
             .concatMap { setSchemeData ->
-                writeSetScheme(exerciseId, setSchemeData, exerciseName, userId)
+                writeSetScheme(exerciseId, setSchemeData, exerciseName, preparedData)
             }
             .then()
     }
@@ -248,10 +243,10 @@ class AtomicWorkoutWriter(
         exerciseId: Long, 
         setSchemeData: SetSchemeParams, 
         exerciseName: String, 
-        userId: String
+        preparedData: WorkoutGenerationPreparedData
     ): Mono<Void> {
         // Get the user's exercise unit preference
-        return getWeightUnitForExercise(userId, exerciseName)
+        return getWeightUnitForExercise(preparedData, exerciseName)
             .flatMap { weightUnit ->
                 setSchemeService.insertSetScheme(
                     programmedExerciseId = exerciseId,

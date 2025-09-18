@@ -1,7 +1,7 @@
 package com.congen.generator
 
-import com.congen.dal.ExerciseEquipmentDAL
-import com.congen.dal.ExerciseMuscleDAL
+import com.congen.model.ExerciseEquipment
+import com.congen.model.ExerciseMuscle
 import com.congen.model.Exercise
 import com.congen.model.UserEquipment
 import com.congen.model.UserExercisePreference
@@ -20,7 +20,8 @@ import java.util.concurrent.ConcurrentHashMap
  * @param allExercises All available exercises in the system
  * @param preferences User's exercise preferences
  * @param userEquipment User's available equipment
- * @param exerciseEquipmentDAL Data access layer for exercise equipment relationships
+ * @param exerciseEquipmentMappings Pre-computed mappings of exercise names to their equipment requirements
+ * @param exerciseMuscleMappings Pre-computed mappings of exercise names to their muscle targets
  * @param previouslyUsedExercises List of exercise names that have been used in previous weeks
  *
  * @author Congen Development Team
@@ -30,7 +31,8 @@ class UserExercisePool(
     private val allExercises: List<Exercise>,
     private val preferences: List<UserExercisePreference>,
     private val userEquipment: List<UserEquipment>,
-    private val exerciseEquipmentDAL: ExerciseEquipmentDAL,
+    private val exerciseEquipmentMappings: Map<String, List<ExerciseEquipment>>,
+    private val exerciseMuscleMappings: Map<String, List<ExerciseMuscle>>,
     private val previouslyUsedExercises: List<String> = emptyList(),
     private val userId: String = ""
 ) {
@@ -267,31 +269,27 @@ class UserExercisePool(
         }
 
         return Flux.fromIterable(exercises)
-            .flatMap { exercise ->
-                exerciseEquipmentDAL.selectExerciseEquipmentByExercise(exercise.name)
-                    .filter { exerciseEquipment ->
-                        val userEquipmentNames = userEquipment.map { it.equipmentName.lowercase() }.toSet()
-                        val exerciseEquipmentNames = exerciseEquipment.map { it.equipmentName.lowercase() }.toSet()
+            .filter { exercise ->
+                val exerciseEquipment = exerciseEquipmentMappings[exercise.name] ?: emptyList()
+                val userEquipmentNames = userEquipment.map { it.equipmentName.lowercase() }.toSet()
+                val exerciseEquipmentNames = exerciseEquipment.map { it.equipmentName.lowercase() }.toSet()
 
-                        // If user has no equipment preferences, allow all exercises (fallback behavior)
-                        val hasRequiredEquipment =
-                            if (userEquipmentNames.isEmpty()) {
-                                true // Allow all exercises when user has no equipment preferences
-                            } else {
-                                userEquipmentNames.any { userEq -> exerciseEquipmentNames.contains(userEq) }
-                            }
-
-                        // Apply dumbbell restriction for primary upper body exercises
-                        val isDumbbellRestricted = isPrimaryExercise && isUpperBody && exerciseEquipmentNames.contains("dumbbells")
-
-                        if (isDumbbellRestricted) {
-                            logger.info("Excluding dumbbell exercise '{}' from primary upper body selection", exercise.name)
-                        }
-
-                        hasRequiredEquipment && !isDumbbellRestricted
+                // If user has no equipment preferences, allow all exercises (fallback behavior)
+                val hasRequiredEquipment =
+                    if (userEquipmentNames.isEmpty()) {
+                        true // Allow all exercises when user has no equipment preferences
+                    } else {
+                        userEquipmentNames.any { userEq -> exerciseEquipmentNames.contains(userEq) }
                     }
-                    .map { exercise }
-                    .onErrorReturn(exercise) // Fallback: include exercise if equipment check fails
+
+                // Apply dumbbell restriction for primary upper body exercises
+                val isDumbbellRestricted = isPrimaryExercise && isUpperBody && exerciseEquipmentNames.contains("dumbbells")
+
+                if (isDumbbellRestricted) {
+                    logger.info("Excluding dumbbell exercise '{}' from primary upper body selection", exercise.name)
+                }
+
+                hasRequiredEquipment && !isDumbbellRestricted
             }
             .collectList()
             .flatMap { equipmentFilteredExercises ->
@@ -302,23 +300,11 @@ class UserExercisePool(
                     if (isPrimaryExercise && isUpperBody) {
                         // For primary upper body exercises, filter out dumbbell exercises even in fallback
                         Flux.fromIterable(exercises)
-                            .flatMap { exercise ->
-                                exerciseEquipmentDAL.selectExerciseEquipmentByExercise(exercise.name)
-                                    .map { exerciseEquipment ->
-                                        val exerciseEquipmentNames = exerciseEquipment.map { it.equipmentName.lowercase() }.toSet()
-                                        val isDumbbellRestricted = exerciseEquipmentNames.contains("dumbbells")
-                                        if (isDumbbellRestricted) {
-                                            // Filter out dumbbell exercises
-                                            Mono.empty<Exercise>()
-                                        } else {
-                                            Mono.just(exercise)
-                                        }
-                                    }
-                                    .flatMap { it }
-                                    .onErrorResume { 
-                                        logger.error("Error selecting exercise equipment for exercise: {}", exercise.name)
-                                        Mono.empty<Exercise>()
-                                    }
+                            .filter { exercise ->
+                                val exerciseEquipment = exerciseEquipmentMappings[exercise.name] ?: emptyList()
+                                val exerciseEquipmentNames = exerciseEquipment.map { it.equipmentName.lowercase() }.toSet()
+                                val isDumbbellRestricted = exerciseEquipmentNames.contains("dumbbells")
+                                !isDumbbellRestricted
                             }
                             .collectList()
                     } else {
@@ -335,13 +321,11 @@ class UserExercisePool(
      *
      * @param exercises List of exercises to filter
      * @param targetMuscles List of target muscles to focus on
-     * @param exerciseMuscleDAL Data access layer for exercise muscle relationships
      * @return Mono containing list of exercises that target the specified muscles
      */
     fun filterExercisesByMuscles(
         exercises: List<Exercise>,
-        targetMuscles: List<String>,
-        exerciseMuscleDAL: ExerciseMuscleDAL
+        targetMuscles: List<String>
     ): Mono<List<Exercise>> {
         if (exercises.isEmpty()) {
             return Mono.just(emptyList())
@@ -353,28 +337,22 @@ class UserExercisePool(
             return Mono.just(exercises)
         }
 
-        return Flux.fromIterable(exercises)
-            .flatMap { exercise ->
-                exerciseMuscleDAL.selectExerciseMuscleByExercise(exercise.name)
-                    .map { exerciseMuscles ->
-                        val exerciseMuscleNames = exerciseMuscles.map { it.muscleName.lowercase() }.toSet()
-                        val targetMuscleNames = targetMuscles.map { it.lowercase() }.toSet()
-                        val hasTargetMuscle = exerciseMuscleNames.any { muscle -> targetMuscleNames.contains(muscle) }
-                        if (hasTargetMuscle) Mono.just(exercise) else Mono.empty<Exercise>()
-                    }
-                    .flatMap { it }
-            }
-            .collectList()
-            .flatMap { muscleFilteredExercises ->
-                if (muscleFilteredExercises.isEmpty()) {
-                    // For accessory exercises with weak muscles, be more strict about targeting
-                    // Only fall back if there are truly no exercises available
-                    logger.warn("No exercises available for target muscles: {}, returning empty list to force fallback", targetMuscles)
-                    Mono.just(emptyList())
-                } else {
-                    Mono.just(muscleFilteredExercises)
-                }
-            }
+        val muscleFilteredExercises = exercises.filter { exercise ->
+            val exerciseMuscles = exerciseMuscleMappings[exercise.name] ?: emptyList()
+            val exerciseMuscleNames = exerciseMuscles.map { it.muscleName.lowercase() }.toSet()
+            val targetMuscleNames = targetMuscles.map { it.lowercase() }.toSet()
+            val hasTargetMuscle = exerciseMuscleNames.any { muscle -> targetMuscleNames.contains(muscle) }
+            hasTargetMuscle
+        }
+
+        return if (muscleFilteredExercises.isEmpty()) {
+            // For accessory exercises with weak muscles, be more strict about targeting
+            // Only fall back if there are truly no exercises available
+            logger.warn("No exercises available for target muscles: {}, returning empty list to force fallback", targetMuscles)
+            Mono.just(emptyList())
+        } else {
+            Mono.just(muscleFilteredExercises)
+        }
     }
 
     /**

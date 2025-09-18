@@ -1,15 +1,7 @@
 package com.congen.generator
 
-import com.congen.dal.ProgrammedExerciseDAL
-import com.congen.dal.SetSchemeDAL
-import com.congen.dal.UserWeightUnitPreferenceDAL
-import com.congen.dal.WorkoutStageDAL
-import com.congen.dal.WorkoutStageTypeDAL
 import com.congen.model.Exercise
-import com.congen.model.ProgramPreferences
-import com.congen.model.ProgrammedWorkout
-import com.congen.model.UserOneRepMax
-import com.congen.service.SetSchemeService
+import com.congen.model.WorkoutStageTypeEnum
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Flux
@@ -38,14 +30,8 @@ import org.jetbrains.annotations.VisibleForTesting
  * - **Accessory Stage**: Multiple accessory exercises based on available time
  * - **Conditioning Stage**: AMRAP/EMOM exercises (for DE days)
  *
- * @param workoutStageDAL Data access layer for workout stage operations
- * @param workoutStageTypeDAL Data access layer for workout stage type operations
- * @param programmedExerciseDAL Data access layer for programmed exercise operations
- * @param setSchemeDAL Data access layer for set scheme operations
- * @param setSchemeService Service for set scheme operations
  * @param prilepinGuidelinesService Service for Prilepin guidelines
  * @param weightSelectionService Service for weight selection
- * @param userWeightUnitPreferenceDAL Data access layer for user weight unit preferences
  * @param exerciseSelectionService Service for exercise selection
  * @param movementBalanceService Service for movement balance
  * @param sessionTimeCalculator Service for session time calculation
@@ -56,27 +42,15 @@ import org.jetbrains.annotations.VisibleForTesting
  */
 @Service
 class FourDayWorkoutStageGenerationService(
-    workoutStageDAL: WorkoutStageDAL,
-    workoutStageTypeDAL: WorkoutStageTypeDAL,
-    programmedExerciseDAL: ProgrammedExerciseDAL,
-    setSchemeDAL: SetSchemeDAL,
-    setSchemeService: SetSchemeService,
     prilepinGuidelinesService: PrilepinGuidelinesService,
     weightSelectionService: WeightSelectionService,
-    userWeightUnitPreferenceDAL: UserWeightUnitPreferenceDAL,
     exerciseSelectionService: ExerciseSelectionService,
     movementBalanceService: MovementBalanceService,
     sessionTimeCalculator: SessionTimeCalculator,
     private val conjugateTemplates: ConjugateTemplates,
 ) : WorkoutStageGenerationService(
-        workoutStageDAL,
-        workoutStageTypeDAL,
-        programmedExerciseDAL,
-        setSchemeDAL,
-        setSchemeService,
         prilepinGuidelinesService,
         weightSelectionService,
-        userWeightUnitPreferenceDAL,
         exerciseSelectionService,
         movementBalanceService,
         sessionTimeCalculator
@@ -91,13 +65,8 @@ class FourDayWorkoutStageGenerationService(
         programId: Long,
         dayNumber: Int,
         dayType: String,
-        userExercisePool: UserExercisePool,
-        oneRepMaxes: List<UserOneRepMax>,
-        programPreferences: ProgramPreferences,
-        weakMuscles: List<String>,
-        currentWeekNumber: Int,
-        userId: String,
-    ): Mono<WorkoutGenerationResult> {
+        preparedData: WorkoutGenerationPreparedData,
+    ): Mono<List<WorkoutStageData>> {
         // Initialize movement balance state for this workout
         var movementBalanceState = createInitialMovementBalanceState()
 
@@ -112,11 +81,13 @@ class FourDayWorkoutStageGenerationService(
         // Select primary exercise and generate set schemes
         val primaryExerciseMono =
             selectPrimaryExercise(
-                userExercisePool = userExercisePool,
+                userExercisePool = preparedData.userExercisePool,
                 workoutType = workoutType,
-                weakMuscles = weakMuscles,
                 dayType = dayType,
-                movementBalanceState = movementBalanceState
+                movementBalanceState = movementBalanceState,
+                exerciseWorkoutTypeMappings = preparedData.exerciseWorkoutTypeMappings,
+                exerciseMuscleMappings = preparedData.exerciseMuscleMappings,
+                exerciseEquipmentMappings = preparedData.exerciseEquipmentMappings
             ).cache()
 
         val primarySetSchemesMono =
@@ -129,9 +100,9 @@ class FourDayWorkoutStageGenerationService(
                     exercise = primaryExercise,
                     movementRole = "primary",
                     dayType = dayType,
-                    oneRepMaxes = oneRepMaxes,
-                    currentWeekNumber = currentWeekNumber,
-                    userId = userId
+                    oneRepMaxes = preparedData.oneRepMaxes,
+                    currentWeekNumber = preparedData.currentWeekNumber,
+                    preparedData = preparedData
                 )
             }.onErrorResume { error ->
                 logger.error("Failed to generate set schemes for primary exercise. Error: {}", error.message)
@@ -143,10 +114,11 @@ class FourDayWorkoutStageGenerationService(
             if (conjugateTemplates.hasSecondaryMovement(dayType)) {
                 primaryExerciseMono.flatMap { primaryExercise ->
                     selectSecondaryExercise(
-                        userExercisePool = userExercisePool,
+                        userExercisePool = preparedData.userExercisePool,
                         primaryExercise = primaryExercise,
                         workoutType = workoutType,
                         dayType = dayType,
+                        preparedData = preparedData,
                         movementBalanceState = movementBalanceState
                     ).doOnNext { secondaryExercise ->
                         // Update movement balance state with secondary exercise
@@ -164,9 +136,9 @@ class FourDayWorkoutStageGenerationService(
                     exercise = secondaryExercise,
                     movementRole = "secondary",
                     dayType = dayType,
-                    oneRepMaxes = oneRepMaxes,
-                    currentWeekNumber = currentWeekNumber,
-                    userId = userId
+                    oneRepMaxes = preparedData.oneRepMaxes,
+                    currentWeekNumber = preparedData.currentWeekNumber,
+                    preparedData = preparedData
                 )
             }.onErrorResume { error ->
                 logger.error("Failed to generate set schemes for secondary exercise. Error: {}", error.message)
@@ -194,7 +166,7 @@ class FourDayWorkoutStageGenerationService(
                 secondaryExerciseAndSchemesMono.flatMap { (secondaryExercise, secondarySetSchemes, hasSecondary) ->
                     val numAccessoryExercises =
                         calculateNumAccessoryExercises(
-                            sessionTimeMinutes = programPreferences.sessionTimeLengthInMinutes,
+                            sessionTimeMinutes = preparedData.programPreferences.sessionTimeLengthInMinutes,
                             primarySetSchemes = primarySetSchemes,
                             secondarySetSchemes = secondarySetSchemes,
                             dayType = dayType
@@ -203,48 +175,36 @@ class FourDayWorkoutStageGenerationService(
                     // Create all workout stages
                     val primaryStageMono = createPrimaryStage(
                         exercise = primaryExercise,
-                        setSchemes = primarySetSchemes,
-                        userId = userId
+                        setSchemes = primarySetSchemes
                     )
 
                     val secondaryStageMono = if (hasSecondary && secondaryExercise != null) {
                         createSecondaryStage(
                             exercise = secondaryExercise,
-                            setSchemes = secondarySetSchemes,
-                            userId = userId
+                            setSchemes = secondarySetSchemes
                         )
                     } else {
                         Mono.empty()
                     }
 
                     val warmupStageMono = createWarmupStage(
-                        userExercisePool = userExercisePool,
-                        oneRepMaxes = oneRepMaxes,
+                        preparedData = preparedData,
                         dayType = dayType,
                         primaryExercise = primaryExercise,
                         secondaryExercise = secondaryExercise,
-                        isFourDayTemplate = true,
-                        currentWeekNumber = currentWeekNumber,
-                        userId = userId
+                        isFourDayTemplate = true
                     )
 
                     val accessoryStageMono = createAccessoryStage(
-                        userExercisePool = userExercisePool,
-                        oneRepMaxes = oneRepMaxes,
+                        preparedData = preparedData,
                         dayType = dayType,
-                        weakMuscles = weakMuscles,
                         numAccessoryExercises = numAccessoryExercises,
-                        userId = userId,
-                        currentWeekNumber = currentWeekNumber,
                         movementBalanceState = movementBalanceState
                     )
 
                     val conditioningStageMono = createConditioningStage(
-                        userExercisePool = userExercisePool,
-                        oneRepMaxes = oneRepMaxes,
+                        preparedData = preparedData,
                         dayType = dayType,
-                        weakMuscles = weakMuscles,
-                        userId = userId,
                         movementBalanceState = movementBalanceState
                     )
 
@@ -256,11 +216,27 @@ class FourDayWorkoutStageGenerationService(
                         accessoryStageMono,
                         conditioningStageMono
                     ).collectList()
-                        .map { stages ->
-                            WorkoutGenerationResult(programId, dayNumber, dayType, userId, stages)
-                        }
                 }
             }
+            .switchIfEmpty(
+                // If primary exercise selection fails, create a minimal workout with just warmup and accessory stages
+                Mono.just(
+                    listOf(
+                        WorkoutStageData(
+                            stageType = WorkoutStageTypeEnum.WARMUP,
+                            position = WorkoutStageTypeEnum.WARMUP.position,
+                            name = WorkoutStageTypeEnum.WARMUP.displayName,
+                            exercises = emptyList()
+                        ),
+                        WorkoutStageData(
+                            stageType = WorkoutStageTypeEnum.ACCESSORY,
+                            position = WorkoutStageTypeEnum.ACCESSORY.position,
+                            name = WorkoutStageTypeEnum.ACCESSORY.displayName,
+                            exercises = emptyList()
+                        )
+                    )
+                )
+            )
             .doOnError { error ->
                 logger.error("Failed to generate stages for day type: {}. Error: {}", dayType, error.message)
             }

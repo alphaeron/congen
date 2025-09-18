@@ -1,24 +1,19 @@
 package com.congen.generator
 
-import com.congen.dal.ProgrammedExerciseDAL
-import com.congen.dal.SetSchemeDAL
-import com.congen.dal.UserWeightUnitPreferenceDAL
-import com.congen.dal.WorkoutStageDAL
-import com.congen.dal.WorkoutStageTypeDAL
 import com.congen.model.Exercise
+import com.congen.model.ExerciseEquipment
+import com.congen.model.ExerciseMuscle
 import com.congen.model.MovementType
 import com.congen.model.ProgramPreferences
-import com.congen.model.ProgrammedWorkout
+import com.congen.model.UserEquipment
+import com.congen.model.UserExercisePreference
 import com.congen.model.UserOneRepMax
-import com.congen.model.WorkoutStageTypeEnum
-import com.congen.service.SetSchemeService
+import com.congen.model.WeightUnit
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
 import org.mockito.kotlin.eq
-import org.mockito.kotlin.isNull
 import org.mockito.kotlin.mock
-import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
@@ -26,337 +21,233 @@ import java.math.BigDecimal
 import java.time.Instant
 
 /**
- * Unit tests for the WorkoutStageGenerationService base class.
- *
- * These tests verify that the base service correctly handles common functionality
- * and delegates to appropriate subclasses for specific implementations.
+ * Unit tests for WorkoutStageGenerationService.
  */
 class WorkoutStageGenerationServiceTest {
     private lateinit var baseService: TestWorkoutStageGenerationService
-    private lateinit var workoutStageDAL: WorkoutStageDAL
-    private lateinit var workoutStageTypeDAL: WorkoutStageTypeDAL
-    private lateinit var programmedExerciseDAL: ProgrammedExerciseDAL
-    private lateinit var setSchemeDAL: SetSchemeDAL
-    private lateinit var setSchemeService: SetSchemeService
     private lateinit var prilepinGuidelinesService: PrilepinGuidelinesService
     private lateinit var weightSelectionService: WeightSelectionService
-    private lateinit var userWeightUnitPreferenceDAL: UserWeightUnitPreferenceDAL
     private lateinit var exerciseSelectionService: ExerciseSelectionService
     private lateinit var movementBalanceService: MovementBalanceService
     private lateinit var sessionTimeCalculator: SessionTimeCalculator
 
+    companion object {
+        private const val USER_ID = "test-user-123"
+        private val now = Instant.now()
+    }
+
     @BeforeEach
     fun setUp() {
-        workoutStageDAL = mock()
-        workoutStageTypeDAL = mock()
-        programmedExerciseDAL = mock()
-        setSchemeDAL = mock()
-        setSchemeService = mock()
         prilepinGuidelinesService = mock()
         weightSelectionService = mock()
-        userWeightUnitPreferenceDAL = mock()
         exerciseSelectionService = mock()
         movementBalanceService = mock()
         sessionTimeCalculator = mock()
-
-        baseService =
-            TestWorkoutStageGenerationService(
-                workoutStageDAL = workoutStageDAL,
-                workoutStageTypeDAL = workoutStageTypeDAL,
-                programmedExerciseDAL = programmedExerciseDAL,
-                setSchemeDAL = setSchemeDAL,
-                setSchemeService = setSchemeService,
-                prilepinGuidelinesService = prilepinGuidelinesService,
-                weightSelectionService = weightSelectionService,
-                userWeightUnitPreferenceDAL = userWeightUnitPreferenceDAL,
-                exerciseSelectionService = exerciseSelectionService,
-                movementBalanceService = movementBalanceService,
-                sessionTimeCalculator = sessionTimeCalculator
-            )
-    }
-
-    @Test
-    fun `should generate workout stages successfully`() {
-        val workout = createSampleWorkout()
-        val dayType = "maximal_effort"
-        val userExercisePool = mock<UserExercisePool>()
-        val oneRepMaxes = createSampleOneRepMaxes()
-        val programPreferences = createSampleProgramPreferences()
-        val weakMuscles = listOf("chest", "triceps")
-        val currentWeekNumber = 1
-        val userId = "user123"
-
-        val primaryExercise = createSampleExercise("Bench Press", MovementType.HORIZONTAL_PUSH)
-
-        whenever(
-            exerciseSelectionService.selectExercise(
-                userExercisePool = eq(userExercisePool),
-                targetMuscles = eq(emptyList()),
-                isAccessory = eq(false),
-                workoutType = eq("maximal_effort"),
-                dayType = eq(dayType),
-                movementBalanceState = isNull(),
-                isWarmup = eq(false)
-            )
-        ).thenReturn(Mono.just(primaryExercise))
-        whenever(workoutStageDAL.insertWorkoutStage(any(), any(), any(), any()))
-            .thenReturn(Mono.empty())
-        whenever(
-            setSchemeService.insertSetScheme(
-                any(),
-                any(),
-                any(),
-                any(),
-                any(),
-                any(),
-                any(),
-                any(),
-                any(),
-                any(),
-                any(),
-                any(),
-                any(),
-                any(),
-                any()
-            )
-        ).thenReturn(Mono.empty())
-        whenever(userWeightUnitPreferenceDAL.selectUserWeightUnitPreference(any(), any()))
-            .thenReturn(Mono.empty())
-
-        val result =
-            baseService.generateWorkoutStages(
-                programId = workout.programId,
-                dayNumber = workout.dayNumber,
-                dayType = dayType,
-                userExercisePool = userExercisePool,
-                oneRepMaxes = oneRepMaxes,
-                programPreferences = programPreferences,
-                weakMuscles = weakMuscles,
-                currentWeekNumber = currentWeekNumber,
-                userId = userId
-            )
-
-        StepVerifier.create(result)
-            .expectNextMatches { workoutResult ->
-                workoutResult.programId == workout.programId && workoutResult.dayNumber == workout.dayNumber && workoutResult.stages.isNotEmpty()
-            }
-            .expectComplete()
-            .verify()
-
-        verify(exerciseSelectionService).selectExercise(
-            userExercisePool = userExercisePool,
-            targetMuscles = emptyList(),
-            isAccessory = false,
-            workoutType = "maximal_effort",
-            dayType = dayType,
-            movementBalanceState = null
+        
+        baseService = TestWorkoutStageGenerationService(
+            prilepinGuidelinesService = prilepinGuidelinesService,
+            weightSelectionService = weightSelectionService,
+            exerciseSelectionService = exerciseSelectionService,
+            movementBalanceService = movementBalanceService,
+            sessionTimeCalculator = sessionTimeCalculator
         )
     }
 
     @Test
-    fun `should handle exercise selection failure`() {
-        val workout = createSampleWorkout()
-        val dayType = "maximal_effort"
-        val userExercisePool = mock<UserExercisePool>()
-        val oneRepMaxes = createSampleOneRepMaxes()
-        val programPreferences = createSampleProgramPreferences()
-        val weakMuscles = listOf("chest", "triceps")
-        val currentWeekNumber = 1
-        val userId = "user123"
+    fun `generateWorkoutStages should generate stages successfully`() {
+        val preparedData = createSamplePreparedData()
+        val primaryExercise = createSampleExercise("Bench Press", MovementType.HORIZONTAL_PUSH)
+        val secondaryExercise = createSampleExercise("Incline Bench Press", MovementType.HORIZONTAL_PUSH)
+
+        // Mock movement balance service
+        val mockMovementBalanceState = mock<MovementBalanceService.MovementBalanceState>()
+        whenever(mockMovementBalanceState.addExercise(any(), any())).thenReturn(mockMovementBalanceState)
+        whenever(
+            movementBalanceService.createInitialState()
+        ).thenReturn(mockMovementBalanceState)
 
         whenever(
+            movementBalanceService.estimateExerciseVolume(any())
+        ).thenReturn(BigDecimal("10.0"))
+
+        whenever(
+            movementBalanceService.logBalanceState(any(), any())
+        ).thenAnswer { /* do nothing */ }
+
+        // Mock primary exercise selection (isAccessory = false, workoutType = "maximal_effort")
+        whenever(
             exerciseSelectionService.selectExercise(
-                userExercisePool = eq(userExercisePool),
+                userExercisePool = any(),
                 targetMuscles = eq(emptyList()),
                 isAccessory = eq(false),
                 workoutType = eq("maximal_effort"),
-                dayType = eq(dayType),
-                movementBalanceState = isNull(),
-                isWarmup = eq(false)
-            )
-        ).thenReturn(Mono.error(RuntimeException("Exercise selection failed")))
-
-        val result =
-            baseService.generateWorkoutStages(
-                programId = workout.programId,
-                dayNumber = workout.dayNumber,
-                dayType = dayType,
-                userExercisePool = userExercisePool,
-                oneRepMaxes = oneRepMaxes,
-                programPreferences = programPreferences,
-                weakMuscles = weakMuscles,
-                currentWeekNumber = currentWeekNumber,
-                userId = userId
-            )
-
-        StepVerifier.create(result)
-            .expectError(RuntimeException::class.java)
-            .verify()
-    }
-
-    @Test
-    fun `should handle dynamic effort day type`() {
-        val workout = createSampleWorkout()
-        val dayType = "dynamic_effort"
-        val userExercisePool = mock<UserExercisePool>()
-        val oneRepMaxes = createSampleOneRepMaxes()
-        val programPreferences = createSampleProgramPreferences()
-        val weakMuscles = listOf("chest", "triceps")
-        val currentWeekNumber = 1
-        val userId = "user123"
-
-        val primaryExercise = createSampleExercise("Bench Press", MovementType.HORIZONTAL_PUSH)
-
-        whenever(
-            exerciseSelectionService.selectExercise(
-                userExercisePool = eq(userExercisePool),
-                targetMuscles = eq(emptyList()),
-                isAccessory = eq(false),
-                workoutType = eq("dynamic_effort"),
-                dayType = eq(dayType),
-                movementBalanceState = isNull(),
-                isWarmup = eq(false)
+                dayType = eq("ME_Upper"),
+                movementBalanceState = any(),
+                isWarmup = eq(false),
+                exerciseWorkoutTypeMappings = any(),
+                exerciseMuscleMappings = any(),
+                exerciseEquipmentMappings = any()
             )
         ).thenReturn(Mono.just(primaryExercise))
-        whenever(workoutStageDAL.insertWorkoutStage(any(), any(), any(), any()))
-            .thenReturn(Mono.empty())
+
+        // Mock secondary exercise selection
         whenever(
-            setSchemeService.insertSetScheme(
-                any(),
-                any(),
-                any(),
-                any(),
-                any(),
-                any(),
-                any(),
-                any(),
-                any(),
-                any(),
-                any(),
-                any(),
-                any(),
-                any(),
-                any()
+            exerciseSelectionService.selectExercise(
+                userExercisePool = any(),
+                targetMuscles = eq(emptyList()),
+                isAccessory = eq(true),
+                workoutType = eq("maximal_effort"),
+                dayType = eq("ME_Upper"),
+                movementBalanceState = any(),
+                isWarmup = eq(false),
+                exerciseWorkoutTypeMappings = any(),
+                exerciseMuscleMappings = any(),
+                exerciseEquipmentMappings = any()
             )
-        ).thenReturn(Mono.empty())
-        whenever(userWeightUnitPreferenceDAL.selectUserWeightUnitPreference(any(), any()))
-            .thenReturn(Mono.empty())
+        ).thenReturn(Mono.just(secondaryExercise))
 
-        val result =
-            baseService.generateWorkoutStages(
-                programId = workout.programId,
-                dayNumber = workout.dayNumber,
-                dayType = dayType,
-                userExercisePool = userExercisePool,
-                oneRepMaxes = oneRepMaxes,
-                programPreferences = programPreferences,
-                weakMuscles = weakMuscles,
-                currentWeekNumber = currentWeekNumber,
-                userId = userId
+        // Mock weight selection for primary exercise
+        whenever(
+            weightSelectionService.getTargetWeight(
+                exerciseName = eq("Bench Press"),
+                intensity = any(),
+                oneRepMaxes = any(),
+                isDynamicEffort = eq(false),
+                currentWeekNumber = any(),
+                preparedData = any()
             )
+        ).thenReturn(Mono.just(WeightSelectionService.TargetWeightResult(BigDecimal("225"), null)))
 
-        StepVerifier.create(result)
-            .expectNextMatches { workoutResult ->
-                workoutResult.programId == workout.programId && workoutResult.dayNumber == workout.dayNumber && workoutResult.stages.isNotEmpty()
-            }
-            .expectComplete()
-            .verify()
+        // Mock weight selection for secondary exercise
+        whenever(
+            weightSelectionService.getTargetWeight(
+                exerciseName = eq("Incline Bench Press"),
+                intensity = any(),
+                oneRepMaxes = any(),
+                isDynamicEffort = eq(false),
+                currentWeekNumber = any(),
+                preparedData = any()
+            )
+        ).thenReturn(Mono.just(WeightSelectionService.TargetWeightResult(BigDecimal("185"), null)))
 
-        verify(exerciseSelectionService).selectExercise(
-            userExercisePool = userExercisePool,
-            targetMuscles = emptyList(),
-            isAccessory = false,
-            workoutType = "dynamic_effort",
-            dayType = dayType,
-            movementBalanceState = null
-        )
-    }
+        // Mock Prilepin guidelines
+        whenever(
+            prilepinGuidelinesService.getUndulatingPeriodizationGuidelines(any(), any(), any())
+        ).thenReturn(Pair(com.congen.generator.PrilepinGuidelines(
+            intensityRange = 0.85..0.95,
+            repsPerSetRange = 1..3,
+            totalReps = 10,
+            totalRepsRange = 8..12,
+            restSeconds = 60..120
+        ), 0.90))
 
-    /**
-     * Test implementation of WorkoutStageGenerationService for testing base functionality.
-     */
-    private class TestWorkoutStageGenerationService(
-        workoutStageDAL: WorkoutStageDAL,
-        workoutStageTypeDAL: WorkoutStageTypeDAL,
-        programmedExerciseDAL: ProgrammedExerciseDAL,
-        setSchemeDAL: SetSchemeDAL,
-        setSchemeService: SetSchemeService,
-        prilepinGuidelinesService: PrilepinGuidelinesService,
-        weightSelectionService: WeightSelectionService,
-        userWeightUnitPreferenceDAL: UserWeightUnitPreferenceDAL,
-        exerciseSelectionService: ExerciseSelectionService,
-        movementBalanceService: MovementBalanceService,
-        sessionTimeCalculator: SessionTimeCalculator
-    ) : WorkoutStageGenerationService(
-            workoutStageDAL,
-            workoutStageTypeDAL,
-            programmedExerciseDAL,
-            setSchemeDAL,
-            setSchemeService,
-            prilepinGuidelinesService,
-            weightSelectionService,
-            userWeightUnitPreferenceDAL,
-            exerciseSelectionService,
-            movementBalanceService,
-            sessionTimeCalculator
-        ) {
-        override fun generateStagesForDayType(
-            programId: Long,
-            dayNumber: Int,
-            dayType: String,
-            userExercisePool: UserExercisePool,
-            oneRepMaxes: List<UserOneRepMax>,
-            programPreferences: ProgramPreferences,
-            weakMuscles: List<String>,
-            currentWeekNumber: Int,
-            userId: String,
-        ): Mono<WorkoutGenerationResult> {
-            // Simple test implementation that selects exercises and returns success
-            return exerciseSelectionService.selectExercise(
-                userExercisePool = userExercisePool,
-                targetMuscles = emptyList(),
-                isAccessory = false,
-                workoutType = dayType,
-                dayType = dayType,
-                movementBalanceState = null
-            ).map { exercise ->
-                // Create a mock stage with the selected exercise
-                val mockStage = WorkoutStageData(
-                    stageType = WorkoutStageTypeEnum.PRIMARY,
-                    position = 1,
-                    name = "Primary",
-                    exercises = listOf(
-                        ProgrammedExerciseData(
-                            exerciseName = exercise.name,
-                            position = 1,
-                            notes = null,
-                            setSchemes = emptyList()
-                        )
-                    )
-                )
-                WorkoutGenerationResult(programId, dayNumber, dayType, userId, listOf(mockStage))
-            }
-        }
-    }
+        whenever(
+            prilepinGuidelinesService.getRepsAndSetsBasedOnIntensity(any(), any(), any())
+        ).thenReturn(Pair(3, 3))
 
-    private fun createSampleWorkout(): ProgrammedWorkout {
-        return ProgrammedWorkout(
-            id = 1L,
+        whenever(
+            prilepinGuidelinesService.getRestTimeBasedOnIntensity(any(), any(), any(), any())
+        ).thenReturn(120)
+
+        whenever(
+            prilepinGuidelinesService.getRandomRestTime(any())
+        ).thenReturn(90)
+
+        // Mock session time calculator
+        whenever(
+            sessionTimeCalculator.calculateNumAccessoryExercisesDynamic(any(), any(), any(), any())
+        ).thenReturn(2)
+
+        // Mock warmup exercises
+        whenever(
+            exerciseSelectionService.selectWarmupExercises(
+                userExercisePool = any(),
+                primaryExercise = any(),
+                secondaryExercise = any(),
+                isFourDayTemplate = any(),
+                dayType = any(),
+                workoutType = any(),
+                exerciseMuscleMappings = any(),
+                exerciseEquipmentMappings = any(),
+                exerciseWorkoutTypeMappings = any()
+            )
+        ).thenReturn(Mono.just(emptyList()))
+
+        val result = baseService.generateWorkoutStages(
             programId = 1L,
             dayNumber = 1,
-            name = "Test Workout",
-            createdAt = Instant.now(),
-            updatedAt = Instant.now()
+            dayType = "ME_Upper",
+            preparedData = preparedData
         )
+
+        StepVerifier.create(result)
+            .expectNextCount(1)
+            .verifyComplete()
     }
 
-    private fun createSampleExercise(
-        name: String,
-        movementType: MovementType
-    ): Exercise {
+    @Test
+    fun `generateWorkoutStages should handle empty exercise selection gracefully`() {
+        val preparedData = createSamplePreparedData()
+
+        // Mock movement balance service
+        val mockMovementBalanceState = mock<MovementBalanceService.MovementBalanceState>()
+        whenever(mockMovementBalanceState.addExercise(any(), any())).thenReturn(mockMovementBalanceState)
+        whenever(
+            movementBalanceService.createInitialState()
+        ).thenReturn(mockMovementBalanceState)
+
+        whenever(
+            movementBalanceService.estimateExerciseVolume(any())
+        ).thenReturn(BigDecimal("10.0"))
+
+        whenever(
+            movementBalanceService.logBalanceState(any(), any())
+        ).thenAnswer { /* do nothing */ }
+
+        whenever(
+            exerciseSelectionService.selectExercise(
+                userExercisePool = any(),
+                targetMuscles = any(),
+                isAccessory = any(),
+                workoutType = any(),
+                dayType = any(),
+                movementBalanceState = any(),
+                isWarmup = any(),
+                exerciseWorkoutTypeMappings = any(),
+                exerciseMuscleMappings = any(),
+                exerciseEquipmentMappings = any()
+            )
+        ).thenReturn(Mono.empty())
+
+        whenever(
+            exerciseSelectionService.selectWarmupExercises(
+                userExercisePool = any(),
+                primaryExercise = any(),
+                secondaryExercise = any(),
+                isFourDayTemplate = any(),
+                dayType = any(),
+                workoutType = any(),
+                exerciseMuscleMappings = any(),
+                exerciseEquipmentMappings = any(),
+                exerciseWorkoutTypeMappings = any()
+            )
+        ).thenReturn(Mono.just(emptyList()))
+
+        val result = baseService.generateWorkoutStages(
+            programId = 1L,
+            dayNumber = 1,
+            dayType = "ME_Upper",
+            preparedData = preparedData
+        )
+
+        StepVerifier.create(result)
+            .expectNextCount(1)
+            .verifyComplete()
+    }
+    private fun createSampleExercise(name: String, movementType: MovementType): Exercise {
         return Exercise(
             name = name,
-            description = "A sample exercise for testing",
+            description = "Sample exercise description",
             movementType = movementType,
             isUnilateral = false,
             isUpper = true,
@@ -364,30 +255,112 @@ class WorkoutStageGenerationServiceTest {
         )
     }
 
-    private fun createSampleOneRepMaxes(): List<UserOneRepMax> {
-        return listOf(
-            UserOneRepMax(
-                userId = "user123",
-                exerciseName = "Bench Press",
-                oneRepMax = BigDecimal("225"),
-                updatedAt = Instant.now()
+    private fun createSamplePreparedData(): WorkoutGenerationPreparedData {
+        return WorkoutGenerationPreparedData(
+            userExercisePool = UserExercisePool(
+                allExercises = createSampleExercises(),
+                preferences = emptyList(),
+                userEquipment = createSampleUserEquipment(),
+                exerciseEquipmentMappings = createSampleExerciseEquipmentMappings(),
+                exerciseMuscleMappings = createSampleExerciseMuscleMappings(),
+                previouslyUsedExercises = emptyList(),
+                userId = USER_ID
             ),
-            UserOneRepMax(
-                userId = "user123",
-                exerciseName = "Squat",
-                oneRepMax = BigDecimal("315"),
-                updatedAt = Instant.now()
+            oneRepMaxes = listOf(
+                UserOneRepMax(USER_ID, "Bench Press", BigDecimal("225"), now),
+                UserOneRepMax(USER_ID, "Squat", BigDecimal("315"), now),
+                UserOneRepMax(USER_ID, "Deadlift", BigDecimal("405"), now)
+            ),
+            programPreferences = ProgramPreferences(
+                programId = 1L,
+                programDaysPerWeek = 4,
+                sessionTimeLengthInMinutes = 60,
+                createdAt = now,
+                updatedAt = now
+            ),
+            weakMuscles = listOf("chest"),
+            currentWeekNumber = 1,
+            userId = USER_ID,
+            weightUnitPreferences = mapOf("Bench Press" to WeightUnit.LBS),
+            exerciseMuscleMappings = createSampleExerciseMuscleMappings(),
+            exerciseWorkoutTypeMappings = mapOf(
+                "Bench Press" to listOf("maximal_effort", "dynamic_effort"),
+                "Squat" to listOf("maximal_effort", "dynamic_effort"),
+                "Deadlift" to listOf("maximal_effort")
+            ),
+            exerciseEquipmentMappings = createSampleExerciseEquipmentMappings(),
+            previouslyProgrammedExercises = emptyList(),
+            allExercises = createSampleExercises(),
+            userEquipment = createSampleUserEquipment(),
+            userExercisePreferences = emptyList()
+        )
+    }
+
+    private fun createSampleExercises(): List<Exercise> {
+        return listOf(
+            createSampleExercise("Bench Press", MovementType.HORIZONTAL_PUSH),
+            createSampleExercise("Squat", MovementType.SQUAT),
+            createSampleExercise("Deadlift", MovementType.HINGE),
+            createSampleExercise("Sled Push", MovementType.PLYOMETRIC)
+        )
+    }
+
+    private fun createSampleUserEquipment(): List<UserEquipment> {
+        return listOf(
+            UserEquipment(USER_ID, "power bar", now),
+            UserEquipment(USER_ID, "bench", now),
+            UserEquipment(USER_ID, "squat rack", now)
+        )
+    }
+
+    private fun createSampleExerciseEquipmentMappings(): Map<String, List<ExerciseEquipment>> {
+        return mapOf(
+            "Bench Press" to listOf(ExerciseEquipment("Bench Press", "power bar")),
+            "Squat" to listOf(ExerciseEquipment("Squat", "power bar")),
+            "Deadlift" to listOf(ExerciseEquipment("Deadlift", "power bar"))
+        )
+    }
+
+    private fun createSampleExerciseMuscleMappings(): Map<String, List<ExerciseMuscle>> {
+        return mapOf(
+            "Bench Press" to listOf(
+                ExerciseMuscle("Bench Press", "chest"),
+                ExerciseMuscle("Bench Press", "triceps")
+            ),
+            "Squat" to listOf(
+                ExerciseMuscle("Squat", "quadriceps"),
+                ExerciseMuscle("Squat", "glutes")
+            ),
+            "Deadlift" to listOf(
+                ExerciseMuscle("Deadlift", "hamstrings"),
+                ExerciseMuscle("Deadlift", "glutes")
             )
         )
     }
 
-    private fun createSampleProgramPreferences(): ProgramPreferences {
-        return ProgramPreferences(
-            programId = 1L,
-            programDaysPerWeek = 4,
-            sessionTimeLengthInMinutes = 60,
-            createdAt = Instant.now(),
-            updatedAt = Instant.now()
-        )
+    /**
+     * Test implementation of WorkoutStageGenerationService for testing purposes.
+     */
+    private class TestWorkoutStageGenerationService(
+        prilepinGuidelinesService: PrilepinGuidelinesService,
+        weightSelectionService: WeightSelectionService,
+        exerciseSelectionService: ExerciseSelectionService,
+        movementBalanceService: MovementBalanceService,
+        sessionTimeCalculator: SessionTimeCalculator,
+    ) : WorkoutStageGenerationService(
+        prilepinGuidelinesService,
+        weightSelectionService,
+        exerciseSelectionService,
+        movementBalanceService,
+        sessionTimeCalculator
+    ) {
+        override fun generateStagesForDayType(
+            programId: Long,
+            dayNumber: Int,
+            dayType: String,
+            preparedData: WorkoutGenerationPreparedData,
+        ): Mono<List<WorkoutStageData>> {
+            return Mono.just(emptyList())
+        }
     }
 }

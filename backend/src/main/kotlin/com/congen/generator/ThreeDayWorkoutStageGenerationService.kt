@@ -1,19 +1,11 @@
 package com.congen.generator
 
-import com.congen.dal.ProgrammedExerciseDAL
-import com.congen.dal.SetSchemeDAL
-import com.congen.dal.UserWeightUnitPreferenceDAL
-import com.congen.dal.WorkoutStageDAL
-import com.congen.dal.WorkoutStageTypeDAL
-import com.congen.model.ProgramPreferences
-import com.congen.model.ProgrammedWorkout
-import com.congen.model.UserOneRepMax
-import com.congen.service.SetSchemeService
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import org.jetbrains.annotations.VisibleForTesting
+import com.congen.model.WorkoutStageTypeEnum
 
 /**
  * Service for generating workout stages for 3-day conjugate powerlifting programs.
@@ -40,14 +32,8 @@ import org.jetbrains.annotations.VisibleForTesting
  * - **Conditioning Stage**: AMRAP/EMOM exercises
  *
  * @param exerciseSelectionService Service for exercise selection logic
- * @param workoutStageDAL Data access layer for workout stage operations
- * @param workoutStageTypeDAL Data access layer for workout stage type operations
- * @param programmedExerciseDAL Data access layer for programmed exercise operations
- * @param setSchemeDAL Data access layer for set scheme operations
- * @param setSchemeService Service for set scheme operations
  * @param prilepinGuidelinesService Service for Prilepin-based guidelines
  * @param weightSelectionService Service for conjugate-specific weight selection
- * @param userWeightUnitPreferenceDAL Data access layer for user weight unit preferences
  * @param sessionTimeCalculator Service for session time calculations
  * @param movementBalanceService Service for movement balance
  * @param conjugateTemplates Service for managing workout templates
@@ -58,26 +44,14 @@ import org.jetbrains.annotations.VisibleForTesting
 @Service
 class ThreeDayWorkoutStageGenerationService(
     exerciseSelectionService: ExerciseSelectionService,
-    workoutStageDAL: WorkoutStageDAL,
-    workoutStageTypeDAL: WorkoutStageTypeDAL,
-    programmedExerciseDAL: ProgrammedExerciseDAL,
-    setSchemeDAL: SetSchemeDAL,
-    setSchemeService: SetSchemeService,
     prilepinGuidelinesService: PrilepinGuidelinesService,
     weightSelectionService: WeightSelectionService,
-    userWeightUnitPreferenceDAL: UserWeightUnitPreferenceDAL,
     sessionTimeCalculator: SessionTimeCalculator,
     movementBalanceService: MovementBalanceService,
     private val conjugateTemplates: ConjugateTemplates,
 ) : WorkoutStageGenerationService(
-        workoutStageDAL,
-        workoutStageTypeDAL,
-        programmedExerciseDAL,
-        setSchemeDAL,
-        setSchemeService,
         prilepinGuidelinesService,
         weightSelectionService,
-        userWeightUnitPreferenceDAL,
         exerciseSelectionService,
         movementBalanceService,
         sessionTimeCalculator
@@ -92,61 +66,40 @@ class ThreeDayWorkoutStageGenerationService(
         programId: Long,
         dayNumber: Int,
         dayType: String,
-        userExercisePool: UserExercisePool,
-        oneRepMaxes: List<UserOneRepMax>,
-        programPreferences: ProgramPreferences,
-        weakMuscles: List<String>,
-        currentWeekNumber: Int,
-        userId: String,
-    ): Mono<WorkoutGenerationResult> {
+        preparedData: WorkoutGenerationPreparedData,
+    ): Mono<List<WorkoutStageData>> {
         return when {
             conjugateTemplates.isCombinedMEDay(dayType) -> {
                 generateCombinedMEDay(
                     programId = programId,
                     dayNumber = dayNumber,
                     dayType = dayType,
-                    userExercisePool = userExercisePool,
-                    oneRepMaxes = oneRepMaxes,
-                    programPreferences = programPreferences,
-                    weakMuscles = weakMuscles,
-                    currentWeekNumber = currentWeekNumber,
-                    userId = userId
+                    preparedData = preparedData
                 )
             }
             conjugateTemplates.isFullBodyDE(dayType) -> {
                 generateFullBodyDEDay(
                     programId = programId,
                     dayNumber = dayNumber,
-                    dayType = dayType,
-                    userExercisePool = userExercisePool,
-                    oneRepMaxes = oneRepMaxes,
-                    programPreferences = programPreferences,
-                    weakMuscles = weakMuscles,
-                    currentWeekNumber = currentWeekNumber,
-                    userId = userId
+                    preparedData = preparedData
                 )
             }
             else -> {
                 logger.warn("ThreeDayWorkoutStageGenerationService received unsupported day type: {}", dayType)
-                Mono.just(WorkoutGenerationResult(programId, dayNumber, dayType, userId, emptyList()))
+                Mono.just(emptyList())
             }
         }
     }
 
     /**
-     * Generates workout stages for a combined ME+DE day.
+     * Generates workout stages for a combined ME+DE day using prepared data.
      */
     private fun generateCombinedMEDay(
         programId: Long,
         dayNumber: Int,
         dayType: String,
-        userExercisePool: UserExercisePool,
-        oneRepMaxes: List<UserOneRepMax>,
-        programPreferences: ProgramPreferences,
-        weakMuscles: List<String>,
-        currentWeekNumber: Int,
-        userId: String,
-    ): Mono<WorkoutGenerationResult> {
+        preparedData: WorkoutGenerationPreparedData,
+    ): Mono<List<WorkoutStageData>> {
         // Initialize movement balance state for this workout
         var movementBalanceState = createInitialMovementBalanceState()
 
@@ -156,22 +109,27 @@ class ThreeDayWorkoutStageGenerationService(
         // Select primary ME exercise
         val primaryExerciseMono =
             selectPrimaryExercise(
-                userExercisePool = userExercisePool,
+                userExercisePool = preparedData.userExercisePool,
                 workoutType = "maximal_effort",
-                weakMuscles = weakMuscles,
                 dayType = dayType,
-                movementBalanceState = movementBalanceState
+                movementBalanceState = movementBalanceState,
+                exerciseWorkoutTypeMappings = preparedData.exerciseWorkoutTypeMappings,
+                exerciseMuscleMappings = preparedData.exerciseMuscleMappings,
+                exerciseEquipmentMappings = preparedData.exerciseEquipmentMappings
             )
 
         // Select secondary DE exercise
         val workoutType = if (dayType.startsWith("DE_")) "dynamic_effort" else "maximal_effort"
         val secondaryExerciseMono =
             selectConditioningExercise(
-                userExercisePool = userExercisePool,
-                weakMuscles = weakMuscles,
+                userExercisePool = preparedData.userExercisePool,
+                weakMuscles = preparedData.weakMuscles,
                 workoutType = workoutType,
                 dayType = dayType,
-                movementBalanceState = movementBalanceState
+                movementBalanceState = movementBalanceState,
+                exerciseWorkoutTypeMappings = preparedData.exerciseWorkoutTypeMappings,
+                exerciseMuscleMappings = preparedData.exerciseMuscleMappings,
+                exerciseEquipmentMappings = preparedData.exerciseEquipmentMappings
             )
 
         // Generate set schemes for both exercises
@@ -181,9 +139,9 @@ class ThreeDayWorkoutStageGenerationService(
                     exercise = primaryExercise,
                     movementRole = "primary",
                     dayType = primaryMovementType,
-                    oneRepMaxes = oneRepMaxes,
-                    currentWeekNumber = currentWeekNumber,
-                    userId = userId
+                    oneRepMaxes = preparedData.oneRepMaxes,
+                    currentWeekNumber = preparedData.currentWeekNumber,
+                    preparedData = preparedData
                 )
             }.onErrorResume { error ->
                 logger.error("Failed to generate set schemes for primary exercise. Error: {}", error.message)
@@ -196,9 +154,9 @@ class ThreeDayWorkoutStageGenerationService(
                     exercise = secondaryExercise,
                     movementRole = "secondary",
                     dayType = secondaryMovementType!!,
-                    oneRepMaxes = oneRepMaxes,
-                    currentWeekNumber = currentWeekNumber,
-                    userId = userId
+                    oneRepMaxes = preparedData.oneRepMaxes,
+                    currentWeekNumber = preparedData.currentWeekNumber,
+                    preparedData = preparedData
                 )
             }.onErrorResume { error ->
                 logger.error("Failed to generate set schemes for secondary exercise. Error: {}", error.message)
@@ -216,7 +174,7 @@ class ThreeDayWorkoutStageGenerationService(
                 // Calculate number of accessory exercises based on program preferences
                 val numAccessoryExercises =
                     calculateNumAccessoryExercises(
-                        sessionTimeMinutes = programPreferences.sessionTimeLengthInMinutes,
+                        sessionTimeMinutes = preparedData.programPreferences.sessionTimeLengthInMinutes,
                         primarySetSchemes = primarySetSchemes,
                         secondarySetSchemes = secondarySetSchemes,
                         dayType = dayType
@@ -227,38 +185,27 @@ class ThreeDayWorkoutStageGenerationService(
                     primaryExercise = primaryExercise,
                     secondaryExercise = secondaryExercise,
                     primarySetSchemes = primarySetSchemes,
-                    secondarySetSchemes = secondarySetSchemes,
-                    userId = userId
+                    secondarySetSchemes = secondarySetSchemes
                 )
 
                 val warmupStageMono = createWarmupStage(
-                    userExercisePool = userExercisePool,
-                    oneRepMaxes = oneRepMaxes,
+                    preparedData = preparedData,
                     dayType = dayType,
                     primaryExercise = primaryExercise,
                     secondaryExercise = secondaryExercise,
-                    isFourDayTemplate = false,
-                    currentWeekNumber = currentWeekNumber,
-                    userId = userId
+                    isFourDayTemplate = false
                 )
 
                 val accessoryStageMono = createAccessoryStage(
-                    userExercisePool = userExercisePool,
-                    oneRepMaxes = oneRepMaxes,
+                    preparedData = preparedData,
                     dayType = dayType,
-                    weakMuscles = weakMuscles,
                     numAccessoryExercises = numAccessoryExercises,
-                    userId = userId,
-                    currentWeekNumber = currentWeekNumber,
                     movementBalanceState = movementBalanceState
                 )
 
                 val conditioningStageMono = createConditioningStage(
-                    userExercisePool = userExercisePool,
-                    oneRepMaxes = oneRepMaxes,
+                    preparedData = preparedData,
                     dayType = dayType,
-                    weakMuscles = weakMuscles,
-                    userId = userId,
                     movementBalanceState = movementBalanceState
                 )
 
@@ -269,50 +216,64 @@ class ThreeDayWorkoutStageGenerationService(
                     accessoryStageMono,
                     conditioningStageMono
                 ).collectList()
-                    .map { stages ->
-                        WorkoutGenerationResult(programId, dayNumber, dayType, userId, stages)
-                    }
             }
+            .switchIfEmpty(
+                // If any exercise selection fails, create a minimal workout with just warmup and accessory stages
+                Mono.just(
+                    listOf(
+                        WorkoutStageData(
+                            stageType = WorkoutStageTypeEnum.WARMUP,
+                            position = WorkoutStageTypeEnum.WARMUP.position,
+                            name = WorkoutStageTypeEnum.WARMUP.displayName,
+                            exercises = emptyList()
+                        ),
+                        WorkoutStageData(
+                            stageType = WorkoutStageTypeEnum.ACCESSORY,
+                            position = WorkoutStageTypeEnum.ACCESSORY.position,
+                            name = WorkoutStageTypeEnum.ACCESSORY.displayName,
+                            exercises = emptyList()
+                        )
+                    )
+                )
+            )
             .doOnError { error ->
                 logger.error("Error creating combined ME+DE workout stages for program {} day {}: {}", programId, dayNumber, error.message)
             }
     }
 
     /**
-     * Generates workout stages for a full body DE day.
+     * Generates workout stages for a full body DE day using prepared data.
      */
     private fun generateFullBodyDEDay(
         programId: Long,
         dayNumber: Int,
-        dayType: String,
-        userExercisePool: UserExercisePool,
-        oneRepMaxes: List<UserOneRepMax>,
-        programPreferences: ProgramPreferences,
-        weakMuscles: List<String>,
-        currentWeekNumber: Int,
-        userId: String,
-    ): Mono<WorkoutGenerationResult> {
+        preparedData: WorkoutGenerationPreparedData,
+    ): Mono<List<WorkoutStageData>> {
         // Initialize movement balance state for this workout
         var movementBalanceState = createInitialMovementBalanceState()
 
         // Select upper body DE exercise
         val upperDEExerciseMono =
             selectPrimaryExercise(
-                userExercisePool = userExercisePool,
+                userExercisePool = preparedData.userExercisePool,
                 workoutType = "dynamic_effort",
-                weakMuscles = weakMuscles,
                 dayType = "DE_Upper",
-                movementBalanceState = movementBalanceState
+                movementBalanceState = movementBalanceState,
+                exerciseWorkoutTypeMappings = preparedData.exerciseWorkoutTypeMappings,
+                exerciseMuscleMappings = preparedData.exerciseMuscleMappings,
+                exerciseEquipmentMappings = preparedData.exerciseEquipmentMappings
             )
 
         // Select lower body DE exercise
         val lowerDEExerciseMono =
             selectPrimaryExercise(
-                userExercisePool = userExercisePool,
+                userExercisePool = preparedData.userExercisePool,
                 workoutType = "dynamic_effort",
-                weakMuscles = weakMuscles,
                 dayType = "DE_Lower",
-                movementBalanceState = movementBalanceState
+                movementBalanceState = movementBalanceState,
+                exerciseWorkoutTypeMappings = preparedData.exerciseWorkoutTypeMappings,
+                exerciseMuscleMappings = preparedData.exerciseMuscleMappings,
+                exerciseEquipmentMappings = preparedData.exerciseEquipmentMappings
             )
 
         // Generate set schemes for both exercises
@@ -322,9 +283,9 @@ class ThreeDayWorkoutStageGenerationService(
                     exercise = upperDEExercise,
                     movementRole = "primary",
                     dayType = "DE_Upper",
-                    oneRepMaxes = oneRepMaxes,
-                    currentWeekNumber = currentWeekNumber,
-                    userId = userId
+                    oneRepMaxes = preparedData.oneRepMaxes,
+                    currentWeekNumber = preparedData.currentWeekNumber,
+                    preparedData = preparedData
                 )
             }.onErrorResume { error ->
                 logger.error("Failed to generate set schemes for upper DE exercise. Error: {}", error.message)
@@ -337,9 +298,9 @@ class ThreeDayWorkoutStageGenerationService(
                     exercise = lowerDEExercise,
                     movementRole = "secondary",
                     dayType = "DE_Lower",
-                    oneRepMaxes = oneRepMaxes,
-                    currentWeekNumber = currentWeekNumber,
-                    userId = userId
+                    oneRepMaxes = preparedData.oneRepMaxes,
+                    currentWeekNumber = preparedData.currentWeekNumber,
+                    preparedData = preparedData
                 )
             }.onErrorResume { error ->
                 logger.error("Failed to generate set schemes for lower DE exercise. Error: {}", error.message)
@@ -357,7 +318,7 @@ class ThreeDayWorkoutStageGenerationService(
                 // Calculate number of accessory exercises based on program preferences
                 val numAccessoryExercises =
                     calculateNumAccessoryExercises(
-                        sessionTimeMinutes = programPreferences.sessionTimeLengthInMinutes,
+                        sessionTimeMinutes = preparedData.programPreferences.sessionTimeLengthInMinutes,
                         primarySetSchemes = upperDESetSchemes,
                         secondarySetSchemes = lowerDESetSchemes,
                         dayType = "DE_Full_Body"
@@ -368,38 +329,27 @@ class ThreeDayWorkoutStageGenerationService(
                     primaryExercise = upperDEExercise,
                     secondaryExercise = lowerDEExercise,
                     primarySetSchemes = upperDESetSchemes,
-                    secondarySetSchemes = lowerDESetSchemes,
-                    userId = userId
+                    secondarySetSchemes = lowerDESetSchemes
                 )
 
                 val warmupStageMono = createWarmupStage(
-                    userExercisePool = userExercisePool,
-                    oneRepMaxes = oneRepMaxes,
+                    preparedData = preparedData,
                     dayType = "DE_Full_Body",
                     primaryExercise = upperDEExercise,
                     secondaryExercise = lowerDEExercise,
-                    isFourDayTemplate = false,
-                    currentWeekNumber = currentWeekNumber,
-                    userId = userId
+                    isFourDayTemplate = false
                 )
 
                 val accessoryStageMono = createAccessoryStage(
-                    userExercisePool = userExercisePool,
-                    oneRepMaxes = oneRepMaxes,
+                    preparedData = preparedData,
                     dayType = "DE_Full_Body",
-                    weakMuscles = weakMuscles,
                     numAccessoryExercises = numAccessoryExercises,
-                    userId = userId,
-                    currentWeekNumber = currentWeekNumber,
                     movementBalanceState = movementBalanceState
                 )
 
                 val conditioningStageMono = createConditioningStage(
-                    userExercisePool = userExercisePool,
-                    oneRepMaxes = oneRepMaxes,
+                    preparedData = preparedData,
                     dayType = "DE_Full_Body",
-                    weakMuscles = weakMuscles,
-                    userId = userId,
                     movementBalanceState = movementBalanceState
                 )
 
@@ -410,10 +360,26 @@ class ThreeDayWorkoutStageGenerationService(
                     accessoryStageMono,
                     conditioningStageMono
                 ).collectList()
-                    .map { stages ->
-                        WorkoutGenerationResult(programId, dayNumber, dayType, userId, stages)
-                    }
             }
+            .switchIfEmpty(
+                // If any exercise selection fails, create a minimal workout with just warmup and accessory stages
+                Mono.just(
+                    listOf(
+                        WorkoutStageData(
+                            stageType = WorkoutStageTypeEnum.WARMUP,
+                            position = WorkoutStageTypeEnum.WARMUP.position,
+                            name = WorkoutStageTypeEnum.WARMUP.displayName,
+                            exercises = emptyList()
+                        ),
+                        WorkoutStageData(
+                            stageType = WorkoutStageTypeEnum.ACCESSORY,
+                            position = WorkoutStageTypeEnum.ACCESSORY.position,
+                            name = WorkoutStageTypeEnum.ACCESSORY.displayName,
+                            exercises = emptyList()
+                        )
+                    )
+                )
+            )
             .doOnError { error ->
                 logger.error("Error creating full body DE workout stages for program {} day {}: {}", programId, dayNumber, error.message)
             }

@@ -1,6 +1,14 @@
 package com.congen.generator
 
 import com.congen.model.Band
+import com.congen.model.Exercise
+import com.congen.model.ExerciseEquipment
+import com.congen.model.ExerciseMuscle
+import com.congen.model.ProgramPreferences
+import com.congen.model.UserEquipment
+import com.congen.model.UserExercisePreference
+import com.congen.model.UserOneRepMax
+import com.congen.model.WeightUnit
 import com.congen.model.WorkoutStageTypeEnum
 import java.math.BigDecimal
 
@@ -113,6 +121,26 @@ object ConjugateConstants {
 }
 
 /**
+ * Represents prepared data for workout generation.
+ */
+data class WorkoutGenerationPreparedData(
+    val userExercisePool: UserExercisePool,
+    val oneRepMaxes: List<UserOneRepMax>,
+    val programPreferences: ProgramPreferences,
+    val weakMuscles: List<String>,
+    val currentWeekNumber: Int,
+    val userId: String,
+    val weightUnitPreferences: Map<String, WeightUnit>,
+    val exerciseMuscleMappings: Map<String, List<ExerciseMuscle>>,
+    val exerciseWorkoutTypeMappings: Map<String, List<String>>,
+    val exerciseEquipmentMappings: Map<String, List<ExerciseEquipment>>,
+    val previouslyProgrammedExercises: List<String>,
+    val allExercises: List<Exercise>,
+    val userEquipment: List<UserEquipment>,
+    val userExercisePreferences: List<UserExercisePreference>
+)
+
+/**
  * Represents a complete workout generation result with all associated data.
  */
 data class WorkoutGenerationResult(
@@ -120,7 +148,8 @@ data class WorkoutGenerationResult(
     val dayNumber: Int,
     val dayType: String,
     val userId: String,
-    val stages: List<WorkoutStageData>
+    val stages: List<WorkoutStageData>,
+    val preparedData: WorkoutGenerationPreparedData
 )
 
 /**

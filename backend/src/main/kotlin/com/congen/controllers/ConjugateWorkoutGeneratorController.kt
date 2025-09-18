@@ -1,5 +1,12 @@
 package com.congen.controllers
 
+import com.congen.dal.ExerciseDAL
+import com.congen.dal.ExerciseEquipmentDAL
+import com.congen.dal.ExerciseMuscleDAL
+import com.congen.dal.ExerciseWorkoutTypeDAL
+import com.congen.dal.ProgrammedExerciseDAL
+import com.congen.dal.UserEquipmentDAL
+import com.congen.dal.UserExercisePreferenceDAL
 import com.congen.exceptions.NoResultsFoundException
 import com.congen.exceptions.ValidationException
 import com.congen.generator.ConjugateWorkoutGeneratorService
@@ -65,7 +72,14 @@ class ConjugateWorkoutGeneratorController(
     private val exercisePoolFactory: ExercisePoolFactory,
     private val programService: ProgramService,
     private val keycloakUtil: KeycloakUtil,
-    private val gdprComplianceService: GdprComplianceService
+    private val gdprComplianceService: GdprComplianceService,
+    private val exerciseDAL: ExerciseDAL,
+    private val exerciseEquipmentDAL: ExerciseEquipmentDAL,
+    private val exerciseMuscleDAL: ExerciseMuscleDAL,
+    private val exerciseWorkoutTypeDAL: ExerciseWorkoutTypeDAL,
+    private val programmedExerciseDAL: ProgrammedExerciseDAL,
+    private val userEquipmentDAL: UserEquipmentDAL,
+    private val userExercisePreferenceDAL: UserExercisePreferenceDAL
 ) {
     companion object {
         /** Logger instance for this class. */
@@ -185,28 +199,57 @@ class ConjugateWorkoutGeneratorController(
     fun getExercisePool(): Mono<ResponseEntity<UserExercisePoolResponse>> {
         return keycloakUtil.getCurrentUserId().flatMap { userId ->
             gdprComplianceService.withUserConsent(userId) {
-                exercisePoolFactory.createPoolForUser(userId)
-                    .map { userExercisePool ->
-                        // Convert UserExercisePool to UserExercisePoolResponse
-                        val availableExercises = userExercisePool.getAvailableExercises()
-                        val primaryExercises = availableExercises.filter { !it.isAccessory }
-                        val accessoryExercises = availableExercises.filter { it.isAccessory }
+                        // Fetch all required data for creating the exercise pool
+                        Mono.zip(
+                            exerciseDAL.selectExercises(),
+                            userEquipmentDAL.selectUserEquipmentByUser(userId),
+                            userExercisePreferenceDAL.selectUserExercisePreferencesByUser(userId),
+                            programmedExerciseDAL.selectProgrammedExercisesByUserId(userId),
+                            exerciseEquipmentDAL.selectAllExerciseEquipment(),
+                            exerciseMuscleDAL.selectAllExerciseMuscle()
+                        ).map { tuple ->
+                            val allExercises = tuple.t1
+                            val userEquipment = tuple.t2
+                            val userExercisePreferences = tuple.t3
+                            val previouslyUsedExercises = tuple.t4
+                            val allExerciseEquipment = tuple.t5
+                            val allExerciseMuscles = tuple.t6
 
-                        val response =
-                            UserExercisePoolResponse(
-                                userId = userId,
-                                totalExercises = userExercisePool.getAllExercises().size,
-                                availableExercises = availableExercises.size,
-                                primaryExercises = primaryExercises,
-                                accessoryExercises = accessoryExercises,
-                                userEquipment = userExercisePool.getUserEquipment(),
-                                userPreferences = userExercisePool.getUserPreferences(),
-                                previouslyUsedExercises = userExercisePool.getPreviouslyUsedExercises()
+                            // Create exercise equipment and muscle mappings
+                            val exerciseEquipmentMappings = allExerciseEquipment.groupBy { it.exerciseName }
+                            val exerciseMuscleMappings = allExerciseMuscles.groupBy { it.exerciseName }
+
+                            // Create user exercise pool from prepared data
+                            val userExercisePool = exercisePoolFactory.createPoolFromPreparedData(
+                                allExercises = allExercises,
+                                userEquipment = userEquipment,
+                                userExercisePreferences = userExercisePreferences,
+                                previouslyUsedExercises = previouslyUsedExercises,
+                                exerciseEquipmentMappings = exerciseEquipmentMappings,
+                                exerciseMuscleMappings = exerciseMuscleMappings,
+                                userId = userId
                             )
 
-                        ResponseEntity.ok(response)
-                    }
-                    .doOnError { error ->
+                    // Convert UserExercisePool to UserExercisePoolResponse
+                    val availableExercises = userExercisePool.getAvailableExercises()
+                    val primaryExercises = availableExercises.filter { !it.isAccessory }
+                    val accessoryExercises = availableExercises.filter { it.isAccessory }
+
+                    val response =
+                        UserExercisePoolResponse(
+                            userId = userId,
+                            totalExercises = userExercisePool.getAllExercises().size,
+                            availableExercises = availableExercises.size,
+                            primaryExercises = primaryExercises,
+                            accessoryExercises = accessoryExercises,
+                            userEquipment = userExercisePool.getUserEquipment(),
+                            userPreferences = userExercisePool.getUserPreferences(),
+                            previouslyUsedExercises = userExercisePool.getPreviouslyUsedExercises()
+                        )
+
+                    ResponseEntity.ok(response)
+                }
+                .doOnError { error ->
                         logger.error("Error retrieving exercise pool for user: {}", userId, error)
                     }
             }

@@ -1,6 +1,6 @@
 package com.congen.generator
 
-import com.congen.dal.ExerciseEquipmentDAL
+import com.congen.model.ExerciseEquipment
 import com.congen.model.WeightUnit
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -33,15 +33,11 @@ import kotlin.math.roundToInt
  *
  * **Dumbbell Increments**: 5 lb / 2.5 kg
  *
- * @param exerciseEquipmentDAL Data access layer for exercise equipment relationships
- *
  * @author Congen Development Team
  * @since 1.0.0
  */
 @Service
-class SupportedEquipmentWeightRoundingService(
-    private val exerciseEquipmentDAL: ExerciseEquipmentDAL
-) {
+class SupportedEquipmentWeightRoundingService {
     companion object {
         private val logger = LoggerFactory.getLogger(WeightSelectionService::class.java)
 
@@ -87,35 +83,36 @@ class SupportedEquipmentWeightRoundingService(
      * @param exerciseName The name of the exercise
      * @param targetWeight The target weight to round
      * @param weightUnit The unit of the target weight
+     * @param exerciseEquipmentMappings Pre-computed mappings of exercise names to their equipment requirements
      * @return Mono containing the rounded weight that can be achieved with available equipment
      */
     fun roundWeightForExercise(
         exerciseName: String,
         targetWeight: BigDecimal,
-        weightUnit: WeightUnit
+        weightUnit: WeightUnit,
+        exerciseEquipmentMappings: Map<String, List<ExerciseEquipment>>
     ): Mono<BigDecimal> {
-        return exerciseEquipmentDAL.selectExerciseEquipmentByExercise(exerciseName)
-            .map { equipment ->
-                val equipmentNames = equipment.map { it.equipmentName }.toSet()
+        val equipment = exerciseEquipmentMappings[exerciseName] ?: emptyList()
+        val equipmentNames = equipment.map { it.equipmentName }.toSet()
 
-                when {
-                    equipmentNames.any { it in BARBELL_EQUIPMENT } -> {
-                        roundWeightForBarbell(targetWeight, weightUnit)
-                    }
-                    equipmentNames.any { it in KETTLEBELL_EQUIPMENT } -> {
-                        roundWeightForKettlebell(targetWeight, weightUnit)
-                    }
-                    equipmentNames.any { it in DUMBBELL_EQUIPMENT } -> {
-                        roundWeightForDumbbell(targetWeight, weightUnit)
-                    }
-                    else -> {
-                        // For exercises without specific equipment requirements, return the original weight
-                        logger.debug("No specific equipment found for exercise: {}, returning original weight", exerciseName)
-                        targetWeight.setScale(2, RoundingMode.HALF_UP)
-                    }
-                }
+        val roundedWeight = when {
+            equipmentNames.any { it in BARBELL_EQUIPMENT } -> {
+                roundWeightForBarbell(targetWeight, weightUnit)
             }
-            .onErrorReturn(targetWeight.setScale(2, RoundingMode.HALF_UP)) // Return original weight if equipment lookup fails
+            equipmentNames.any { it in KETTLEBELL_EQUIPMENT } -> {
+                roundWeightForKettlebell(targetWeight, weightUnit)
+            }
+            equipmentNames.any { it in DUMBBELL_EQUIPMENT } -> {
+                roundWeightForDumbbell(targetWeight, weightUnit)
+            }
+            else -> {
+                // For exercises without specific equipment requirements, return the original weight
+                logger.debug("No specific equipment found for exercise: {}, returning original weight", exerciseName)
+                targetWeight.setScale(2, RoundingMode.HALF_UP)
+            }
+        }
+
+        return Mono.just(roundedWeight)
     }
 
     /**

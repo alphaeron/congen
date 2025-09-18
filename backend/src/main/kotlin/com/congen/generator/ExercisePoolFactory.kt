@@ -1,12 +1,11 @@
 package com.congen.generator
 
-import com.congen.dal.ExerciseDAL
-import com.congen.dal.ExerciseEquipmentDAL
-import com.congen.dal.ExerciseMuscleDAL
-import com.congen.dal.ExerciseWorkoutTypeDAL
-import com.congen.dal.ProgrammedExerciseDAL
-import com.congen.dal.UserEquipmentDAL
-import com.congen.dal.UserExercisePreferenceDAL
+import com.congen.model.Exercise
+import com.congen.model.ExerciseEquipment
+import com.congen.model.ExerciseMuscle
+import com.congen.model.ProgrammedExercise
+import com.congen.model.UserEquipment
+import com.congen.model.UserExercisePreference
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Mono
@@ -19,63 +18,50 @@ import reactor.core.publisher.Mono
  * across multiple services, providing a single source of truth for determining
  * which exercises are available to a user.
  *
- * @param exerciseEquipmentDAL Data access layer for exercise equipment relationships
- * @param exerciseMuscleDAL Data access layer for exercise muscle relationships
- * @param exerciseWorkoutTypeDAL Data access layer for exercise workout type relationships
  * @param exerciseMatchingService Service for exercise matching and scoring
- * @param exerciseDAL Data access layer for exercise operations
- * @param userEquipmentDAL Data access layer for user equipment operations
- * @param userExercisePreferenceDAL Data access layer for user exercise preference operations
- * @param programmedExerciseDAL Data access layer for programmed exercise operations
  *
  * @author Congen Development Team
  * @since 1.0.0
  */
 @Component
 class ExercisePoolFactory(
-    private val exerciseEquipmentDAL: ExerciseEquipmentDAL,
-    private val exerciseMuscleDAL: ExerciseMuscleDAL,
-    private val exerciseWorkoutTypeDAL: ExerciseWorkoutTypeDAL,
-    private val exerciseMatchingService: ExerciseMatchingService,
-    private val exerciseDAL: ExerciseDAL,
-    private val userEquipmentDAL: UserEquipmentDAL,
-    private val userExercisePreferenceDAL: UserExercisePreferenceDAL,
-    private val programmedExerciseDAL: ProgrammedExerciseDAL
+    private val exerciseMatchingService: ExerciseMatchingService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(ExercisePoolFactory::class.java)
     }
 
     /**
-     * Creates a user exercise pool for the specified user by fetching all necessary data.
-     * Implements sliding window logic to prevent exercise reuse based on available exercise pool size.
+     * Creates a user exercise pool using prepared data instead of making database calls.
+     * This method should be used in the generation stage (Stage 2) with data prepared in Stage 1.
      *
+     * @param allExercises All exercises in the system
+     * @param userEquipment User's available equipment
+     * @param userExercisePreferences User's exercise preferences
+     * @param previouslyUsedExercises Previously programmed exercises
      * @param userId The user ID to create the pool for
-     * @return Mono containing the user's exercise pool
+     * @return The user's exercise pool
      */
-    fun createPoolForUser(userId: String): Mono<UserExercisePool> {
-        return Mono.zip(
-            exerciseDAL.selectExercises(),
-            userEquipmentDAL.selectUserEquipmentByUser(userId),
-            userExercisePreferenceDAL.selectUserExercisePreferencesByUser(userId),
-            programmedExerciseDAL.selectProgrammedExercisesByUserId(userId)
-        ).map { tuple ->
-            val allExercises = tuple.t1
-            val userEquipment = tuple.t2
-            val preferences = tuple.t3
-            val previouslyUsedExercises = tuple.t4
-
-            // Don't apply sliding window logic at pool initialization level
-            // The sliding window logic will be applied during exercise selection
-            UserExercisePool(
-                allExercises = allExercises,
-                preferences = preferences,
-                userEquipment = userEquipment,
-                exerciseEquipmentDAL = exerciseEquipmentDAL,
-                previouslyUsedExercises = emptyList(), // No exclusions at pool level
-                userId = userId
-            )
-        }
+    fun createPoolFromPreparedData(
+        allExercises: List<Exercise>,
+        userEquipment: List<UserEquipment>,
+        userExercisePreferences: List<UserExercisePreference>,
+        previouslyUsedExercises: List<ProgrammedExercise>,
+        exerciseEquipmentMappings: Map<String, List<ExerciseEquipment>>,
+        exerciseMuscleMappings: Map<String, List<ExerciseMuscle>>,
+        userId: String
+    ): UserExercisePool {
+        // Don't apply sliding window logic at pool initialization level
+        // The sliding window logic will be applied during exercise selection
+        return UserExercisePool(
+            allExercises = allExercises,
+            preferences = userExercisePreferences,
+            userEquipment = userEquipment,
+            exerciseEquipmentMappings = exerciseEquipmentMappings,
+            exerciseMuscleMappings = exerciseMuscleMappings,
+            previouslyUsedExercises = previouslyUsedExercises.map { it.exerciseName },
+            userId = userId
+        )
     }
 
     /**
@@ -97,9 +83,9 @@ class ExercisePoolFactory(
      * @return List of exercise names that should be excluded from the current pool
      */
     private fun applySlidingWindowLogic(
-        allExercises: List<com.congen.model.Exercise>,
-        preferences: List<com.congen.model.UserExercisePreference>,
-        previouslyUsedExercises: List<com.congen.model.ProgrammedExercise>
+        allExercises: List<Exercise>,
+        preferences: List<UserExercisePreference>,
+        previouslyUsedExercises: List<ProgrammedExercise>
     ): List<String> {
         // Filter exercises by user preferences first
         val preferenceFilteredExercises =
