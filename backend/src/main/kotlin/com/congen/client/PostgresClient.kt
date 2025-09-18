@@ -112,7 +112,13 @@ class PostgresClient(
         query: String,
         cls: KClass<T>,
         vararg queryArgs: Any?,
-    ): Mono<T> = queryIndividual(postgresDBReader, query, cls, *queryArgs)
+    ): Mono<T> {
+        return Mono.deferContextual { contextView ->
+            val currentConnection = getCurrentConnection() ?: contextView.getOrEmpty<SqlConnection>("transactionConnection").orElse(null)
+            val clientToUse = currentConnection ?: postgresDBReader
+            queryIndividual(clientToUse, query, cls, *queryArgs)
+        }
+    }
 
     /**
      * Executes a query expecting multiple results using the reader connection.
@@ -151,7 +157,13 @@ class PostgresClient(
         query: String,
         cls: KClass<T>,
         vararg queryArgs: Any?,
-    ): Mono<List<T>> = query(postgresDBReader, query, cls, *queryArgs)
+    ): Mono<List<T>> {
+        return Mono.deferContextual { contextView ->
+            val currentConnection = getCurrentConnection() ?: contextView.getOrEmpty<SqlConnection>("transactionConnection").orElse(null)
+            val clientToUse = currentConnection ?: postgresDBReader
+            query(clientToUse, query, cls, *queryArgs)
+        }
+    }
 
     /**
      * Executes an update query using the writer connection.
@@ -190,7 +202,18 @@ class PostgresClient(
         query: String,
         cls: KClass<T>,
         vararg queryArgs: Any?,
-    ): Mono<T> = queryIndividual(postgresDBWriter, "$query RETURNING *", cls, *queryArgs)
+    ): Mono<T> {
+        return Mono.deferContextual { contextView ->
+            val currentConnection = getCurrentConnection() ?: contextView.getOrEmpty<SqlConnection>("transactionConnection").orElse(null)
+            if (currentConnection != null) {
+                // Use the transactional connection if we're in a transaction
+                queryIndividual(currentConnection, "$query RETURNING *", cls, *queryArgs)
+            } else {
+                // Use the writer connection if not in a transaction
+                queryIndividual(postgresDBWriter, "$query RETURNING *", cls, *queryArgs)
+            }
+        }
+    }
 
     /**
      * Executes an update query using the writer connection.
@@ -210,7 +233,18 @@ class PostgresClient(
         query: String,
         cls: KClass<T>,
         vararg queryArgs: Any?,
-    ): Mono<T> = queryIndividual(postgresDBWriter, query, cls, *queryArgs)
+    ): Mono<T> {
+        return Mono.deferContextual { contextView ->
+            val currentConnection = getCurrentConnection() ?: contextView.getOrEmpty<SqlConnection>("transactionConnection").orElse(null)
+            if (currentConnection != null) {
+                // Use the transactional connection if we're in a transaction
+                queryIndividual(currentConnection, query, cls, *queryArgs)
+            } else {
+                // Use the writer connection if not in a transaction
+                queryIndividual(postgresDBWriter, query, cls, *queryArgs)
+            }
+        }
+    }
 
     /**
      * Executes a query expecting exactly one result.
@@ -236,11 +270,7 @@ class PostgresClient(
     ): Mono<T> {
         logger.debug("Executing individual query: {}", query)
         
-        // Check if we're in a transaction context
-        val currentConnection = getCurrentConnection()
-        val clientToUse = currentConnection ?: sqlClient
-        
-        return query(clientToUse, query, cls, *queryArgs)
+        return query(sqlClient, query, cls, *queryArgs)
             .map {
                 if (it.size > 1) {
                     logger.error("Query returned multiple results when expecting single: {}", query)
@@ -276,12 +306,8 @@ class PostgresClient(
     ): Mono<List<T>> {
         logger.debug("Executing query: {}", query)
         
-        // Check if we're in a transaction context
-        val currentConnection = getCurrentConnection()
-        val clientToUse = currentConnection ?: sqlClient
-        
         return Mono.fromCompletionStage(
-            beginQuery(clientToUse, query, *queryArgs)
+            beginQuery(sqlClient, query, *queryArgs)
                 .thenApply { rowSet ->
                     rowSet
                         .toList()
@@ -311,7 +337,17 @@ class PostgresClient(
         query: String,
         vararg queryArgs: Any?,
     ): CompletionStage<RowSet<Row>> {
-        return sqlClient
+        // Check if we're in a transaction context
+        val currentConnection = getCurrentConnection()
+        val clientToUse = currentConnection ?: sqlClient
+        
+        if (currentConnection != null) {
+            logger.debug("Using transactional connection for query: {} with args: {}", query, queryArgs.contentToString())
+        } else {
+            logger.debug("Using regular connection for query: {} with args: {}", query, queryArgs.contentToString())
+        }
+        
+        return clientToUse
             .preparedQuery(query)
             .execute(Tuple.wrap(arrayOf(*queryArgs)))
             .recover { throwable ->
@@ -391,38 +427,47 @@ class PostgresClient(
             return block()
         }
         
-        // Use the pool's built-in withTransaction method for proper pipelined pool support
+        // Use pool.withTransaction and ensure the connection context is maintained
         return Mono.fromCompletionStage(
             pool.withTransaction<T> { sqlConnection ->
-                logger.debug("Transaction begun using pool.withTransaction")
+                logger.debug("Transaction begun with connection: {}", sqlConnection.hashCode())
                 
                 // Set the transaction context for this thread
                 setCurrentConnection(sqlConnection)
                 
                 try {
-                    // Execute the transaction block and convert to Future
-                    val future = block().toFuture()
-                    future.whenComplete { result, throwable ->
-                        // Clear the transaction context
-                        setCurrentConnection(null)
-                        
+                    // Execute the transaction block, ensuring context is preserved
+                    val result = block()
+                        .contextWrite { context ->
+                            // Store the connection in the reactive context as well
+                            context.put("transactionConnection", sqlConnection)
+                        }
+                        .doFinally { signal ->
+                            // Clear the transaction context on completion or error
+                            setCurrentConnection(null)
+                            logger.debug("Transaction context cleared due to signal: {}", signal)
+                        }
+                        .toFuture()
+                    
+                    result.whenComplete { _, throwable ->
                         if (throwable != null) {
                             logger.warn("Transaction failed: {}", throwable.message)
                         } else {
                             logger.debug("Transaction completed successfully")
                         }
                     }
+                    
                     // Convert CompletableFuture to Vert.x Future
-                    Future.fromCompletionStage(future)
+                    Future.fromCompletionStage(result)
                 } catch (e: Exception) {
                     // Clear the transaction context on exception
                     setCurrentConnection(null)
                     logger.warn("Transaction failed with exception: {}", e.message)
-                    Future.failedFuture(e)
+                    Future.failedFuture<T>(e)
                 }
             }.toCompletionStage()
         )
-        .onErrorMap { throwable ->
+        .onErrorMap { throwable: Throwable ->
             when (throwable) {
                 is ConnectException -> {
                     logger.error("Database connection error during transaction", throwable)

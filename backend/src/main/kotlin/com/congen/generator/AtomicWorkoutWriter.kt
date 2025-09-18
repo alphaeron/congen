@@ -90,6 +90,7 @@ class AtomicWorkoutWriter(
             workoutResult.dayType
         )
             .flatMap { createdWorkout ->
+                logger.debug("Created programmed workout with ID: {}", createdWorkout.id)
                 writeWorkoutStages(createdWorkout.id, workoutResult.stages, workoutResult.preparedData)
                     .then(Mono.just(createdWorkout))
             }

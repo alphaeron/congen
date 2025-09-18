@@ -26,10 +26,18 @@ class SupportedEquipmentWeightRoundingServiceIntegrationTest : BaseIntegrationTe
     @Autowired
     private lateinit var exerciseEquipmentDAL: ExerciseEquipmentDAL
 
+    private lateinit var exerciseEquipmentMappings: Map<String, List<com.congen.model.ExerciseEquipment>>
+
     @BeforeEach
     override fun setUp() {
         super.setUp()
         // Database is already populated with exercise and equipment data from migration scripts
+        // Load exercise equipment mappings for use in tests
+        exerciseEquipmentMappings = exerciseEquipmentDAL.selectAllExerciseEquipment()
+            .map { equipmentList ->
+                equipmentList.groupBy { it.exerciseName }
+            }
+            .block() ?: emptyMap()
     }
 
     @Test
@@ -38,7 +46,7 @@ class SupportedEquipmentWeightRoundingServiceIntegrationTest : BaseIntegrationTe
         val targetWeight = BigDecimal("185.0") // 185 lbs
         val weightUnit = WeightUnit.LBS
 
-        val result = supportedEquipmentWeightRoundingService.roundWeightForExercise(exerciseName, targetWeight, weightUnit)
+        val result = supportedEquipmentWeightRoundingService.roundWeightForExercise(exerciseName, targetWeight, weightUnit, exerciseEquipmentMappings)
 
         StepVerifier.create(result)
             .expectNext(BigDecimal("185.00")) // 45lb bar + 2x45lb + 2x25lb plates = 185lbs
@@ -51,7 +59,7 @@ class SupportedEquipmentWeightRoundingServiceIntegrationTest : BaseIntegrationTe
         val targetWeight = BigDecimal("30.0") // 30 lbs (below 45lb bar)
         val weightUnit = WeightUnit.LBS
 
-        val result = supportedEquipmentWeightRoundingService.roundWeightForExercise(exerciseName, targetWeight, weightUnit)
+        val result = supportedEquipmentWeightRoundingService.roundWeightForExercise(exerciseName, targetWeight, weightUnit, exerciseEquipmentMappings)
 
         StepVerifier.create(result)
             .expectNext(BigDecimal("45.00")) // Should return bar weight
@@ -64,7 +72,7 @@ class SupportedEquipmentWeightRoundingServiceIntegrationTest : BaseIntegrationTe
         val targetWeight = BigDecimal("35.0") // 35 lbs
         val weightUnit = WeightUnit.LBS
 
-        val result = supportedEquipmentWeightRoundingService.roundWeightForExercise(exerciseName, targetWeight, weightUnit)
+        val result = supportedEquipmentWeightRoundingService.roundWeightForExercise(exerciseName, targetWeight, weightUnit, exerciseEquipmentMappings)
 
         StepVerifier.create(result)
             .expectNext(BigDecimal("35.00")) // Should match available kettlebell weight
@@ -77,7 +85,7 @@ class SupportedEquipmentWeightRoundingServiceIntegrationTest : BaseIntegrationTe
         val targetWeight = BigDecimal("37.0") // 37 lbs (not in standard weights)
         val weightUnit = WeightUnit.LBS
 
-        val result = supportedEquipmentWeightRoundingService.roundWeightForExercise(exerciseName, targetWeight, weightUnit)
+        val result = supportedEquipmentWeightRoundingService.roundWeightForExercise(exerciseName, targetWeight, weightUnit, exerciseEquipmentMappings)
 
         StepVerifier.create(result)
             .expectNext(BigDecimal("35.00")) // Should round to closest available (35lb is closer than 40lb)
@@ -90,7 +98,7 @@ class SupportedEquipmentWeightRoundingServiceIntegrationTest : BaseIntegrationTe
         val targetWeight = BigDecimal("27.5") // 27.5 lbs
         val weightUnit = WeightUnit.LBS
 
-        val result = supportedEquipmentWeightRoundingService.roundWeightForExercise(exerciseName, targetWeight, weightUnit)
+        val result = supportedEquipmentWeightRoundingService.roundWeightForExercise(exerciseName, targetWeight, weightUnit, exerciseEquipmentMappings)
 
         StepVerifier.create(result)
             .expectNext(BigDecimal("30.00")) // Should round to nearest 5lb increment
@@ -103,7 +111,7 @@ class SupportedEquipmentWeightRoundingServiceIntegrationTest : BaseIntegrationTe
         val targetWeight = BigDecimal("12.3") // 12.3 kg
         val weightUnit = WeightUnit.KG
 
-        val result = supportedEquipmentWeightRoundingService.roundWeightForExercise(exerciseName, targetWeight, weightUnit)
+        val result = supportedEquipmentWeightRoundingService.roundWeightForExercise(exerciseName, targetWeight, weightUnit, exerciseEquipmentMappings)
 
         StepVerifier.create(result)
             .expectNext(BigDecimal("12.50")) // Should round to nearest 2.5kg increment
@@ -116,7 +124,7 @@ class SupportedEquipmentWeightRoundingServiceIntegrationTest : BaseIntegrationTe
         val targetWeight = BigDecimal("0.0") // Bodyweight exercise
         val weightUnit = WeightUnit.LBS
 
-        val result = supportedEquipmentWeightRoundingService.roundWeightForExercise(exerciseName, targetWeight, weightUnit)
+        val result = supportedEquipmentWeightRoundingService.roundWeightForExercise(exerciseName, targetWeight, weightUnit, exerciseEquipmentMappings)
 
         StepVerifier.create(result)
             .expectNext(targetWeight.setScale(2, RoundingMode.HALF_UP)) // Should return original weight with proper scale
@@ -129,7 +137,7 @@ class SupportedEquipmentWeightRoundingServiceIntegrationTest : BaseIntegrationTe
         val targetWeight = BigDecimal("100.0") // 100 kg
         val weightUnit = WeightUnit.KG
 
-        val result = supportedEquipmentWeightRoundingService.roundWeightForExercise(exerciseName, targetWeight, weightUnit)
+        val result = supportedEquipmentWeightRoundingService.roundWeightForExercise(exerciseName, targetWeight, weightUnit, exerciseEquipmentMappings)
 
         StepVerifier.create(result)
             .expectNext(BigDecimal("100.00")) // 20kg bar + 2x25kg + 2x15kg plates = 100kg
@@ -142,7 +150,7 @@ class SupportedEquipmentWeightRoundingServiceIntegrationTest : BaseIntegrationTe
         val targetWeight = BigDecimal("18.0") // 18 kg
         val weightUnit = WeightUnit.KG
 
-        val result = supportedEquipmentWeightRoundingService.roundWeightForExercise(exerciseName, targetWeight, weightUnit)
+        val result = supportedEquipmentWeightRoundingService.roundWeightForExercise(exerciseName, targetWeight, weightUnit, exerciseEquipmentMappings)
 
         StepVerifier.create(result)
             .expectNext(BigDecimal("18.00")) // Should match available kettlebell weight
@@ -155,7 +163,7 @@ class SupportedEquipmentWeightRoundingServiceIntegrationTest : BaseIntegrationTe
         val targetWeight = BigDecimal("225.0") // 225 lbs
         val weightUnit = WeightUnit.LBS
 
-        val result = supportedEquipmentWeightRoundingService.roundWeightForExercise(exerciseName, targetWeight, weightUnit)
+        val result = supportedEquipmentWeightRoundingService.roundWeightForExercise(exerciseName, targetWeight, weightUnit, exerciseEquipmentMappings)
 
         StepVerifier.create(result)
             .expectNext(BigDecimal("225.00")) // Should use barbell plate logic
@@ -168,7 +176,7 @@ class SupportedEquipmentWeightRoundingServiceIntegrationTest : BaseIntegrationTe
         val targetWeight = BigDecimal("135.0") // 135 lbs
         val weightUnit = WeightUnit.LBS
 
-        val result = supportedEquipmentWeightRoundingService.roundWeightForExercise(exerciseName, targetWeight, weightUnit)
+        val result = supportedEquipmentWeightRoundingService.roundWeightForExercise(exerciseName, targetWeight, weightUnit, exerciseEquipmentMappings)
 
         StepVerifier.create(result)
             .expectNext(BigDecimal("135.00")) // Should use barbell plate logic
@@ -181,7 +189,7 @@ class SupportedEquipmentWeightRoundingServiceIntegrationTest : BaseIntegrationTe
         val targetWeight = BigDecimal("275.0") // 275 lbs
         val weightUnit = WeightUnit.LBS
 
-        val result = supportedEquipmentWeightRoundingService.roundWeightForExercise(exerciseName, targetWeight, weightUnit)
+        val result = supportedEquipmentWeightRoundingService.roundWeightForExercise(exerciseName, targetWeight, weightUnit, exerciseEquipmentMappings)
 
         StepVerifier.create(result)
             .expectNext(BigDecimal("225.00")) // Should use barbell plate logic (275 not achievable with standard plates)
@@ -194,7 +202,7 @@ class SupportedEquipmentWeightRoundingServiceIntegrationTest : BaseIntegrationTe
         val targetWeight = BigDecimal("22.5") // 22.5 lbs
         val weightUnit = WeightUnit.LBS
 
-        val result = supportedEquipmentWeightRoundingService.roundWeightForExercise(exerciseName, targetWeight, weightUnit)
+        val result = supportedEquipmentWeightRoundingService.roundWeightForExercise(exerciseName, targetWeight, weightUnit, exerciseEquipmentMappings)
 
         StepVerifier.create(result)
             .expectNext(BigDecimal("25.00")) // Should round to nearest 5lb increment for dumbbells
@@ -207,7 +215,7 @@ class SupportedEquipmentWeightRoundingServiceIntegrationTest : BaseIntegrationTe
         val targetWeight = BigDecimal("100.0")
         val weightUnit = WeightUnit.LBS
 
-        val result = supportedEquipmentWeightRoundingService.roundWeightForExercise(exerciseName, targetWeight, weightUnit)
+        val result = supportedEquipmentWeightRoundingService.roundWeightForExercise(exerciseName, targetWeight, weightUnit, exerciseEquipmentMappings)
 
         StepVerifier.create(result)
             .expectNext(targetWeight.setScale(2, RoundingMode.HALF_UP)) // Should return original weight when no equipment found
