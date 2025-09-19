@@ -211,14 +211,22 @@ describe('Workouts', () => {
       renderWithProviders(<Workouts user={mockUser} />);
     });
 
+    // Wait for the component to load and render
     await waitFor(
       () => {
         expect(screen.getByText('Test Program')).toBeInTheDocument();
-        expect(screen.getByText(/Week.*2/)).toBeInTheDocument();
       },
       { timeout: 10000 }
     );
-  });
+
+    // Check for week information - it should be in the progress section
+    await waitFor(
+      () => {
+        expect(screen.getByText('Current Week: Week 2')).toBeInTheDocument();
+      },
+      { timeout: 5000 }
+    );
+  }, 15000);
 
   it('shows generate next week button', async () => {
     mock.onGet('/program/with-preferences').reply(200, [mockProgramWithPreferences]);

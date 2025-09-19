@@ -176,12 +176,12 @@ describe('WorkoutWeekDetails', () => {
 
     await waitFor(
       () => {
-        expect(screen.getByText('Workouts')).toBeInTheDocument();
-        expect(screen.getByText(/1 workouts • Week 1 of 2/)).toBeInTheDocument();
+        expect(screen.getByText('Test Program')).toBeInTheDocument();
+        expect(screen.getByText('Week 1')).toBeInTheDocument();
       },
       { timeout: 10000 }
     );
-  });
+  }, 15000);
 
   it('displays week workouts when workouts exist for the week', async () => {
     mock.onGet('/program/with-preferences').reply(200, [mockProgramWithPreferences]);
@@ -209,14 +209,14 @@ describe('WorkoutWeekDetails', () => {
 
     await waitFor(
       () => {
-        expect(screen.getByText('Workouts')).toBeInTheDocument();
-        expect(screen.getByText(/1 workouts • Week 1 of 2/)).toBeInTheDocument();
+        expect(screen.getByText('Test Program')).toBeInTheDocument();
+        expect(screen.getByText('Week 1')).toBeInTheDocument();
         expect(screen.getByText('Day 1')).toBeInTheDocument();
         expect(screen.getByText('Push Day')).toBeInTheDocument();
       },
       { timeout: 10000 }
     );
-  });
+  }, 15000);
 
   it('shows no workouts message when no workouts exist for the week', async () => {
     mock.onGet('/program/with-preferences').reply(200, [mockProgramWithPreferences]);

@@ -201,46 +201,51 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ user }) =>
       {/* Key Performance Indicators */}
       <Card sx={{ mb: 3 }}>
         <CardContent>
-          <Typography variant="h6" gutterBottom>
-            Key Performance Indicators
-          </Typography>
+          <Box display="flex" alignItems="center" gap={1} sx={{ mb: 2 }}>
+            <Typography variant="h6">
+              Key Performance Indicators
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              • Your training overview
+            </Typography>
+          </Box>
           <Grid container spacing={2}>
             <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-              <Box textAlign="center">
-                <Typography variant="h4" color="primary">
+              <Box textAlign="center" sx={{ p: 2, borderRadius: 1, backgroundColor: 'primary.light', color: 'primary.contrastText' }}>
+                <Typography variant="h4" fontWeight="bold">
                   {totalWorkouts}
                 </Typography>
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant="body2" sx={{ opacity: 0.9 }}>
                   Total Workouts
                 </Typography>
               </Box>
             </Grid>
             <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-              <Box textAlign="center">
-                <Typography variant="h4" color="secondary">
+              <Box textAlign="center" sx={{ p: 2, borderRadius: 1, backgroundColor: 'secondary.light', color: 'secondary.contrastText' }}>
+                <Typography variant="h4" fontWeight="bold">
                   {Math.round(totalVolume / 1000)}k
                 </Typography>
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant="body2" sx={{ opacity: 0.9 }}>
                   Total Volume (lbs)
                 </Typography>
               </Box>
             </Grid>
             <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-              <Box textAlign="center">
-                <Typography variant="h4" color="success">
+              <Box textAlign="center" sx={{ p: 2, borderRadius: 1, backgroundColor: 'success.light', color: 'success.contrastText' }}>
+                <Typography variant="h4" fontWeight="bold">
                   {oneRepMaxes.length}
                 </Typography>
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant="body2" sx={{ opacity: 0.9 }}>
                   1RM Records
                 </Typography>
               </Box>
             </Grid>
             <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-              <Box textAlign="center">
-                <Typography variant="h4" color="info">
+              <Box textAlign="center" sx={{ p: 2, borderRadius: 1, backgroundColor: 'info.light', color: 'info.contrastText' }}>
+                <Typography variant="h4" fontWeight="bold">
                   {Math.round(latestVolume)}
                 </Typography>
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant="body2" sx={{ opacity: 0.9 }}>
                   Latest Volume (lbs)
                 </Typography>
               </Box>

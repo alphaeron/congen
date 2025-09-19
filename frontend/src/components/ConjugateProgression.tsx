@@ -139,21 +139,21 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({
 
   return (
     <Grid container spacing={3}>
-      {/* Volume Tracking Chart */}
-      <Grid size={{ xs: 12, lg: 8 }}>
+      {/* Progress Tracking Chart - Shows strength gains over time */}
+      <Grid size={{ xs: 12, lg: 6 }}>
         <LineChart
           userDataExport={userData}
           exerciseData={exerciseData}
-          chartType="volume"
-          title="Volume Progression"
-          description="Total weight lifted over time (including band resistance)"
+          chartType="progress"
+          title="Strength & Volume Progress"
+          description="1RM improvements and volume trends over time"
           xAxisLabel="Workout Date"
-          yAxisLabel="Volume (lbs)"
+          yAxisLabel="Weight (lbs)"
         />
       </Grid>
 
       {/* Exercise Category Distribution */}
-      <Grid size={{ xs: 12, lg: 4 }}>
+      <Grid size={{ xs: 12, lg: 6 }}>
         <PieChart
           userDataExport={userData}
           exerciseData={exerciseData}
@@ -163,12 +163,37 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({
         />
       </Grid>
 
-      {/* 1RM Table and Progress Tracking */}
-      <Grid size={{ xs: 12, lg: 4 }}>
-        <Card variant="outlined">
+      {/* 1RM Table and Progress Tracking - Enhanced UX design */}
+      <Grid size={{ xs: 12 }}>
+        <Card variant="outlined" sx={{ 
+          background: 'linear-gradient(135deg, rgba(25, 118, 210, 0.05) 0%, rgba(156, 39, 176, 0.05) 100%)',
+          border: '1px solid',
+          borderColor: 'primary.light'
+        }}>
           <CardContent>
-            <Typography variant="h6" gutterBottom>
-              Current 1RM Values
+            <Box display="flex" alignItems="center" gap={1} sx={{ mb: 2 }}>
+              <Typography variant="h6" fontWeight="medium">
+                Personal Records (1RM)
+              </Typography>
+              <Box
+                sx={{
+                  backgroundColor: 'primary.main',
+                  color: 'primary.contrastText',
+                  borderRadius: '50%',
+                  width: 24,
+                  height: 24,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '0.75rem',
+                  fontWeight: 'bold'
+                }}
+              >
+                {oneRepMaxes.length}
+              </Box>
+            </Box>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+              Track your strength progress and personal records • Click to view details
             </Typography>
             <TextField
               fullWidth
@@ -183,7 +208,15 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({
                   </InputAdornment>
                 ),
               }}
-              sx={{ mb: 2 }}
+              sx={{ 
+                mb: 2,
+                '& .MuiOutlinedInput-root': {
+                  backgroundColor: 'background.paper',
+                  '&:hover': {
+                    backgroundColor: 'action.hover',
+                  }
+                }
+              }}
             />
             <Box
               ref={tableParentRef}
@@ -191,9 +224,17 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({
                 maxHeight: 400,
                 overflow: 'auto',
                 height: '400px',
+                borderRadius: 1,
+                border: 1,
+                borderColor: 'divider',
+                backgroundColor: 'background.paper'
               }}
             >
-              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <table style={{ 
+                width: '100%', 
+                borderCollapse: 'collapse',
+                fontFamily: 'inherit'
+              }}>
                 <thead>
                   {table.getHeaderGroups().map(headerGroup => (
                     <tr key={headerGroup.id}>
@@ -202,9 +243,14 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({
                           key={header.id}
                           style={{
                             textAlign: 'left',
-                            padding: '8px',
-                            borderBottom: '1px solid #e0e0e0',
-                            fontWeight: 'bold',
+                            padding: '12px 16px',
+                            borderBottom: '2px solid #e0e0e0',
+                            fontWeight: '600',
+                            backgroundColor: '#f8f9fa',
+                            color: '#495057',
+                            fontSize: '0.875rem',
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.5px'
                           }}
                         >
                           {flexRender(header.column.columnDef.header, header.getContext())}
@@ -242,8 +288,16 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({
                           <td
                             key={cell.id}
                             style={{
-                              padding: '8px',
+                              padding: '12px 16px',
                               borderBottom: '1px solid #f0f0f0',
+                              fontSize: '0.875rem',
+                              transition: 'background-color 0.2s ease'
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.backgroundColor = '#f8f9fa';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.backgroundColor = 'transparent';
                             }}
                           >
                             {flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -259,18 +313,6 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({
         </Card>
       </Grid>
 
-      {/* Progress Tracking Chart */}
-      <Grid size={{ xs: 12, lg: 8 }}>
-        <LineChart
-          userDataExport={userData}
-          exerciseData={exerciseData}
-          chartType="progress"
-          title="Progress Tracking"
-          description="1RM improvements and volume progression over time"
-          xAxisLabel="Date"
-          yAxisLabel="Weight (lbs)"
-        />
-      </Grid>
     </Grid>
   );
 };

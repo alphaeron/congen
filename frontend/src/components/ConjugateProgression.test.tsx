@@ -272,10 +272,9 @@ describe('ConjugateProgression', () => {
     ).not.toBeInTheDocument();
 
     // Check that the component renders the actual content
-    expect(screen.getByText('Volume Progression')).toBeInTheDocument();
+    expect(screen.getByText('Strength & Volume Progress')).toBeInTheDocument();
     expect(screen.getByText('Exercise Distribution')).toBeInTheDocument();
-    expect(screen.getByText('Current 1RM Values')).toBeInTheDocument();
-    expect(screen.getByText('Progress Tracking')).toBeInTheDocument();
+    expect(screen.getByText('Personal Records (1RM)')).toBeInTheDocument();
   });
 
   it('should handle weight unit conversion correctly', () => {
@@ -307,7 +306,7 @@ describe('ConjugateProgression', () => {
     );
 
     // Component should render without errors and show the expected content
-    expect(screen.getByText('Volume Progression')).toBeInTheDocument();
+    expect(screen.getByText('Strength & Volume Progress')).toBeInTheDocument();
     expect(screen.getByText('Bench Press')).toBeInTheDocument();
     expect(screen.getByText('Squat')).toBeInTheDocument();
   });

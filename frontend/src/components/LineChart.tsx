@@ -26,7 +26,7 @@ interface LineChartProps {
   height?: number;
   showLegend?: boolean;
   colors?: string[];
-  chartType: 'volume' | 'progress';
+  chartType: 'progress';
 }
 
 /**
@@ -44,7 +44,7 @@ interface LineChartProps {
  * @param height Optional height for the chart container
  * @param showLegend Whether to show the legend
  * @param colors Optional color scheme
- * @param chartType Type of chart to render ('volume' or 'progress')
+ * @param chartType Type of chart to render ('progress')
  * @return Line Chart component
  */
 export const LineChart: React.FC<LineChartProps> = ({
@@ -75,61 +75,10 @@ export const LineChart: React.FC<LineChartProps> = ({
     return allWorkouts;
   }, [userDataExport]);
 
-  // Calculate volume data for volume charts
-  const volumeData = useMemo(() => {
-    if (chartType !== 'volume' || !workouts.length || !exerciseData) return [];
-
-    return workouts
-      .map(workoutData => {
-        const totalVolume = 0;
-        let maxEffortVolume = 0;
-        let dynamicEffortVolume = 0;
-        let accessoryVolume = 0;
-
-        (workoutData.stages as WorkoutStageWithExercises[]).forEach(stage => {
-          stage.exercises.forEach(exerciseWithSchemes => {
-            exerciseWithSchemes.set_schemes.forEach(setScheme => {
-              const weight = setScheme.performed_weight || setScheme.target_weight || 0;
-              const reps = setScheme.performed_rep_count || setScheme.target_rep_count || 0;
-              const bandWeight = setScheme.band_weight_lbs
-                ? (setScheme.band_weight_lbs as { weight_lbs: number })?.weight_lbs || 0
-                : 0;
-
-              const totalWeight = weight + bandWeight;
-              const setVolume = totalWeight * reps;
-
-              // Get exercise data and categorize volume using shared helper
-              const exerciseName = exerciseWithSchemes.exercise.exercise_name;
-              const exerciseInfo = exerciseData.get(exerciseName);
-              const categorizedVolume = categorizeExerciseVolume(
-                exerciseInfo,
-                replaceUnderscoresWithSpaces(workoutData.workout.name),
-                setVolume
-              );
-
-              maxEffortVolume += categorizedVolume.maxEffortVolume;
-              dynamicEffortVolume += categorizedVolume.dynamicEffortVolume;
-              accessoryVolume += categorizedVolume.accessoryVolume;
-            });
-          });
-        });
-
-        return {
-          date: formatDate(workoutData.workout.created_at),
-          totalVolume: Math.round(
-            totalVolume + maxEffortVolume + dynamicEffortVolume + accessoryVolume
-          ),
-          maxEffortVolume: Math.round(maxEffortVolume),
-          dynamicEffortVolume: Math.round(dynamicEffortVolume),
-          accessoryVolume: Math.round(accessoryVolume),
-        };
-      })
-      .slice(-10); // Last 10 workouts
-  }, [workouts, exerciseData, chartType]);
 
   // Calculate progress data for progress charts
   const progressData = useMemo(() => {
-    if (chartType !== 'progress' || !userDataExport) return [];
+    if (!userDataExport) return [];
 
     const progress: Array<{
       date: string;
@@ -155,57 +104,49 @@ export const LineChart: React.FC<LineChartProps> = ({
       });
     }
 
-    // Add volume data from recent workouts
-    volumeData.forEach(volume => {
-      progress.push({
-        date: volume.date,
-        exercise: 'Total Volume',
-        weight: volume.totalVolume,
-        type: 'Volume',
+    // Add volume data from recent workouts (simplified)
+    if (workouts.length) {
+      workouts.slice(-10).forEach(workoutData => {
+        let totalVolume = 0;
+        (workoutData.stages as WorkoutStageWithExercises[]).forEach(stage => {
+          stage.exercises.forEach(exerciseWithSchemes => {
+            exerciseWithSchemes.set_schemes.forEach(setScheme => {
+              const weight = setScheme.performed_weight || setScheme.target_weight || 0;
+              const reps = setScheme.performed_rep_count || setScheme.target_rep_count || 0;
+              const bandWeight = setScheme.band_weight_lbs
+                ? (setScheme.band_weight_lbs as { weight_lbs: number })?.weight_lbs || 0
+                : 0;
+              totalVolume += (weight + bandWeight) * reps;
+            });
+          });
+        });
+        progress.push({
+          date: formatDate(workoutData.workout.created_at),
+          exercise: 'Total Volume',
+          weight: totalVolume,
+          type: 'Volume',
+        });
       });
-    });
+    }
 
     return progress.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-  }, [userDataExport, volumeData, chartType]);
+  }, [userDataExport, workouts]);
 
-  // Prepare chart data based on chart type
+  // Prepare chart data for progress charts
   const chartData = useMemo(() => {
-    if (chartType === 'volume') {
-      return [
-        {
-          id: 'Total Volume',
-          data: volumeData.map(d => ({ x: d.date, y: d.totalVolume })),
-        },
-        {
-          id: 'Max Effort',
-          data: volumeData.map(d => ({ x: d.date, y: d.maxEffortVolume })),
-        },
-        {
-          id: 'Dynamic Effort',
-          data: volumeData.map(d => ({ x: d.date, y: d.dynamicEffortVolume })),
-        },
-        {
-          id: 'Accessory',
-          data: volumeData.map(d => ({ x: d.date, y: d.accessoryVolume })),
-        },
-      ];
-    } else if (chartType === 'progress') {
-      return [
-        {
-          id: '1RM Progress',
-          data: progressData.filter(d => d.type === '1RM').map(d => ({ x: d.date, y: d.weight })),
-        },
-        {
-          id: 'Volume Progress',
-          data: progressData
-            .filter(d => d.type === 'Volume')
-            .map(d => ({ x: d.date, y: d.weight / 1000 })), // Scale down for visibility
-        },
-      ];
-    } else {
-      return [];
-    }
-  }, [chartType, volumeData, progressData]);
+    return [
+      {
+        id: '1RM Progress',
+        data: progressData.filter(d => d.type === '1RM').map(d => ({ x: d.date, y: d.weight })),
+      },
+      {
+        id: 'Volume Progress',
+        data: progressData
+          .filter(d => d.type === 'Volume')
+          .map(d => ({ x: d.date, y: d.weight / 1000 })), // Scale down for visibility
+      },
+    ];
+  }, [progressData]);
 
   // Filter data based on legend selection
   const filteredData = useMemo(() => {
@@ -215,32 +156,29 @@ export const LineChart: React.FC<LineChartProps> = ({
     return chartData.filter(item => selectedItems.includes(item.id));
   }, [chartData, selectedItems]);
 
-  // Don't render if no data, but show a message for progress charts
+  // Don't render if no data
   if (!chartData.length || !chartData[0].data.length) {
-    if (chartType === 'progress') {
-      return (
-        <Card variant="outlined">
-          <CardContent>
-            <Box display="flex" alignItems="center" gap={1} sx={{ mb: 2 }}>
-              <BarChartIcon color="primary" />
-              <Typography variant="h6">{title}</Typography>
-            </Box>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-              {description}
+    return (
+      <Card variant="outlined">
+        <CardContent>
+          <Box display="flex" alignItems="center" gap={1} sx={{ mb: 2 }}>
+            <BarChartIcon color="primary" />
+            <Typography variant="h6">{title}</Typography>
+          </Box>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            {description}
+          </Typography>
+          <Box
+            sx={{ height: 200, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          >
+            <Typography variant="body2" color="text.secondary">
+              No progress data available. Complete workouts and record 1RM values to see progress
+              tracking.
             </Typography>
-            <Box
-              sx={{ height: 200, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-            >
-              <Typography variant="body2" color="text.secondary">
-                No progress data available. Complete workouts and record 1RM values to see progress
-                tracking.
-              </Typography>
-            </Box>
-          </CardContent>
-        </Card>
-      );
-    }
-    return null;
+          </Box>
+        </CardContent>
+      </Card>
+    );
   }
 
   return (
@@ -285,56 +223,43 @@ export const LineChart: React.FC<LineChartProps> = ({
             useMesh={true}
             colors={colors || congenColorSchemes.strength}
             theme={nivoTheme}
-            tooltip={({ point }) => (
-              <div
-                style={{
-                  padding: '8px 12px',
-                  color: nivoTheme.tooltip.container.color,
-                  background: nivoTheme.tooltip.container.background,
-                  borderRadius: nivoTheme.tooltip.container.borderRadius,
-                  boxShadow: nivoTheme.tooltip.container.boxShadow,
-                  border: nivoTheme.tooltip.container.border,
-                  whiteSpace: 'nowrap',
-                  fontSize: nivoTheme.tooltip.container.fontSize,
-                  fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
-                  lineHeight: '1.4',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                }}
-              >
-                <div
-                  style={{
-                    width: '12px',
-                    height: '12px',
-                    backgroundColor: point.seriesColor,
-                    borderRadius: '2px',
-                    flexShrink: 0,
-                  }}
-                />
-                <div>
-                  {chartType === 'volume' ? (
-                    <React.Fragment>
-                      <div>
-                        Date: <span style={{ fontWeight: 'bold' }}>{point.data.x}</span>
-                      </div>
-                      <div>
-                        Volume: <span style={{ fontWeight: 'bold' }}>{point.data.y} lbs</span>
-                      </div>
-                    </React.Fragment>
-                  ) : (
-                    <React.Fragment>
-                      <div>
-                        Date: <span style={{ fontWeight: 'bold' }}>{point.data.x}</span>
-                      </div>
-                      <div>
-                        Weight: <span style={{ fontWeight: 'bold' }}>{point.data.y} lbs</span>
-                      </div>
-                    </React.Fragment>
-                  )}
-                </div>
-              </div>
-            )}
+             tooltip={({ point }) => (
+               <div
+                 style={{
+                   padding: '8px 12px',
+                   color: nivoTheme.tooltip.container.color,
+                   background: nivoTheme.tooltip.container.background,
+                   borderRadius: nivoTheme.tooltip.container.borderRadius,
+                   boxShadow: nivoTheme.tooltip.container.boxShadow,
+                   border: nivoTheme.tooltip.container.border,
+                   whiteSpace: 'nowrap',
+                   fontSize: nivoTheme.tooltip.container.fontSize,
+                   fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
+                   lineHeight: '1.4',
+                   display: 'flex',
+                   alignItems: 'center',
+                   gap: '8px',
+                 }}
+               >
+                 <div
+                   style={{
+                     width: '12px',
+                     height: '12px',
+                     backgroundColor: point.seriesColor,
+                     borderRadius: '2px',
+                     flexShrink: 0,
+                   }}
+                 />
+                 <div>
+                   <div>
+                     Date: <span style={{ fontWeight: 'bold' }}>{point.data.x}</span>
+                   </div>
+                   <div>
+                     Weight: <span style={{ fontWeight: 'bold' }}>{point.data.y} lbs</span>
+                   </div>
+                 </div>
+               </div>
+             )}
             legends={
               showLegend
                 ? [

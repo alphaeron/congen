@@ -22,6 +22,9 @@ import { ChordChart } from './ChordChart';
 import { ExerciseName } from './ExerciseName';
 import { ExportButtons } from './ExportButtons';
 import { LoadingSpinner } from './LoadingSpinner';
+import { ProgressBar } from './ProgressBar';
+import { calculateWorkoutProgress } from '../utils/progressUtils';
+
 import { SunburstChart } from './SunburstChart';
 import { SetSchemeEditor } from './SetSchemeEditor';
 import { SetSchemeForm, type SetSchemeFormData } from './SetSchemeForm';
@@ -354,12 +357,20 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
     navigate(`/dashboard?${newSearchParams.toString()}`);
   };
 
-  // Render breadcrumbs
+  // Calculate workout progress metrics
+  const getWorkoutProgressMetrics = () => {
+    if (!workoutData) return null;
+    
+    return calculateWorkoutProgress(workoutData);
+  };
+
+  // Render breadcrumbs with integrated progress
   const renderBreadcrumbs = () => {
     if (!workoutData || !userData) return null;
 
     const workoutName = replaceUnderscoresWithSpaces(workoutData.workout.name);
     const dayNumber = workoutData.workout.day_number;
+    const progressMetrics = getWorkoutProgressMetrics();
     
     // Find the active program to get workouts per week and program name
     let weekNumber = 1;
@@ -391,7 +402,7 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
         }}
       >
         <Box sx={{ mb: 2 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
             <Button
               variant="text"
               onClick={() => handleBreadcrumbClick('workouts')}
@@ -454,6 +465,26 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
               </Button>
             )}
           </Box>
+          
+            {/* Workout progress indicator integrated into breadcrumb */}
+            {progressMetrics && (
+              <Box sx={{ mt: 1 }}>
+                <ProgressBar
+                  value={progressMetrics.completionRate}
+                  status={progressMetrics.status}
+                  current={progressMetrics.completedExercises}
+                  total={progressMetrics.totalExercises}
+                  showTooltip={true}
+                  showTicks={true}
+                  steps={Array.from({ length: progressMetrics.totalExercises + 1 }, (_, i) => (i / progressMetrics.totalExercises) * 100)}
+                  ticks={Array.from({ length: progressMetrics.totalExercises + 1 }, (_, i) => (i / progressMetrics.totalExercises) * 100)}
+                  width="100%"
+                  height={8}
+                  smooth={true}
+                  animationDuration={500}
+                />
+              </Box>
+            )}
         </Box>
       </Box>
     );

@@ -97,7 +97,7 @@ export const StreamChart: React.FC<StreamChartProps> = ({
               // Convert weight to pounds for consistent calculations
               const convertedWeight = convertWeightToPounds(
                 weight,
-                weightUnitPreference?.preferred_unit
+                weightUnitPreference?.preferred_unit as 'KG' | 'LBS' | undefined
               );
               const totalWeight = convertedWeight + bandWeight; // bandWeight is already in lbs
               const setVolume = totalWeight * reps;
@@ -150,33 +150,31 @@ export const StreamChart: React.FC<StreamChartProps> = ({
   }
 
   return (
-    <Card variant="outlined">
-      <CardContent>
-        <Box display="flex" alignItems="center" gap={1} sx={{ mb: 2 }}>
-          <ShowChartIcon color="secondary" />
-          <Typography variant="h6">{title}</Typography>
-        </Box>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          {description}
-        </Typography>
-        <Box sx={{ height }}>
-          <ResponsiveStream
-            data={streamData}
-            keys={keys}
-            margin={{ top: 50, right: 110, bottom: 50, left: 60 }}
-            colors={{ scheme: 'nivo' }}
-            theme={{
-              ...nivoTheme,
-              tooltip: {
-                container: {
-                  ...nivoTheme.tooltip.container,
-                  whiteSpace: 'nowrap',
-                },
+    <Box>
+      <Box display="flex" alignItems="center" gap={1} sx={{ mb: 1 }}>
+        <ShowChartIcon color="secondary" fontSize="small" />
+        <Typography variant="subtitle1" fontWeight="medium">{title}</Typography>
+      </Box>
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+        {description}
+      </Typography>
+      <Box sx={{ height, borderRadius: 1, overflow: 'hidden', border: 1, borderColor: 'divider' }}>
+        <ResponsiveStream
+          data={streamData}
+          keys={keys}
+          margin={{ top: 30, right: 80, bottom: 30, left: 50 }}
+          colors={{ scheme: 'nivo' }}
+          theme={{
+            ...nivoTheme,
+            tooltip: {
+              container: {
+                ...nivoTheme.tooltip.container,
+                whiteSpace: 'nowrap',
               },
-            }}
-          />
-        </Box>
-      </CardContent>
-    </Card>
+            },
+          }}
+        />
+      </Box>
+    </Box>
   );
 };
