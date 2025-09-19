@@ -197,9 +197,6 @@ export const WorkoutGenerationWizard: React.FC<WorkoutGenerationWizardProps> = (
     const exercisesWithoutOneRepMax = pool.primary_exercises.concat(pool.accessory_exercises)
       .filter(exercise => !exercise.one_rep_max);
     
-    console.log('Exercises needing 1RM input:', exercisesWithoutOneRepMax.length);
-    console.log('Workout exercises:', Array.from(workoutExercises));
-    
     return exercisesWithoutOneRepMax;
   };
 

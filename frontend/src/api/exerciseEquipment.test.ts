@@ -60,7 +60,7 @@ describe('exerciseEquipment API', () => {
     it('should handle timeout errors', async () => {
       mockAdapter.onGet('/exercise_equipment/').timeout();
 
-      await expect(getExerciseEquipment()).rejects.toEqual({ error: 'timeout of 2500ms exceeded' });
+      await expect(getExerciseEquipment()).rejects.toEqual({ error: 'timeout of 10000ms exceeded' });
       expect(mockAdapter.history.get.length).toBe(1);
     });
 

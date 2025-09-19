@@ -59,7 +59,7 @@ describe('user API', () => {
     it('should handle timeout error', async () => {
       mockAdapter.onPost('/user/').timeout();
 
-      await expect(createUserProfile()).rejects.toEqual({ error: 'timeout of 2500ms exceeded' });
+      await expect(createUserProfile()).rejects.toEqual({ error: 'timeout of 10000ms exceeded' });
     });
   });
 
@@ -97,7 +97,7 @@ describe('user API', () => {
     it('should handle timeout error', async () => {
       mockAdapter.onGet('/user/me').timeout();
 
-      await expect(getCurrentUser()).rejects.toEqual({ error: 'timeout of 2500ms exceeded' });
+      await expect(getCurrentUser()).rejects.toEqual({ error: 'timeout of 10000ms exceeded' });
     });
   });
 });

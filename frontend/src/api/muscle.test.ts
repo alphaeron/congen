@@ -58,7 +58,7 @@ describe('muscle API', () => {
     it('should handle timeout errors', async () => {
       mockAdapter.onGet('/muscle/').timeout();
 
-      await expect(getMuscles()).rejects.toEqual({ error: 'timeout of 2500ms exceeded' });
+      await expect(getMuscles()).rejects.toEqual({ error: 'timeout of 10000ms exceeded' });
       expect(mockAdapter.history.get.length).toBe(1);
     });
 
@@ -116,7 +116,7 @@ describe('muscle API', () => {
       mockAdapter.onGet('/muscle/Pectoralis%20Major').timeout();
 
       await expect(getIndividualMuscle('Pectoralis Major')).rejects.toEqual({
-        error: 'timeout of 2500ms exceeded',
+        error: 'timeout of 10000ms exceeded',
       });
       expect(mockAdapter.history.get.length).toBe(1);
     });

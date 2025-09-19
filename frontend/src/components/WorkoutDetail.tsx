@@ -1,17 +1,21 @@
 import {
-  Notes as NotesIcon,
   ExpandMore as ExpandMoreIcon,
   ExpandLess as ExpandLessIcon,
+  Edit as EditIcon,
+  FitnessCenter as FitnessCenterIcon,
+  Save,
+  Add as AddIcon,
 } from '@mui/icons-material';
-import { Box, Typography, Alert, IconButton, Tooltip, Paper, useTheme, Grid, Button } from '@mui/material';
+import { Box, Typography, Alert, IconButton, Tooltip, Paper, useTheme, Grid, Button, CircularProgress, Dialog, DialogTitle, DialogContent, DialogActions, Autocomplete, TextField, FormControl, InputLabel, Select, MenuItem, Divider, Switch, FormControlLabel } from '@mui/material';
 import {
   useReactTable,
   getCoreRowModel,
   flexRender,
   createColumnHelper,
 } from '@tanstack/react-table';
+import { useForm } from '@tanstack/react-form';
 import { useSnackbar } from 'notistack';
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 
 import { ChordChart } from './ChordChart';
@@ -19,12 +23,16 @@ import { ExerciseName } from './ExerciseName';
 import { ExportButtons } from './ExportButtons';
 import { LoadingSpinner } from './LoadingSpinner';
 import { SunburstChart } from './SunburstChart';
-import { getExerciseMuscle } from '../api/exerciseMuscle';
-import { getUserDataExport } from '../api/gdpr';
-import type { UserDataExport, ExerciseMuscle, UserWeightUnitPreference } from '../api/types';
-import { getUserWeightUnitPreferences } from '../api/userWeightUnitPreference';
+import { SetSchemeEditor } from './SetSchemeEditor';
+import { SetSchemeForm, type SetSchemeFormData } from './SetSchemeForm';
+import { RichTextEditor } from './RichTextEditor';
+import { RichTextDisplay } from './RichTextDisplay';
+import { updateProgrammedExercise, createProgrammedExercise } from '../api/programmedExercise';
+import { getExercises } from '../api/exercise';
+import type { UserDataExport, UserWeightUnitPreference, Exercise } from '../api/types';
 import { replaceUnderscoresWithSpaces, formatWeightWithUnit } from '../common/utils';
 import { useAuth } from '../contexts/AuthContext';
+import { useData } from '../contexts/DataContext';
 import { exportWorkoutToPDF } from '../utils/exportUtils';
 
 interface WorkoutDetailProps {
@@ -51,6 +59,9 @@ interface TableRow {
   notes?: string;
   exerciseNotes?: string;
   stageId?: number;
+  exerciseId?: number;
+  setSchemes?: any[];
+  exerciseData?: any;
 }
 
 const columnHelper = createColumnHelper<TableRow>();
@@ -76,50 +87,191 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
   const { user } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const [userData, setUserData] = useState<UserDataExport | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  
+  // Use shared data context instead of local state
+  const { userData, exerciseMuscleData, weightUnitPreferences, isLoading, error, refreshData } = useData();
+  
   const [collapsedStages, setCollapsedStages] = useState<Set<number>>(new Set());
+  // Remove local exerciseData state - we'll use the data from context directly
+  const [isMostRecentWeek, setIsMostRecentWeek] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [notesEditorOpen, setNotesEditorOpen] = useState(false);
+  const [selectedExerciseForNotes, setSelectedExerciseForNotes] = useState<any>(null);
+  const [notesContent, setNotesContent] = useState('');
+  const [addExerciseDialogOpen, setAddExerciseDialogOpen] = useState(false);
+  const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null);
+  const [selectedStageId, setSelectedStageId] = useState<number | ''>('');
+  const [availableExercises, setAvailableExercises] = useState<Exercise[]>([]);
+  const [loadingExercises, setLoadingExercises] = useState(false);
+  
+  // Weight conversion functions for Add Exercise dialog
+  const convertWeightForStorage = (weight: number, exerciseName: string): number => {
+    const weightUnitPreference = weightUnitPreferences.find(pref => pref.exercise_name === exerciseName);
+    if (weightUnitPreference?.preferred_unit === 'LBS') {
+      return weight / 2.20462; // Convert lbs to kg
+    }
+    return weight;
+  };
 
-  const [exerciseMuscleData, setExerciseMuscleData] = useState<Map<string, string[]>>(new Map());
-  const [weightUnitPreferences, setWeightUnitPreferences] = useState<UserWeightUnitPreference[]>(
-    []
-  );
-  const [exerciseData, setExerciseData] = useState<Map<string, any>>(new Map());
-
-  useEffect(() => {
-    const loadWorkoutDetails = async () => {
-      try {
-        setIsLoading(true);
-
-        // Load user data first to get the workout data, then load chart data
-        const dataExport = await getUserDataExport();
-        setUserData(dataExport);
-
-        // Load data needed for the chart
-        const [exerciseMuscleData, weightUnitPreferencesData] = await Promise.all([
-          getExerciseMuscle(),
-          getUserWeightUnitPreferences(user?.keycloak_id || ''),
-        ]);
-
-        // Convert exercise muscle data to Map
-        const muscleMap = new Map<string, string[]>();
-        exerciseMuscleData.forEach((item: ExerciseMuscle) => {
-          const existing = muscleMap.get(item.exercise_name) || [];
-          existing.push(item.muscle_name);
-          muscleMap.set(item.exercise_name, existing);
-        });
-        setExerciseMuscleData(muscleMap);
-
-        setWeightUnitPreferences(weightUnitPreferencesData || []);
-      } catch {
-        enqueueSnackbar('Failed to load workout details. Please try again.', { variant: 'error' });
-      } finally {
-        setIsLoading(false);
+  // Form for set scheme details in Add Exercise dialog
+  const addExerciseForm = useForm({
+    defaultValues: {
+      totalSets: 1,
+      targetWeight: 1,
+      targetReps: 1,
+      restSeconds: 60,
+      performedWeight: undefined as number | undefined,
+      performedReps: undefined as number | undefined,
+      useTempo: false,
+      eccentricTempo: '',
+      isometricTempo: '',
+      concentricTempo: '',
+      isAmrap: false,
+      isEmom: false,
+    },
+    onSubmit: async ({ value }) => {
+      if (!selectedExercise || !selectedStageId) {
+        enqueueSnackbar('Please select an exercise and stage', { variant: 'warning' });
+        return;
       }
-    };
+      
+      try {
+        setSaving(true);
+        
+        // Find the next position in the selected stage
+        const selectedStage = workoutData?.stages.find(s => s.stage.id === selectedStageId);
+        const nextPosition = selectedStage ? selectedStage.exercises.length + 1 : 1;
+        
+        // Create the programmed exercise
+        const result = await createProgrammedExercise(
+          selectedStageId as number,
+          selectedExercise.name,
+          nextPosition,
+          '', // notes - empty initially
+          value.totalSets,
+          convertWeightForStorage(value.targetWeight, selectedExercise.name),
+          value.targetReps,
+          value.restSeconds,
+          value.performedWeight ? convertWeightForStorage(value.performedWeight, selectedExercise.name) : undefined,
+          value.performedReps,
+          value.useTempo ? `${value.eccentricTempo}-${value.isometricTempo}-${value.concentricTempo}` : undefined,
+          value.isAmrap,
+          value.isEmom
+        );
+        
+        // Refresh data to show the new exercise
+        await refreshData();
+        
+        handleCloseAddExerciseDialog();
+        enqueueSnackbar('Exercise added successfully', { variant: 'success' });
+      } catch (error) {
+        enqueueSnackbar('Failed to add exercise', { variant: 'error' });
+      } finally {
+        setSaving(false);
+      }
+    },
+  });
+  
+  const handleNotesContentChange = useCallback((newContent: string) => {
+    setNotesContent(newContent);
+  }, []);
 
-    loadWorkoutDetails();
-  }, [workoutId, user?.keycloak_id]);
+  // Load available exercises when dialog opens
+  const loadAvailableExercises = useCallback(async () => {
+    setLoadingExercises(true);
+    try {
+      const exercises = await getExercises();
+      setAvailableExercises(exercises);
+    } catch (error) {
+      console.error('Failed to load exercises:', error);
+      enqueueSnackbar('Failed to load exercises', { variant: 'error' });
+    } finally {
+      setLoadingExercises(false);
+    }
+  }, [enqueueSnackbar]);
+
+  const handleOpenAddExerciseDialog = useCallback(() => {
+    setAddExerciseDialogOpen(true);
+    loadAvailableExercises();
+    // Reset form state
+    setSelectedExercise(null);
+    setSelectedStageId('');
+  }, [loadAvailableExercises]);
+
+  const handleCloseAddExerciseDialog = useCallback(() => {
+    setAddExerciseDialogOpen(false);
+    setSelectedExercise(null);
+    setSelectedStageId('');
+  }, []);
+
+
+  // Determine if this is the most recent week when userData is available
+  useEffect(() => {
+    if (userData?.training_programs && userData.training_programs.length > 0) {
+      const activeProgram = userData.training_programs.find((program: any) => program.program.is_active);
+      if (activeProgram) {
+        // Find the current workout's week
+        const currentWorkout = activeProgram.workouts.find((workout: any) => workout.workout.id === workoutId);
+        if (currentWorkout) {
+          const workoutsPerWeek = activeProgram.program_preferences.program_days_per_week;
+          const currentWeek = Math.ceil(currentWorkout.workout.day_number / workoutsPerWeek);
+          
+          // Find the highest week number in the program
+          const maxWeek = Math.max(...activeProgram.workouts.map((workout: any) => 
+            Math.ceil(workout.workout.day_number / workoutsPerWeek)
+          ));
+          
+          setIsMostRecentWeek(currentWeek === maxWeek);
+        }
+      }
+    }
+  }, [userData, workoutId]);
+
+
+  // Handle opening notes editor
+  const handleOpenNotesEditor = useCallback((exerciseData: any) => {
+    if (!isMostRecentWeek) {
+      enqueueSnackbar('Editing is only available for the most recent week', { variant: 'warning' });
+      return;
+    }
+    setSelectedExerciseForNotes(exerciseData);
+    setNotesContent(exerciseData.exercise.notes || '');
+    setNotesEditorOpen(true);
+  }, [isMostRecentWeek, enqueueSnackbar]);
+
+  // Handle closing notes editor
+  const handleCloseNotesEditor = useCallback(() => {
+    setNotesEditorOpen(false);
+    setSelectedExerciseForNotes(null);
+    setNotesContent('');
+  }, []);
+
+  // Handle saving notes from modal
+  const handleSaveNotesFromModal = useCallback(async () => {
+    if (!selectedExerciseForNotes) return;
+    
+    try {
+      setSaving(true);
+      
+      const result = await updateProgrammedExercise(
+        selectedExerciseForNotes.exercise.id,
+        selectedExerciseForNotes.exercise.workout_stage_id,
+        selectedExerciseForNotes.exercise.exercise_name,
+        selectedExerciseForNotes.exercise.position,
+        notesContent
+      );
+      
+      // Refresh data from server to get the updated notes
+      await refreshData();
+      
+      handleCloseNotesEditor();
+      enqueueSnackbar('Exercise notes saved successfully', { variant: 'success' });
+    } catch (error) {
+      enqueueSnackbar('Failed to save exercise notes', { variant: 'error' });
+    } finally {
+      setSaving(false);
+    }
+  }, [selectedExerciseForNotes, notesContent, handleCloseNotesEditor, enqueueSnackbar, workoutId]);
 
   // Find the specific workout from the exported data
   const workoutData = useMemo(() => {
@@ -284,6 +436,23 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
               onExportPDF={handleExportPDF}
               disabled={!workoutData}
             />
+            
+            {/* Add Exercise button - only show for most recent week */}
+            {isMostRecentWeek && (
+              <Button
+                variant="contained"
+                color="primary"
+                startIcon={<AddIcon />}
+                onClick={handleOpenAddExerciseDialog}
+                sx={{
+                  ml: 2,
+                  textTransform: 'none',
+                  fontSize: '0.875rem',
+                }}
+              >
+                Add Exercise
+              </Button>
+            )}
           </Box>
         </Box>
       </Box>
@@ -351,6 +520,9 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
             notes: '-',
             exerciseNotes: exerciseData.exercise.notes,
             stageId: stageData.stage.id,
+            exerciseId: exerciseData.exercise.id,
+            setSchemes: setSchemes,
+            exerciseData: exerciseData,
           });
         });
       }
@@ -368,23 +540,25 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
         cell: ({ row }) => {
           if (row.original.type === 'exercise') {
             return (
-              <Box display="flex" alignItems="center" gap={1}>
-                <ExerciseName
-                  exerciseName={row.original.exerciseName || ''}
-                  variant="body2"
-                  sx={{
-                    wordWrap: 'break-word',
-                    whiteSpace: 'normal',
-                    lineHeight: 1.4,
+              <Box display="flex" alignItems="center" gap={1} minHeight={40}>
+                <SetSchemeEditor
+                  exercise={row.original.exerciseData}
+                  onExerciseUpdate={async (updatedExercise) => {
+                    // Refresh data from server to get the updated exercise
+                    await refreshData();
                   }}
+                  isMostRecentWeek={isMostRecentWeek}
+                  weightUnitPreferences={weightUnitPreferences}
                 />
-                {row.original.exerciseNotes && (
-                  <Tooltip title={row.original.exerciseNotes} arrow>
-                    <IconButton size="small">
-                      <NotesIcon fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
-                )}
+                          <ExerciseName
+                            exerciseName={row.original.exerciseName || ''}
+                            variant="body2"
+                            sx={{
+                              wordWrap: 'break-word',
+                              whiteSpace: 'normal',
+                              lineHeight: 1.4,
+                            }}
+                          />
               </Box>
             );
           }
@@ -399,7 +573,9 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
         header: 'Sets',
         cell: ({ row }) => {
           if (row.original.type === 'exercise') {
-            return <Typography variant="body2">{row.original.sets}</Typography>;
+            return (
+              <Typography variant="body2">{row.original.sets}</Typography>
+            );
           }
           return null;
         },
@@ -412,7 +588,9 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
         header: 'Reps',
         cell: ({ row }) => {
           if (row.original.type === 'exercise') {
-            return <Typography variant="body2">{row.original.reps || '-'}</Typography>;
+            return (
+              <Typography variant="body2">{row.original.reps || '-'}</Typography>
+            );
           }
           return null;
         },
@@ -425,7 +603,9 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
         header: 'Tempo',
         cell: ({ row }) => {
           if (row.original.type === 'exercise') {
-            return <Typography variant="body2">{row.original.tempo || '-'}</Typography>;
+            return (
+              <Typography variant="body2">{row.original.tempo || '-'}</Typography>
+            );
           }
           return null;
         },
@@ -438,7 +618,9 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
         header: 'Weight',
         cell: ({ row }) => {
           if (row.original.type === 'exercise') {
-            return <Typography variant="body2">{row.original.weight || '-'}</Typography>;
+            return (
+              <Typography variant="body2">{row.original.weight || '-'}</Typography>
+            );
           }
           return null;
         },
@@ -451,7 +633,9 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
         header: 'Rest',
         cell: ({ row }) => {
           if (row.original.type === 'exercise') {
-            return <Typography variant="body2">{row.original.rest || '-'}</Typography>;
+            return (
+              <Typography variant="body2">{row.original.rest || '-'}</Typography>
+            );
           }
           return null;
         },
@@ -464,27 +648,63 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
         header: 'Notes',
         cell: ({ row }) => {
           if (row.original.type === 'exercise') {
+            const canEdit = isMostRecentWeek && !saving;
+            
             return (
-              <Typography
-                variant="body2"
+              <Box
                 sx={{
-                  wordWrap: 'break-word',
-                  whiteSpace: 'normal',
-                  lineHeight: 1.4,
+                  minHeight: 40,
+                  minWidth: 200,
+                  maxWidth: 300,
+                  cursor: canEdit ? 'pointer' : 'default',
+                  p: 1,
+                  borderRadius: 1,
+                  border: canEdit ? '1px dashed transparent' : 'none',
+                  '&:hover': canEdit ? {
+                    border: '1px dashed',
+                    borderColor: 'primary.main',
+                    backgroundColor: 'action.hover',
+                  } : {},
+                }}
+                onClick={() => {
+                  if (canEdit) {
+                    handleOpenNotesEditor(row.original.exerciseData);
+                  }
                 }}
               >
-                {row.original.notes}
-              </Typography>
+                {row.original.exerciseNotes ? (
+                  <RichTextDisplay
+                    content={row.original.exerciseNotes}
+                    sx={{
+                      wordWrap: 'break-word',
+                      whiteSpace: 'normal',
+                      lineHeight: 1.4,
+                      '& p': { margin: 0 },
+                      '& strong': { fontWeight: 'bold' },
+                      '& em': { fontStyle: 'italic' },
+                      '& u': { textDecoration: 'underline' },
+                    }}
+                  />
+                ) : (
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ fontStyle: 'italic' }}
+                  >
+                    {canEdit ? 'Click to add notes...' : 'No notes'}
+                  </Typography>
+                )}
+              </Box>
             );
           }
           return null;
         },
-        size: 200,
-        minSize: 150,
-        maxSize: 300,
+        size: 300,
+        minSize: 200,
+        maxSize: 400,
       }),
     ],
-    []
+    [isMostRecentWeek, saving, handleOpenNotesEditor]
   );
 
   // Create table instance
@@ -627,7 +847,9 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
                               color: theme.palette.text.primary,
                               wordWrap: 'break-word',
                               overflow: 'hidden',
-                              verticalAlign: 'top',
+                              textAlign: 'center',
+                              verticalAlign: 'middle',
+                              minHeight: '40px',
                             }}
                           >
                             {flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -662,6 +884,160 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
         </Grid>
         </Grid>
       </Box>
+      
+      {/* Notes Editor Modal */}
+      <Dialog
+        open={notesEditorOpen}
+        onClose={handleCloseNotesEditor}
+        maxWidth="md"
+        fullWidth
+        PaperProps={{
+          sx: { minHeight: '60vh' }
+        }}
+      >
+        <DialogTitle>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <FitnessCenterIcon />
+            <Typography variant="h6">
+              Edit Notes: {selectedExerciseForNotes?.exercise?.exercise_name}
+            </Typography>
+          </Box>
+        </DialogTitle>
+        
+        <DialogContent>
+          <Alert severity="info" sx={{ mb: 2 }}>
+            Add detailed notes for this exercise. Use formatting to organize your thoughts and instructions.
+          </Alert>
+          
+          <RichTextEditor
+            value={notesContent}
+            onChange={handleNotesContentChange}
+            placeholder="Add exercise notes, form cues, or reminders..."
+            showToolbar={true}
+            minHeight={300}
+            maxHeight={400}
+            autoSave={false}
+          />
+        </DialogContent>
+        
+        <DialogActions>
+          <Button
+            onClick={handleCloseNotesEditor}
+            disabled={saving}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleSaveNotesFromModal}
+            variant="contained"
+            disabled={saving}
+            startIcon={saving ? <CircularProgress size={16} /> : <Save />}
+          >
+            Save Notes
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Add Exercise Dialog */}
+      <Dialog
+        open={addExerciseDialogOpen}
+        onClose={handleCloseAddExerciseDialog}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{
+          sx: { minHeight: '50vh' }
+        }}
+      >
+        <DialogTitle>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <AddIcon />
+            <Typography variant="h6">
+              Add Exercise to Workout
+            </Typography>
+          </Box>
+        </DialogTitle>
+        
+        <DialogContent>
+          <Alert severity="info" sx={{ mb: 2 }}>
+            Select an exercise and the stage where it should be added. Configure the set scheme details below.
+          </Alert>
+          
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            {/* Exercise Selection */}
+            <Autocomplete
+              options={availableExercises}
+              value={selectedExercise}
+              onChange={(_, newValue) => setSelectedExercise(newValue)}
+              getOptionLabel={(option) => option.name}
+              loading={loadingExercises}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Exercise"
+                  placeholder="Search for an exercise..."
+                  required
+                  helperText="Start typing to search for exercises"
+                />
+              )}
+              renderOption={(props, option) => (
+                <Box component="li" {...props}>
+                  <Box>
+                    <Typography variant="body1">{option.name}</Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {option.movement_type} • {option.is_upper ? 'Upper' : 'Lower'} Body
+                    </Typography>
+                  </Box>
+                </Box>
+              )}
+            />
+
+            {/* Stage Selection */}
+            <FormControl fullWidth required>
+              <InputLabel>Stage</InputLabel>
+              <Select
+                value={selectedStageId}
+                onChange={(e) => setSelectedStageId(e.target.value as number)}
+                label="Stage"
+              >
+                {workoutData?.stages.map((stageData) => (
+                  <MenuItem key={stageData.stage.id} value={stageData.stage.id}>
+                    {stageData.stage.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+
+            {/* Set Scheme Details */}
+            <SetSchemeForm
+              form={addExerciseForm}
+              saving={saving}
+              exerciseName={selectedExercise?.name}
+              weightUnitPreferences={weightUnitPreferences}
+              showPerformedFields={false}
+              showTempoFields={true}
+              showSetTypeFields={true}
+            />
+          </Box>
+        </DialogContent>
+        
+        <DialogActions>
+          <Button
+            onClick={handleCloseAddExerciseDialog}
+            disabled={saving}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={() => addExerciseForm.handleSubmit()}
+            variant="contained"
+            disabled={saving || !selectedExercise || !selectedStageId}
+            startIcon={saving ? <CircularProgress size={16} /> : <AddIcon />}
+          >
+            Add Exercise
+          </Button>
+        </DialogActions>
+      </Dialog>
+      
     </Box>
   );
 };

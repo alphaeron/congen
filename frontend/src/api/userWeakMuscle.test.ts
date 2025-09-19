@@ -68,7 +68,7 @@ describe('userWeakMuscle API', () => {
       mockAdapter.onGet('/user_weak_muscle/test-user-id').timeout();
 
       await expect(getUserWeakMuscles('test-user-id')).rejects.toEqual({
-        error: 'timeout of 2500ms exceeded',
+        error: 'timeout of 10000ms exceeded',
       });
     });
 
@@ -135,7 +135,7 @@ describe('userWeakMuscle API', () => {
       mockAdapter.onPost('/user_weak_muscle/').timeout();
 
       await expect(addUserWeakMuscle('test-user-id', 'Deltoids')).rejects.toEqual({
-        error: 'timeout of 2500ms exceeded',
+        error: 'timeout of 10000ms exceeded',
       });
     });
   });
@@ -186,7 +186,7 @@ describe('userWeakMuscle API', () => {
       mockAdapter.onDelete('/user_weak_muscle/').timeout();
 
       await expect(removeUserWeakMuscle('test-user-id', 'Deltoids')).rejects.toEqual({
-        error: 'timeout of 2500ms exceeded',
+        error: 'timeout of 10000ms exceeded',
       });
     });
   });

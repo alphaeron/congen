@@ -26,7 +26,7 @@ describe('endpoint', () => {
     });
 
     it('should have correct timeout', () => {
-      expect(ENDPOINT.defaults.timeout).toBe(2500);
+      expect(ENDPOINT.defaults.timeout).toBe(10000);
     });
 
     it('should have withCredentials set to true', () => {
@@ -166,7 +166,7 @@ describe('endpoint', () => {
           url: '/test',
           method: 'GET',
         })
-      ).rejects.toEqual({ error: 'timeout of 2500ms exceeded' });
+      ).rejects.toEqual({ error: 'timeout of 10000ms exceeded' });
     });
 
     it('should work with POST requests', async () => {

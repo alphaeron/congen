@@ -28,6 +28,7 @@ interface OneRepMaxInputStepProps {
   exercises: Exercise[];
   onDeclineAll: () => void;
   onComplete: () => void;
+  onInputsChange?: (inputs: OneRepMaxData[]) => void;
   onNavigationChange?: (navigation: {
     onSkipExercise: () => void;
     onSkipRemaining: () => void;
@@ -49,14 +50,15 @@ export const OneRepMaxInputStep: React.FC<OneRepMaxInputStepProps> = ({
   exercises,
   onDeclineAll,
   onComplete,
+  onInputsChange,
   onNavigationChange,
 }) => {
   const [inputs, setInputs] = React.useState<OneRepMaxData[]>(
     exercises.map(exercise => ({
       exerciseName: exercise.name,
-      reps: 8,
-      weight: 0,
-      unit: 'KG',
+      reps: exercise.set_schemes?.[0]?.reps || 8,
+      weight: exercise.set_schemes?.[0]?.weight || 0,
+      unit: exercise.set_schemes?.[0]?.weight_unit || 'KG',
       declined: false,
     }))
   );
@@ -72,6 +74,13 @@ export const OneRepMaxInputStep: React.FC<OneRepMaxInputStepProps> = ({
     );
     setInputs(newInputs);
   };
+
+  // Call onInputsChange when inputs change
+  React.useEffect(() => {
+    if (onInputsChange) {
+      onInputsChange(inputs);
+    }
+  }, [inputs, onInputsChange]);
 
   const handleRepsWeightChange = (exerciseName: string, reps: number, weight: number, unit: string) => {
     updateInput(exerciseName, { reps, weight, unit });

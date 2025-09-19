@@ -1,6 +1,6 @@
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, act } from '@testing-library/react';
+import { render, screen, act, waitFor } from '@testing-library/react';
 import MockAdapter from 'axios-mock-adapter';
 import React from 'react';
 import { MemoryRouter } from 'react-router';
@@ -21,16 +21,62 @@ jest.mock('react-oidc-context', () => ({
   }),
 }));
 
+// Mock DataContext
+jest.mock('../contexts/DataContext', () => ({
+  useData: jest.fn(),
+  DataProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}));
+
+// Mock other components
+jest.mock('./ExerciseName', () => ({
+  ExerciseName: ({ exerciseName }: { exerciseName: string }) => (
+    <span>{exerciseName}</span>
+  ),
+}));
+
+jest.mock('./ExportButtons', () => ({
+  ExportButtons: () => <div data-testid="export-buttons">Export Buttons</div>,
+}));
+
+jest.mock('./LoadingSpinner', () => ({
+  LoadingSpinner: ({ message }: { message: string }) => (
+    <div data-testid="loading-spinner">{message}</div>
+  ),
+}));
+
+
+jest.mock('./SetSchemeEditor', () => ({
+  SetSchemeEditor: () => <div data-testid="set-scheme-editor">Set Scheme Editor</div>,
+}));
+
+jest.mock('./RichTextEditor', () => ({
+  RichTextEditor: ({ value, onChange }: { value: string; onChange: (value: string) => void }) => (
+    <textarea data-testid="rich-text-editor" value={value} onChange={(e) => onChange(e.target.value)} />
+  ),
+}));
+
+jest.mock('./RichTextDisplay', () => ({
+  RichTextDisplay: ({ content }: { content: string }) => (
+    <div data-testid="rich-text-display">{content}</div>
+  ),
+}));
+
+// Remove the module mock - we'll use axios mock adapter instead
+
+jest.mock('../utils/exportUtils', () => ({
+  exportWorkoutToPDF: jest.fn(),
+}));
+
 // Mock chart components to avoid rendering issues in tests
 jest.mock('./ChordChart', () => ({
   ChordChart: ({ data }: { data: unknown }) => (
-    <div data-testid="chord-chart">{data?.length || 0} items</div>
+    <div data-testid="chord-chart">{(data as any)?.length || 0} items</div>
   ),
 }));
 
 jest.mock('./SunburstChart', () => ({
   SunburstChart: ({ data }: { data: unknown }) => (
-    <div data-testid="sunburst-chart">{data?.length || 0} items</div>
+    <div data-testid="sunburst-chart">{(data as any)?.length || 0} items</div>
   ),
 }));
 
@@ -49,6 +95,7 @@ jest.mock('@tanstack/react-virtual', () => ({
 import { WorkoutDetail } from './WorkoutDetail';
 import { ENDPOINT } from '../api/endpoint';
 import { AuthProvider } from '../contexts/AuthContext';
+import { DataProvider } from '../contexts/DataContext';
 
 const mock = new MockAdapter(ENDPOINT);
 
@@ -81,6 +128,9 @@ const mockUserDataExport = {
         created_at: '2024-01-01T00:00:00Z',
         updated_at: '2024-01-01T00:00:00Z',
         is_active: true,
+      },
+      program_preferences: {
+        program_days_per_week: 3,
       },
       workouts: [
         {
@@ -157,7 +207,9 @@ const renderWithTheme = (component: React.ReactElement) => {
     <MemoryRouter>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <ThemeProvider theme={theme}>{component}</ThemeProvider>
+          <DataProvider>
+            <ThemeProvider theme={theme}>{component}</ThemeProvider>
+          </DataProvider>
         </AuthProvider>
       </QueryClientProvider>
     </MemoryRouter>
@@ -166,6 +218,7 @@ const renderWithTheme = (component: React.ReactElement) => {
 
 describe('WorkoutDetail', () => {
   const mockOnBack = jest.fn();
+  const mockUseData = require('../contexts/DataContext').useData;
 
   beforeEach(() => {
     mock.reset();
@@ -176,10 +229,38 @@ describe('WorkoutDetail', () => {
       { id: 1, name: 'Bench Press' },
       { id: 2, name: 'Incline Press' },
     ]);
+
+    // Mock the updateProgrammedExercise API call
+    mock.onPatch(/\/programmed_exercise\/\d+/).reply(200, {
+      id: 1,
+      workout_stage_id: 1,
+      exercise_name: 'Bench Press',
+      position: 1,
+      notes: 'Updated notes',
+      created_at: '2024-01-01T00:00:00Z',
+      updated_at: '2024-01-01T00:00:00Z',
+    });
   });
 
   describe('Success State', () => {
     beforeEach(() => {
+      // Mock the useData hook to return the expected data
+      mockUseData.mockReturnValue({
+        userData: mockUserDataExport,
+        exerciseMuscleData: new Map(),
+        weightUnitPreferences: [
+          {
+            user_id: 'test-user-id',
+            exercise_name: 'Bench Press',
+            preferred_unit: 'LBS',
+          },
+        ],
+        isLoading: false,
+        error: null,
+        refreshData: jest.fn(),
+        isDataStale: false,
+      });
+
       mock.onGet('/gdpr/export').reply(200, mockUserDataExport);
       mock.onGet('/exercise/').reply(200, []);
       mock.onGet('/exercise_muscle/').reply(200, []);
@@ -196,6 +277,9 @@ describe('WorkoutDetail', () => {
       await act(async () => {
         renderWithTheme(<WorkoutDetail workoutId={1} onBack={mockOnBack} />);
       });
+
+      // Since we're mocking useData with isLoading: false, the data should be immediately available
+      expect(screen.queryByText('Loading workout details...')).not.toBeInTheDocument();
 
       expect(screen.getByText('Warm-up')).toBeInTheDocument();
       expect(screen.getByText('Bench Press')).toBeInTheDocument();
@@ -226,8 +310,10 @@ describe('WorkoutDetail', () => {
         renderWithTheme(<WorkoutDetail workoutId={1} onBack={mockOnBack} />);
       });
 
-      // Check that the notes icon is present (notes are now in tooltip)
-      expect(screen.getByTestId('NotesIcon')).toBeInTheDocument();
+      // Check that the exercise name is displayed
+      expect(screen.getByText('Bench Press')).toBeInTheDocument();
+      // Check that the notes content is displayed (since we have notes in mock data)
+      expect(screen.getByText('Focus on form')).toBeInTheDocument();
     });
 
     it('should display set scheme information correctly', async () => {
@@ -235,10 +321,11 @@ describe('WorkoutDetail', () => {
         renderWithTheme(<WorkoutDetail workoutId={1} onBack={mockOnBack} />);
       });
 
-      expect(screen.getByText('135 lbs')).toBeInTheDocument();
+      // Weight 135 KG converted to LBS: 135 * 2.20462 = 297.62 lbs
+      expect(screen.getByText('297.62 lbs')).toBeInTheDocument();
       expect(screen.getByText('8')).toBeInTheDocument();
       expect(screen.getByText('90s')).toBeInTheDocument(); // Rest shows as "90s"
-      expect(screen.getAllByText('-')).toHaveLength(2); // Tempo and Notes both show "-" when null
+      expect(screen.getAllByText('-')).toHaveLength(1); // Only tempo shows "-" when null (notes are displayed)
       expect(screen.getByText('1')).toBeInTheDocument(); // Number of sets
     });
 
@@ -273,7 +360,22 @@ describe('WorkoutDetail', () => {
         ],
       };
 
-      mock.onGet('/gdpr/export').reply(200, dataWithoutNotes);
+      // Update the mock to return data without notes
+      mockUseData.mockReturnValue({
+        userData: dataWithoutNotes,
+        exerciseMuscleData: new Map(),
+        weightUnitPreferences: [
+          {
+            user_id: 'test-user-id',
+            exercise_name: 'Bench Press',
+            preferred_unit: 'LBS',
+          },
+        ],
+        isLoading: false,
+        error: null,
+        refreshData: jest.fn(),
+        isDataStale: false,
+      });
 
       await act(async () => {
         renderWithTheme(<WorkoutDetail workoutId={1} onBack={mockOnBack} />);
@@ -312,7 +414,22 @@ describe('WorkoutDetail', () => {
         ],
       };
 
-      mock.onGet('/gdpr/export').reply(200, dataWithMultipleStages);
+      // Update the mock to return data with multiple stages
+      mockUseData.mockReturnValue({
+        userData: dataWithMultipleStages,
+        exerciseMuscleData: new Map(),
+        weightUnitPreferences: [
+          {
+            user_id: 'test-user-id',
+            exercise_name: 'Bench Press',
+            preferred_unit: 'LBS',
+          },
+        ],
+        isLoading: false,
+        error: null,
+        refreshData: jest.fn(),
+        isDataStale: false,
+      });
 
       await act(async () => {
         renderWithTheme(<WorkoutDetail workoutId={1} onBack={mockOnBack} />);
@@ -374,7 +491,22 @@ describe('WorkoutDetail', () => {
         ],
       };
 
-      mock.onGet('/gdpr/export').reply(200, dataWithMultipleExercises);
+      // Update the mock to return data with multiple exercises
+      mockUseData.mockReturnValue({
+        userData: dataWithMultipleExercises,
+        exerciseMuscleData: new Map(),
+        weightUnitPreferences: [
+          {
+            user_id: 'test-user-id',
+            exercise_name: 'Bench Press',
+            preferred_unit: 'LBS',
+          },
+        ],
+        isLoading: false,
+        error: null,
+        refreshData: jest.fn(),
+        isDataStale: false,
+      });
 
       await act(async () => {
         renderWithTheme(<WorkoutDetail workoutId={1} onBack={mockOnBack} />);
@@ -430,7 +562,22 @@ describe('WorkoutDetail', () => {
         ],
       };
 
-      mock.onGet('/gdpr/export').reply(200, dataWithMultipleSets);
+      // Update the mock to return data with multiple set schemes
+      mockUseData.mockReturnValue({
+        userData: dataWithMultipleSets,
+        exerciseMuscleData: new Map(),
+        weightUnitPreferences: [
+          {
+            user_id: 'test-user-id',
+            exercise_name: 'Bench Press',
+            preferred_unit: 'LBS',
+          },
+        ],
+        isLoading: false,
+        error: null,
+        refreshData: jest.fn(),
+        isDataStale: false,
+      });
 
       await act(async () => {
         renderWithTheme(<WorkoutDetail workoutId={1} onBack={mockOnBack} />);
@@ -458,7 +605,16 @@ describe('WorkoutDetail', () => {
         ],
       };
 
-      mock.onGet('/gdpr/export').reply(200, dataWithEmptyStages);
+      // Update the mock to return data with empty stages
+      mockUseData.mockReturnValue({
+        userData: dataWithEmptyStages,
+        exerciseMuscleData: new Map(),
+        weightUnitPreferences: [],
+        isLoading: false,
+        error: null,
+        refreshData: jest.fn(),
+        isDataStale: false,
+      });
 
       await act(async () => {
         renderWithTheme(<WorkoutDetail workoutId={1} onBack={mockOnBack} />);
@@ -490,7 +646,16 @@ describe('WorkoutDetail', () => {
         ],
       };
 
-      mock.onGet('/gdpr/export').reply(200, dataWithEmptyExercises);
+      // Update the mock to return data with empty exercises
+      mockUseData.mockReturnValue({
+        userData: dataWithEmptyExercises,
+        exerciseMuscleData: new Map(),
+        weightUnitPreferences: [],
+        isLoading: false,
+        error: null,
+        refreshData: jest.fn(),
+        isDataStale: false,
+      });
 
       await act(async () => {
         renderWithTheme(<WorkoutDetail workoutId={1} onBack={mockOnBack} />);
@@ -528,7 +693,16 @@ describe('WorkoutDetail', () => {
         ],
       };
 
-      mock.onGet('/gdpr/export').reply(200, dataWithEmptySets);
+      // Update the mock to return data with empty set schemes
+      mockUseData.mockReturnValue({
+        userData: dataWithEmptySets,
+        exerciseMuscleData: new Map(),
+        weightUnitPreferences: [],
+        isLoading: false,
+        error: null,
+        refreshData: jest.fn(),
+        isDataStale: false,
+      });
 
       await act(async () => {
         renderWithTheme(<WorkoutDetail workoutId={1} onBack={mockOnBack} />);
@@ -546,7 +720,16 @@ describe('WorkoutDetail', () => {
 
   describe('Error State', () => {
     it('should handle workout not found', async () => {
-      mock.onGet('/gdpr/export').reply(200, mockUserDataExport);
+      // Mock useData to return data but no matching workout
+      mockUseData.mockReturnValue({
+        userData: mockUserDataExport,
+        exerciseMuscleData: new Map(),
+        weightUnitPreferences: [],
+        isLoading: false,
+        error: null,
+        refreshData: jest.fn(),
+        isDataStale: false,
+      });
 
       await act(async () => {
         renderWithTheme(<WorkoutDetail workoutId={999} onBack={mockOnBack} />);
@@ -556,7 +739,16 @@ describe('WorkoutDetail', () => {
     });
 
     it('should handle API failure', async () => {
-      mock.onGet('/gdpr/export').reply(500);
+      // Mock useData to return null userData (simulating API failure)
+      mockUseData.mockReturnValue({
+        userData: null,
+        exerciseMuscleData: new Map(),
+        weightUnitPreferences: [],
+        isLoading: false,
+        error: 'API Error',
+        refreshData: jest.fn(),
+        isDataStale: false,
+      });
 
       await act(async () => {
         renderWithTheme(<WorkoutDetail workoutId={1} onBack={mockOnBack} />);
@@ -570,7 +762,17 @@ describe('WorkoutDetail', () => {
   describe('Component Props', () => {
     it('should call onWorkoutDetailsUpdate when workout data is loaded', async () => {
       const mockOnWorkoutDetailsUpdate = jest.fn();
-      mock.onGet('/gdpr/export').reply(200, mockUserDataExport);
+      
+      // Mock useData to return the expected data
+      mockUseData.mockReturnValue({
+        userData: mockUserDataExport,
+        exerciseMuscleData: new Map(),
+        weightUnitPreferences: [],
+        isLoading: false,
+        error: null,
+        refreshData: jest.fn(),
+        isDataStale: false,
+      });
 
       await act(async () => {
         renderWithTheme(

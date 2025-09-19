@@ -158,6 +158,30 @@ jest.mock('@tanstack/react-query', () => ({
 // Mock Material-UI components
 jest.mock('@mui/material/useMediaQuery', () => () => false);
 
+// Mock the DataProvider to prevent HTTP requests
+jest.mock('./contexts/DataContext', () => ({
+  DataProvider: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  useData: () => ({
+    userData: null,
+    exerciseMuscleData: new Map(),
+    weightUnitPreferences: [],
+    isLoading: false,
+    error: null,
+    refreshData: jest.fn(),
+    isDataStale: false,
+  }),
+}));
+
+// Mock the CookieProvider
+jest.mock('./contexts/CookieContext', () => ({
+  CookieProvider: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+}));
+
+// Mock the CookieConsentManager
+jest.mock('./components/CookieConsentManager', () => ({
+  CookieConsentManager: () => <div data-testid="cookie-consent-manager">Cookie Consent</div>,
+}));
+
 describe('App', () => {
   beforeEach(() => {
     mockUseAuth.mockReturnValue({

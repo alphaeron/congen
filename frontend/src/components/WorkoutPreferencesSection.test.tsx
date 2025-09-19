@@ -92,7 +92,7 @@ describe('WorkoutPreferencesSection', () => {
       { timeout: 10000 }
     );
 
-    expect(screen.getAllByText('Add Preference')).toHaveLength(2); // Weight units and exercise preferences sections
+    expect(screen.getAllByText('Add Preference')).toHaveLength(1); // Only the active tab (Weight units) is visible
   });
 
   it('should open dialog when add preference button is clicked', async () => {

@@ -29,14 +29,17 @@ export const upsertUserWeightUnitPreference = async (
  * Get all weight unit preferences for a user.
  *
  * @param userId The Keycloak identifier of the user
+ * @param options Optional configuration including forceRefresh flag
  * @returns Promise containing a list of user weight unit preferences
  */
 export const getUserWeightUnitPreferences = async (
-  userId: string
+  userId: string,
+  options: { forceRefresh?: boolean } = {}
 ): Promise<UserWeightUnitPreference[]> => {
   return REQUEST({
     method: 'GET',
     url: `/user_weight_unit_preference/${userId}`,
+    forceRefresh: options.forceRefresh,
   });
 };
 

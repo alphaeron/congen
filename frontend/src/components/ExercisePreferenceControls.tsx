@@ -106,7 +106,6 @@ export function ExercisePreferenceControls(
         );
       }
     } catch (error) {
-      console.error('Failed to update exercise preference:', error);
       enqueueSnackbar('Failed to update exercise preference', { variant: 'error' });
     } finally {
       setSaving(false);

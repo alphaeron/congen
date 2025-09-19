@@ -79,7 +79,7 @@ describe('userExercisePreference API', () => {
       mockAdapter.onGet('/user_exercise_preference/test-user-id').timeout();
 
       await expect(getUserExercisePreferences('test-user-id')).rejects.toEqual({
-        error: 'timeout of 2500ms exceeded',
+        error: 'timeout of 10000ms exceeded',
       });
     });
 
@@ -148,7 +148,7 @@ describe('userExercisePreference API', () => {
       mockAdapter.onPut('/user_exercise_preference/').timeout();
 
       await expect(upsertUserExercisePreference('test-user-id', 'Deadlift', false)).rejects.toEqual(
-        { error: 'timeout of 2500ms exceeded' }
+        { error: 'timeout of 10000ms exceeded' }
       );
     });
   });
@@ -205,7 +205,7 @@ describe('userExercisePreference API', () => {
       mockAdapter.onDelete('/user_exercise_preference/').timeout();
 
       await expect(removeUserExercisePreference('test-user-id', 'Deadlift')).rejects.toEqual({
-        error: 'timeout of 2500ms exceeded',
+        error: 'timeout of 10000ms exceeded',
       });
     });
   });

@@ -50,13 +50,15 @@ export async function exportUserData(): Promise<UserDataExport> {
  *
  * This is much more efficient than making separate API calls for each workout.
  *
+ * @param options Optional configuration including forceRefresh flag
  * @returns Promise containing complete user data export
  */
-export const getUserDataExport = async (): Promise<UserDataExport> => {
+export const getUserDataExport = async (options: { forceRefresh?: boolean } = {}): Promise<UserDataExport> => {
   return REQUEST({
     method: 'GET',
     url: '/gdpr/export',
     timeout: 5000, // 5 second timeout for large data export
+    forceRefresh: options.forceRefresh,
   });
 };
 

@@ -68,7 +68,7 @@ describe('userEquipment API', () => {
       mockAdapter.onGet('/user_equipment/test-user-id').timeout();
 
       await expect(getUserEquipment('test-user-id')).rejects.toEqual({
-        error: 'timeout of 2500ms exceeded',
+        error: 'timeout of 10000ms exceeded',
       });
     });
 
@@ -135,7 +135,7 @@ describe('userEquipment API', () => {
       mockAdapter.onPost('/user_equipment/').timeout();
 
       await expect(addUserEquipment('test-user-id', 'Kettlebell')).rejects.toEqual({
-        error: 'timeout of 2500ms exceeded',
+        error: 'timeout of 10000ms exceeded',
       });
     });
   });
@@ -192,7 +192,7 @@ describe('userEquipment API', () => {
       mockAdapter.onDelete('/user_equipment/').timeout();
 
       await expect(removeUserEquipment('test-user-id', 'Kettlebell')).rejects.toEqual({
-        error: 'timeout of 2500ms exceeded',
+        error: 'timeout of 10000ms exceeded',
       });
     });
   });

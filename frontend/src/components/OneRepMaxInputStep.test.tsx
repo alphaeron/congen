@@ -11,7 +11,7 @@ const renderWithProviders = (ui: React.ReactElement) => {
 const mockExercises: Exercise[] = [
   {
     id: 1,
-    exercise_name: 'Bench Press',
+    name: 'Bench Press',
     category: 'strength',
     primary_muscle: 'chest',
     secondary_muscles: ['triceps', 'shoulders'],
@@ -33,7 +33,7 @@ const mockExercises: Exercise[] = [
   },
   {
     id: 2,
-    exercise_name: 'Squat',
+    name: 'Squat',
     category: 'strength',
     primary_muscle: 'quadriceps',
     secondary_muscles: ['glutes', 'hamstrings'],

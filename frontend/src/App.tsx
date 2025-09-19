@@ -30,6 +30,7 @@ import { ProfileEditRedirect } from './components/ProfileEditRedirect';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { CookieProvider } from './contexts/CookieContext';
+import { DataProvider } from './contexts/DataContext';
 import { DashboardPage } from './pages/DashboardPage';
 import { ExerciseDetailsPage } from './pages/ExerciseDetailsPage';
 import { ExerciseOverviewPage } from './pages/ExerciseOverviewPage';
@@ -559,7 +560,9 @@ export function App(): React.ReactElement {
       <OidcAuthProvider {...getAuthProviderConfig()}>
         <AuthProvider>
           <CookieProvider>
-            <AppContent />
+            <DataProvider>
+              <AppContent />
+            </DataProvider>
           </CookieProvider>
         </AuthProvider>
       </OidcAuthProvider>

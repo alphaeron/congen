@@ -67,7 +67,7 @@ describe('exercise API', () => {
     it('should handle timeout errors', async () => {
       mockAdapter.onGet('/exercise/').timeout();
 
-      await expect(getExercises()).rejects.toEqual({ error: 'timeout of 2500ms exceeded' });
+      await expect(getExercises()).rejects.toEqual({ error: 'timeout of 10000ms exceeded' });
       expect(mockAdapter.history.get.length).toBe(1);
     });
   });
@@ -120,7 +120,7 @@ describe('exercise API', () => {
       mockAdapter.onGet('/exercise/Bench%20Press').timeout();
 
       await expect(getIndividualExercise('Bench Press')).rejects.toEqual({
-        error: 'timeout of 2500ms exceeded',
+        error: 'timeout of 10000ms exceeded',
       });
       expect(mockAdapter.history.get.length).toBe(1);
     });
@@ -182,7 +182,7 @@ describe('exercise API', () => {
       mockAdapter.onGet('/exercise/Bench%20Press/muscle').timeout();
 
       await expect(getExerciseMuscles('Bench Press')).rejects.toEqual({
-        error: 'timeout of 2500ms exceeded',
+        error: 'timeout of 10000ms exceeded',
       });
       expect(mockAdapter.history.get.length).toBe(1);
     });
@@ -244,7 +244,7 @@ describe('exercise API', () => {
       mockAdapter.onGet('/exercise/Bench%20Press/equipment').timeout();
 
       await expect(getExerciseEquipment('Bench Press')).rejects.toEqual({
-        error: 'timeout of 2500ms exceeded',
+        error: 'timeout of 10000ms exceeded',
       });
       expect(mockAdapter.history.get.length).toBe(1);
     });

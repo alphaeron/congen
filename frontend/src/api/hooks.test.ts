@@ -160,7 +160,7 @@ describe('hooks', () => {
         await expect(hookResult.result.current.mutateAsync()).rejects.toThrow('API Error');
       });
 
-      expect(mockErrorCallback).toHaveBeenCalledWith(mockError, undefined, undefined);
+      expect(mockErrorCallback).toHaveBeenCalledWith(mockError, undefined, undefined, expect.any(Object));
       expect(mockSuccess).not.toHaveBeenCalled();
     });
 

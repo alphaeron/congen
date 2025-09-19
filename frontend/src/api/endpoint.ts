@@ -62,7 +62,7 @@ function convertTimestampsToDates(obj: unknown): unknown {
  */
 export const ENDPOINT = axios.create({
   baseURL: `${BACKEND_URL}/api/v1/`,
-  timeout: 2500,
+  timeout: 10000, // Increased from 2500ms to 10 seconds to handle slow backend responses
   withCredentials: true, // Include credentials in CORS requests
   headers: {
     'Content-Type': 'application/json',
@@ -143,12 +143,45 @@ ENDPOINT.interceptors.response.use(
   }
 );
 
+// Request deduplication cache
+const requestCache = new Map<string, Promise<any>>();
+const CACHE_DURATION = 30000; // 30 seconds
+const cacheTimestamps = new Map<string, number>();
+
 /**
- * Congen backend request main helper with retry logic for network errors.
+ * Generate a cache key for request deduplication
  */
-export const REQUEST = async <T>(options: AxiosRequestConfig, retryCount = 0): Promise<T> => {
+const generateCacheKey = (options: AxiosRequestConfig): string => {
+  const { method = 'GET', url, params, data } = options;
+  return `${method}:${url}:${JSON.stringify(params)}:${JSON.stringify(data)}`;
+};
+
+/**
+ * Check if a cached request is still valid
+ */
+const isCacheValid = (key: string): boolean => {
+  const timestamp = cacheTimestamps.get(key);
+  if (!timestamp) return false;
+  return Date.now() - timestamp < CACHE_DURATION;
+};
+
+/**
+ * Congen backend request main helper with retry logic, deduplication, and caching.
+ */
+export const REQUEST = async <T>(options: AxiosRequestConfig & { forceRefresh?: boolean }, retryCount = 0): Promise<T> => {
   const maxRetries = 3;
   const retryDelay = 1000; // 1 second
+
+  // Only cache GET requests and respect forceRefresh flag
+  // Disable caching in test environments
+  const isTestEnvironment = process.env.NODE_ENV === 'test' || typeof jest !== 'undefined';
+  const shouldCache = (options.method === 'GET' || !options.method) && !options.forceRefresh && !isTestEnvironment;
+  const cacheKey = shouldCache ? generateCacheKey(options) : null;
+
+  // Check for existing request (deduplication) - skip if forceRefresh is true
+  if (cacheKey && requestCache.has(cacheKey) && isCacheValid(cacheKey)) {
+    return requestCache.get(cacheKey) as Promise<T>;
+  }
 
   const onSuccess = (response: AxiosResponse<T>): T => {
     return response?.data;
@@ -180,5 +213,22 @@ export const REQUEST = async <T>(options: AxiosRequestConfig, retryCount = 0): P
     }
   };
 
-  return ENDPOINT(options).then(onSuccess).catch(onError);
+  // Create the request promise
+  const requestPromise = ENDPOINT(options).then(onSuccess).catch(onError);
+
+  // Cache the request if it's a GET request
+  if (cacheKey && shouldCache) {
+    requestCache.set(cacheKey, requestPromise);
+    cacheTimestamps.set(cacheKey, Date.now());
+    
+    // Clean up cache after request completes
+    requestPromise.finally(() => {
+      setTimeout(() => {
+        requestCache.delete(cacheKey);
+        cacheTimestamps.delete(cacheKey);
+      }, CACHE_DURATION);
+    });
+  }
+
+  return requestPromise;
 };

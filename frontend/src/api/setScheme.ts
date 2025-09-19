@@ -26,3 +26,64 @@ export const getSetScheme = (id: number): Promise<SetScheme> => {
     url: `/set_scheme/${id}`,
   });
 };
+
+/**
+ * Update a set scheme.
+ *
+ * @param id The set scheme ID
+ * @param programmedExerciseId The programmed exercise ID
+ * @param setNumber The set number
+ * @param isAmrap Whether this is an AMRAP set
+ * @param isEmom Whether this is an EMOM set
+ * @param useTempo Whether to use tempo timing
+ * @param eccentricTempo Eccentric tempo
+ * @param isometricTempo Isometric tempo
+ * @param concentricTempo Concentric tempo
+ * @param targetWeight Target weight
+ * @param performedWeight Performed weight
+ * @param targetRepCount Target rep count
+ * @param performedRepCount Performed rep count
+ * @param restSeconds Rest period in seconds
+ * @param unit Weight unit (KG or LBS)
+ * @returns Promise containing the updated set scheme
+ */
+export const updateSetScheme = (
+  id: number,
+  programmedExerciseId: number,
+  setNumber: number,
+  isAmrap: boolean,
+  isEmom: boolean,
+  useTempo: boolean,
+  eccentricTempo?: string,
+  isometricTempo?: string,
+  concentricTempo?: string,
+  targetWeight?: number,
+  performedWeight?: number,
+  targetRepCount?: number,
+  performedRepCount?: number,
+  restSeconds?: number,
+  unit: string = 'KG'
+): Promise<SetScheme> => {
+  const params = new URLSearchParams({
+    programmed_exercise_id: programmedExerciseId.toString(),
+    set_number: setNumber.toString(),
+    is_amrap: isAmrap.toString(),
+    is_emom: isEmom.toString(),
+    use_tempo: useTempo.toString(),
+    unit,
+  });
+
+  if (eccentricTempo !== undefined) params.append('eccentric_tempo', eccentricTempo);
+  if (isometricTempo !== undefined) params.append('isometric_tempo', isometricTempo);
+  if (concentricTempo !== undefined) params.append('concentric_tempo', concentricTempo);
+  if (targetWeight !== undefined) params.append('target_weight', targetWeight.toString());
+  if (performedWeight !== undefined) params.append('performed_weight', performedWeight.toString());
+  if (targetRepCount !== undefined) params.append('target_rep_count', targetRepCount.toString());
+  if (performedRepCount !== undefined) params.append('performed_rep_count', performedRepCount.toString());
+  if (restSeconds !== undefined) params.append('rest_seconds', restSeconds.toString());
+
+  return REQUEST({
+    method: 'PATCH',
+    url: `/set_scheme/${id}?${params.toString()}`,
+  });
+};

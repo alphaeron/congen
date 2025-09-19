@@ -1,0 +1,473 @@
+import React from 'react';
+import {
+  Box,
+  TextField,
+  Typography,
+  Divider,
+  FormControlLabel,
+  Switch,
+} from '@mui/material';
+import { useForm } from '@tanstack/react-form';
+import type { UserWeightUnitPreference } from '../api/types';
+import { convertWeightToPounds } from '../common/utils';
+
+export interface SetSchemeFormData {
+  totalSets: number;
+  targetWeight: number;
+  performedWeight?: number;
+  targetReps: number;
+  performedReps?: number;
+  restSeconds: number;
+  useTempo: boolean;
+  eccentricTempo: string;
+  isometricTempo: string;
+  concentricTempo: string;
+  isAmrap: boolean;
+  isEmom: boolean;
+}
+
+export interface SetSchemeFormProps {
+  form: ReturnType<typeof useForm<SetSchemeFormData>>;
+  saving?: boolean;
+  exerciseName?: string;
+  weightUnitPreferences?: UserWeightUnitPreference[];
+  showPerformedFields?: boolean;
+  showTempoFields?: boolean;
+  showSetTypeFields?: boolean;
+}
+
+export const SetSchemeForm: React.FC<SetSchemeFormProps> = ({
+  form,
+  saving = false,
+  exerciseName,
+  weightUnitPreferences = [],
+  showPerformedFields = true,
+  showTempoFields = true,
+  showSetTypeFields = true,
+}) => {
+  // Get user's weight unit preference for this exercise
+  const weightUnitPreference = exerciseName 
+    ? weightUnitPreferences.find(pref => pref.exercise_name === exerciseName)
+    : undefined;
+  
+  const preferredUnit = weightUnitPreference?.preferred_unit;
+  const weightUnitLabel = preferredUnit === 'LBS' ? 'lbs' : 'kg';
+  
+  // Convert weight values for display
+  const convertWeightForDisplay = (weight: number): number => {
+    if (preferredUnit === 'LBS') {
+      return convertWeightToPounds(weight, 'KG');
+    }
+    return weight;
+  };
+  
+  // Convert weight values for storage
+  const convertWeightForStorage = (weight: number): number => {
+    if (preferredUnit === 'LBS') {
+      return weight / 2.20462; // Convert lbs to kg
+    }
+    return weight;
+  };
+
+  return (
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+      <Typography variant="subtitle2" gutterBottom>
+        Set Scheme Details
+      </Typography>
+
+      <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+        {/* Total Sets */}
+        <Box sx={{ flex: '1 1 200px', minWidth: 200 }}>
+          <form.Field
+            name="totalSets"
+            validators={{
+              onChange: ({ value }) =>
+                value < 1 ? 'Must have at least 1 set' : undefined,
+            }}
+          >
+            {(field) => (
+              <TextField
+                fullWidth
+                size="small"
+                label="Total Sets"
+                type="text"
+                inputProps={{ inputMode: 'decimal' }}
+                value={field.state.value === 0 ? '' : field.state.value.toString()}
+                onChange={(e) => {
+                  const inputValue = e.target.value;
+                  // Allow any valid numeric input including decimals
+                  if (inputValue === '' || /^\d*\.?\d*$/.test(inputValue)) {
+                    // Store the raw input value to preserve decimal points during typing
+                    field.handleChange(inputValue);
+                  }
+                }}
+                onBlur={(e) => {
+                  // Convert to integer on blur for validation
+                  const inputValue = e.target.value;
+                  if (inputValue !== '') {
+                    const numValue = parseFloat(inputValue);
+                    if (!isNaN(numValue) && numValue >= 0) {
+                      field.handleChange(Math.floor(numValue)); // Ensure integer for sets
+                    }
+                  }
+                }}
+                disabled={saving}
+                error={!!field.state.meta.errors.length}
+                helperText={field.state.meta.errors.join(', ')}
+              />
+            )}
+          </form.Field>
+        </Box>
+
+        {/* Rest Period */}
+        <Box sx={{ flex: '1 1 200px', minWidth: 200 }}>
+          <form.Field
+            name="restSeconds"
+            validators={{
+              onChange: ({ value }) =>
+                value < 0 ? 'Rest period cannot be negative' : undefined,
+            }}
+          >
+            {(field) => (
+              <TextField
+                fullWidth
+                size="small"
+                label="Rest Period (seconds)"
+                type="text"
+                inputProps={{ inputMode: 'decimal' }}
+                value={field.state.value === 0 ? '' : field.state.value.toString()}
+                onChange={(e) => {
+                  const inputValue = e.target.value;
+                  // Allow any valid numeric input including decimals
+                  if (inputValue === '' || /^\d*\.?\d*$/.test(inputValue)) {
+                    // Store the raw input value to preserve decimal points during typing
+                    field.handleChange(inputValue);
+                  }
+                }}
+                onBlur={(e) => {
+                  // Convert to integer on blur for validation
+                  const inputValue = e.target.value;
+                  if (inputValue !== '') {
+                    const numValue = parseFloat(inputValue);
+                    if (!isNaN(numValue) && numValue >= 0) {
+                      field.handleChange(Math.floor(numValue)); // Ensure integer for seconds
+                    }
+                  }
+                }}
+                disabled={saving}
+                error={!!field.state.meta.errors.length}
+                helperText={field.state.meta.errors.join(', ')}
+              />
+            )}
+          </form.Field>
+        </Box>
+      </Box>
+
+      <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+        {/* Target Weight */}
+        <Box sx={{ flex: '1 1 200px', minWidth: 200 }}>
+          <form.Field
+            name="targetWeight"
+            validators={{
+              onChange: ({ value }) =>
+                value < 0 ? 'Weight cannot be negative' : undefined,
+            }}
+          >
+            {(field) => (
+              <TextField
+                fullWidth
+                size="small"
+                label={`Target Weight (${weightUnitLabel})`}
+                type="text"
+                inputProps={{ inputMode: 'decimal' }}
+                value={field.state.value === 0 ? '' : field.state.value.toString()}
+                onChange={(e) => {
+                  const inputValue = e.target.value;
+                  // Allow any valid numeric input including decimals
+                  if (inputValue === '' || /^\d*\.?\d*$/.test(inputValue)) {
+                    // Store the raw input value to preserve decimal points
+                    field.handleChange(inputValue);
+                  }
+                }}
+                onBlur={(e) => {
+                  // Convert to number on blur for validation
+                  const inputValue = e.target.value;
+                  if (inputValue !== '') {
+                    const numValue = parseFloat(inputValue);
+                    if (!isNaN(numValue) && numValue >= 0) {
+                      field.handleChange(numValue);
+                    }
+                  }
+                }}
+                disabled={saving}
+                error={!!field.state.meta.errors.length}
+                helperText={field.state.meta.errors.join(', ')}
+              />
+            )}
+          </form.Field>
+        </Box>
+
+        {/* Performed Weight */}
+        {showPerformedFields && (
+          <Box sx={{ flex: '1 1 200px', minWidth: 200 }}>
+            <form.Field
+              name="performedWeight"
+              validators={{
+                onChange: ({ value }) =>
+                  value !== undefined && value < 0 ? 'Weight cannot be negative' : undefined,
+              }}
+            >
+              {(field) => (
+                <TextField
+                  fullWidth
+                  size="small"
+                  label={`Performed Weight (${weightUnitLabel})`}
+                  type="text"
+                  inputProps={{ inputMode: 'decimal' }}
+                  value={field.state.value ? convertWeightForDisplay(field.state.value).toString() : ''}
+                  onChange={(e) => {
+                    const inputValue = e.target.value;
+                    // Allow any valid numeric input including decimals
+                    if (inputValue === '' || /^\d*\.?\d*$/.test(inputValue)) {
+                      // Store the raw input value to preserve decimal points during typing
+                      field.handleChange(inputValue);
+                    }
+                  }}
+                  onBlur={(e) => {
+                    // Convert to number on blur for validation
+                    const inputValue = e.target.value;
+                    if (inputValue !== '') {
+                      const numValue = parseFloat(inputValue);
+                      if (!isNaN(numValue) && numValue >= 0) {
+                        const storageValue = convertWeightForStorage(numValue);
+                        field.handleChange(storageValue);
+                      }
+                    } else {
+                      field.handleChange(undefined);
+                    }
+                  }}
+                  disabled={saving}
+                  placeholder="Actual weight used"
+                  error={!!field.state.meta.errors.length}
+                  helperText={field.state.meta.errors.join(', ')}
+                />
+              )}
+            </form.Field>
+          </Box>
+        )}
+      </Box>
+
+      <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+        {/* Target Reps */}
+        <Box sx={{ flex: '1 1 200px', minWidth: 200 }}>
+          <form.Field
+            name="targetReps"
+            validators={{
+              onChange: ({ value }) =>
+                value < 1 ? 'Must have at least 1 rep' : undefined,
+            }}
+          >
+            {(field) => (
+              <TextField
+                fullWidth
+                size="small"
+                label="Target Reps"
+                type="text"
+                inputProps={{ inputMode: 'decimal' }}
+                value={field.state.value === 0 ? '' : field.state.value.toString()}
+                onChange={(e) => {
+                  const inputValue = e.target.value;
+                  // Allow any valid numeric input including decimals
+                  if (inputValue === '' || /^\d*\.?\d*$/.test(inputValue)) {
+                    // Store the raw input value to preserve decimal points during typing
+                    field.handleChange(inputValue);
+                  }
+                }}
+                onBlur={(e) => {
+                  // Convert to integer on blur for validation
+                  const inputValue = e.target.value;
+                  if (inputValue !== '') {
+                    const numValue = parseFloat(inputValue);
+                    if (!isNaN(numValue) && numValue >= 0) {
+                      field.handleChange(Math.floor(numValue)); // Ensure integer for reps
+                    }
+                  }
+                }}
+                disabled={saving}
+                error={!!field.state.meta.errors.length}
+                helperText={field.state.meta.errors.join(', ')}
+              />
+            )}
+          </form.Field>
+        </Box>
+
+        {/* Performed Reps */}
+        {showPerformedFields && (
+          <Box sx={{ flex: '1 1 200px', minWidth: 200 }}>
+            <form.Field
+              name="performedReps"
+              validators={{
+                onChange: ({ value }) =>
+                  value !== undefined && value < 0 ? 'Reps cannot be negative' : undefined,
+              }}
+            >
+              {(field) => (
+                <TextField
+                  fullWidth
+                  size="small"
+                label="Performed Reps"
+                type="text"
+                inputProps={{ inputMode: 'decimal' }}
+                value={field.state.value ? field.state.value.toString() : ''}
+                onChange={(e) => {
+                  const inputValue = e.target.value;
+                  // Allow any valid numeric input including decimals
+                  if (inputValue === '' || /^\d*\.?\d*$/.test(inputValue)) {
+                    // Store the raw input value to preserve decimal points during typing
+                    field.handleChange(inputValue);
+                  }
+                }}
+                onBlur={(e) => {
+                  // Convert to integer on blur for validation
+                  const inputValue = e.target.value;
+                  if (inputValue !== '') {
+                    const numValue = parseFloat(inputValue);
+                    if (!isNaN(numValue) && numValue >= 0) {
+                      field.handleChange(Math.floor(numValue)); // Ensure integer for reps
+                    }
+                  } else {
+                    field.handleChange(undefined);
+                  }
+                }}
+                  disabled={saving}
+                  placeholder="Actual reps completed"
+                  error={!!field.state.meta.errors.length}
+                  helperText={field.state.meta.errors.join(', ')}
+                />
+              )}
+            </form.Field>
+          </Box>
+        )}
+      </Box>
+
+      {/* Tempo Settings */}
+      {showTempoFields && (
+        <>
+          <Divider sx={{ my: 1 }} />
+          <Typography variant="subtitle2" gutterBottom>
+            Tempo Settings
+          </Typography>
+
+          <Box>
+            <form.Field name="useTempo">
+              {(field) => (
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={field.state.value}
+                      onChange={(e) => field.handleChange(e.target.checked)}
+                      disabled={saving}
+                    />
+                  }
+                  label="Use Tempo"
+                />
+              )}
+            </form.Field>
+          </Box>
+
+          {form.state.values.useTempo && (
+            <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+              <Box sx={{ flex: '1 1 150px', minWidth: 150 }}>
+                <form.Field name="eccentricTempo">
+                  {(field) => (
+                    <TextField
+                      fullWidth
+                      size="small"
+                      label="Eccentric"
+                      value={field.state.value}
+                      onChange={(e) => field.handleChange(e.target.value)}
+                      disabled={saving}
+                      placeholder="e.g., 3"
+                    />
+                  )}
+                </form.Field>
+              </Box>
+              <Box sx={{ flex: '1 1 150px', minWidth: 150 }}>
+                <form.Field name="isometricTempo">
+                  {(field) => (
+                    <TextField
+                      fullWidth
+                      size="small"
+                      label="Isometric"
+                      value={field.state.value}
+                      onChange={(e) => field.handleChange(e.target.value)}
+                      disabled={saving}
+                      placeholder="e.g., 1"
+                    />
+                  )}
+                </form.Field>
+              </Box>
+              <Box sx={{ flex: '1 1 150px', minWidth: 150 }}>
+                <form.Field name="concentricTempo">
+                  {(field) => (
+                    <TextField
+                      fullWidth
+                      size="small"
+                      label="Concentric"
+                      value={field.state.value}
+                      onChange={(e) => field.handleChange(e.target.value)}
+                      disabled={saving}
+                      placeholder="e.g., X"
+                    />
+                  )}
+                </form.Field>
+              </Box>
+            </Box>
+          )}
+        </>
+      )}
+
+      {/* Set Type Options */}
+      {showSetTypeFields && (
+        <>
+          <Divider sx={{ my: 1 }} />
+          <Typography variant="subtitle2" gutterBottom>
+            Set Type Options
+          </Typography>
+
+          <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+            <form.Field name="isAmrap">
+              {(field) => (
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={field.state.value}
+                      onChange={(e) => field.handleChange(e.target.checked)}
+                      disabled={saving}
+                    />
+                  }
+                  label="AMRAP"
+                />
+              )}
+            </form.Field>
+
+            <form.Field name="isEmom">
+              {(field) => (
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={field.state.value}
+                      onChange={(e) => field.handleChange(e.target.checked)}
+                      disabled={saving}
+                    />
+                  }
+                  label="EMOM"
+                />
+              )}
+            </form.Field>
+          </Box>
+        </>
+      )}
+    </Box>
+  );
+};
