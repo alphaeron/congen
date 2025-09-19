@@ -1,9 +1,12 @@
 import {
   Box,
   List,
+  Tabs,
+  Tab,
+  Typography,
 } from '@mui/material';
 import { useSnackbar } from 'notistack';
-import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 
 import { FormDialog } from './FormDialog';
 import { FormField } from './FormField';
@@ -11,7 +14,6 @@ import { LoadingSpinner } from './LoadingSpinner';
 import { PreferenceSection } from './PreferenceSection';
 import { DeletableListItem } from './DeletableListItem';
 import { DeletableChip } from './DeletableChip';
-import { NavigationItem } from './NavigationItem';
 import { getEquipment } from '../api/equipment';
 import { getExercises } from '../api/exercise';
 import { getMuscles } from '../api/muscle';
@@ -40,6 +42,28 @@ import {
 import { useAuth } from '../contexts/AuthContext';
 
 import type { AxiosError } from 'axios';
+
+interface TabPanelProps {
+  children?: React.ReactNode;
+  index: number;
+  value: number;
+}
+
+function TabPanel(props: TabPanelProps) {
+  const { children, value, index, ...other } = props;
+
+  return (
+    <div
+      role="tabpanel"
+      hidden={value !== index}
+      id={`vertical-tabpanel-${index}`}
+      aria-labelledby={`vertical-tab-${index}`}
+      {...other}
+    >
+      {value === index && <Box sx={{ p: 3 }}>{children}</Box>}
+    </div>
+  );
+}
 
 /**
  * Workout preferences section component for user profile.
@@ -76,12 +100,8 @@ export function WorkoutPreferencesSection(): React.ReactElement {
   const [userExercisePreferences, setUserExercisePreferences] = useState<UserExercisePreference[]>([]);
   const [exercisePreferenceDialogOpen, setExercisePreferenceDialogOpen] = useState(false);
 
-  // Navigation state
-  const [activeSection, setActiveSection] = useState('weight-units');
-  const weightUnitsRef = useRef<HTMLDivElement>(null);
-  const equipmentRef = useRef<HTMLDivElement>(null);
-  const weakMusclesRef = useRef<HTMLDivElement>(null);
-  const exercisePreferencesRef = useRef<HTMLDivElement>(null);
+  // Tab state
+  const [activeTab, setActiveTab] = useState(0);
 
   // Form data types for TanStack Form
   interface WeightUnitPreferenceFormData extends Record<string, unknown> {
@@ -165,54 +185,10 @@ export function WorkoutPreferencesSection(): React.ReactElement {
     setLoading(false);
   };
 
-  // Navigation functions
-  const scrollToSection = useCallback((sectionId: string) => {
-    const refs = {
-      'weight-units': weightUnitsRef,
-      equipment: equipmentRef,
-      'weak-muscles': weakMusclesRef,
-      'exercise-preferences': exercisePreferencesRef,
-    };
-
-    const ref = refs[sectionId as keyof typeof refs];
-    if (ref?.current) {
-      ref.current.scrollIntoView({
-        behavior: 'smooth',
-        block: 'start',
-      });
-    }
-  }, []);
-
-  // Intersection Observer for scroll detection
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      entries => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting) {
-            const sectionId = entry.target.getAttribute('data-section');
-            if (sectionId) {
-              setActiveSection(sectionId);
-            }
-          }
-        });
-      },
-      {
-        rootMargin: '-20% 0px -70% 0px', // Trigger when section is 20% from top
-        threshold: 0.1,
-      }
-    );
-
-    // Observe all section refs
-    [weightUnitsRef, equipmentRef, weakMusclesRef, exercisePreferencesRef].forEach(ref => {
-      if (ref.current) {
-        observer.observe(ref.current);
-      }
-    });
-
-    return () => {
-      observer.disconnect();
-    };
-  }, [loading]); // Re-run when loading changes (data is loaded)
+  // Tab change handler
+  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+    setActiveTab(newValue);
+  };
 
   const handleAddWeightUnitPreference = async (data: WeightUnitPreferenceFormData) => {
     if (!user?.keycloak_id) return;
@@ -416,150 +392,130 @@ export function WorkoutPreferencesSection(): React.ReactElement {
 
   return (
     <Box sx={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
-      {/* Sticky Sidebar Navigation */}
+      {/* Vertical Tabs */}
       <Box
         sx={{
           width: 250,
           minWidth: 250,
           height: '100vh',
-          overflow: 'auto',
-          position: 'sticky',
-          top: 0,
-          zIndex: 1,
-          p: 2,
           borderRight: 1,
           borderColor: 'divider',
         }}
       >
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-          <NavigationItem
-            label="Weight Unit Preferences"
-            isActive={activeSection === 'weight-units'}
-            onClick={() => scrollToSection('weight-units')}
-          />
-          <NavigationItem
-            label="Available Equipment"
-            isActive={activeSection === 'equipment'}
-            onClick={() => scrollToSection('equipment')}
-          />
-          <NavigationItem
-            label="Weak Muscle Groups"
-            isActive={activeSection === 'weak-muscles'}
-            onClick={() => scrollToSection('weak-muscles')}
-          />
-          <NavigationItem
-            label="Exercise Preferences"
-            isActive={activeSection === 'exercise-preferences'}
-            onClick={() => scrollToSection('exercise-preferences')}
-          />
-        </Box>
+        <Tabs
+          orientation="vertical"
+          variant="scrollable"
+          value={activeTab}
+          onChange={handleTabChange}
+          aria-label="workout preferences tabs"
+          sx={{ borderRight: 1, borderColor: 'divider' }}
+        >
+          <Tab label="Weight Unit Preferences" />
+          <Tab label="Available Equipment" />
+          <Tab label="Weak Muscle Groups" />
+          <Tab label="Exercise Preferences" />
+        </Tabs>
       </Box>
 
-      {/* Main Content Area */}
+      {/* Tab Content */}
       <Box sx={{ flex: 1, overflow: 'auto', height: '100vh' }}>
-        <Box sx={{ p: 3 }}>
-          {/* Weight Unit Preferences Section */}
-          <div ref={weightUnitsRef} data-section="weight-units">
-            <PreferenceSection
-              title="Weight Unit Preferences"
-              description="Set your preferred weight units for specific exercises."
-              addButtonText="Add Preference"
-              onAddClick={() => setUnitDialogOpen(true)}
-              hasItems={weightUnitPreferences.length > 0}
-              emptyMessage="No weight unit preferences set yet."
-            >
-              <List dense>
-                {weightUnitPreferences.map(pref => (
-                  <DeletableListItem
-                    key={`${pref.user_id}-${pref.exercise_name}`}
-                    primary={getExerciseName(pref.exercise_name)}
-                    secondary={`Preferred unit: ${pref.preferred_unit}`}
-                    onDelete={() => handleDeleteWeightUnitPreference(pref.exercise_name)}
-                    deleteTooltip="Remove weight unit preference"
-                    disabled={saving}
-                  />
-                ))}
-              </List>
-            </PreferenceSection>
-          </div>
+        <TabPanel value={activeTab} index={0}>
+          <PreferenceSection
+            title="Weight Unit Preferences"
+            description="Set your preferred weight units for specific exercises."
+            addButtonText="Add Preference"
+            onAddClick={() => setUnitDialogOpen(true)}
+            hasItems={weightUnitPreferences.length > 0}
+            emptyMessage="No weight unit preferences set yet."
+          >
+            <List dense>
+              {weightUnitPreferences.map(pref => (
+                <DeletableListItem
+                  key={`${pref.user_id}-${pref.exercise_name}`}
+                  primary={getExerciseName(pref.exercise_name)}
+                  secondary={`Preferred unit: ${pref.preferred_unit}`}
+                  onDelete={() => handleDeleteWeightUnitPreference(pref.exercise_name)}
+                  deleteTooltip="Remove weight unit preference"
+                  disabled={saving}
+                />
+              ))}
+            </List>
+          </PreferenceSection>
+        </TabPanel>
 
-          {/* Available Equipment Section */}
-          <div ref={equipmentRef} data-section="equipment">
-            <PreferenceSection
-              title="Available Equipment"
-              description="Manage the equipment you have available for workouts. This affects which exercises are available in your exercise pool."
-              addButtonText="Add Equipment"
-              onAddClick={() => setEquipmentDialogOpen(true)}
-              hasItems={userEquipment.length > 0}
-              emptyMessage="No equipment added yet. Add equipment to expand your exercise pool."
-            >
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                {userEquipment.map(equipment => (
-                  <DeletableChip
-                    key={equipment.equipment_name}
-                    label={equipment.equipment_name}
-                    onDelete={() => handleRemoveEquipment(equipment.equipment_name)}
-                    deleteTooltip="Remove equipment"
-                    disabled={saving}
-                    color="primary"
-                    variant="outlined"
-                  />
-                ))}
-              </Box>
-            </PreferenceSection>
-          </div>
+        <TabPanel value={activeTab} index={1}>
+          <PreferenceSection
+            title="Available Equipment"
+            description="Manage the equipment you have available for workouts. This affects which exercises are available in your exercise pool."
+            addButtonText="Add Equipment"
+            onAddClick={() => setEquipmentDialogOpen(true)}
+            hasItems={userEquipment.length > 0}
+            emptyMessage="No equipment added yet. Add equipment to expand your exercise pool."
+          >
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+              {userEquipment.map(equipment => (
+                <DeletableChip
+                  key={equipment.equipment_name}
+                  label={equipment.equipment_name}
+                  onDelete={() => handleRemoveEquipment(equipment.equipment_name)}
+                  deleteTooltip="Remove equipment"
+                  disabled={saving}
+                  color="primary"
+                  variant="outlined"
+                />
+              ))}
+            </Box>
+          </PreferenceSection>
+        </TabPanel>
 
-          {/* Weak Muscle Groups Section */}
-          <div ref={weakMusclesRef} data-section="weak-muscles">
-            <PreferenceSection
-              title="Weak Muscle Groups"
-              description="Identify muscle groups you want to target for improvement. This helps prioritize exercises that work these areas."
-              addButtonText="Add Weak Muscle"
-              onAddClick={() => setWeakMuscleDialogOpen(true)}
-              hasItems={userWeakMuscles.length > 0}
-              emptyMessage="No weak muscle groups identified yet. Add muscle groups you want to focus on."
-            >
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                {userWeakMuscles.map(weakMuscle => (
-                  <DeletableChip
-                    key={weakMuscle.muscle_name}
-                    label={weakMuscle.muscle_name}
-                    onDelete={() => handleRemoveWeakMuscle(weakMuscle.muscle_name)}
-                    deleteTooltip="Remove weak muscle group"
-                    disabled={saving}
-                    color="warning"
-                    variant="outlined"
-                  />
-                ))}
-              </Box>
-            </PreferenceSection>
-          </div>
+        <TabPanel value={activeTab} index={2}>
+          <PreferenceSection
+            title="Weak Muscle Groups"
+            description="Identify muscle groups you want to target for improvement. This helps prioritize exercises that work these areas."
+            addButtonText="Add Weak Muscle"
+            onAddClick={() => setWeakMuscleDialogOpen(true)}
+            hasItems={userWeakMuscles.length > 0}
+            emptyMessage="No weak muscle groups identified yet. Add muscle groups you want to focus on."
+          >
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+              {userWeakMuscles.map(weakMuscle => (
+                <DeletableChip
+                  key={weakMuscle.muscle_name}
+                  label={weakMuscle.muscle_name}
+                  onDelete={() => handleRemoveWeakMuscle(weakMuscle.muscle_name)}
+                  deleteTooltip="Remove weak muscle group"
+                  disabled={saving}
+                  color="warning"
+                  variant="outlined"
+                />
+              ))}
+            </Box>
+          </PreferenceSection>
+        </TabPanel>
 
-          {/* Exercise Preferences Section */}
-          <div ref={exercisePreferencesRef} data-section="exercise-preferences">
-            <PreferenceSection
-              title="Exercise Preferences"
-              description="Set your preferences for specific exercises. You can prefer exercises you enjoy or ignore exercises you want to avoid."
-              addButtonText="Add Preference"
-              onAddClick={() => setExercisePreferenceDialogOpen(true)}
-              hasItems={userExercisePreferences.length > 0}
-              emptyMessage="No exercise preferences set yet. Add exercises you prefer or want to avoid."
-            >
-              <List dense>
-                {userExercisePreferences.map(pref => (
-                  <DeletableListItem
-                    key={`${pref.user_id}-${pref.exercise_name}`}
-                    primary={pref.exercise_name}
-                    secondary={pref.should_avoid ? 'Ignored' : 'Preferred'}
-                    onDelete={() => handleRemoveExercisePreference(pref.exercise_name)}
-                    deleteTooltip="Remove exercise preference"
-                    disabled={saving}
-                  />
-                ))}
-              </List>
-            </PreferenceSection>
-          </div>
-        </Box>
+        <TabPanel value={activeTab} index={3}>
+          <PreferenceSection
+            title="Exercise Preferences"
+            description="Set your preferences for specific exercises. You can prefer exercises you enjoy or ignore exercises you want to avoid."
+            addButtonText="Add Preference"
+            onAddClick={() => setExercisePreferenceDialogOpen(true)}
+            hasItems={userExercisePreferences.length > 0}
+            emptyMessage="No exercise preferences set yet. Add exercises you prefer or want to avoid."
+          >
+            <List dense>
+              {userExercisePreferences.map(pref => (
+                <DeletableListItem
+                  key={`${pref.user_id}-${pref.exercise_name}`}
+                  primary={pref.exercise_name}
+                  secondary={pref.should_avoid ? 'Ignored' : 'Preferred'}
+                  onDelete={() => handleRemoveExercisePreference(pref.exercise_name)}
+                  deleteTooltip="Remove exercise preference"
+                  disabled={saving}
+                />
+              ))}
+            </List>
+          </PreferenceSection>
+        </TabPanel>
       </Box>
 
       {/* Add Weight Unit Preference Dialog */}

@@ -1,0 +1,182 @@
+Performance Indicators (Simplified Table)
+Category	What to Measure	How to Test It at Home
+Relative Strength	Strength-to-weight ratio	✅ Wilks Score calculator + track 1RM or max reps of pull-ups, push-ups, squats
+Explosiveness	Vertical jump power	✅ MyJump2 app (uses your phone camera to measure jump height accurately)
+Aerobic Capacity	General conditioning + VO₂ max proxy	✅ Oura/Whoop VO₂ Max estimate
+✅ 12-min Cooper Test + online VO₂ calculator
+Recovery Ability	Heart rate recovery + readiness	✅ Whoop/Oura HRV + recovery score
+✅ 1-min HR drop after exercise (see below)
+Muscular Endurance	Repeat bodyweight efforts	✅ Max push-ups in 1 minute
+✅ Max pull-ups (strict)
+Speed / Agility	Change of direction / reaction time (proxy)	✅ BlazePod app or phone-based reflex apps
+✅ Footwork drills w/ timer (e.g., shadowboxing rounds)
+
+
+
+Track improvements weekly.
+
+✅ 6. Agility / Reaction Time (Proxy)
+
+Download:
+
+Reflex apps like “Human Benchmark,” “Reflex,” or “BlazePod” (or DIY light drills).
+
+Add shadowboxing with footwork drills on a timer:
+
+3x3-minute rounds, max pivots + directional changes per round.
+
+Optional: Weekly Testing Protocol (30 min total)
+Day	Test	Tool/App
+Monday	Vertical Jump	MyJump2
+Wednesday	Max Push-Ups & Pull-Ups	Timer / None
+Friday	12-min Run + VO₂ Max calc	GPS + calculator
+Any day	HRV & HR recovery	Oura / Whoop
+Any day	Reflex speed	Human Benchmark
+
+Ensure the weekly testing protol would be visibile on the frontend and would not interfere with regularly scheduled workouts.
+
+
+Here's a structured algorithm to calculate a single overall athleticism level, using the home-measurable indicators we discussed. This will:
+
+Normalize inputs across different test types (strength, endurance, power, etc.)
+
+Use scoring functions that scale non-linearly — harder to improve at elite levels
+
+Output a single "Athleticism Level", starting at Level 1 and progressing upward with diminishing returns
+
+
+Overview of Algorithm Logic
+
+Inputs: Test results from:
+
+Relative Strength (Wilks or Pull-ups)
+
+Explosiveness (Vertical Jump)
+
+Aerobic Capacity (VO₂ max or proxy)
+
+Recovery (HR Recovery or HRV)
+
+Muscular Endurance (Push-ups / Pull-ups)
+
+Reaction Time (ms)
+
+Scoring:
+
+Each metric maps to a score from 0 to 100 using a non-linear scaling function.
+
+Example functions: logarithmic, hyperbolic tangent, exponential decay, depending on the nature of the metric.
+
+Higher scores = closer to elite performance.
+
+Weighting (optional):
+
+For a general athlete: all metrics are equally weighted.
+
+You can apply custom weights for martial arts (e.g., heavier weighting to relative strength and endurance).
+
+Final Level:
+
+Combine scores → normalize → pass through logarithmic level curve to determine final level (e.g., Level 1 to Level 20+).
+
+Harder to go from Level 15 to 16 than Level 3 to 4.
+
+1. Keep normalized metric scores (0–100 per test)
+
+We already do this with non-linear scaling per input.
+
+2. Average all test scores → total_score (0–100)
+
+This gives you the raw fitness profile.
+
+3. Apply a non-linear scaling function to total_score
+
+To stretch it across 1–100 while keeping realistic difficulty curves, we apply one of these:
+
+
+
+simplified code to get started
+
+import math
+
+# --- 1. Input Metrics ---
+metrics = {
+    "relative_strength": wilks_score,         # or pull-ups max
+    "vertical_jump_cm": jump_height_cm,       # from MyJump2
+    "vo2_max": vo2_estimate,                  # from Oura or Cooper test
+    "hr_recovery": heart_rate_drop_1_min,     # after exertion
+    "muscular_endurance": pushups_1_min,      # or pull-ups
+    "reaction_time_ms": reaction_time         # from reflex app
+}
+
+# --- 2. Normalize Each Metric to 0-100 Scale ---
+
+def score_relative_strength(wilks):
+    # Typical: 250 (avg) to 500+ (elite)
+    return min(100, 20 * math.log10(wilks / 250))
+
+def score_vertical_jump(cm):
+    # 30cm (low) to 70cm (elite)
+    return min(100, 25 * math.log10(cm / 30))
+
+def score_vo2_max(vo2):
+    # 35 (avg) to 70+ (elite)
+    return min(100, 25 * math.log10(vo2 / 35))
+
+def score_hr_recovery(drop):
+    # 20 (poor) to 60+ (excellent)
+    return min(100, 2 * (drop - 20))  # simple linear scale
+
+def score_muscular_endurance(pushups):
+    # 20 (low) to 60+ (high)
+    return min(100, 3 * math.log10(pushups + 1))  # log growth
+
+def score_reaction_time(rt_ms):
+    # 300ms (fast) to 600ms (slow)
+    return max(0, min(100, 100 - ((rt_ms - 300) * 0.33)))  # linear decay
+
+# Score all metrics
+scores = {
+    "relative_strength": score_relative_strength(metrics["relative_strength"]),
+    "explosiveness": score_vertical_jump(metrics["vertical_jump_cm"]),
+    "aerobic_capacity": score_vo2_max(metrics["vo2_max"]),
+    "recovery": score_hr_recovery(metrics["hr_recovery"]),
+    "muscular_endurance": score_muscular_endurance(metrics["muscular_endurance"]),
+    "reaction_time": score_reaction_time(metrics["reaction_time_ms"])
+}
+
+# --- 3. Average scores ---
+def average_score(scores):
+    valid_scores = [v for v in scores.values() if v is not None]
+    if not valid_scores:
+        return 0
+    return sum(valid_scores) / len(valid_scores)
+
+# --- 4. Apply tanh scaling ---
+def tanh_scaling(avg_score):
+    # Center at 50, scale by 15 (adjust for curve steepness)
+    scaled = (math.tanh((avg_score - 50) / 15) + 1) * 50
+    return round(scaled, 1)
+
+# --- 5. Main function to get final athleticism score ---
+def calculate_athleticism_level(metrics):
+    scores = compute_scores(metrics)
+    avg = average_score(scores)
+    final_score = tanh_scaling(avg)
+    return final_score, scores
+
+# --- Example usage ---
+if __name__ == "__main__":
+    # Example test inputs
+    sample_metrics = {
+        "relative_strength": 350,    # Wilks score
+        "vertical_jump_cm": 50,      # cm
+        "vo2_max": 48,               # ml/kg/min
+        "hr_recovery": 40,           # bpm drop in 1 min
+        "muscular_endurance": 40,    # max push-ups in 1 min
+        "reaction_time_ms": 350      # milliseconds
+    }
+
+    final_level, individual_scores = calculate_athleticism_level(sample_metrics)
+    print("Individual Metric Scores:", individual_scores)
+    print("Final Athleticism Score (1-100):", final_level)
