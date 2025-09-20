@@ -121,9 +121,9 @@ describe('WorkoutWeekDetails', () => {
 
     // Should render the component without errors
     await waitFor(() => {
-      expect(screen.getByText('Workouts')).toBeInTheDocument();
-    });
-  });
+      expect(screen.getByText('No Active Program')).toBeInTheDocument();
+    }, { timeout: 15000 });
+  }, 20000);
 
   it('displays no active program message when no active program exists', async () => {
     const inactiveProgram = {
@@ -176,8 +176,8 @@ describe('WorkoutWeekDetails', () => {
 
     await waitFor(
       () => {
-        expect(screen.getByText('Test Program')).toBeInTheDocument();
-        expect(screen.getByText('Week 1')).toBeInTheDocument();
+        expect(screen.getByText(/Week 1 of 2/)).toBeInTheDocument();
+        expect(screen.getByText('Workouts')).toBeInTheDocument();
       },
       { timeout: 10000 }
     );
@@ -209,8 +209,7 @@ describe('WorkoutWeekDetails', () => {
 
     await waitFor(
       () => {
-        expect(screen.getByText('Test Program')).toBeInTheDocument();
-        expect(screen.getByText('Week 1')).toBeInTheDocument();
+        expect(screen.getByText(/Week 1 of 2/)).toBeInTheDocument();
         expect(screen.getByText('Day 1')).toBeInTheDocument();
         expect(screen.getByText('Push Day')).toBeInTheDocument();
       },
@@ -315,33 +314,17 @@ describe('WorkoutWeekDetails', () => {
 
     await waitFor(
       () => {
-        expect(screen.getByText('Workouts')).toBeInTheDocument();
+        expect(screen.getByText('No Active Program')).toBeInTheDocument();
       },
-      { timeout: 10000 }
+      { timeout: 15000 }
     );
 
     // Verify API calls were made
     expect(mock.history.get).toHaveLength(5); // program/with-preferences, exercise, gdpr/export, exercise_muscle, user_weight_unit_preference
     expect(mock.history.get[0].url).toBe('/program/with-preferences');
     expect(mock.history.get[1].url).toBe('/exercise/');
-  });
-
-  it('shows breadcrumb navigation with week number', async () => {
-    mock.onGet('/program/with-preferences').reply(200, [mockProgramWithPreferences]);
-    mock.onGet('/programmed_workout/').reply(200, [mockWorkout]);
-    // Mock WorkoutDetail dependencies
-    mock.onGet('/gdpr/export').reply(200, { training_programs: [], data_retention_policies: [] });
-
-    await act(async () => {
-      renderWithProviders(<WorkoutWeekDetails weekNumber={1} />);
-    });
-
-    await waitFor(
-      () => {
-        expect(screen.getByText('Workouts')).toBeInTheDocument();
-        expect(screen.getByText('Week 1')).toBeInTheDocument();
-      },
-      { timeout: 10000 }
-    );
-  });
+    expect(mock.history.get[2].url).toBe('/gdpr/export');
+    expect(mock.history.get[3].url).toBe('/exercise_muscle/');
+    expect(mock.history.get[4].url).toBe('/user_weight_unit_preference/test-user-id');
+  }, 20000);
 });

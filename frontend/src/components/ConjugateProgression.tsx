@@ -8,11 +8,15 @@ import {
   flexRender,
 } from '@tanstack/react-table';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import React, { useMemo, useState, useRef } from 'react';
+import React, { useMemo, useState, useRef, useEffect } from 'react';
 
 import { ExerciseName } from './ExerciseName';
 import { LineChart } from './LineChart';
 import { PieChart } from './PieChart';
+import { LoadingSpinner } from './LoadingSpinner';
+import { getIndividualExercise } from '../api/exercise';
+import { getUserDataExport } from '../api/gdpr';
+import { getUserWeightUnitPreferences } from '../api/userWeightUnitPreference';
 import type {
   User,
   Exercise,
@@ -23,10 +27,6 @@ import type {
 
 interface ConjugateProgressionProps {
   user: User;
-  userData: UserDataExport | null;
-  exerciseData: Map<string, Exercise>;
-  oneRepMaxes: UserOneRepMax[];
-  weightUnitPreferences: UserWeightUnitPreference[];
 }
 
 /**
@@ -39,22 +39,74 @@ interface ConjugateProgressionProps {
  * - Training intensity distribution
  *
  * @param user The user data
- * @param userData The user's workout and training data
- * @param exerciseData Map of exercise names to exercise data
- * @param oneRepMaxes User's one rep max records
- * @param weightUnitPreferences User's weight unit preferences
  * @return Enhanced conjugate progression component
  */
 export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({
-  userData,
-  exerciseData,
-  oneRepMaxes,
-  weightUnitPreferences,
+  user,
 }) => {
+  // State for loaded data
+  const [userData, setUserData] = useState<UserDataExport | null>(null);
+  const [exerciseData, setExerciseData] = useState<Map<string, Exercise>>(new Map());
+  const [oneRepMaxes, setOneRepMaxes] = useState<UserOneRepMax[]>([]);
+  const [weightUnitPreferences, setWeightUnitPreferences] = useState<UserWeightUnitPreference[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [globalFilter, setGlobalFilter] = useState('');
 
   // Virtualization setup
   const tableParentRef = useRef<HTMLDivElement>(null);
+
+  // Load data on component mount
+  useEffect(() => {
+    const loadData = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const [userDataResponse, weightUnitData] = await Promise.all([
+          getUserDataExport(),
+          getUserWeightUnitPreferences(user.keycloak_id),
+        ]);
+
+        setUserData(userDataResponse);
+        setWeightUnitPreferences(weightUnitData || []);
+        setOneRepMaxes((userDataResponse.user_one_rep_max as unknown as UserOneRepMax[]) || []);
+
+        // Extract unique exercises from the export data and fetch exercise details
+        const uniqueExercises = new Set<string>();
+        (userDataResponse.training_programs as any[])?.forEach(program => {
+          program.workouts.forEach((workoutWithStages: any) => {
+            workoutWithStages.stages.forEach((stageWithExercises: any) => {
+              stageWithExercises.exercises.forEach((exerciseWithSetSchemes: any) => {
+                uniqueExercises.add(exerciseWithSetSchemes.exercise.exercise_name);
+              });
+            });
+          });
+        });
+
+        // Fetch exercise details for all unique exercises
+        const exercisePromises = Array.from(uniqueExercises).map(exerciseName =>
+          getIndividualExercise(exerciseName).catch(() => null)
+        );
+        const exerciseResults = await Promise.all(exercisePromises);
+        
+        const exerciseMap = new Map<string, Exercise>();
+        exerciseResults.forEach(exercise => {
+          if (exercise) {
+            exerciseMap.set(exercise.name, exercise);
+          }
+        });
+        setExerciseData(exerciseMap);
+
+      } catch (err) {
+        console.error('Error loading conjugate progression data:', err);
+        setError('Failed to load progression data');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadData();
+  }, [user.keycloak_id]);
 
   // Table configuration
   const columnHelper = createColumnHelper<{
@@ -122,14 +174,36 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({
     overscan: 5, // Render 5 extra rows above and below viewport
   });
 
-  if (!userData?.training_programs || userData.training_programs.length === 0) {
+  // Show loading state
+  if (isLoading) {
     return (
-      <Card sx={{ mb: 3 }}>
+      <LoadingSpinner 
+        message="Loading progression data..." 
+        fullHeight={false}
+      />
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <Card>
         <CardContent>
-          <Typography variant="h6" gutterBottom>
+          <Typography color="error">{error}</Typography>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Show message if no data
+  if (!userData || !userData.training_programs || userData.training_programs.length === 0) {
+    return (
+      <Card sx={{ mt: 3 }}>
+        <CardContent>
+          <Typography variant="h5" gutterBottom>
             Conjugate Progress Tracking
           </Typography>
-          <Typography variant="body2" color="text.secondary">
+          <Typography>
             Complete your first workout to see progress statistics and correlations.
           </Typography>
         </CardContent>
@@ -138,7 +212,7 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({
   }
 
   return (
-    <Grid container spacing={3}>
+    <Grid container spacing={3} sx={{ mt: 3 }}>
       {/* Progress Tracking Chart - Shows strength gains over time */}
       <Grid size={{ xs: 12, lg: 6 }}>
         <LineChart

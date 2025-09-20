@@ -99,16 +99,7 @@ export const ExerciseCategoryDetails: React.FC<ExerciseCategoryDetailsProps> = (
   }
 
   return (
-    <Box sx={{ p: 3 }}>
-      {/* Category Header */}
-      <Box sx={{ mb: 3 }}>
-        <Alert severity="info" sx={{ mb: 2 }}>
-          {categoryData.exercises.length === 0
-            ? `No ${categoryData.title.toLowerCase()}s in your rotation.`
-            : `${categoryData.exercises.length} ${categoryData.title.toLowerCase()}${categoryData.exercises.length === 1 ? '' : 's'} in your rotation.`}
-        </Alert>
-      </Box>
-
+    <Box>
       {/* Exercise Grid */}
       <Grid container spacing={3}>
         {categoryData.exercises.map(exercise => (

@@ -9,9 +9,6 @@ import {
   List,
   ListItem,
   ListItemText,
-  Breadcrumbs,
-  Link,
-  Slide,
 } from '@mui/material';
 import { useSnackbar } from 'notistack';
 import React, { useState, useEffect, useMemo } from 'react';
@@ -23,7 +20,6 @@ import { LoadingBackdrop } from './LoadingBackdrop';
 import { LoadingSpinner } from './LoadingSpinner';
 import { StreamChart } from './StreamChart';
 import { WorkoutGenerationWizard } from './WorkoutGenerationWizard';
-import { WorkoutWeekDetails } from './WorkoutWeekDetails';
 import { ProgressBar } from './ProgressBar';
 import { generateNextWeek } from '../api/conjugateWorkoutGenerator';
 import { calculateProgramProgress } from '../utils/progressUtils';
@@ -83,10 +79,6 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
     []
   );
   const [userDataExport, setUserDataExport] = useState<UserDataExport | null>(null);
-
-  // URL query parameters
-  const selectedWeek = searchParams.get('week');
-  const selectedWorkoutId = searchParams.get('workout') || selectedWorkout;
 
   // Load workout data
   useEffect(() => {
@@ -214,7 +206,7 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
     setSelectedProgram(null);
   };
 
-  // Calculate progress metrics for breadcrumb
+  // Calculate progress metrics
   const getProgressMetrics = () => {
     if (!activeProgram || !userDataExport) return null;
     
@@ -231,88 +223,8 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
     };
   };
 
-  // Render breadcrumbs with integrated progress
-  const renderBreadcrumbs = () => {
-    const progressMetrics = getProgressMetrics();
-    
-    return (
-      <Box
-        position="sticky"
-        top={0}
-        zIndex={1001}
-        sx={{
-          backgroundColor: 'background.default',
-          pt: 2,
-          pb: 2,
-          borderBottom: 1,
-          borderColor: 'divider',
-        }}
-      >
-        <Box sx={{ mb: 2 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-            {/* Show program name instead of "Workouts" */}
-            {selectedWeek ? (
-              <Link
-                component="button"
-                variant="body1"
-                onClick={() => handleBreadcrumbClick('workouts')}
-                sx={{ color: 'text.secondary' }}
-              >
-                {activeProgram?.program.name || 'Workouts'}
-              </Link>
-            ) : (
-              <Typography variant="body1" color="text.primary">
-                {activeProgram?.program.name || 'Workouts'}
-              </Typography>
-            )}
-            {selectedWeek && (
-              <>
-                <Typography variant="body1" color="text.primary">
-                  /
-                </Typography>
-                <Typography variant="body1" color="text.primary">
-                  Week {selectedWeek}
-                </Typography>
-              </>
-            )}
-            
-            {/* Export buttons */}
-            <Box sx={{ flexGrow: 1 }} />
-            <ExportButtons
-              onExportPDF={handleExportPDF}
-              disabled={weeks.length === 0}
-            />
-          </Box>
-          
-            {/* Progress indicator integrated into breadcrumb */}
-            {progressMetrics && !selectedWeek && (
-              <Box sx={{ mt: 1 }}>
-                <ProgressBar
-                  value={progressMetrics.completionRate}
-                  status={progressMetrics.status}
-                  current={progressMetrics.completedWeeks}
-                  total={progressMetrics.totalWeeks}
-                  showTooltip={true}
-                  showTicks={true}
-                  steps={Array.from({ length: progressMetrics.totalWeeks + 1 }, (_, i) => (i / progressMetrics.totalWeeks) * 100)}
-                  ticks={Array.from({ length: progressMetrics.totalWeeks + 1 }, (_, i) => (i / progressMetrics.totalWeeks) * 100)}
-                  width="100%"
-                  height={8}
-                  smooth={true}
-                  animationDuration={400}
-                />
-              </Box>
-            )}
-        </Box>
-      </Box>
-    );
-  };
-
-  const handleBreadcrumbClick = (path: string) => {
-    if (path === 'workouts') {
-      handleBackToWorkouts();
-    }
-  };
+  // Get progress metrics for the component
+  const progressMetrics = getProgressMetrics();
 
   // Export handlers
   const handleExportPDF = async () => {
@@ -326,178 +238,187 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
     });
   };
 
-
-  // If a week is selected, show the WorkoutWeekDetails component
-  if (selectedWeek) {
-    return (
-      <WorkoutWeekDetails selectedWorkout={selectedWorkoutId} weekNumber={parseInt(selectedWeek)} />
-    );
-  }
-
   // Show loading state while data is being fetched
   if (isLoading) {
     return (
       <React.Fragment>
-        {renderBreadcrumbs()}
         <LoadingSpinner message="Loading workout data..." fullHeight={false} />
       </React.Fragment>
     );
   }
 
+  // Show workout calendar
   return (
     <React.Fragment>
-      {renderBreadcrumbs()}
-      {!activeProgram ? (
-        <Card sx={{ mb: 3, mt: 3 }}>
-          <CardContent>
-            <Typography variant="h6" gutterBottom={true}>
-              No Active Program
-            </Typography>
-            <Typography variant="body2" color="text.secondary" paragraph>
-              You need to create a program first before you can generate and view workouts. Please
-              go to the Programs section to create a program.
-            </Typography>
-          </CardContent>
-        </Card>
-      ) : (
-        <Box>
-          <Box id="workouts-overview-content">
-            <Box sx={{ mt: 3, display: 'flex', gap: 3 }}>
-          {/* Week List - Slides right when week is selected */}
-          <Slide direction="right" in={!selectedWeek} mountOnEnter unmountOnExit>
-            <Box sx={{ flex: 1, minWidth: 0 }}>
-              <Grid container spacing={3}>
-                {/* Program Overview and Generation - Enhanced with inline progress */}
-                <Grid size={{ xs: 12 }}>
-                  <Card>
-                    <CardContent>
-                      <Box display="flex" justifyContent="space-between" alignItems="flex-start" sx={{ mb: 2 }}>
-                        <Box>
-                          <Typography variant="h6" gutterBottom>
-                            {`Current Week: Week ${Math.max(activeProgram.program.current_week_number, 1)}`}
-                          </Typography>
-                          <Typography variant="body2" color="text.secondary">
-                            Track your progress and generate new workout weeks
-                          </Typography>
-                        </Box>
-                        <Box display="flex" gap={1}>
-                          <Button
-                            variant="contained"
-                            startIcon={<AddIcon />}
-                            onClick={() => openWizard(activeProgram.program)}
-                            disabled={isGenerating}
-                            size="large"
-                          >
-                            {isGenerating ? 'Generating...' : 'Generate Next Week'}
-                          </Button>
-                        </Box>
-                      </Box>
-                      
-                      {/* Inline progress visualization */}
-                      {userDataExport?.training_programs &&
-                        userDataExport.training_programs.length > 0 &&
-                        userDataExport.training_programs.some(program => program.workouts.length > 0) && (
-                        <Box sx={{ mt: 2 }}>
-                          <StreamChart
-                            userDataExport={userDataExport}
-                            exerciseData={exerciseData}
-                            weightUnitPreferences={weightUnitPreferences}
-                            title="Volume Flow Over Time"
-                            description="Training volume distribution across workout types"
-                            height={300}
-                          />
-                        </Box>
-                      )}
-                    </CardContent>
-                  </Card>
-                </Grid>
+      <Box sx={{ p: 3 }}>
 
-                {/* Week List */}
-                <Grid size={{ xs: 12 }}>
-                  <Card sx={{ mb: 3 }}>
-                    <CardContent>
-                      <Typography variant="h6" gutterBottom>
-                        Training Weeks
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                        Click on any week to view detailed workout information
-                      </Typography>
-                      {isLoading ? (
-                        <Box display="flex" justifyContent="center" p={3}>
-                          <LoadingSpinner message="Loading weeks..." size={40} />
-                        </Box>
-                      ) : weeks.length === 0 ? (
-                        <Box sx={{ textAlign: 'center', py: 4 }}>
-                          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                            No workouts generated yet. Click &quot;Generate Next Week&quot; to create
-                            your first workout week.
-                          </Typography>
-                        </Box>
-                      ) : (
-                        <List>
-                          {weeks.map(week => (
-                            <ListItem
-                              key={week.weekNumber}
-                              disablePadding
-                              sx={{
-                                cursor: 'pointer',
-                                borderRadius: 1,
-                                mb: 1,
-                                '&:hover': { 
-                                  backgroundColor: 'action.hover',
-                                  transform: 'translateX(4px)',
-                                  transition: 'all 0.2s ease'
-                                },
-                              }}
-                              onClick={() => handleWeekClick(week.weekNumber)}
-                            >
-                              <ListItemText
-                                primary={
-                                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                    <Typography variant="subtitle1" fontWeight="medium">
-                                      Week {week.weekNumber}
-                                    </Typography>
-                                    {week.workoutCount > 0 && (
-                                      <Box
-                                        sx={{
-                                          backgroundColor: 'primary.main',
-                                          color: 'primary.contrastText',
-                                          borderRadius: '50%',
-                                          width: 20,
-                                          height: 20,
-                                          display: 'flex',
-                                          alignItems: 'center',
-                                          justifyContent: 'center',
-                                          fontSize: '0.75rem',
-                                          fontWeight: 'bold'
-                                        }}
-                                      >
-                                        {week.workoutCount}
-                                      </Box>
-                                    )}
-                                  </Box>
-                                }
-                                secondary={
-                                  <Typography variant="body2" color="text.secondary">
-                                    {week.workouts.map(w => replaceUnderscoresWithSpaces(w.name || `Workout ${w.day_number}`)).join(' • ')}
-                                  </Typography>
-                                }
-                              />
-                            </ListItem>
-                          ))}
-                        </List>
-                      )}
-                    </CardContent>
-                  </Card>
-                </Grid>
-              </Grid>
+        {!activeProgram ? (
+          <Card sx={{ mb: 3, mt: 3 }}>
+            <CardContent>
+              <Typography variant="h6" gutterBottom={true}>
+                No Active Program
+              </Typography>
+              <Typography variant="body2" color="text.secondary" paragraph>
+                You need to create a program first before you can generate and view workouts. Please
+                go to the Programs section to create a program.
+              </Typography>
+            </CardContent>
+          </Card>
+        ) : (
+          <Box>
+            {/* Top Section: Progress Bar and Export Buttons */}
+            <Box sx={{ mb: 3 }}>
+              <Box display="flex" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
+                {/* Progress Bar on the left */}
+                <Box sx={{ flex: 1, mr: 2 }}>
+                  {progressMetrics && (
+                    <ProgressBar
+                      value={progressMetrics.completionRate}
+                      status={progressMetrics.status}
+                      current={progressMetrics.completedWeeks}
+                      total={progressMetrics.totalWeeks}
+                      showTooltip={true}
+                      showTicks={true}
+                      steps={Array.from({ length: progressMetrics.totalWeeks + 1 }, (_, i) => (i / progressMetrics.totalWeeks) * 100)}
+                      ticks={Array.from({ length: progressMetrics.totalWeeks + 1 }, (_, i) => (i / progressMetrics.totalWeeks) * 100)}
+                      width="100%"
+                      height={8}
+                      smooth={true}
+                      animationDuration={400}
+                    />
+                  )}
+                </Box>
+                
+                {/* Export Buttons on the right */}
+                <ExportButtons
+                  onExportPDF={handleExportPDF}
+                  disabled={weeks.length === 0}
+                />
+              </Box>
             </Box>
-          </Slide>
-            </Box>
+
+            {/* Current Week Section */}
+            <Card sx={{ mb: 3 }}>
+              <CardContent>
+                <Box display="flex" justifyContent="space-between" alignItems="flex-start" sx={{ mb: 2 }}>
+                  <Box>
+                    <Typography variant="h6" gutterBottom>
+                      {`Current Week: Week ${Math.max(activeProgram.program.current_week_number, 1)}`}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Track your progress and generate new workout weeks
+                    </Typography>
+                  </Box>
+                  <Box display="flex" gap={1}>
+                    <Button
+                      variant="contained"
+                      startIcon={<AddIcon />}
+                      onClick={() => openWizard(activeProgram.program)}
+                      disabled={isGenerating}
+                      size="large"
+                    >
+                      {isGenerating ? 'Generating...' : 'Generate Next Week'}
+                    </Button>
+                  </Box>
+                </Box>
+
+                {/* Volume Flow Chart */}
+                {userDataExport?.training_programs &&
+                  userDataExport.training_programs.length > 0 &&
+                  userDataExport.training_programs.some(program => program.workouts.length > 0) && (
+                  <Box sx={{ mt: 2 }}>
+                    <StreamChart
+                      userDataExport={userDataExport}
+                      exerciseData={exerciseData}
+                      weightUnitPreferences={weightUnitPreferences}
+                      title="Volume Flow Over Time"
+                      description="Training volume distribution across workout types"
+                      height={300}
+                    />
+                  </Box>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Training Weeks Section */}
+            <Card>
+              <CardContent>
+                <Typography variant="h6" gutterBottom>
+                  Training Weeks
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                  Click on any week to view detailed workout information
+                </Typography>
+                {isLoading ? (
+                  <Box display="flex" justifyContent="center" p={3}>
+                    <LoadingSpinner message="Loading weeks..." size={40} />
+                  </Box>
+                ) : weeks.length === 0 ? (
+                  <Box sx={{ textAlign: 'center', py: 4 }}>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                      No workouts generated yet. Click &quot;Generate Next Week&quot; to create
+                      your first workout week.
+                    </Typography>
+                  </Box>
+                ) : (
+                  <List>
+                    {weeks.map(week => (
+                      <ListItem
+                        key={week.weekNumber}
+                        disablePadding
+                        sx={{
+                          cursor: 'pointer',
+                          borderRadius: 1,
+                          mb: 1,
+                          '&:hover': {
+                            backgroundColor: 'action.hover',
+                            transform: 'translateX(4px)',
+                            transition: 'all 0.2s ease'
+                          },
+                        }}
+                        onClick={() => handleWeekClick(week.weekNumber)}
+                      >
+                        <ListItemText
+                          primary={
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                              <Typography variant="subtitle1" fontWeight="medium">
+                                Week {week.weekNumber}
+                              </Typography>
+                              {week.workoutCount > 0 && (
+                                <Box
+                                  sx={{
+                                    backgroundColor: 'primary.main',
+                                    color: 'primary.contrastText',
+                                    borderRadius: '50%',
+                                    width: 20,
+                                    height: 20,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    fontSize: '0.75rem',
+                                    fontWeight: 'bold'
+                                  }}
+                                >
+                                  {week.workoutCount}
+                                </Box>
+                              )}
+                            </Box>
+                          }
+                          secondary={
+                            <Typography variant="body2" color="text.secondary">
+                              {week.workouts.map(w => replaceUnderscoresWithSpaces(w.name || `Workout ${w.day_number}`)).join(' • ')}
+                            </Typography>
+                          }
+                        />
+                      </ListItem>
+                    ))}
+                  </List>
+                )}
+              </CardContent>
+            </Card>
           </Box>
-        </Box>
-      )}
-
+        )}
+      </Box>
 
       {/* Workout Generation Wizard */}
       {selectedProgram && (

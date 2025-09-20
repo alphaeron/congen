@@ -1,7 +1,10 @@
 import FitnessCenterIcon from '@mui/icons-material/FitnessCenter';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import ScheduleIcon from '@mui/icons-material/Schedule';
+import PauseCircleIcon from '@mui/icons-material/PauseCircle';
 import {
   Box,
-  Button,
   Card,
   CardContent,
   Typography,
@@ -9,7 +12,8 @@ import {
   List,
   ListItem,
   ListItemText,
-  Breadcrumbs,
+  IconButton,
+  Slide,
 } from '@mui/material';
 import { useSnackbar } from 'notistack';
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
@@ -19,513 +23,506 @@ import { ExportButtons } from './ExportButtons';
 import { LoadingSpinner } from './LoadingSpinner';
 import { RadarChart } from './RadarChart';
 import { SunburstChart } from './SunburstChart';
-import { WorkoutDetail } from './WorkoutDetail';
 import { ProgressBar } from './ProgressBar';
-import { getExercises } from '../api/exercise';
+import { getExercises, getIndividualExercise } from '../api/exercise';
 import { calculateWeekProgress, calculateWorkoutProgress } from '../utils/progressUtils';
 
 import { getExerciseMuscle } from '../api/exerciseMuscle';
 import { getUserDataExport } from '../api/gdpr';
 import { getProgramsWithPreferences } from '../api/program';
+import { getProgrammedWorkouts } from '../api/programmedWorkout';
 import type {
+  Program,
+  ProgrammedWorkout,
+  User,
   ProgramWithPreferences,
   Exercise,
-  ProgramWithWorkouts,
+  UserDataExport,
   UserWeightUnitPreference,
+  ProgrammedWorkoutWithStages,
+  WorkoutStageWithExercises,
+  ProgrammedExerciseWithSetSchemes,
 } from '../api/types';
 import { getUserWeightUnitPreferences } from '../api/userWeightUnitPreference';
 import { replaceUnderscoresWithSpaces } from '../common/utils';
-import { useAuth } from '../contexts/AuthContext';
-import { exportWeekToPDF, exportWorkoutToPDF } from '../utils/exportUtils';
+import { exportWeekToPDF } from '../utils/exportUtils';
 
 interface WorkoutWeekDetailsProps {
+  user: User;
   selectedWorkout?: string | null;
   weekNumber: number;
+  showBackButton?: boolean;
+  onBack?: () => void;
+  onWorkoutClick?: (workoutId: number) => void;
 }
 
-/**
- * WorkoutWeekDetails component for viewing workouts grouped by week.
- *
- * Features:
- * - Display workouts for a specific week
- * - Generate new workouts for the week
- * - View workout details with slide-left animation
- * - Auto-refresh functionality after workout generation
- * - URL query parameters for workout selection
- * - Breadcrumb navigation with week number
- *
- * @param selectedWorkout The selected workout ID (from URL)
- * @param weekNumber The week number to display
- * @returns WorkoutWeekDetails component
- */
 export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
+  user,
   selectedWorkout,
   weekNumber,
+  showBackButton = true,
+  onBack,
+  onWorkoutClick,
 }) => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { enqueueSnackbar } = useSnackbar();
-  const { user } = useAuth();
 
   const [programsWithPreferences, setProgramsWithPreferences] = useState<
     Array<ProgramWithPreferences>
   >([]);
-  const [userDataExport, setUserDataExport] = useState<Record<string, unknown> | null>(null);
-  const [exerciseData, setExerciseData] = useState<Map<string, Exercise>>(new Map());
-  const [exerciseMuscleData, setExerciseMuscleData] = useState<Map<string, string[]>>(new Map());
-  const [weightUnitPreferences, setWeightUnitPreferences] = useState<
-    UserWeightUnitPreference[] | null
-  >(null);
+  const [workouts, setWorkouts] = useState<ProgrammedWorkout[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [currentWorkoutDetails, setCurrentWorkoutDetails] = useState<{
-    name: string;
-    day_number: number;
-    stages: number;
-  } | null>(null);
+  const [exerciseData, setExerciseData] = useState<Map<string, Exercise>>(new Map());
+  const [exerciseMuscleData, setExerciseMuscleData] = useState<Map<string, string[]>>(
+    new Map()
+  );
+  const [userDataExport, setUserDataExport] = useState<UserDataExport | null>(null);
+  const [weightUnitPreferences, setWeightUnitPreferences] = useState<UserWeightUnitPreference[]>(
+    []
+  );
 
-  // URL query parameters
-  const selectedWorkoutId = searchParams.get('workout') || selectedWorkout;
-
-  // Reset workout details when workout selection changes
   useEffect(() => {
-    if (!selectedWorkoutId) {
-      setCurrentWorkoutDetails(null);
-    }
-  }, [selectedWorkoutId]);
-
-  // Load workout data
-  useEffect(() => {
-    const loadWorkoutData = async () => {
+    const loadWeekData = async () => {
       setIsLoading(true);
       try {
-        const [programsData, exercisesData, userData, exerciseMuscleData, weightUnitData] =
+        const [programsData, workoutsData, userData, exerciseMuscleDataResponse, weightUnitData] =
           await Promise.all([
             getProgramsWithPreferences(),
-            getExercises(),
+            getProgrammedWorkouts(),
             getUserDataExport(),
             getExerciseMuscle(),
-            getUserWeightUnitPreferences(user?.keycloak_id || ''),
+            getUserWeightUnitPreferences(user.keycloak_id),
           ]);
 
         setProgramsWithPreferences(programsData);
+        setWorkouts(workoutsData);
         setUserDataExport(userData);
         setWeightUnitPreferences(weightUnitData || []);
 
-        // Convert exercises array to Map for easy lookup
+        const uniqueExercises = new Set<string>();
+        (userData.training_programs as any[])?.forEach(program => {
+          program.workouts.forEach((workoutWithStages: any) => {
+            workoutWithStages.stages.forEach((stageWithExercises: any) => {
+              stageWithExercises.exercises.forEach((exerciseWithSetSchemes: any) => {
+                uniqueExercises.add(exerciseWithSetSchemes.exercise.exercise_name);
+              });
+            });
+          });
+        });
+
+        const exerciseDetailsPromises = Array.from(uniqueExercises).map(name =>
+          getIndividualExercise(name)
+        );
+        const exerciseDetails = await Promise.all(exerciseDetailsPromises);
         const exerciseMap = new Map<string, Exercise>();
-        exercisesData.forEach(exercise => {
-          exerciseMap.set(exercise.name, exercise);
+        exerciseDetails.forEach(ex => {
+          if (ex && ex.name) exerciseMap.set(ex.name, ex);
         });
         setExerciseData(exerciseMap);
 
-        // Convert exercise muscle data array to Map for easy lookup
+        // Convert exercise muscle data to Map<string, string[]> format (same as useData hook)
         const exerciseMuscleMap = new Map<string, string[]>();
-        exerciseMuscleData.forEach(muscleData => {
-          const exerciseName = muscleData.exercise_name;
-          const muscleName = muscleData.muscle_name;
-
-          if (!exerciseMuscleMap.has(exerciseName)) {
-            exerciseMuscleMap.set(exerciseName, []);
-          }
-          exerciseMuscleMap.get(exerciseName)!.push(muscleName);
-        });
+        if (exerciseMuscleDataResponse && Array.isArray(exerciseMuscleDataResponse)) {
+          exerciseMuscleDataResponse.forEach((em: any) => {
+            const existing = exerciseMuscleMap.get(em.exercise_name) || [];
+            if (!existing.includes(em.muscle_name)) {
+              existing.push(em.muscle_name);
+            }
+            exerciseMuscleMap.set(em.exercise_name, existing);
+          });
+        }
         setExerciseMuscleData(exerciseMuscleMap);
-      } catch {
-        enqueueSnackbar('Failed to load workout data. Please try again.', { variant: 'error' });
+      } catch (error) {
+        console.error('Failed to load week data:', error);
+        enqueueSnackbar('Failed to load week data.', { variant: 'error' });
       } finally {
         setIsLoading(false);
       }
     };
 
-    loadWorkoutData();
-  }, [weekNumber]); // Reload when week number changes
+    loadWeekData();
+  }, [user.keycloak_id, enqueueSnackbar]);
 
   const activeProgram = programsWithPreferences.find(program => program.program.is_active);
 
-  // Group workouts by week and filter for the current week
   const weekWorkouts = useMemo(() => {
-    if (!activeProgram || !userDataExport?.training_programs?.length) return [];
+    if (!activeProgram || !workouts.length || !userDataExport?.training_programs?.length)
+      return [];
 
-    // Find the active program in the user data export
-    const activeProgramData = (userDataExport.training_programs as ProgramWithWorkouts[])?.find(
-      program => (program.program as Record<string, unknown>).id === activeProgram.program.id
+    const programWorkouts = workouts.filter(
+      workout => workout.program_id === activeProgram.program.id
+    );
+
+    const activeProgramData = userDataExport.training_programs.find(
+      p => p.program.id === activeProgram.program.id
     );
 
     if (!activeProgramData) return [];
 
-    // Filter workouts for the current week
-    const workoutsPerWeek = activeProgram.program_preferences.program_days_per_week;
+    const workoutsPerWeek = activeProgram.program_preferences?.program_days_per_week || 3;
     const weekStartDay = (weekNumber - 1) * workoutsPerWeek + 1;
     const weekEndDay = weekNumber * workoutsPerWeek;
 
-    const weekWorkouts = activeProgramData.workouts.filter(workoutWithStages => {
-      const dayNumber = workoutWithStages.workout.day_number;
-      return dayNumber >= weekStartDay && dayNumber <= weekEndDay;
-    });
-
-    // Sort by day number within the week
-    return weekWorkouts
+    // Use userDataExport.training_programs directly instead of programWorkouts
+    // This ensures we get all the workout data with stages and exercises
+    const allWorkouts = activeProgramData.workouts;
+    const filteredWorkouts = allWorkouts
       .map(workoutWithStages => {
-        const dayInWeek = ((workoutWithStages.workout.day_number - 1) % workoutsPerWeek) + 1;
-        return { workout: workoutWithStages, weekNumber: weekNumber, dayInWeek };
+        const dayInWeek = workoutWithStages.workout.day_number;
+        // Only include workouts that fall within the current week's day range
+        if (dayInWeek >= weekStartDay && dayInWeek <= weekEndDay) {
+          return { workout: workoutWithStages, weekNumber: weekNumber, dayInWeek };
+        }
+        return null;
       })
-      .sort((a, b) => a.dayInWeek - b.dayInWeek);
-  }, [userDataExport, activeProgram, weekNumber]);
+      .filter(Boolean) as {
+      workout: ProgrammedWorkoutWithStages;
+      weekNumber: number;
+      dayInWeek: number;
+    }[];
+
+
+    return filteredWorkouts;
+  }, [activeProgram, weekNumber, userDataExport]);
+
+  // Aggregate workout data for charts - combine at stage and exercise level
+  const aggregatedWorkoutData = useMemo((): ProgrammedWorkoutWithStages | null => {
+    if (!weekWorkouts.length) return null;
+    
+    // Collect all stages from all workouts
+    const allStages: WorkoutStageWithExercises[] = [];
+    weekWorkouts.forEach(weekWorkout => {
+      if (weekWorkout.workout.stages) {
+        weekWorkout.workout.stages.forEach((stage: WorkoutStageWithExercises) => {
+          allStages.push(stage);
+        });
+      }
+    });
+    
+    // Group stages by stage type/name and merge exercises within each stage
+    const stageMap = new Map<string, WorkoutStageWithExercises>();
+    
+    allStages.forEach(stage => {
+      const stageKey = `${stage.stage.stage_type_id}-${stage.stage.name}`;
+      
+      if (stageMap.has(stageKey)) {
+        // Merge exercises from this stage
+        const existingStage = stageMap.get(stageKey)!;
+        const exerciseMap = new Map<string, ProgrammedExerciseWithSetSchemes>();
+        
+        // Don't merge exercises - preserve all exercises as they exist in source data
+        // This maintains the same duplication that exists in WorkoutDetail
+        existingStage.exercises = [...existingStage.exercises, ...stage.exercises];
+      } else {
+        // First occurrence of this stage type
+        stageMap.set(stageKey, { ...stage });
+      }
+    });
+    
+    const mergedStages: WorkoutStageWithExercises[] = Array.from(stageMap.values());
+    
+    
+    return {
+      workout: {
+        id: weekNumber * 1000,
+        program_id: activeProgram?.program.id || 0,
+        day_number: weekNumber,
+        name: `Week ${weekNumber}`,
+        created_at: new Date(),
+        updated_at: new Date(),
+      },
+      stages: mergedStages
+    };
+  }, [weekWorkouts, weekNumber, activeProgram]);
+
+  // Create exercise-to-muscles mapping for SunburstChart
+  const exerciseToMusclesData = useMemo(() => {
+    // exerciseMuscleData is already in the correct format (Map<string, string[]>)
+    // Just return it directly
+    return exerciseMuscleData;
+  }, [exerciseMuscleData]);
 
   const handleWorkoutClick = (workoutId: number) => {
     const newSearchParams = new URLSearchParams(searchParams);
     newSearchParams.set('section', 'workouts');
+    newSearchParams.set('subsection', 'calendar');
     newSearchParams.set('week', weekNumber.toString());
     newSearchParams.set('workout', workoutId.toString());
-    navigate(`/dashboard?${newSearchParams.toString()}`);
-  };
-
-  const handleBackToWorkouts = () => {
-    const newSearchParams = new URLSearchParams(searchParams);
-    newSearchParams.set('section', 'workouts');
-    newSearchParams.delete('week');
-    newSearchParams.delete('workout');
     navigate(`/dashboard?${newSearchParams.toString()}`);
   };
 
   const handleBackToWeekList = () => {
     const newSearchParams = new URLSearchParams(searchParams);
     newSearchParams.set('section', 'workouts');
-    newSearchParams.set('week', weekNumber.toString());
+    newSearchParams.set('subsection', 'calendar');
+    newSearchParams.delete('week'); // Go back to the main workout calendar
     newSearchParams.delete('workout');
     navigate(`/dashboard?${newSearchParams.toString()}`);
   };
 
-  // Calculate week progress metrics
   const getWeekProgressMetrics = () => {
     if (!weekWorkouts.length) return null;
-    
-    return calculateWeekProgress(weekWorkouts);
+
+    return calculateWeekProgress(weekWorkouts.map(ww => ww.workout));
   };
 
-  // Render breadcrumbs with integrated progress
-  const renderBreadcrumbs = () => {
-    const progressMetrics = getWeekProgressMetrics();
-    
-    return (
-      <Box
-        position="sticky"
-        top={0}
-        zIndex={1001}
-        sx={{
-          backgroundColor: 'background.default',
-          pt: 2,
-          pb: 2,
-          borderBottom: 1,
-          borderColor: 'divider',
-        }}
-      >
-        <Box sx={{ mb: 2 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-            <Button
-              variant="text"
-              onClick={() => handleBreadcrumbClick('workouts')}
-              sx={{
-                color: 'text.secondary',
-                textTransform: 'none',
-                fontSize: '1rem',
-                fontWeight: 'normal',
-                p: 0,
-                minWidth: 'auto',
-              }}
-            >
-              {activeProgram?.program.name || 'Workouts'}
-            </Button>
-            <Typography variant="body1" color="text.primary">
-              /
-            </Typography>
-            {/* Only show Week as a clickable button if we're viewing workout details */}
-            {selectedWorkoutId ? (
-              <Button
-                variant="text"
-                onClick={() => handleBreadcrumbClick('week')}
-                sx={{
-                  color: 'text.secondary',
-                  textTransform: 'none',
-                  fontSize: '1rem',
-                  fontWeight: 'normal',
-                  p: 0,
-                  minWidth: 'auto',
-                }}
-              >
-                Week {weekNumber}
-              </Button>
-            ) : (
-              <Typography variant="body1" color="text.primary">
-                Week {weekNumber}
-              </Typography>
-            )}
-            {selectedWorkoutId && currentWorkoutDetails && (
-              <>
-                <Typography variant="body1" color="text.primary">
-                  /
-                </Typography>
-                <Typography variant="body1" color="text.primary">
-                  {currentWorkoutDetails.name}
-                </Typography>
-              </>
-            )}
-            {selectedWorkoutId && !currentWorkoutDetails && (
-              <>
-                <Typography variant="body1" color="text.primary">
-                  /
-                </Typography>
-                <Typography variant="body1" color="text.primary">
-                  Workout Details
-                </Typography>
-              </>
-            )}
-            
-            {/* Export buttons - show for both week view and individual workout view */}
-            <Box sx={{ flexGrow: 1 }} />
-            <ExportButtons
-              onExportPDF={handleExportPDF}
-              disabled={weekWorkouts.length === 0}
-            />
-          </Box>
-          
-            {/* Week progress indicator integrated into breadcrumb */}
-            {progressMetrics && !selectedWorkoutId && (
-              <Box sx={{ mt: 1 }}>
-                <ProgressBar
-                  value={progressMetrics.completionRate}
-                  status={progressMetrics.status}
-                  current={progressMetrics.completedWorkouts}
-                  total={progressMetrics.totalWorkouts}
-                  showTooltip={true}
-                  showTicks={true}
-                  steps={Array.from({ length: progressMetrics.totalWorkouts + 1 }, (_, i) => (i / progressMetrics.totalWorkouts) * 100)}
-                  ticks={Array.from({ length: progressMetrics.totalWorkouts + 1 }, (_, i) => (i / progressMetrics.totalWorkouts) * 100)}
-                  width="100%"
-                  height={8}
-                  smooth={true}
-                  animationDuration={400}
-                />
-              </Box>
-            )}
-        </Box>
-      </Box>
-    );
-  };
+  // Get progress metrics for the component
+  const progressMetrics = getWeekProgressMetrics();
 
-  const handleBreadcrumbClick = (path: string) => {
-    if (path === 'workouts') {
-      handleBackToWorkouts();
-    } else if (path === 'week') {
-      handleBackToWeekList();
-    }
-  };
-
-  const handleWorkoutDetailsUpdate = useCallback(
-    (workoutDetails: { name: string; day_number: number; stages: number }) => {
-      setCurrentWorkoutDetails(workoutDetails);
-    },
-    []
-  );
-
-  // Export handlers
   const handleExportPDF = async () => {
-    if (selectedWorkoutId) {
-      // Export individual workout
-      const workoutData = weekWorkouts.find(ww => ww.workout.id === parseInt(selectedWorkoutId));
-      if (workoutData) {
-        const workoutName = currentWorkoutDetails?.name || workoutData.workout.name;
-        await exportWorkoutToPDF(workoutData, weightUnitPreferences, {
-          title: workoutName,
-          filename: `workout-${workoutName.toLowerCase().replace(/\s+/g, '-')}`,
-        });
-      }
-    } else {
-      // Export entire week
-      const weekWorkoutsData = weekWorkouts.map(ww => ww.workout);
-      await exportWeekToPDF(weekWorkoutsData, weightUnitPreferences, {
-        title: `Week ${weekNumber}`,
-        filename: `week-${weekNumber}-workouts`,
-      });
+    if (!activeProgram || !userDataExport) {
+      enqueueSnackbar('No active program or user data for export.', { variant: 'warning' });
+      return;
     }
-  };
 
+    // Export entire week
+    const weekWorkoutsData = weekWorkouts.map(ww => ww.workout);
+    await exportWeekToPDF(weekWorkoutsData, weightUnitPreferences, {
+      title: `Week ${weekNumber}`,
+      filename: `week-${weekNumber}-workouts`,
+    });
+  };
 
   // Show loading state while data is being fetched
   if (isLoading) {
     return (
       <React.Fragment>
-        {renderBreadcrumbs()}
         <LoadingSpinner message="Loading week details..." fullHeight={false} />
       </React.Fragment>
     );
   }
 
-  // If a workout is selected, show the WorkoutDetail component
-  if (selectedWorkoutId) {
-    return (
-      <WorkoutDetail
-        workoutId={parseInt(selectedWorkoutId)}
-        onBack={handleBackToWeekList}
-        onWorkoutDetailsUpdate={handleWorkoutDetailsUpdate}
-      />
-    );
-  }
-
   return (
     <React.Fragment>
-      {renderBreadcrumbs()}
-      {!activeProgram ? (
-        <Card>
-          <CardContent>
-            <Typography variant="h6" gutterBottom>
-              No Active Program
-            </Typography>
-            <Typography variant="body2" color="text.secondary" paragraph>
-              You need to create a program first before you can generate and view workouts. Please
-              go to the Programs section to create a program.
-            </Typography>
-          </CardContent>
-        </Card>
-      ) : (
+      <Slide direction="left" in={true} mountOnEnter unmountOnExit>
         <Box>
-          <Box id="week-details-content">
+          {!activeProgram ? (
+            <Card>
+              <CardContent>
+                <Typography variant="h6" gutterBottom>
+                  No Active Program
+                </Typography>
+                <Typography variant="body2" color="text.secondary" paragraph>
+                  You need to create a program first before you can generate and view workouts. Please
+                  go to the Programs section to create a program.
+                </Typography>
+              </CardContent>
+            </Card>
+          ) : (
+            <Box sx={{ position: 'relative' }}>
+          {/* Back button for week details */}
+          {showBackButton && (
+            <IconButton
+              onClick={onBack || handleBackToWeekList}
+              sx={{
+                position: 'absolute',
+                top: 24,
+                left: -32,
+                zIndex: 1001,
+                backgroundColor: 'background.paper',
+                boxShadow: 2,
+                '&:hover': {
+                  backgroundColor: 'action.hover',
+                  boxShadow: 4,
+                },
+              }}
+            >
+              <ArrowBackIcon />
+            </IconButton>
+          )}
+          
+          {/* Progress Bar and Export Buttons */}
+          <Box sx={{ p: 3, pb: 0 }}>
+            <Box display="flex" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
+              {/* Progress Bar on the left */}
+              <Box sx={{ flex: 1, mr: 2 }}>
+                {progressMetrics && (
+                  <ProgressBar
+                    value={progressMetrics.completionRate}
+                    status={progressMetrics.status}
+                    current={progressMetrics.completedWorkouts}
+                    total={progressMetrics.totalWorkouts}
+                    showTooltip={true}
+                    showTicks={true}
+                    steps={Array.from({ length: progressMetrics.totalWorkouts + 1 }, (_, i) => (i / progressMetrics.totalWorkouts) * 100)}
+                    ticks={Array.from({ length: progressMetrics.totalWorkouts + 1 }, (_, i) => (i / progressMetrics.totalWorkouts) * 100)}
+                    width="100%"
+                    height={8}
+                    smooth={true}
+                    animationDuration={400}
+                  />
+                )}
+              </Box>
+
+              {/* Export Buttons on the right */}
+              <ExportButtons
+                onExportPDF={handleExportPDF}
+                disabled={weekWorkouts.length === 0}
+              />
+            </Box>
+          </Box>
+          
+          <Box id="week-details-content" sx={{ p: 3, pt: 0 }}>
             <Grid container spacing={3} sx={{ height: 'calc(100vh - 200px)' }}>
-          {/* Workout List - 2/3 width */}
-          <Grid size={{ xs: 12, lg: 8 }}>
-            <Box sx={{ height: '100%' }}>
-              <Card
-                sx={{
-                  mt: 3,
-                  height: '100%',
-                  '&:hover': {
-                    transform: 'none',
-                    boxShadow: 'none',
-                  },
-                }}
-              >
-                <CardContent>
-                  <Box display="flex" alignItems="center" gap={1} sx={{ mb: 2 }}>
-                    <FitnessCenterIcon color="primary" />
-                    <Typography variant="h6">Workouts</Typography>
-                    {weekWorkouts.length > 0 && (
+              {/* Workout List - 2/3 width */}
+              <Grid size={{ xs: 12, lg: 8 }}>
+                <Box sx={{ height: '100%' }}>
+                  <Card
+                    sx={{
+                      mt: 3,
+                      height: '100%',
+                      '&:hover': {
+                        transform: 'none',
+                        boxShadow: 'none',
+                      },
+                    }}
+                  >
+                    <CardContent>
                       <Box
                         sx={{
-                          backgroundColor: 'primary.main',
-                          color: 'primary.contrastText',
-                          borderRadius: '50%',
-                          width: 24,
-                          height: 24,
                           display: 'flex',
                           alignItems: 'center',
-                          justifyContent: 'center',
-                          fontSize: '0.75rem',
-                          fontWeight: 'bold'
+                          gap: 1,
+                          mb: 2,
                         }}
                       >
-                        {weekWorkouts.length}
-                      </Box>
-                    )}
-                  </Box>
-                  <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                    Week {weekNumber} of {activeProgram.program.current_week_number} • Click any workout to view details
-                  </Typography>
-                  {isLoading ? (
-                    <Box display="flex" justifyContent="center" p={3}>
-                      <LoadingSpinner message="Loading workouts..." size={40} />
-                    </Box>
-                  ) : weekWorkouts.length === 0 ? (
-                    <Box sx={{ textAlign: 'center', py: 4 }}>
-                      <Typography variant="body2" color="text.secondary">
-                        No workouts found for Week {weekNumber}.
-                      </Typography>
-                    </Box>
-                  ) : (
-                    <List>
-                      {weekWorkouts.map(weekWorkout => {
-                        // Calculate workout progress using proper logic
-                        const workoutProgress = calculateWorkoutProgress(weekWorkout.workout);
-                        return (
-                          <ListItem
-                            key={weekWorkout.workout.workout.id}
-                            disablePadding
+                        <FitnessCenterIcon color="primary" />
+                        <Typography variant="h6">Workouts</Typography>
+                        {weekWorkouts.length > 0 && (
+                          <Box
                             sx={{
-                              cursor: 'pointer',
-                              borderRadius: 1,
-                              mb: 1,
-                              border: 1,
-                              borderColor: 'divider',
-                              backgroundColor: 'transparent',
-                              '&:hover': { 
-                                backgroundColor: 'action.hover',
-                                transform: 'translateX(4px)',
-                                transition: 'all 0.2s ease'
-                              },
+                              backgroundColor: 'primary.main',
+                              color: 'primary.contrastText',
+                              borderRadius: '50%',
+                              width: 24,
+                              height: 24,
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontSize: '0.75rem',
+                              fontWeight: 'bold'
                             }}
-                            onClick={() => handleWorkoutClick(weekWorkout.workout.workout.id)}
                           >
-                            <ListItemText
-                              primary={
-                                <Typography variant="subtitle1" fontWeight="medium">
-                                  Day {weekWorkout.dayInWeek}
-                                </Typography>
-                              }
-                              secondary={
-                                <>
-                                  <Typography variant="body2" color="text.secondary" component="span">
-                                    {replaceUnderscoresWithSpaces(weekWorkout.workout.workout.name || `Workout ${weekWorkout.workout.workout.day_number}`)}
-                                  </Typography>
-                                  <Typography variant="caption" color="text.secondary" component="span" sx={{ ml: 1 }}>
-                                    • {workoutProgress.completedExercises}/{workoutProgress.totalExercises} exercises
-                                  </Typography>
-                                </>
-                              }
-                            />
-                          </ListItem>
-                        );
-                      })}
-                    </List>
-                  )}
-                </CardContent>
-              </Card>
-            </Box>
-          </Grid>
+                            {weekWorkouts.length}
+                          </Box>
+                        )}
+                      </Box>
+                      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                        Week {weekNumber} of {activeProgram.program.current_week_number} • Click any workout to view details
+                      </Typography>
+                      {isLoading ? (
+                        <Box display="flex" justifyContent="center" p={3}>
+                          <LoadingSpinner message="Loading workouts..." size={40} />
+                        </Box>
+                      ) : weekWorkouts.length === 0 ? (
+                        <Box sx={{ textAlign: 'center', py: 4 }}>
+                          <Typography variant="body2" color="text.secondary">
+                            No workouts found for Week {weekNumber}.
+                          </Typography>
+                        </Box>
+                      ) : (
+                        <List>
+                          {weekWorkouts.map(weekWorkout => {
+                            // Calculate workout progress using proper logic
+                            const workoutProgress = calculateWorkoutProgress(weekWorkout.workout);
+                            return (
+                              <ListItem
+                                key={weekWorkout.workout.workout.id}
+                                disablePadding
+                                sx={{
+                                  cursor: 'pointer',
+                                  borderRadius: 1,
+                                  mb: 1,
+                                  border: 1,
+                                  borderColor: 'divider',
+                                  backgroundColor: 'transparent',
+                                  '&:hover': { 
+                                    backgroundColor: 'action.hover',
+                                    transform: 'translateX(4px)',
+                                    transition: 'all 0.2s ease'
+                                  },
+                                }}
+                                onClick={() => (onWorkoutClick || handleWorkoutClick)(weekWorkout.workout.workout.id)}
+                              >
+                                <ListItemText
+                                  primary={
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                      <Typography variant="subtitle1" fontWeight="medium">
+                                        Day {weekWorkout.dayInWeek}
+                                      </Typography>
+                                      {workoutProgress.status === 'completed' ? (
+                                        <CheckCircleIcon 
+                                          sx={{ 
+                                            fontSize: 18, 
+                                            color: 'success.main' 
+                                          }} 
+                                        />
+                                      ) : workoutProgress.status === 'in-progress' ? (
+                                        <ScheduleIcon 
+                                          sx={{ 
+                                            fontSize: 18, 
+                                            color: 'warning.main' 
+                                          }} 
+                                        />
+                                      ) : (
+                                        <PauseCircleIcon 
+                                          sx={{ 
+                                            fontSize: 18, 
+                                            color: 'text.disabled' 
+                                          }} 
+                                        />
+                                      )}
+                                    </Box>
+                                  }
+                                  secondary={
+                                    <>
+                                      <Typography variant="body2" color="text.secondary" component="span">
+                                        {replaceUnderscoresWithSpaces(weekWorkout.workout.workout.name || `Workout ${weekWorkout.workout.workout.day_number}`)}
+                                      </Typography>
+                                      <Typography variant="caption" color="text.secondary" component="span" sx={{ ml: 1 }}>
+                                        • {workoutProgress.completedExercises}/{workoutProgress.totalExercises} exercises
+                                      </Typography>
+                                    </>
+                                  }
+                                />
+                              </ListItem>
+                            );
+                          })}
+                        </List>
+                      )}
+                    </CardContent>
+                  </Card>
+                </Box>
+              </Grid>
 
           {/* Charts - 1/3 width */}
           <Grid size={{ xs: 12, lg: 4 }}>
             <Box sx={{ mt: 3, display: 'flex', flexDirection: 'column', gap: 3 }}>
-              {weekWorkouts.length > 0 && (
-                <SunburstChart
-                  workoutData={{
-                    id: `week-${weekNumber}`,
-                    name: `Week ${weekNumber} Aggregated`,
-                    day_number: weekNumber,
-                    stages: weekWorkouts.reduce((acc, weekWorkout) => {
-                      const workoutWithStages = weekWorkout.workout;
-                      if (workoutWithStages.stages) {
-                        return [...acc, ...workoutWithStages.stages];
-                      }
-                      return acc;
-                    }, []),
-                  }}
-                  exerciseData={exerciseData}
-                  exerciseMuscleData={exerciseMuscleData}
-                  weightUnitPreferences={weightUnitPreferences}
-                  selectedExercise="all"
-                />
+              {weekWorkouts.length > 0 && aggregatedWorkoutData && (
+                <React.Fragment>
+                  <SunburstChart
+                    workoutData={aggregatedWorkoutData}
+                    exerciseMuscleData={exerciseToMusclesData}
+                    weightUnitPreferences={weightUnitPreferences}
+                    selectedExercise="all"
+                  />
+                  <RadarChart
+                    weekWorkouts={weekWorkouts.map(ww => ww.workout)}
+                    exerciseData={exerciseData}
+                    title="Exercise Movement Type"
+                    height={300}
+                  />
+                </React.Fragment>
               )}
-              <RadarChart
-                weekWorkouts={weekWorkouts}
-                exerciseData={exerciseData}
-                title="Exercise Movement Type"
-                height={300}
-              />
             </Box>
           </Grid>
             </Grid>
           </Box>
+            </Box>
+          )}
         </Box>
-      )}
+      </Slide>
     </React.Fragment>
   );
 };

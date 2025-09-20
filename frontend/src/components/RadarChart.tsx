@@ -45,8 +45,8 @@ export const RadarChart: React.FC<RadarChartProps> = ({
 
     // Iterate through all workouts in the week
     weekWorkouts.forEach(weekWorkout => {
-      // Access the workout data structure
-      const workout = weekWorkout.workout;
+      // The weekWorkout is already the ProgrammedWorkoutWithStages
+      const workout = weekWorkout;
 
       // If the workout has stages with exercises, process them
       if (workout.stages) {

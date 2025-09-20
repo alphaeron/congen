@@ -4,9 +4,9 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router';
 
 import { ActionCard } from './ActionCard';
-import { ConjugateProgression } from './ConjugateProgression';
 import { LoadingSpinner } from './LoadingSpinner';
 import { StatusChip } from './StatusChip';
+import { UserStatusSystem } from './UserStatusSystem';
 import { getIndividualExercise } from '../api/exercise';
 import { getUserDataExport } from '../api/gdpr';
 import { getPrograms } from '../api/program';
@@ -198,6 +198,13 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ user }) =>
 
   return (
     <React.Fragment>
+      {/* User Status System */}
+      <UserStatusSystem
+        user={user}
+        userData={userData}
+        oneRepMaxes={oneRepMaxes}
+      />
+
       {/* Key Performance Indicators */}
       <Card sx={{ mb: 3 }}>
         <CardContent>
@@ -272,24 +279,20 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ user }) =>
         </Box>
       )}
 
-      {/* Conjugate Progression Section */}
-      <ConjugateProgression
-        user={user}
-        userData={userData}
-        exerciseData={exerciseData}
-        oneRepMaxes={oneRepMaxes}
-        weightUnitPreferences={weightUnitPreferences}
-      />
-
-      {/* Recent 1RM Section */}
+      {/* Recent Achievements Section */}
       {recentOneRepMaxes.length > 0 && (
         <Card sx={{ mb: 3 }}>
           <CardContent>
-            <Typography variant="h6" gutterBottom>
-              Recent 1RM Records
-            </Typography>
+            <Box display="flex" alignItems="center" gap={1} sx={{ mb: 2 }}>
+              <Typography variant="h6">
+                Recent Achievements
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                • Your latest personal records
+              </Typography>
+            </Box>
             <Grid container spacing={2}>
-              {recentOneRepMaxes.map((oneRepMax, index) => (
+              {recentOneRepMaxes.slice(0, 6).map((oneRepMax, index) => (
                 <Grid size={{ xs: 12, sm: 6, md: 4 }} key={index}>
                   <Box
                     sx={{
@@ -297,16 +300,23 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ user }) =>
                       border: 1,
                       borderColor: 'divider',
                       borderRadius: 1,
+                      backgroundColor: 'success.light',
+                      color: 'success.contrastText',
+                      transition: 'all 0.2s ease-in-out',
+                      '&:hover': {
+                        transform: 'translateY(-2px)',
+                        boxShadow: 2,
+                      },
                     }}
                   >
-                    <Typography variant="body1" fontWeight="medium">
-                      {oneRepMax.exercise_name}
+                    <Typography variant="body1" fontWeight="medium" sx={{ mb: 1 }}>
+                      ✅ New 1RM: {oneRepMax.exercise_name}
                     </Typography>
-                    <Typography variant="h6" color="primary">
+                    <Typography variant="h6" fontWeight="bold">
                       {oneRepMax.one_rep_max} {oneRepMax.unit}
                     </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      Updated: {formatDate(oneRepMax.updated_at)}
+                    <Typography variant="caption" sx={{ opacity: 0.9 }}>
+                      Achieved: {formatDate(oneRepMax.updated_at)}
                     </Typography>
                   </Box>
                 </Grid>

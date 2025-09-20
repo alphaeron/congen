@@ -5,6 +5,7 @@ import {
   FitnessCenter as FitnessCenterIcon,
   Save,
   Add as AddIcon,
+  ArrowBack as ArrowBackIcon,
 } from '@mui/icons-material';
 import { Box, Typography, Alert, IconButton, Tooltip, Paper, useTheme, Grid, Button, CircularProgress, Dialog, DialogTitle, DialogContent, DialogActions, Autocomplete, TextField, FormControl, InputLabel, Select, MenuItem, Divider, Switch, FormControlLabel } from '@mui/material';
 import {
@@ -106,7 +107,7 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
   const [selectedStageId, setSelectedStageId] = useState<number | ''>('');
   const [availableExercises, setAvailableExercises] = useState<Exercise[]>([]);
   const [loadingExercises, setLoadingExercises] = useState(false);
-  
+
   // Weight conversion functions for Add Exercise dialog
   const convertWeightForStorage = (weight: number, exerciseName: string): number => {
     const weightUnitPreference = weightUnitPreferences.find(pref => pref.exercise_name === exerciseName);
@@ -365,12 +366,14 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
   };
 
   // Render breadcrumbs with integrated progress
+  // Get progress metrics for the component
+  const progressMetrics = getWorkoutProgressMetrics();
+
   const renderBreadcrumbs = () => {
     if (!workoutData || !userData) return null;
 
     const workoutName = replaceUnderscoresWithSpaces(workoutData.workout.name);
     const dayNumber = workoutData.workout.day_number;
-    const progressMetrics = getWorkoutProgressMetrics();
     
     // Find the active program to get workouts per week and program name
     let weekNumber = 1;
@@ -756,12 +759,63 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
   }
 
   return (
-    <Box sx={{ height: 'calc(100vh - 48px)', overflow: 'auto' }}>
-      <Box id="workout-detail-content">
-        {renderBreadcrumbs()}
-        <Grid container spacing={3} sx={{ height: '100%' }}>
+    <Box sx={{ height: 'calc(100vh - 48px)', overflow: 'auto', position: 'relative', pl: 4 }}>
+      <Box sx={{ position: 'relative' }}>
+        {/* Back Button */}
+        <IconButton
+          onClick={onBack}
+          sx={{
+            position: 'absolute',
+            top: 24,
+            left: -32,
+            zIndex: 9999,
+            backgroundColor: 'background.paper',
+            border: '1px solid',
+            borderColor: 'divider',
+            '&:hover': {
+              backgroundColor: 'action.hover',
+              boxShadow: 4,
+            },
+          }}
+        >
+          <ArrowBackIcon />
+        </IconButton>
+        
+        {/* Progress Bar and Export Buttons */}
+        <Box sx={{ p: 3, pb: 0 }}>
+          <Box display="flex" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
+            {/* Progress Bar on the left */}
+            <Box sx={{ flex: 1, mr: 2 }}>
+              {progressMetrics && (
+                <ProgressBar
+                  value={progressMetrics.completionRate}
+                  status={progressMetrics.status}
+                  current={progressMetrics.completedExercises}
+                  total={progressMetrics.totalExercises}
+                  showTooltip={true}
+                  showTicks={true}
+                  steps={Array.from({ length: progressMetrics.totalExercises + 1 }, (_, i) => (i / progressMetrics.totalExercises) * 100)}
+                  ticks={Array.from({ length: progressMetrics.totalExercises + 1 }, (_, i) => (i / progressMetrics.totalExercises) * 100)}
+                  width="100%"
+                  height={8}
+                  smooth={true}
+                  animationDuration={400}
+                />
+              )}
+            </Box>
+
+            {/* Export Buttons on the right */}
+            <ExportButtons
+              onExportPDF={handleExportPDF}
+              disabled={!workoutData}
+            />
+          </Box>
+        </Box>
+      </Box>
+        
+        <Grid container spacing={3} sx={{ p: 3, pt: 0 }}>
         {/* Table Container - 2/3 width */}
-        <Grid size={{ xs: 12, lg: 8 }} sx={{ mt: 3 }} >
+        <Grid size={{ xs: 12, lg: 8 }}>
           <Paper sx={{ width: '100%', overflow: 'hidden', height: '100%' }}>
             <Box
               sx={{
@@ -897,7 +951,7 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
 
         {/* Charts - 1/3 width */}
         <Grid size={{ xs: 12, lg: 4 }}>
-          <Box sx={{ mt: 3, display: 'flex', flexDirection: 'column', gap: 3 }}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
             {/* Exercise Volume Hierarchy Chart */}
             <SunburstChart
               workoutData={workoutData}
@@ -914,7 +968,6 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
           </Box>
         </Grid>
         </Grid>
-      </Box>
       
       {/* Notes Editor Modal */}
       <Dialog

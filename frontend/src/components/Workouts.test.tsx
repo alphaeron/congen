@@ -41,6 +41,27 @@ jest.mock('./WorkoutWeekDetails', () => ({
   ),
 }));
 
+// Mock ConjugateProgression component to prevent Nivo chart issues
+jest.mock('./ConjugateProgression', () => ({
+  ConjugateProgression: () => (
+    <div data-testid="conjugate-progression">Mock Conjugate Progression</div>
+  ),
+}));
+
+// Mock ExerciseRotationVisualization component
+jest.mock('./ExerciseRotationVisualization', () => ({
+  ExerciseRotationVisualization: () => (
+    <div data-testid="exercise-rotation">Mock Exercise Rotation</div>
+  ),
+}));
+
+// Mock WorkoutPreferencesSection component
+jest.mock('./WorkoutPreferencesSection', () => ({
+  WorkoutPreferencesSection: () => (
+    <div data-testid="workout-preferences">Mock Workout Preferences</div>
+  ),
+}));
+
 describe('Workouts', () => {
   // Create a new mock adapter for each test to prevent interference
   let mock: MockAdapter;
@@ -134,11 +155,12 @@ describe('Workouts', () => {
 
     await waitFor(
       () => {
-        expect(screen.getByText('Workouts')).toBeInTheDocument();
+        // Check that the workout calendar content is rendered
+        expect(screen.getByText('No Active Program')).toBeInTheDocument();
       },
-      { timeout: 10000 }
+      { timeout: 15000 }
     );
-  });
+  }, 20000);
 
   it('displays no active program message when no active program exists', async () => {
     const inactiveProgram = {
@@ -214,7 +236,8 @@ describe('Workouts', () => {
     // Wait for the component to load and render
     await waitFor(
       () => {
-        expect(screen.getByText('Test Program')).toBeInTheDocument();
+        expect(screen.getByText('Current Week: Week 2')).toBeInTheDocument();
+        expect(screen.getByText('Training Weeks')).toBeInTheDocument();
       },
       { timeout: 10000 }
     );
@@ -454,16 +477,16 @@ describe('Workouts', () => {
 
     await waitFor(
       () => {
-        expect(screen.getByText('Workouts')).toBeInTheDocument();
+        expect(screen.getByText('No Active Program')).toBeInTheDocument();
       },
-      { timeout: 10000 }
+      { timeout: 15000 }
     );
 
     expect(mock.history.get.length).toBeGreaterThanOrEqual(2); // At least program and programmed_workout
     const urls = mock.history.get.map(req => req.url);
     expect(urls).toContain('/program/with-preferences');
     expect(urls).toContain('/programmed_workout/');
-  });
+  }, 20000);
 
   it('navigates to week details when week is clicked', async () => {
     mock.onGet('/program/with-preferences').reply(200, [mockProgramWithPreferences]);

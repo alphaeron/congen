@@ -43,13 +43,12 @@ jest.mock('@nivo/pie', () => ({
   ),
 }));
 
-// Mock ConjugateProgression component to avoid complex dependencies
-jest.mock('./ConjugateProgression', () => ({
-  ConjugateProgression: ({ user }: { user: User }) => (
-    <div data-testid="conjugate-progression">
-      <div>Conjugate Progress Tracking</div>
-      <div>Complete your first workout to see progress statistics</div>
-      Conjugate Progression for {user.name}
+// Mock UserStatusSystem component
+jest.mock('./UserStatusSystem', () => ({
+  UserStatusSystem: ({ user }: { user: User }) => (
+    <div data-testid="user-status-system">
+      <div>Overall Health & Fitness Status</div>
+      <div>Status System for {user.name}</div>
     </div>
   ),
 }));
@@ -269,17 +268,17 @@ describe('DashboardOverview', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByText('Recent 1RM Records')).toBeInTheDocument();
-      // Check for Bench Press in the Recent 1RM Records section specifically
-      const recentOneRepMaxSection = screen
-        .getByText('Recent 1RM Records')
+      expect(screen.getByText('Recent Achievements')).toBeInTheDocument();
+      // Check for Bench Press in the Recent Achievements section specifically
+      const recentAchievementsSection = screen
+        .getByText('Recent Achievements')
         .closest('.MuiCard-root');
-      expect(recentOneRepMaxSection).toHaveTextContent('Bench Press');
-      expect(recentOneRepMaxSection).toHaveTextContent('225 KG');
+      expect(recentAchievementsSection).toHaveTextContent('Bench Press');
+      expect(recentAchievementsSection).toHaveTextContent('225 KG');
     });
   });
 
-  it('should display welcome message when no data is available', async () => {
+  it('should display status system when no data is available', async () => {
     mock.onGet('/program/').reply(200, []);
     mock.onGet('/programmed_workout/').reply(200, []);
     mock.onGet('/user_one_rep_max/user/test-user-id').reply(200, []);
@@ -292,10 +291,8 @@ describe('DashboardOverview', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByText('Conjugate Progress Tracking')).toBeInTheDocument();
-      expect(
-        screen.getByText(/Complete your first workout to see progress statistics/)
-      ).toBeInTheDocument();
+      expect(screen.getByTestId('user-status-system')).toBeInTheDocument();
+      expect(screen.getByText('Overall Health & Fitness Status')).toBeInTheDocument();
     });
   });
 

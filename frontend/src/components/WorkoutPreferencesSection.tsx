@@ -56,8 +56,8 @@ function TabPanel(props: TabPanelProps) {
     <div
       role="tabpanel"
       hidden={value !== index}
-      id={`vertical-tabpanel-${index}`}
-      aria-labelledby={`vertical-tab-${index}`}
+      id={`horizontal-tabpanel-${index}`}
+      aria-labelledby={`horizontal-tab-${index}`}
       {...other}
     >
       {value === index && <Box sx={{ p: 3 }}>{children}</Box>}
@@ -391,24 +391,28 @@ export function WorkoutPreferencesSection(): React.ReactElement {
   }
 
   return (
-    <Box sx={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
-      {/* Vertical Tabs */}
+    <Box sx={{ height: '100vh', overflow: 'hidden' }}>
+      {/* Horizontal Tabs */}
       <Box
         sx={{
-          width: 250,
-          minWidth: 250,
-          height: '100vh',
-          borderRight: 1,
+          borderBottom: 1,
           borderColor: 'divider',
+          backgroundColor: 'background.paper',
         }}
       >
         <Tabs
-          orientation="vertical"
-          variant="scrollable"
           value={activeTab}
           onChange={handleTabChange}
           aria-label="workout preferences tabs"
-          sx={{ borderRight: 1, borderColor: 'divider' }}
+          variant="scrollable"
+          scrollButtons="auto"
+          sx={{
+            '& .MuiTab-root': {
+              minHeight: 48,
+              textTransform: 'none',
+              fontWeight: 500,
+            },
+          }}
         >
           <Tab label="Weight Unit Preferences" />
           <Tab label="Available Equipment" />
@@ -418,7 +422,7 @@ export function WorkoutPreferencesSection(): React.ReactElement {
       </Box>
 
       {/* Tab Content */}
-      <Box sx={{ flex: 1, overflow: 'auto', height: '100vh' }}>
+      <Box sx={{ flex: 1, overflow: 'auto', height: 'calc(100vh - 48px)' }}>
         <TabPanel value={activeTab} index={0}>
           <PreferenceSection
             title="Weight Unit Preferences"

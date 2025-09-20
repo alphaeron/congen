@@ -2,8 +2,6 @@ import {
   Dashboard as DashboardIcon,
   FitnessCenter as FitnessCenterIcon,
   Settings as SettingsIcon,
-  Tune as TuneIcon,
-  RotateRight as RotateRightIcon,
 } from '@mui/icons-material';
 import {
   Box,
@@ -20,10 +18,8 @@ import React from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 
 import { DashboardOverview } from './DashboardOverview';
-import { ExerciseRotationVisualization } from './ExerciseRotationVisualization';
 import { ProgramManagement } from './ProgramManagement';
-import { WorkoutPreferencesSection } from './WorkoutPreferencesSection';
-import { Workouts } from './Workouts';
+import { WorkoutsOverview } from './WorkoutsOverview';
 import type { User } from '../api/types';
 
 interface DashboardProps {
@@ -63,28 +59,16 @@ export const Dashboard: React.FC<DashboardProps> = ({
       component: <DashboardOverview user={user} />,
     },
     {
+      id: 'workouts',
+      label: 'Workouts',
+      icon: <FitnessCenterIcon />,
+      component: <WorkoutsOverview user={user} selectedWorkout={selectedWorkout} />,
+    },
+    {
       id: 'programs',
       label: 'Programs',
       icon: <SettingsIcon />,
       component: <ProgramManagement user={user} />,
-    },
-    {
-      id: 'workouts',
-      label: 'Workouts',
-      icon: <FitnessCenterIcon />,
-      component: <Workouts user={user} selectedWorkout={selectedWorkout} />,
-    },
-    {
-      id: 'exercise-rotation',
-      label: 'Exercise Rotation',
-      icon: <RotateRightIcon />,
-      component: <ExerciseRotationVisualization />,
-    },
-    {
-      id: 'workout-preferences',
-      label: 'Workout Preferences',
-      icon: <TuneIcon />,
-      component: <WorkoutPreferencesSection />,
     },
   ];
 

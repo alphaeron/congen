@@ -83,7 +83,6 @@ describe('Dashboard', () => {
     expect(screen.getByText('Overview')).toBeInTheDocument();
     expect(screen.getByText('Programs')).toBeInTheDocument();
     expect(screen.getByText('Workouts')).toBeInTheDocument();
-    expect(screen.getByText('Workout Preferences')).toBeInTheDocument();
   });
 
   it('shows overview as the default active tab', () => {
@@ -113,17 +112,6 @@ describe('Dashboard', () => {
 
     expect(workoutsButton).toHaveClass('Mui-selected');
     expect(screen.getByTestId('workouts')).toBeInTheDocument();
-    expect(screen.queryByTestId('dashboard-overview')).not.toBeInTheDocument();
-  });
-
-  it('switches to workout preferences when clicked', () => {
-    renderWithTheme(<Dashboard user={mockUser} />);
-
-    const workoutPreferencesButton = screen.getByRole('button', { name: 'Workout Preferences' });
-    fireEvent.click(workoutPreferencesButton);
-
-    expect(workoutPreferencesButton).toHaveClass('Mui-selected');
-    expect(screen.getByTestId('workout-preferences')).toBeInTheDocument();
     expect(screen.queryByTestId('dashboard-overview')).not.toBeInTheDocument();
   });
 
@@ -184,8 +172,8 @@ describe('Dashboard', () => {
   it('renders all menu items with correct icons', () => {
     renderWithTheme(<Dashboard user={mockUser} />);
 
-    // Check that all menu items are present
-    const menuItems = ['Overview', 'Programs', 'Workouts', 'Workout Preferences'];
+    // Check that all menu items are present (Workout Preferences moved to Workouts section)
+    const menuItems = ['Overview', 'Programs', 'Workouts'];
     menuItems.forEach(item => {
       expect(screen.getByText(item)).toBeInTheDocument();
     });

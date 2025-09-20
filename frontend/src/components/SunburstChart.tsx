@@ -114,18 +114,16 @@ export const SunburstChart: React.FC<SunburstChartProps> = ({
     return workoutData ? [workoutData] : [];
   }, [workoutData]);
 
-  // Helper function to convert weight to user's preferred unit
-  const convertWeightToUserUnit = (weight: number, exerciseName: string): number => {
+  // Helper function to convert weight to pounds (consistent with StreamChart)
+  const convertWeightToPounds = (weight: number, exerciseName: string): number => {
     const preference = weightUnitPreferences.find(pref => pref.exercise_name === exerciseName);
     const userUnit = preference?.preferred_unit || WeightUnit.LBS;
 
-    if (userUnit === WeightUnit.LBS) {
-      return weight;
-    } else if (userUnit === WeightUnit.KG) {
-      return weight * 0.453592;
+    if (userUnit === WeightUnit.KG) {
+      return weight * 2.20462; // Convert kg to lbs
+    } else {
+      return weight; // Already in lbs or default to lbs
     }
-
-    return weight;
   };
 
   // Create exerciseMap from workout data for volume calculations
@@ -139,27 +137,29 @@ export const SunburstChart: React.FC<SunburstChartProps> = ({
         stage.exercises?.forEach(exercise => {
           const exerciseName = (exercise.exercise as Record<string, unknown>)
             .exercise_name as string;
+          
+          // Always get or create the exercise entry
           const existing = map.get(exerciseName) || { totalVolume: 0 };
 
-          // Calculate volume from set schemes with weight unit conversion
+          // Calculate volume from set schemes
           let exerciseVolume = 0;
           exercise.set_schemes?.forEach(setScheme => {
-            // Use performed values if available, otherwise use target values
             const weight = setScheme.performed_weight || setScheme.target_weight;
             const reps = setScheme.performed_rep_count || setScheme.target_rep_count;
 
             if (weight && reps) {
-              const convertedWeight = convertWeightToUserUnit(weight, exerciseName);
+              const convertedWeight = convertWeightToPounds(weight, exerciseName);
               exerciseVolume += convertedWeight * reps;
             }
           });
 
+          // Add to existing volume (this handles duplicates properly)
           existing.totalVolume += exerciseVolume;
           map.set(exerciseName, existing);
         });
       });
     });
-
+    
     return map;
   }, [workouts, weightUnitPreferences]);
 
@@ -206,23 +206,21 @@ export const SunburstChart: React.FC<SunburstChartProps> = ({
         });
         muscleGroups.set('Other', defaultGroup);
       } else {
-        // For exercises that belong to multiple muscle groups, create unique keys
-        // by combining exercise name with muscle group
+        // For exercises that belong to multiple muscle groups, add the full volume
+        // to each muscle group (don't create unique names)
         individualMuscles.forEach(muscle => {
           const existing = muscleGroups.get(muscle);
-          const uniqueExerciseName =
-            individualMuscles.length > 1 ? `${exercise.name} (${muscle})` : exercise.name;
 
           if (existing) {
             // Check if this exercise already exists in this muscle group
             const existingExercise = existing.children.find(
-              child => child.name === uniqueExerciseName
+              child => child.name === exercise.name
             );
             if (existingExercise) {
               existingExercise.loc += exercise.totalVolume;
             } else {
               existing.children.push({
-                name: uniqueExerciseName,
+                name: exercise.name,
                 loc: exercise.totalVolume,
               });
             }
@@ -231,7 +229,7 @@ export const SunburstChart: React.FC<SunburstChartProps> = ({
               name: muscle,
               children: [
                 {
-                  name: uniqueExerciseName,
+                  name: exercise.name,
                   loc: exercise.totalVolume,
                 },
               ],

@@ -7,13 +7,13 @@ import {
   Typography,
   Paper,
   Alert,
-  Breadcrumbs,
   Button,
   Slide,
   Tooltip,
   IconButton,
 } from '@mui/material';
 import InfoIcon from '@mui/icons-material/Info';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { useSnackbar } from 'notistack';
 import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
@@ -76,81 +76,61 @@ export const ExerciseRotationVisualization: React.FC = () => {
 
   const handleCategoryClick = (category: string) => {
     const newSearchParams = new URLSearchParams();
-    newSearchParams.set('section', 'exercise-rotation');
+    newSearchParams.set('section', 'workouts');
+    newSearchParams.set('subsection', 'rotation');
     newSearchParams.set('category', category);
     navigate(`?${newSearchParams.toString()}`);
   };
 
   const handlePreferencesClick = () => {
     const newSearchParams = new URLSearchParams();
-    newSearchParams.set('section', 'workout-preferences');
+    newSearchParams.set('section', 'workouts');
+    newSearchParams.set('subsection', 'preferences');
     navigate(`?${newSearchParams.toString()}`);
   };
 
-  const handleBreadcrumbClick = (target: string) => {
+  const handleBackClick = () => {
     const newSearchParams = new URLSearchParams();
-    newSearchParams.set('section', 'exercise-rotation');
-    if (target === 'exercise-rotation') {
-      // Don't set category for main exercise rotation view
-    }
+    newSearchParams.set('section', 'workouts');
+    newSearchParams.set('subsection', 'rotation');
+    // Remove category to go back to main view
     navigate(`?${newSearchParams.toString()}`);
   };
 
-  // Render breadcrumbs
-  const renderBreadcrumbs = () => (
-    <Box
-      position="sticky"
-      top={0}
-      zIndex={1001}
-      sx={{
-        backgroundColor: 'background.default',
-        pt: 2,
-        pb: 2,
-        borderBottom: 1,
-        borderColor: 'divider',
-      }}
-    >
-      <Breadcrumbs sx={{ mb: 2 }}>
-        {selectedCategory ? (
-          <Button
-            variant="text"
-            onClick={() => handleBreadcrumbClick('exercise-rotation')}
-            sx={{
-              color: 'text.secondary',
-              textTransform: 'none',
-              fontSize: '1rem',
-              fontWeight: 'normal',
-              p: 0,
-              minWidth: 'auto',
-            }}
-          >
-            Exercise Rotation
-          </Button>
-        ) : (
-          <Typography
-            variant="body1"
-            color="text.primary"
-            sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
-          >
-            Exercise Rotation
-          </Typography>
-        )}
-        {selectedCategory && (
-          <Typography variant="body1" color="text.primary">
-            {selectedCategory === 'primary'
-              ? 'Primary Exercises'
-              : selectedCategory === 'accessory'
-                ? 'Accessory Exercises'
-                : selectedCategory === 'recent'
-                  ? 'Recent Exercises'
-                  : selectedCategory.charAt(0).toUpperCase() +
-                    selectedCategory.slice(1) +
-                    ' Exercises'}
-          </Typography>
-        )}
-      </Breadcrumbs>
-    </Box>
-  );
+  const handleExerciseClick = (exerciseName: string) => {
+    const newSearchParams = new URLSearchParams();
+    newSearchParams.set('section', 'workouts');
+    newSearchParams.set('subsection', 'rotation');
+    newSearchParams.set('category', selectedCategory || '');
+    newSearchParams.set('exercise', exerciseName);
+    navigate(`?${newSearchParams.toString()}`);
+  };
+
+  // Render minimal floating back button
+  const renderBackButton = () => {
+    // Only show back button when in a category view
+    if (!selectedCategory) return null;
+    
+    return (
+      <IconButton
+        onClick={handleBackClick}
+        sx={{
+          position: 'absolute',
+          top: 24,
+          left: -32,
+          zIndex: 1001,
+          backgroundColor: 'background.paper',
+          boxShadow: 2,
+          '&:hover': {
+            backgroundColor: 'action.hover',
+            boxShadow: 4,
+          },
+        }}
+      >
+        <ArrowBackIcon />
+      </IconButton>
+    );
+  };
 
   // Exercise pool analysis
   const exercisePoolAnalysis = useMemo(() => {
@@ -184,8 +164,8 @@ export const ExerciseRotationVisualization: React.FC = () => {
   }
 
   return (
-    <React.Fragment>
-      {renderBreadcrumbs()}
+    <Box sx={{ position: 'relative' }}>
+      {renderBackButton()}
 
       {/* Main Exercise Rotation - Slides right when category is selected */}
       <Slide direction="right" in={!showCategoryDetails} mountOnEnter unmountOnExit>
@@ -281,6 +261,11 @@ export const ExerciseRotationVisualization: React.FC = () => {
                                     size="small"
                                     variant="outlined"
                                     color="error"
+                                    clickable
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleExerciseClick(exercise.name);
+                                    }}
                                   />
                                 ))}
                               {exercisePoolAnalysis.categorizedExercises.primary.length > 3 && (
@@ -331,6 +316,11 @@ export const ExerciseRotationVisualization: React.FC = () => {
                                     size="small"
                                     variant="outlined"
                                     color="info"
+                                    clickable
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleExerciseClick(exercise.name);
+                                    }}
                                   />
                                 ))}
                               {exercisePoolAnalysis.categorizedExercises.accessory.length > 3 && (
@@ -488,7 +478,11 @@ export const ExerciseRotationVisualization: React.FC = () => {
                               variant="outlined"
                               color="warning"
                               size="small"
-                              onClick={e => e.stopPropagation()}
+                              clickable
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleExerciseClick(exerciseName);
+                              }}
                             />
                           ))}
                         {exercisePoolAnalysis.previouslyUsedExercises.length > 10 && (
@@ -512,10 +506,18 @@ export const ExerciseRotationVisualization: React.FC = () => {
       {selectedCategory && (
         <Slide direction="left" in={showCategoryDetails} mountOnEnter unmountOnExit>
           <Box sx={{ p: 3 }}>
+            {/* Horizontal layout for alert - positioned to align with back button */}
+            <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, mb: 3, ml: 5 }}>
+              <Alert severity="info" sx={{ flex: 1 }}>
+                {selectedCategory === 'primary' && '10 primary exercises in your rotation.'}
+                {selectedCategory === 'accessory' && '15 accessory exercises in your rotation.'}
+                {selectedCategory === 'recent' && '8 recent exercises in your rotation.'}
+              </Alert>
+            </Box>
             <ExerciseCategoryDetails category={selectedCategory} />
           </Box>
         </Slide>
       )}
-    </React.Fragment>
+    </Box>
   );
 };

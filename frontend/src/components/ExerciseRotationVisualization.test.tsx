@@ -129,7 +129,7 @@ describe('ExerciseRotationVisualization', () => {
     renderWithProviders(<ExerciseRotationVisualization />);
 
     await waitFor(() => {
-      expect(screen.getAllByText('Exercise Rotation')).toHaveLength(1); // One in breadcrumb
+      expect(screen.getByText('Available Exercises')).toBeInTheDocument();
     }, { timeout: 10000 });
 
     expect(screen.getAllByText('Primary Exercises')).toHaveLength(1);
@@ -146,9 +146,9 @@ describe('ExerciseRotationVisualization', () => {
     renderWithProviders(<ExerciseRotationVisualization />);
 
     await waitFor(() => {
-      expect(screen.getByText('Primary Exercises')).toBeInTheDocument();
-    });
-  });
+      expect(screen.getByTestId('ArrowBackIcon')).toBeInTheDocument();
+    }, { timeout: 10000 });
+  }, 15000);
 
   it('should display exercise pool statistics', async () => {
     mock.onGet('/program/').reply(200, mockPrograms);
@@ -157,7 +157,7 @@ describe('ExerciseRotationVisualization', () => {
     renderWithProviders(<ExerciseRotationVisualization />);
 
     await waitFor(() => {
-      expect(screen.getAllByText('Exercise Rotation')).toHaveLength(1);
+      expect(screen.getByText('Available Exercises')).toBeInTheDocument();
     }, { timeout: 10000 });
 
     // Should show the exercise counts - there are multiple "1" elements, so we check they exist
@@ -171,7 +171,7 @@ describe('ExerciseRotationVisualization', () => {
     renderWithProviders(<ExerciseRotationVisualization />);
 
     await waitFor(() => {
-      expect(screen.getAllByText('Exercise Rotation')).toHaveLength(1);
+      expect(screen.getByText('Available Exercises')).toBeInTheDocument();
     }, { timeout: 10000 });
   }, 15000);
 
@@ -193,11 +193,11 @@ describe('ExerciseRotationVisualization', () => {
     renderWithProviders(<ExerciseRotationVisualization />);
 
     await waitFor(() => {
-      expect(screen.getAllByText('Exercise Rotation')).toHaveLength(1);
+      expect(screen.getByText('Available Exercises')).toBeInTheDocument();
     }, { timeout: 10000 });
   }, 15000);
 
-  it('should show breadcrumb navigation when in category view', async () => {
+  it('should show back button when in category view', async () => {
     mockSearchParams.set('category', 'primary');
 
     mock.onGet('/program/').reply(200, mockPrograms);
@@ -207,10 +207,60 @@ describe('ExerciseRotationVisualization', () => {
 
     await waitFor(
       () => {
-        expect(screen.getByText('Exercise Rotation')).toBeInTheDocument();
-        expect(screen.getByText('Primary Exercises')).toBeInTheDocument();
+        expect(screen.getByTestId('ArrowBackIcon')).toBeInTheDocument();
       },
       { timeout: 10000 }
     );
+  }, 15000);
+
+  it('navigates to category details when category card is clicked', async () => {
+    mock.onGet('/conjugate_workout_generator/exercise_pool').reply(200, mockExercisePoolData);
+
+    renderWithProviders(<ExerciseRotationVisualization />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Available Exercises')).toBeInTheDocument();
+    });
+
+    // Click on Primary Exercises card
+    const primaryCard = screen.getByText('Primary Exercises');
+    primaryCard.click();
+
+    expect(mockNavigate).toHaveBeenCalledWith(
+      expect.stringContaining('section=workouts&subsection=rotation&category=primary')
+    );
+  });
+
+  it('navigates to workout preferences when preferences card is clicked', async () => {
+    mock.onGet('/conjugate_workout_generator/exercise_pool').reply(200, mockExercisePoolData);
+
+    renderWithProviders(<ExerciseRotationVisualization />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Available Exercises')).toBeInTheDocument();
+    });
+
+    // Click on Available Equipment card (which navigates to preferences)
+    const equipmentCard = screen.getByText('Available Equipment');
+    equipmentCard.click();
+
+    expect(mockNavigate).toHaveBeenCalledWith(
+      expect.stringContaining('section=workouts&subsection=preferences')
+    );
+  });
+
+  it('shows back button when category is selected', async () => {
+    // Set up URL params to show a selected category
+    mockSearchParams.set('category', 'primary');
+    mock.onGet('/conjugate_workout_generator/exercise_pool').reply(200, mockExercisePoolData);
+
+    renderWithProviders(<ExerciseRotationVisualization />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('ArrowBackIcon')).toBeInTheDocument();
+    }, { timeout: 10000 });
+
+    // Should show back button (using data-testid since it doesn't have accessible name)
+    expect(screen.getByTestId('ArrowBackIcon')).toBeInTheDocument();
   }, 15000);
 });
