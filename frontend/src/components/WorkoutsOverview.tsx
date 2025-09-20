@@ -49,6 +49,7 @@ export const WorkoutsOverview: React.FC<WorkoutsOverviewProps> = ({
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState(0);
+  const [slideDirection, setSlideDirection] = useState<'left' | 'right'>('left');
   const [workoutsSlideDirection, setWorkoutsSlideDirection] = useState<'left' | 'right'>('left');
   const [weekDetailsSlideDirection, setWeekDetailsSlideDirection] = useState<'left' | 'right'>('left');
   const [workoutDetailSlideDirection, setWorkoutDetailSlideDirection] = useState<'left' | 'right'>('left');
@@ -66,6 +67,13 @@ export const WorkoutsOverview: React.FC<WorkoutsOverviewProps> = ({
 
   // Handle tab changes and update URL parameters
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+    // Set slide direction based on tab navigation
+    if (newValue > activeTab) {
+      setSlideDirection('left'); // Moving forward to next tab
+    } else {
+      setSlideDirection('right'); // Moving backward to previous tab
+    }
+    
     setActiveTab(newValue);
     
     // Update URL parameters based on tab selection
@@ -104,21 +112,32 @@ export const WorkoutsOverview: React.FC<WorkoutsOverviewProps> = ({
   // Sync active tab with URL parameters
   useEffect(() => {
     const subsection = searchParams.get('subsection');
+    let newTabIndex = 0;
+    
     switch (subsection) {
       case 'progression':
-        setActiveTab(1);
+        newTabIndex = 1;
         break;
       case 'rotation':
-        setActiveTab(2);
+        newTabIndex = 2;
         break;
       case 'preferences':
-        setActiveTab(3);
+        newTabIndex = 3;
         break;
       default:
-        setActiveTab(0);
+        newTabIndex = 0;
         break;
     }
-  }, [searchParams]);
+    
+    // Set slide direction based on tab navigation
+    if (newTabIndex > activeTab) {
+      setSlideDirection('left'); // Moving forward to next tab
+    } else if (newTabIndex < activeTab) {
+      setSlideDirection('right'); // Moving backward to previous tab
+    }
+    
+    setActiveTab(newTabIndex);
+  }, [searchParams, activeTab]);
 
   return (
     <React.Fragment>
@@ -239,11 +258,19 @@ export const WorkoutsOverview: React.FC<WorkoutsOverviewProps> = ({
       </TabPanel>
 
       <TabPanel value={activeTab} index={2}>
-        <ExerciseRotationVisualization />
+        <Slide key={`exercise-rotation-${slideDirection}`} direction={slideDirection} in={true} mountOnEnter unmountOnExit>
+          <Box>
+            <ExerciseRotationVisualization />
+          </Box>
+        </Slide>
       </TabPanel>
 
       <TabPanel value={activeTab} index={3}>
-        <WorkoutPreferencesSection />
+        <Slide key={`workout-preferences-${slideDirection}`} direction={slideDirection} in={true} mountOnEnter unmountOnExit>
+          <Box>
+            <WorkoutPreferencesSection />
+          </Box>
+        </Slide>
       </TabPanel>
     </React.Fragment>
   );
