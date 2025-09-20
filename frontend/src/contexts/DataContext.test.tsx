@@ -1,16 +1,8 @@
-import React from 'react';
 import { render, screen, waitFor, act } from '@testing-library/react';
-import { DataProvider, useData } from './DataContext';
-import { useAuth } from './AuthContext';
+import React from 'react';
 
-// Custom test utility to handle async operations properly - following WorkoutDetail pattern
-const renderWithAct = async (component: React.ReactElement) => {
-  let result: any;
-  await act(async () => {
-    result = render(component);
-  });
-  return result;
-};
+import { useAuth } from './AuthContext';
+import { DataProvider, useData } from './DataContext';
 
 // Mock the API functions
 jest.mock('../api/gdpr', () => ({
@@ -27,8 +19,8 @@ jest.mock('../api/userWeightUnitPreference', () => ({
 
 // Mock the AuthContext
 const mockAuthContext = {
-  Provider: ({ children, value }: any) => children,
-  Consumer: ({ children }: any) => children({}),
+  Provider: ({ children }: { children: React.ReactNode; value?: unknown }) => children,
+  Consumer: ({ children }: { children: (value: unknown) => React.ReactNode }) => children({}),
 };
 jest.mock('./AuthContext', () => ({
   useAuth: jest.fn(),
@@ -83,30 +75,39 @@ const mockExerciseMuscleData = [
   { exercise_name: 'Bench Press', muscle_name: 'Triceps Brachii' },
 ];
 
-const mockWeightUnitPreferences = [
-  { id: 1, user_id: 'test-user-id', weight_unit: 'lbs' },
-];
+const mockWeightUnitPreferences = [{ id: 1, user_id: 'test-user-id', weight_unit: 'lbs' }];
 
 // Test component that uses the DataContext
 const TestComponent = () => {
-  const { userData, exerciseMuscleData, weightUnitPreferences, isLoading, error, refreshData } = useData();
+  const { userData, exerciseMuscleData, weightUnitPreferences, isLoading, error, refreshData } =
+    useData();
 
   return (
     <div>
       <div data-testid="loading">{isLoading ? 'Loading' : 'Not Loading'}</div>
       <div data-testid="error">{error || 'No Error'}</div>
       <div data-testid="user-data">{userData ? 'User Data Loaded' : 'No User Data'}</div>
-      <div data-testid="exercise-muscle-data">{exerciseMuscleData.size > 0 ? 'Exercise Muscle Data Loaded' : 'No Exercise Muscle Data'}</div>
-      <div data-testid="weight-unit-preferences">{weightUnitPreferences.length > 0 ? 'Weight Unit Preferences Loaded' : 'No Weight Unit Preferences'}</div>
-      <button data-testid="refresh-button" onClick={refreshData}>Refresh</button>
+      <div data-testid="exercise-muscle-data">
+        {exerciseMuscleData.size > 0 ? 'Exercise Muscle Data Loaded' : 'No Exercise Muscle Data'}
+      </div>
+      <div data-testid="weight-unit-preferences">
+        {weightUnitPreferences.length > 0
+          ? 'Weight Unit Preferences Loaded'
+          : 'No Weight Unit Preferences'}
+      </div>
+      <button data-testid="refresh-button" onClick={refreshData}>
+        Refresh
+      </button>
     </div>
   );
 };
 
 describe('DataContext', () => {
-  const mockGetUserDataExport = require('../api/gdpr').getUserDataExport;
-  const mockGetExerciseMuscle = require('../api/exerciseMuscle').getExerciseMuscle;
-  const mockGetUserWeightUnitPreferences = require('../api/userWeightUnitPreference').getUserWeightUnitPreferences;
+  const mockGetUserDataExport = jest.requireActual('../api/gdpr').getUserDataExport;
+  const mockGetExerciseMuscle = jest.requireActual('../api/exerciseMuscle').getExerciseMuscle;
+  const mockGetUserWeightUnitPreferences = jest.requireActual(
+    '../api/userWeightUnitPreference'
+  ).getUserWeightUnitPreferences;
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -127,13 +128,20 @@ describe('DataContext', () => {
     });
 
     // Wait for all data to load
-    await waitFor(() => {
-      expect(screen.getByTestId('loading')).toHaveTextContent('Not Loading');
-      expect(screen.getByTestId('user-data')).toHaveTextContent('User Data Loaded');
-      expect(screen.getByTestId('exercise-muscle-data')).toHaveTextContent('Exercise Muscle Data Loaded');
-      expect(screen.getByTestId('weight-unit-preferences')).toHaveTextContent('Weight Unit Preferences Loaded');
-      expect(screen.getByTestId('error')).toHaveTextContent('No Error');
-    }, { timeout: 5000 });
+    await waitFor(
+      () => {
+        expect(screen.getByTestId('loading')).toHaveTextContent('Not Loading');
+        expect(screen.getByTestId('user-data')).toHaveTextContent('User Data Loaded');
+        expect(screen.getByTestId('exercise-muscle-data')).toHaveTextContent(
+          'Exercise Muscle Data Loaded'
+        );
+        expect(screen.getByTestId('weight-unit-preferences')).toHaveTextContent(
+          'Weight Unit Preferences Loaded'
+        );
+        expect(screen.getByTestId('error')).toHaveTextContent('No Error');
+      },
+      { timeout: 5000 }
+    );
   });
 
   it('refreshes data when refreshData is called', async () => {
@@ -167,7 +175,9 @@ describe('DataContext', () => {
     await waitFor(() => {
       expect(mockGetUserDataExport).toHaveBeenCalledWith({ forceRefresh: true });
       expect(mockGetExerciseMuscle).toHaveBeenCalledWith({ forceRefresh: true });
-      expect(mockGetUserWeightUnitPreferences).toHaveBeenCalledWith('test-user-id', { forceRefresh: true });
+      expect(mockGetUserWeightUnitPreferences).toHaveBeenCalledWith('test-user-id', {
+        forceRefresh: true,
+      });
     });
   });
 
@@ -186,8 +196,8 @@ describe('DataContext', () => {
   });
 
   it('prevents multiple simultaneous data loads', async () => {
-    let resolvePromise: (value: any) => void;
-    const promise = new Promise((resolve) => {
+    let resolvePromise: (value: unknown) => void;
+    const promise = new Promise(resolve => {
       resolvePromise = resolve;
     });
 
@@ -249,7 +259,9 @@ describe('DataContext', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByTestId('exercise-muscle-data')).toHaveTextContent('Exercise Muscle Data Loaded');
+      expect(screen.getByTestId('exercise-muscle-data')).toHaveTextContent(
+        'Exercise Muscle Data Loaded'
+      );
     });
 
     // The exercise muscle data should be converted to a Map

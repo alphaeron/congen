@@ -1,3 +1,5 @@
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import InfoIcon from '@mui/icons-material/Info';
 import {
   Box,
   Card,
@@ -7,23 +9,20 @@ import {
   Typography,
   Paper,
   Alert,
-  Button,
   Slide,
   Tooltip,
   IconButton,
 } from '@mui/material';
-import InfoIcon from '@mui/icons-material/Info';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { useSnackbar } from 'notistack';
 import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 
 import { ExerciseCategoryDetails } from './ExerciseCategoryDetails';
 import { ExerciseName } from './ExerciseName';
-import { LoadingSpinner } from './LoadingSpinner';
 import { ExercisePoolPieChart } from './ExercisePoolPieChart';
-import { RadialBarChart } from './RadialBarChart';
 import { ExercisePoolSunburstChart } from './ExercisePoolSunburstChart';
+import { LoadingSpinner } from './LoadingSpinner';
+import { RadialBarChart } from './RadialBarChart';
 import { getUserExercisePool } from '../api/conjugateWorkoutGenerator';
 import type { UserExercisePoolResponse } from '../api/types';
 import { useAuth } from '../contexts/AuthContext';
@@ -110,7 +109,7 @@ export const ExerciseRotationVisualization: React.FC = () => {
   const renderBackButton = () => {
     // Only show back button when in a category view
     if (!selectedCategory) return null;
-    
+
     return (
       <IconButton
         onClick={handleBackClick}
@@ -171,8 +170,8 @@ export const ExerciseRotationVisualization: React.FC = () => {
       <Slide direction="right" in={!showCategoryDetails} mountOnEnter unmountOnExit>
         <Box sx={{ p: 3 }}>
           <Grid container spacing={3}>
-                        {/* Exercise Insights Charts */}
-                        {exercisePoolAnalysis && (
+            {/* Exercise Insights Charts */}
+            {exercisePoolAnalysis && (
               <Grid size={{ xs: 12 }}>
                 <Grid container spacing={3}>
                   {/* Pool Availability - Pie Chart */}
@@ -210,9 +209,15 @@ export const ExerciseRotationVisualization: React.FC = () => {
 
             {/* Exercise Rotation and Recent Exercises - Side by side */}
             <Grid container spacing={3}>
-               {/* Available Exercises - Left side */}
-               {exercisePoolAnalysis && (
-                 <Grid size={exercisePoolAnalysis.previouslyUsedExercises.length > 0 ? { xs: 12, md: 6 } : { xs: 12 }}>
+              {/* Available Exercises - Left side */}
+              {exercisePoolAnalysis && (
+                <Grid
+                  size={
+                    exercisePoolAnalysis.previouslyUsedExercises.length > 0
+                      ? { xs: 12, md: 6 }
+                      : { xs: 12 }
+                  }
+                >
                   <Card>
                     <CardContent>
                       <Typography
@@ -256,13 +261,16 @@ export const ExerciseRotationVisualization: React.FC = () => {
                                   <Chip
                                     key={exercise.name}
                                     label={
-                                      <ExerciseName exerciseName={exercise.name} variant="caption" />
+                                      <ExerciseName
+                                        exerciseName={exercise.name}
+                                        variant="caption"
+                                      />
                                     }
                                     size="small"
                                     variant="outlined"
                                     color="error"
                                     clickable
-                                    onClick={(e) => {
+                                    onClick={e => {
                                       e.stopPropagation();
                                       handleExerciseClick(exercise.name);
                                     }}
@@ -311,13 +319,16 @@ export const ExerciseRotationVisualization: React.FC = () => {
                                   <Chip
                                     key={exercise.name}
                                     label={
-                                      <ExerciseName exerciseName={exercise.name} variant="caption" />
+                                      <ExerciseName
+                                        exerciseName={exercise.name}
+                                        variant="caption"
+                                      />
                                     }
                                     size="small"
                                     variant="outlined"
                                     color="info"
                                     clickable
-                                    onClick={(e) => {
+                                    onClick={e => {
                                       e.stopPropagation();
                                       handleExerciseClick(exercise.name);
                                     }}
@@ -479,7 +490,7 @@ export const ExerciseRotationVisualization: React.FC = () => {
                               color="warning"
                               size="small"
                               clickable
-                              onClick={(e) => {
+                              onClick={e => {
                                 e.stopPropagation();
                                 handleExerciseClick(exerciseName);
                               }}

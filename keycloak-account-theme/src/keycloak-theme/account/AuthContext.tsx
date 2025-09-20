@@ -57,7 +57,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         return null;
       });
     }
-  }, [oidcAuth.user?.access_token, clearAuthState]);
+  }, [oidcAuth, clearAuthState]);
 
   const login = async (): Promise<void> => {
     try {

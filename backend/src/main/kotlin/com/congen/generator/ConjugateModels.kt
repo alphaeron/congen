@@ -124,19 +124,33 @@ object ConjugateConstants {
  * Represents prepared data for workout generation.
  */
 data class WorkoutGenerationPreparedData(
+    /** The user's exercise pool containing available exercises. */
     val userExercisePool: UserExercisePool,
+    /** The user's one rep max records for strength calculations. */
     val oneRepMaxes: List<UserOneRepMax>,
+    /** The program preferences including days per week and other settings. */
     val programPreferences: ProgramPreferences,
+    /** List of muscles that need extra attention in the workout. */
     val weakMuscles: List<String>,
+    /** The current week number in the training program. */
     val currentWeekNumber: Int,
+    /** The ID of the user for whom the workout is being generated. */
     val userId: String,
+    /** Weight unit preferences for different exercises. */
     val weightUnitPreferences: Map<String, WeightUnit>,
+    /** Mapping of exercise names to their associated muscles. */
     val exerciseMuscleMappings: Map<String, List<ExerciseMuscle>>,
+    /** Mapping of exercise names to their workout type classifications. */
     val exerciseWorkoutTypeMappings: Map<String, List<String>>,
+    /** Mapping of exercise names to their required equipment. */
     val exerciseEquipmentMappings: Map<String, List<ExerciseEquipment>>,
+    /** List of exercises that were previously programmed to avoid repetition. */
     val previouslyProgrammedExercises: List<String>,
+    /** All available exercises in the system. */
     val allExercises: List<Exercise>,
+    /** The user's available equipment. */
     val userEquipment: List<UserEquipment>,
+    /** The user's exercise preferences and settings. */
     val userExercisePreferences: List<UserExercisePreference>
 )
 
@@ -144,11 +158,17 @@ data class WorkoutGenerationPreparedData(
  * Represents a complete workout generation result with all associated data.
  */
 data class WorkoutGenerationResult(
+    /** The ID of the program this workout belongs to. */
     val programId: Long,
+    /** The day number within the program. */
     val dayNumber: Int,
+    /** The type of day (e.g., "DE_Upper", "ME_Lower", "Full_Body"). */
     val dayType: String,
+    /** The ID of the user for whom the workout was generated. */
     val userId: String,
+    /** The workout stages containing exercises and set schemes. */
     val stages: List<WorkoutStageData>,
+    /** The prepared data used for workout generation. */
     val preparedData: WorkoutGenerationPreparedData
 )
 
@@ -156,9 +176,13 @@ data class WorkoutGenerationResult(
  * Represents workout stage data for atomic writes.
  */
 data class WorkoutStageData(
+    /** The type of workout stage (e.g., WARMUP, PRIMARY, SECONDARY, ACCESSORY, CONDITIONING). */
     val stageType: WorkoutStageTypeEnum,
+    /** The position of this stage within the workout. */
     val position: Int,
+    /** The name of the workout stage. */
     val name: String,
+    /** The exercises programmed for this stage. */
     val exercises: List<ProgrammedExerciseData>
 )
 
@@ -166,8 +190,12 @@ data class WorkoutStageData(
  * Represents programmed exercise data for atomic writes.
  */
 data class ProgrammedExerciseData(
+    /** The name of the exercise. */
     val exerciseName: String,
+    /** The position of this exercise within the stage. */
     val position: Int,
+    /** Optional notes for the exercise. */
     val notes: String?,
+    /** The set schemes defining the exercise parameters. */
     val setSchemes: List<SetSchemeParams>
 )

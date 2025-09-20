@@ -5,9 +5,7 @@ import com.congen.model.ExerciseEquipment
 import com.congen.model.ExerciseMuscle
 import com.congen.model.MovementType
 import com.congen.model.ProgramPreferences
-import com.congen.model.ProgrammedWorkout
 import com.congen.model.UserEquipment
-import com.congen.model.UserExercisePreference
 import com.congen.model.UserOneRepMax
 import com.congen.model.WeightUnit
 import org.junit.jupiter.api.BeforeEach
@@ -48,15 +46,16 @@ class ThreeDayWorkoutStageGenerationServiceTest {
         movementBalanceService = mock()
         conjugateTemplates = mock()
         userExercisePool = mock()
-        
-        threeDayService = ThreeDayWorkoutStageGenerationService(
-            exerciseSelectionService = exerciseSelectionService,
-            prilepinGuidelinesService = prilepinGuidelinesService,
-            weightSelectionService = weightSelectionService,
-            sessionTimeCalculator = sessionTimeCalculator,
-            movementBalanceService = movementBalanceService,
-            conjugateTemplates = conjugateTemplates
-        )
+
+        threeDayService =
+            ThreeDayWorkoutStageGenerationService(
+                exerciseSelectionService = exerciseSelectionService,
+                prilepinGuidelinesService = prilepinGuidelinesService,
+                weightSelectionService = weightSelectionService,
+                sessionTimeCalculator = sessionTimeCalculator,
+                movementBalanceService = movementBalanceService,
+                conjugateTemplates = conjugateTemplates
+            )
     }
 
     @Test
@@ -140,13 +139,18 @@ class ThreeDayWorkoutStageGenerationServiceTest {
         // Mock Prilepin guidelines
         whenever(
             prilepinGuidelinesService.getUndulatingPeriodizationGuidelines(any(), any(), any())
-        ).thenReturn(Pair(com.congen.generator.PrilepinGuidelines(
-            intensityRange = 0.85..0.95,
-            repsPerSetRange = 1..3,
-            totalReps = 10,
-            totalRepsRange = 8..12,
-            restSeconds = 60..120
-        ), 0.90))
+        ).thenReturn(
+            Pair(
+                com.congen.generator.PrilepinGuidelines(
+                    intensityRange = 0.85..0.95,
+                    repsPerSetRange = 1..3,
+                    totalReps = 10,
+                    totalRepsRange = 8..12,
+                    restSeconds = 60..120
+                ),
+                0.90
+            )
+        )
 
         whenever(
             prilepinGuidelinesService.getRepsAndSetsBasedOnIntensity(any(), any(), any())
@@ -180,12 +184,13 @@ class ThreeDayWorkoutStageGenerationServiceTest {
             )
         ).thenReturn(Mono.just(emptyList()))
 
-        val result = threeDayService.generateStagesForDayType(
-            programId = 1L,
-            dayNumber = 1,
-            dayType = dayType,
-            preparedData = preparedData
-        )
+        val result =
+            threeDayService.generateStagesForDayType(
+                programId = 1L,
+                dayNumber = 1,
+                dayType = dayType,
+                preparedData = preparedData
+            )
 
         StepVerifier.create(result)
             .expectNextCount(1)
@@ -273,13 +278,18 @@ class ThreeDayWorkoutStageGenerationServiceTest {
         // Mock Prilepin guidelines
         whenever(
             prilepinGuidelinesService.getUndulatingPeriodizationGuidelines(any(), any(), any())
-        ).thenReturn(Pair(com.congen.generator.PrilepinGuidelines(
-            intensityRange = 0.85..0.95,
-            repsPerSetRange = 1..3,
-            totalReps = 10,
-            totalRepsRange = 8..12,
-            restSeconds = 60..120
-        ), 0.90))
+        ).thenReturn(
+            Pair(
+                com.congen.generator.PrilepinGuidelines(
+                    intensityRange = 0.85..0.95,
+                    repsPerSetRange = 1..3,
+                    totalReps = 10,
+                    totalRepsRange = 8..12,
+                    restSeconds = 60..120
+                ),
+                0.90
+            )
+        )
 
         whenever(
             prilepinGuidelinesService.getRepsAndSetsBasedOnIntensity(any(), any(), any())
@@ -313,12 +323,13 @@ class ThreeDayWorkoutStageGenerationServiceTest {
             )
         ).thenReturn(Mono.just(emptyList()))
 
-        val result = threeDayService.generateStagesForDayType(
-            programId = 1L,
-            dayNumber = 1,
-            dayType = dayType,
-            preparedData = preparedData
-        )
+        val result =
+            threeDayService.generateStagesForDayType(
+                programId = 1L,
+                dayNumber = 1,
+                dayType = dayType,
+                preparedData = preparedData
+            )
 
         StepVerifier.create(result)
             .expectNextCount(1)
@@ -406,13 +417,18 @@ class ThreeDayWorkoutStageGenerationServiceTest {
         // Mock Prilepin guidelines
         whenever(
             prilepinGuidelinesService.getUndulatingPeriodizationGuidelines(any(), any(), any())
-        ).thenReturn(Pair(com.congen.generator.PrilepinGuidelines(
-            intensityRange = 0.55..0.65,
-            repsPerSetRange = 3..6,
-            totalReps = 24,
-            totalRepsRange = 18..30,
-            restSeconds = 60..90
-        ), 0.60))
+        ).thenReturn(
+            Pair(
+                com.congen.generator.PrilepinGuidelines(
+                    intensityRange = 0.55..0.65,
+                    repsPerSetRange = 3..6,
+                    totalReps = 24,
+                    totalRepsRange = 18..30,
+                    restSeconds = 60..90
+                ),
+                0.60
+            )
+        )
 
         whenever(
             prilepinGuidelinesService.getRepsAndSetsBasedOnIntensity(any(), any(), any())
@@ -446,19 +462,23 @@ class ThreeDayWorkoutStageGenerationServiceTest {
             )
         ).thenReturn(Mono.just(emptyList()))
 
-        val result = threeDayService.generateStagesForDayType(
-            programId = 1L,
-            dayNumber = 1,
-            dayType = dayType,
-            preparedData = preparedData
-        )
+        val result =
+            threeDayService.generateStagesForDayType(
+                programId = 1L,
+                dayNumber = 1,
+                dayType = dayType,
+                preparedData = preparedData
+            )
 
         StepVerifier.create(result)
             .expectNextCount(1)
             .verifyComplete()
     }
 
-    private fun createSampleExercise(name: String, movementType: MovementType): Exercise {
+    private fun createSampleExercise(
+        name: String,
+        movementType: MovementType
+    ): Exercise {
         return Exercise(
             name = name,
             description = "Sample exercise description",
@@ -471,37 +491,41 @@ class ThreeDayWorkoutStageGenerationServiceTest {
 
     private fun createSamplePreparedData(): WorkoutGenerationPreparedData {
         return WorkoutGenerationPreparedData(
-            userExercisePool = UserExercisePool(
-                allExercises = createSampleExercises(),
-                preferences = emptyList(),
-                userEquipment = createSampleUserEquipment(),
-                exerciseEquipmentMappings = createSampleExerciseEquipmentMappings(),
-                exerciseMuscleMappings = createSampleExerciseMuscleMappings(),
-                previouslyUsedExercises = emptyList(),
-                userId = USER_ID
-            ),
-            oneRepMaxes = listOf(
-                UserOneRepMax(USER_ID, "Bench Press", BigDecimal("225"), now),
-                UserOneRepMax(USER_ID, "Squat", BigDecimal("315"), now),
-                UserOneRepMax(USER_ID, "Deadlift", BigDecimal("405"), now)
-            ),
-            programPreferences = ProgramPreferences(
-                programId = 1L,
-                programDaysPerWeek = 3,
-                sessionTimeLengthInMinutes = 60,
-                createdAt = now,
-                updatedAt = now
-            ),
+            userExercisePool =
+                UserExercisePool(
+                    allExercises = createSampleExercises(),
+                    preferences = emptyList(),
+                    userEquipment = createSampleUserEquipment(),
+                    exerciseEquipmentMappings = createSampleExerciseEquipmentMappings(),
+                    exerciseMuscleMappings = createSampleExerciseMuscleMappings(),
+                    previouslyUsedExercises = emptyList(),
+                    userId = USER_ID
+                ),
+            oneRepMaxes =
+                listOf(
+                    UserOneRepMax(USER_ID, "Bench Press", BigDecimal("225"), now),
+                    UserOneRepMax(USER_ID, "Squat", BigDecimal("315"), now),
+                    UserOneRepMax(USER_ID, "Deadlift", BigDecimal("405"), now)
+                ),
+            programPreferences =
+                ProgramPreferences(
+                    programId = 1L,
+                    programDaysPerWeek = 3,
+                    sessionTimeLengthInMinutes = 60,
+                    createdAt = now,
+                    updatedAt = now
+                ),
             weakMuscles = listOf("chest"),
             currentWeekNumber = 1,
             userId = USER_ID,
             weightUnitPreferences = mapOf("Bench Press" to WeightUnit.LBS),
             exerciseMuscleMappings = createSampleExerciseMuscleMappings(),
-            exerciseWorkoutTypeMappings = mapOf(
-                "Bench Press" to listOf("maximal_effort", "dynamic_effort"),
-                "Squat" to listOf("maximal_effort", "dynamic_effort"),
-                "Deadlift" to listOf("maximal_effort")
-            ),
+            exerciseWorkoutTypeMappings =
+                mapOf(
+                    "Bench Press" to listOf("maximal_effort", "dynamic_effort"),
+                    "Squat" to listOf("maximal_effort", "dynamic_effort"),
+                    "Deadlift" to listOf("maximal_effort")
+                ),
             exerciseEquipmentMappings = createSampleExerciseEquipmentMappings(),
             previouslyProgrammedExercises = emptyList(),
             allExercises = createSampleExercises(),
@@ -537,18 +561,21 @@ class ThreeDayWorkoutStageGenerationServiceTest {
 
     private fun createSampleExerciseMuscleMappings(): Map<String, List<ExerciseMuscle>> {
         return mapOf(
-            "Bench Press" to listOf(
-                ExerciseMuscle("Bench Press", "chest"),
-                ExerciseMuscle("Bench Press", "triceps")
-            ),
-            "Squat" to listOf(
-                ExerciseMuscle("Squat", "quadriceps"),
-                ExerciseMuscle("Squat", "glutes")
-            ),
-            "Deadlift" to listOf(
-                ExerciseMuscle("Deadlift", "hamstrings"),
-                ExerciseMuscle("Deadlift", "glutes")
-            )
+            "Bench Press" to
+                listOf(
+                    ExerciseMuscle("Bench Press", "chest"),
+                    ExerciseMuscle("Bench Press", "triceps")
+                ),
+            "Squat" to
+                listOf(
+                    ExerciseMuscle("Squat", "quadriceps"),
+                    ExerciseMuscle("Squat", "glutes")
+                ),
+            "Deadlift" to
+                listOf(
+                    ExerciseMuscle("Deadlift", "hamstrings"),
+                    ExerciseMuscle("Deadlift", "glutes")
+                )
         )
     }
 }

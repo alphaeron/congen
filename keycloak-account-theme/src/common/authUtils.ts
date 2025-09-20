@@ -144,7 +144,7 @@ export const sanitizeToken = (token: string | null | undefined): string | null =
  * Handles authentication failure by clearing stored tokens and redirecting to login.
  * This function should be called when authentication fails or tokens are invalid.
  */
-export const handleAuthenticationFailure = (reason: string): void => {
+export const handleAuthenticationFailure = (_reason: string): void => {
   // Clear any stored authentication state
   // In the Keycloak theme context, we don't need to redirect since we're already in Keycloak
   // The OIDC context will handle token refresh automatically

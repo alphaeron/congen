@@ -1,11 +1,11 @@
 package com.congen.generator
 
+import com.congen.model.WorkoutStageTypeEnum
+import org.jetbrains.annotations.VisibleForTesting
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
-import org.jetbrains.annotations.VisibleForTesting
-import com.congen.model.WorkoutStageTypeEnum
 
 /**
  * Service for generating workout stages for 3-day conjugate powerlifting programs.
@@ -181,33 +181,37 @@ class ThreeDayWorkoutStageGenerationService(
                     )
 
                 // Create all workout stages
-                val primaryStageMono = createCombinedPrimaryStage(
-                    primaryExercise = primaryExercise,
-                    secondaryExercise = secondaryExercise,
-                    primarySetSchemes = primarySetSchemes,
-                    secondarySetSchemes = secondarySetSchemes
-                )
+                val primaryStageMono =
+                    createCombinedPrimaryStage(
+                        primaryExercise = primaryExercise,
+                        secondaryExercise = secondaryExercise,
+                        primarySetSchemes = primarySetSchemes,
+                        secondarySetSchemes = secondarySetSchemes
+                    )
 
-                val warmupStageMono = createWarmupStage(
-                    preparedData = preparedData,
-                    dayType = dayType,
-                    primaryExercise = primaryExercise,
-                    secondaryExercise = secondaryExercise,
-                    isFourDayTemplate = false
-                )
+                val warmupStageMono =
+                    createWarmupStage(
+                        preparedData = preparedData,
+                        dayType = dayType,
+                        primaryExercise = primaryExercise,
+                        secondaryExercise = secondaryExercise,
+                        isFourDayTemplate = false
+                    )
 
-                val accessoryStageMono = createAccessoryStage(
-                    preparedData = preparedData,
-                    dayType = dayType,
-                    numAccessoryExercises = numAccessoryExercises,
-                    movementBalanceState = movementBalanceState
-                )
+                val accessoryStageMono =
+                    createAccessoryStage(
+                        preparedData = preparedData,
+                        dayType = dayType,
+                        numAccessoryExercises = numAccessoryExercises,
+                        movementBalanceState = movementBalanceState
+                    )
 
-                val conditioningStageMono = createConditioningStage(
-                    preparedData = preparedData,
-                    dayType = dayType,
-                    movementBalanceState = movementBalanceState
-                )
+                val conditioningStageMono =
+                    createConditioningStage(
+                        preparedData = preparedData,
+                        dayType = dayType,
+                        movementBalanceState = movementBalanceState
+                    )
 
                 // Combine all stages - collect non-empty stages
                 Flux.merge(
@@ -325,33 +329,37 @@ class ThreeDayWorkoutStageGenerationService(
                     )
 
                 // Create all workout stages
-                val primaryStageMono = createCombinedPrimaryStage(
-                    primaryExercise = upperDEExercise,
-                    secondaryExercise = lowerDEExercise,
-                    primarySetSchemes = upperDESetSchemes,
-                    secondarySetSchemes = lowerDESetSchemes
-                )
+                val primaryStageMono =
+                    createCombinedPrimaryStage(
+                        primaryExercise = upperDEExercise,
+                        secondaryExercise = lowerDEExercise,
+                        primarySetSchemes = upperDESetSchemes,
+                        secondarySetSchemes = lowerDESetSchemes
+                    )
 
-                val warmupStageMono = createWarmupStage(
-                    preparedData = preparedData,
-                    dayType = "DE_Full_Body",
-                    primaryExercise = upperDEExercise,
-                    secondaryExercise = lowerDEExercise,
-                    isFourDayTemplate = false
-                )
+                val warmupStageMono =
+                    createWarmupStage(
+                        preparedData = preparedData,
+                        dayType = "DE_Full_Body",
+                        primaryExercise = upperDEExercise,
+                        secondaryExercise = lowerDEExercise,
+                        isFourDayTemplate = false
+                    )
 
-                val accessoryStageMono = createAccessoryStage(
-                    preparedData = preparedData,
-                    dayType = "DE_Full_Body",
-                    numAccessoryExercises = numAccessoryExercises,
-                    movementBalanceState = movementBalanceState
-                )
+                val accessoryStageMono =
+                    createAccessoryStage(
+                        preparedData = preparedData,
+                        dayType = "DE_Full_Body",
+                        numAccessoryExercises = numAccessoryExercises,
+                        movementBalanceState = movementBalanceState
+                    )
 
-                val conditioningStageMono = createConditioningStage(
-                    preparedData = preparedData,
-                    dayType = "DE_Full_Body",
-                    movementBalanceState = movementBalanceState
-                )
+                val conditioningStageMono =
+                    createConditioningStage(
+                        preparedData = preparedData,
+                        dayType = "DE_Full_Body",
+                        movementBalanceState = movementBalanceState
+                    )
 
                 // Combine all stages - collect non-empty stages
                 Flux.merge(

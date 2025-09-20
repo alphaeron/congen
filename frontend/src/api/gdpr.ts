@@ -53,7 +53,9 @@ export async function exportUserData(): Promise<UserDataExport> {
  * @param options Optional configuration including forceRefresh flag
  * @returns Promise containing complete user data export
  */
-export const getUserDataExport = async (options: { forceRefresh?: boolean } = {}): Promise<UserDataExport> => {
+export const getUserDataExport = async (
+  options: { forceRefresh?: boolean } = {}
+): Promise<UserDataExport> => {
   return REQUEST({
     method: 'GET',
     url: '/gdpr/export',

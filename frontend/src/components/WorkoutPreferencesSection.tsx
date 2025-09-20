@@ -1,19 +1,13 @@
-import {
-  Box,
-  List,
-  Tabs,
-  Tab,
-  Typography,
-} from '@mui/material';
+import { Box, List, Tabs, Tab } from '@mui/material';
 import { useSnackbar } from 'notistack';
 import React, { useState, useEffect, useMemo } from 'react';
 
+import { DeletableChip } from './DeletableChip';
+import { DeletableListItem } from './DeletableListItem';
 import { FormDialog } from './FormDialog';
 import { FormField } from './FormField';
 import { LoadingSpinner } from './LoadingSpinner';
 import { PreferenceSection } from './PreferenceSection';
-import { DeletableListItem } from './DeletableListItem';
-import { DeletableChip } from './DeletableChip';
 import { getEquipment } from '../api/equipment';
 import { getExercises } from '../api/exercise';
 import { getMuscles } from '../api/muscle';
@@ -28,17 +22,17 @@ import {
   type UserExercisePreference,
 } from '../api/types';
 import { getUserEquipment, addUserEquipment, removeUserEquipment } from '../api/userEquipment';
+import {
+  getUserExercisePreferences,
+  upsertUserExercisePreference,
+  removeUserExercisePreference,
+} from '../api/userExercisePreference';
 import { getUserWeakMuscles, addUserWeakMuscle, removeUserWeakMuscle } from '../api/userWeakMuscle';
 import {
   getUserWeightUnitPreferences,
   upsertUserWeightUnitPreference,
   deleteUserWeightUnitPreference,
 } from '../api/userWeightUnitPreference';
-import {
-  getUserExercisePreferences,
-  upsertUserExercisePreference,
-  removeUserExercisePreference,
-} from '../api/userExercisePreference';
 import { useAuth } from '../contexts/AuthContext';
 
 import type { AxiosError } from 'axios';
@@ -97,7 +91,9 @@ export function WorkoutPreferencesSection(): React.ReactElement {
   const [weakMuscleDialogOpen, setWeakMuscleDialogOpen] = useState(false);
 
   // Exercise preferences state
-  const [userExercisePreferences, setUserExercisePreferences] = useState<UserExercisePreference[]>([]);
+  const [userExercisePreferences, setUserExercisePreferences] = useState<UserExercisePreference[]>(
+    []
+  );
   const [exercisePreferenceDialogOpen, setExercisePreferenceDialogOpen] = useState(false);
 
   // Tab state
@@ -378,9 +374,12 @@ export function WorkoutPreferencesSection(): React.ReactElement {
       enqueueSnackbar('Exercise preference removed successfully', { variant: 'success' });
     } catch (err: unknown) {
       const axiosError = err as AxiosError<{ message?: string }>;
-      enqueueSnackbar(axiosError.response?.data?.message || 'Failed to remove exercise preference', {
-        variant: 'error',
-      });
+      enqueueSnackbar(
+        axiosError.response?.data?.message || 'Failed to remove exercise preference',
+        {
+          variant: 'error',
+        }
+      );
     } finally {
       setSaving(false);
     }

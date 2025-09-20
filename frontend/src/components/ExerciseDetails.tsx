@@ -99,10 +99,15 @@ export function ExerciseDetails(
     isLoading: isEquipmentLoading,
     isError: isEquipmentError,
   } = useApiGet<Equipment[]>(
-    [`equipment${props.exerciseName}`, exerciseEquipment?.map(e => e.equipment_name).join(',') || ''],
+    [
+      `equipment${props.exerciseName}`,
+      exerciseEquipment?.map(e => e.equipment_name).join(',') || '',
+    ],
     async (): Promise<Equipment[]> => {
       if (!exerciseEquipment || exerciseEquipment.length === 0) return [];
-      return Promise.all(exerciseEquipment.map(element => getIndividualEquipment(element.equipment_name)));
+      return Promise.all(
+        exerciseEquipment.map(element => getIndividualEquipment(element.equipment_name))
+      );
     },
     {
       retry: 1,

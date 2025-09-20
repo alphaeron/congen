@@ -26,7 +26,11 @@ interface CongenAppBarProps {
  * CongenAppBar component that mimics the frontend app bar.
  * All navigation items link back to the frontend to maintain the user experience.
  */
-export const CongenAppBar: React.FC<CongenAppBarProps> = ({ kcContext, user, userLoading = false }) => {
+export const CongenAppBar: React.FC<CongenAppBarProps> = ({
+  kcContext,
+  user,
+  userLoading = false,
+}) => {
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
 
   const handleClick = (event: React.MouseEvent<HTMLElement>) => {
@@ -187,10 +191,12 @@ export const CongenAppBar: React.FC<CongenAppBarProps> = ({ kcContext, user, use
                 fontWeight: 600,
               }}
             >
-              {userLoading ? '...' : 
-                (typeof user?.firstName === 'string' && user.firstName.charAt(0).toUpperCase()) ||
-                (typeof user?.given_name === 'string' && user.given_name.charAt(0).toUpperCase()) ||
-                'U'}
+              {userLoading
+                ? '...'
+                : (typeof user?.firstName === 'string' && user.firstName.charAt(0).toUpperCase()) ||
+                  (typeof user?.given_name === 'string' &&
+                    user.given_name.charAt(0).toUpperCase()) ||
+                  'U'}
             </Avatar>
           </IconButton>
           <Menu

@@ -401,21 +401,28 @@ class PostgresClientTest {
     fun `should execute transaction with connection reuse`() {
         val mockConnection = mock<io.vertx.sqlclient.SqlConnection>()
         val mockPool = mock<io.vertx.sqlclient.Pool>()
-        
+
         // Mock the pool.withTransaction method to return a successful Future
         whenever(mockPool.withTransaction<String>(any())).thenAnswer { invocation ->
-            val function = invocation.getArgument<java.util.function.Function<io.vertx.sqlclient.SqlConnection, io.vertx.core.Future<String>>>(0)
+            val function =
+                invocation.getArgument<
+                    java.util.function.Function<
+                        io.vertx.sqlclient.SqlConnection,
+                        io.vertx.core.Future<String>
+                    >
+                >(0)
             // Execute the function with the mock connection and return the result
             function.apply(mockConnection)
         }
-        
+
         // Create a PostgresClient with the mocked pool
         val testClient = PostgresClient(mockPool, mockPool)
-        
-        val result = testClient.withTransaction<String> {
-            Mono.just("test result")
-        }
-        
+
+        val result =
+            testClient.withTransaction<String> {
+                Mono.just("test result")
+            }
+
         StepVerifier.create(result)
             .expectNext("test result")
             .verifyComplete()
@@ -425,21 +432,28 @@ class PostgresClientTest {
     fun `should handle transaction rollback on error`() {
         val mockConnection = mock<io.vertx.sqlclient.SqlConnection>()
         val mockPool = mock<io.vertx.sqlclient.Pool>()
-        
+
         // Mock the pool.withTransaction method to return a failed Future when an error occurs
         whenever(mockPool.withTransaction<String>(any())).thenAnswer { invocation ->
-            val function = invocation.getArgument<java.util.function.Function<io.vertx.sqlclient.SqlConnection, io.vertx.core.Future<String>>>(0)
+            val function =
+                invocation.getArgument<
+                    java.util.function.Function<
+                        io.vertx.sqlclient.SqlConnection,
+                        io.vertx.core.Future<String>
+                    >
+                >(0)
             // Execute the function with the mock connection and return the result
             function.apply(mockConnection)
         }
-        
+
         // Create a PostgresClient with the mocked pool
         val testClient = PostgresClient(mockPool, mockPool)
-        
-        val result = testClient.withTransaction<String> {
-            Mono.error<String>(RuntimeException("Test error"))
-        }
-        
+
+        val result =
+            testClient.withTransaction<String> {
+                Mono.error<String>(RuntimeException("Test error"))
+            }
+
         StepVerifier.create(result)
             .expectError(DatabaseQueryException::class.java)
             .verify()

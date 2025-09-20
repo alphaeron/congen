@@ -1154,7 +1154,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
         // Validate we have the expected number of workouts (weeks * days per week)
         val expectedTotalWorkouts = expectedWeeks * expectedDaysPerWeek
         assert(workoutsResponse.size == expectedTotalWorkouts) {
-            "Expected $expectedTotalWorkouts workouts (${expectedWeeks} weeks × ${expectedDaysPerWeek} days), but got ${workoutsResponse.size}"
+            "Expected $expectedTotalWorkouts workouts ($expectedWeeks weeks × $expectedDaysPerWeek days), but got ${workoutsResponse.size}"
         }
 
         // Group workouts by week (assuming workouts are ordered by creation/position)
@@ -1190,11 +1190,12 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
 
                 // Only validate stage structure for a subset of workouts to reduce API calls
                 // For 4-day programs with many weeks, we'll validate fewer workouts
-                val shouldValidateStages = when {
-                    expectedDaysPerWeek == 4 && expectedWeeks > 20 -> weekIndex % 5 == 0 // Validate every 5th week
-                    expectedDaysPerWeek == 3 && expectedWeeks > 15 -> weekIndex % 3 == 0 // Validate every 3rd week
-                    else -> true // Validate all workouts for smaller programs
-                }
+                val shouldValidateStages =
+                    when {
+                        expectedDaysPerWeek == 4 && expectedWeeks > 20 -> weekIndex % 5 == 0 // Validate every 5th week
+                        expectedDaysPerWeek == 3 && expectedWeeks > 15 -> weekIndex % 3 == 0 // Validate every 3rd week
+                        else -> true // Validate all workouts for smaller programs
+                    }
 
                 if (shouldValidateStages) {
                     // Validate stage structure based on program type
@@ -1206,11 +1207,12 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
                 }
 
                 // Get all exercises for this workout (sample fewer stages for 4-day programs)
-                val stagesToValidate = when {
-                    expectedDaysPerWeek == 4 && expectedWeeks > 20 -> stagesResponse.take(2) // Only validate first 2 stages
-                    expectedDaysPerWeek == 3 && expectedWeeks > 15 -> stagesResponse.take(3) // Only validate first 3 stages
-                    else -> stagesResponse // Validate all stages for smaller programs
-                }
+                val stagesToValidate =
+                    when {
+                        expectedDaysPerWeek == 4 && expectedWeeks > 20 -> stagesResponse.take(2) // Only validate first 2 stages
+                        expectedDaysPerWeek == 3 && expectedWeeks > 15 -> stagesResponse.take(3) // Only validate first 3 stages
+                        else -> stagesResponse // Validate all stages for smaller programs
+                    }
 
                 stagesToValidate.forEach { stage ->
                     val exercisesResponse =

@@ -3,15 +3,13 @@ package com.congen.generator
 import com.congen.model.Exercise
 import com.congen.model.ExerciseEquipment
 import com.congen.model.ExerciseMuscle
-import com.congen.model.MovementType
 import com.congen.model.UserOneRepMax
-import com.congen.model.WeightUnit
 import com.congen.model.WorkoutStageTypeEnum
+import org.jetbrains.annotations.VisibleForTesting
 import org.slf4j.LoggerFactory
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import kotlin.random.Random
-import org.jetbrains.annotations.VisibleForTesting
 
 /**
  * Base service for generating workout stages for conjugate powerlifting programs.
@@ -125,13 +123,14 @@ abstract class WorkoutStageGenerationService(
         exercise: Exercise,
         setSchemes: List<SetSchemeParams>
     ): Mono<WorkoutStageData> {
-        val exerciseData = ProgrammedExerciseData(
-            exerciseName = exercise.name,
-            position = 1,
-            notes = null,
-            setSchemes = setSchemes
-        )
-        
+        val exerciseData =
+            ProgrammedExerciseData(
+                exerciseName = exercise.name,
+                position = 1,
+                notes = null,
+                setSchemes = setSchemes
+            )
+
         return Mono.just(
             WorkoutStageData(
                 stageType = WorkoutStageTypeEnum.PRIMARY,
@@ -156,13 +155,14 @@ abstract class WorkoutStageGenerationService(
         exercise: Exercise,
         setSchemes: List<SetSchemeParams>
     ): Mono<WorkoutStageData> {
-        val exerciseData = ProgrammedExerciseData(
-            exerciseName = exercise.name,
-            position = 1,
-            notes = null,
-            setSchemes = setSchemes
-        )
-        
+        val exerciseData =
+            ProgrammedExerciseData(
+                exerciseName = exercise.name,
+                position = 1,
+                notes = null,
+                setSchemes = setSchemes
+            )
+
         return Mono.just(
             WorkoutStageData(
                 stageType = WorkoutStageTypeEnum.SECONDARY,
@@ -203,31 +203,33 @@ abstract class WorkoutStageGenerationService(
             )
         }
 
-        val primaryExerciseMono = if (primaryExercise != null) {
-            Mono.just(
-                ProgrammedExerciseData(
-                    exerciseName = primaryExercise.name,
-                    position = 1,
-                    notes = null,
-                    setSchemes = primarySetSchemes
+        val primaryExerciseMono =
+            if (primaryExercise != null) {
+                Mono.just(
+                    ProgrammedExerciseData(
+                        exerciseName = primaryExercise.name,
+                        position = 1,
+                        notes = null,
+                        setSchemes = primarySetSchemes
+                    )
                 )
-            )
-        } else {
-            Mono.empty()
-        }
+            } else {
+                Mono.empty()
+            }
 
-        val secondaryExerciseMono = if (secondaryExercise != null) {
-            Mono.just(
-                ProgrammedExerciseData(
-                    exerciseName = secondaryExercise.name,
-                    position = 2,
-                    notes = null,
-                    setSchemes = secondarySetSchemes
+        val secondaryExerciseMono =
+            if (secondaryExercise != null) {
+                Mono.just(
+                    ProgrammedExerciseData(
+                        exerciseName = secondaryExercise.name,
+                        position = 2,
+                        notes = null,
+                        setSchemes = secondarySetSchemes
+                    )
                 )
-            )
-        } else {
-            Mono.empty()
-        }
+            } else {
+                Mono.empty()
+            }
 
         return Mono.zip(primaryExerciseMono, secondaryExerciseMono)
             .map { tuple ->
@@ -240,12 +242,14 @@ abstract class WorkoutStageGenerationService(
                 )
             }
             .switchIfEmpty(
-                Mono.just(WorkoutStageData(
-                    stageType = WorkoutStageTypeEnum.PRIMARY,
-                    position = WorkoutStageTypeEnum.PRIMARY.position,
-                    name = WorkoutStageTypeEnum.PRIMARY.displayName,
-                    exercises = emptyList()
-                ))
+                Mono.just(
+                    WorkoutStageData(
+                        stageType = WorkoutStageTypeEnum.PRIMARY,
+                        position = WorkoutStageTypeEnum.PRIMARY.position,
+                        name = WorkoutStageTypeEnum.PRIMARY.displayName,
+                        exercises = emptyList()
+                    )
+                )
             )
             .doOnError { error ->
                 logger.error("Error creating combined primary stage: {}", error.message)
@@ -310,7 +314,7 @@ abstract class WorkoutStageGenerationService(
                         preparedData = preparedData
                     ).map { accessoryScheme ->
                         val setSchemeData = accessoryScheme
-                        
+
                         ProgrammedExerciseData(
                             exerciseName = accessoryExercise.name,
                             position = it,
@@ -387,14 +391,15 @@ abstract class WorkoutStageGenerationService(
                 preparedData = preparedData
             ).map { conditioningScheme ->
                 val setSchemeData = conditioningScheme
-                
-                val exerciseData = ProgrammedExerciseData(
-                    exerciseName = conditioningExercise.name,
-                    position = 1,
-                    notes = null,
-                    setSchemes = setSchemeData
-                )
-                
+
+                val exerciseData =
+                    ProgrammedExerciseData(
+                        exerciseName = conditioningExercise.name,
+                        position = 1,
+                        notes = null,
+                        setSchemes = setSchemeData
+                    )
+
                 WorkoutStageData(
                     stageType = WorkoutStageTypeEnum.CONDITIONING,
                     position = WorkoutStageTypeEnum.CONDITIONING.position,
@@ -486,7 +491,7 @@ abstract class WorkoutStageGenerationService(
                             preparedData = preparedData
                         ).map { warmupScheme ->
                             val setSchemeData = warmupScheme
-                            
+
                             ProgrammedExerciseData(
                                 exerciseName = warmupExercise.name,
                                 position = warmupExercises.indexOf(warmupExercise) + 1,
@@ -616,6 +621,9 @@ abstract class WorkoutStageGenerationService(
      * @param workoutType The workout type (e.g., "maximal_effort", "dynamic_effort")
      * @param dayType The day type (e.g., "ME_Upper", "DE_Lower")
      * @param movementBalanceState Current movement balance state (optional)
+     * @param exerciseWorkoutTypeMappings Pre-computed mappings of exercise names to their workout types
+     * @param exerciseMuscleMappings Pre-computed mappings of exercise names to their muscle targets
+     * @param exerciseEquipmentMappings Pre-computed mappings of exercise names to their equipment requirements
      * @return Mono containing the selected exercise or null if none available
      */
     protected fun selectPrimaryExercise(
@@ -635,8 +643,7 @@ abstract class WorkoutStageGenerationService(
             dayType = dayType,
             movementBalanceState = movementBalanceState,
             exerciseWorkoutTypeMappings = exerciseWorkoutTypeMappings,
-            exerciseMuscleMappings = exerciseMuscleMappings,
-            exerciseEquipmentMappings = exerciseEquipmentMappings
+            exerciseMuscleMappings = exerciseMuscleMappings
         )
     }
 
@@ -648,6 +655,7 @@ abstract class WorkoutStageGenerationService(
      * @param primaryExercise The primary exercise to base selection on
      * @param workoutType The workout type (e.g., "maximal_effort", "dynamic_effort")
      * @param dayType The day type (e.g., "ME_Upper", "DE_Lower")
+     * @param preparedData The prepared data containing exercise mappings
      * @param movementBalanceState Current movement balance state (optional)
      * @return Mono containing the selected exercise or null if none available
      */
@@ -666,8 +674,7 @@ abstract class WorkoutStageGenerationService(
             dayType = dayType,
             exerciseMuscleMappings = preparedData.exerciseMuscleMappings,
             movementBalanceState = movementBalanceState,
-            exerciseWorkoutTypeMappings = preparedData.exerciseWorkoutTypeMappings,
-            exerciseEquipmentMappings = preparedData.exerciseEquipmentMappings
+            exerciseWorkoutTypeMappings = preparedData.exerciseWorkoutTypeMappings
         ).filter { selectedExercise ->
             // Filter out exercises that are the same as the primary
             selectedExercise.name != primaryExercise.name
@@ -686,6 +693,9 @@ abstract class WorkoutStageGenerationService(
      * @param workoutType The workout type (e.g., "maximal_effort", "dynamic_effort")
      * @param dayType The day type (e.g., "ME_Upper", "DE_Lower")
      * @param movementBalanceState Current movement balance state (optional)
+     * @param exerciseWorkoutTypeMappings Pre-computed mappings of exercise names to their workout types
+     * @param exerciseMuscleMappings Pre-computed mappings of exercise names to their muscle targets
+     * @param exerciseEquipmentMappings Pre-computed mappings of exercise names to their equipment requirements
      * @return Mono containing the selected exercise or null if none available
      */
     protected fun selectAccessoryExercise(
@@ -712,7 +722,6 @@ abstract class WorkoutStageGenerationService(
             movementBalanceState = movementBalanceState,
             exerciseWorkoutTypeMappings = exerciseWorkoutTypeMappings,
             exerciseMuscleMappings = exerciseMuscleMappings,
-            exerciseEquipmentMappings = exerciseEquipmentMappings
         ).onErrorResume { error ->
             if (error.message?.contains("No exercises found for target muscles") == true ||
                 error.message?.contains("No suitable exercise found") == true
@@ -741,6 +750,9 @@ abstract class WorkoutStageGenerationService(
      * @param workoutType The workout type (e.g., "maximal_effort", "dynamic_effort")
      * @param dayType The day type (e.g., "ME_Upper", "DE_Lower")
      * @param movementBalanceState Current movement balance state (optional)
+     * @param exerciseWorkoutTypeMappings Pre-computed mappings of exercise names to their workout types
+     * @param exerciseMuscleMappings Pre-computed mappings of exercise names to their muscle targets
+     * @param exerciseEquipmentMappings Pre-computed mappings of exercise names to their equipment requirements
      * @return Mono containing the selected exercise or null if none available
      */
     protected fun selectConditioningExercise(
@@ -767,7 +779,6 @@ abstract class WorkoutStageGenerationService(
             movementBalanceState = movementBalanceState,
             exerciseWorkoutTypeMappings = exerciseWorkoutTypeMappings,
             exerciseMuscleMappings = exerciseMuscleMappings,
-            exerciseEquipmentMappings = exerciseEquipmentMappings
         ).onErrorResume { error ->
             logger.error("Failed to select conditioning exercise for dayType: {}. Error: {}", dayType, error.message)
             // Return empty to indicate no conditioning exercise available

@@ -1,7 +1,8 @@
-import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
+import React from 'react';
+
 import { OneRepMaxInputStep } from './OneRepMaxInputStep';
-import { Exercise } from '../api/types';
+import type { Exercise } from '../api/types';
 
 // Mock the theme provider
 const renderWithProviders = (ui: React.ReactElement) => {
@@ -27,9 +28,9 @@ const mockExercises: Exercise[] = [
         weight_unit: 'KG',
         rest_seconds: 120,
         rpe: 8,
-        notes: null
-      }
-    ]
+        notes: null,
+      },
+    ],
   },
   {
     id: 2,
@@ -49,9 +50,9 @@ const mockExercises: Exercise[] = [
         weight_unit: 'KG',
         rest_seconds: 180,
         rpe: 9,
-        notes: null
-      }
-    ]
+        notes: null,
+      },
+    ],
   },
 ];
 
@@ -185,5 +186,4 @@ describe('OneRepMaxInputStep', () => {
     // The calculated 1RM should be shown with default values
     expect(screen.getByText(/Calculated 1RM:/)).toBeInTheDocument();
   });
-
 });

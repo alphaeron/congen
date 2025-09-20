@@ -25,13 +25,13 @@ class ProgramDALTest {
     @BeforeEach
     fun setUp() {
         postgresClient = mock()
-        
+
         // Mock PostgresClient.withTransaction to execute the block directly
         doAnswer { invocation ->
             val block = invocation.getArgument<() -> Mono<Program>>(0)
             block.invoke()
         }.whenever(postgresClient).withTransaction(any<() -> Mono<Program>>())
-        
+
         programDAL = ProgramDAL(postgresClient)
     }
 

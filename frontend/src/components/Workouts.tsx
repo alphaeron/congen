@@ -5,7 +5,6 @@ import {
   CardContent,
   Typography,
   Button,
-  Grid,
   List,
   ListItem,
   ListItemText,
@@ -14,16 +13,12 @@ import { useSnackbar } from 'notistack';
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 
-import { ConfirmationDialog } from './ConfirmationDialog';
 import { ExportButtons } from './ExportButtons';
 import { LoadingBackdrop } from './LoadingBackdrop';
 import { LoadingSpinner } from './LoadingSpinner';
+import { ProgressBar } from './ProgressBar';
 import { StreamChart } from './StreamChart';
 import { WorkoutGenerationWizard } from './WorkoutGenerationWizard';
-import { ProgressBar } from './ProgressBar';
-import { generateNextWeek } from '../api/conjugateWorkoutGenerator';
-import { calculateProgramProgress } from '../utils/progressUtils';
-
 import { getIndividualExercise } from '../api/exercise';
 import { getUserDataExport } from '../api/gdpr';
 import { getProgramsWithPreferences } from '../api/program';
@@ -41,6 +36,7 @@ import type {
 import { getUserWeightUnitPreferences } from '../api/userWeightUnitPreference';
 import { replaceUnderscoresWithSpaces } from '../common/utils';
 import { exportProgramToPDF } from '../utils/exportUtils';
+import { calculateProgramProgress } from '../utils/progressUtils';
 
 interface WorkoutsProps {
   user: User;
@@ -61,7 +57,7 @@ interface WorkoutsProps {
  * @param selectedWorkout The selected workout ID (from URL)
  * @returns Workouts component
  */
-export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => {
+export const Workouts: React.FC<WorkoutsProps> = ({ user }) => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { enqueueSnackbar } = useSnackbar();
@@ -71,7 +67,6 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
   >([]);
   const [workouts, setWorkouts] = useState<ProgrammedWorkout[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isGenerating, setIsGenerating] = useState(false);
   const [wizardOpen, setWizardOpen] = useState(false);
   const [selectedProgram, setSelectedProgram] = useState<Program | null>(null);
   const [exerciseData, setExerciseData] = useState<Map<string, Exercise>>(new Map());
@@ -179,15 +174,7 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
     navigate(`/dashboard?${newSearchParams.toString()}`);
   };
 
-  const handleBackToWorkouts = () => {
-    const newSearchParams = new URLSearchParams(searchParams);
-    newSearchParams.set('section', 'workouts');
-    newSearchParams.delete('week');
-    newSearchParams.delete('workout');
-    navigate(`/dashboard?${newSearchParams.toString()}`);
-  };
-
-  const handleWizardComplete = async (updatedProgram: Program) => {
+  const handleWizardComplete = async () => {
     // Refresh data after generation
     const [programsData, workoutsData] = await Promise.all([
       getProgramsWithPreferences(),
@@ -195,7 +182,7 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
     ]);
     setProgramsWithPreferences(programsData);
     setWorkouts(workoutsData);
-    
+
     enqueueSnackbar('Workouts generated successfully!', { variant: 'success' });
     setWizardOpen(false);
     setSelectedProgram(null);
@@ -209,14 +196,16 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
   // Calculate progress metrics
   const getProgressMetrics = () => {
     if (!activeProgram || !userDataExport) return null;
-    
-    const programData = userDataExport.training_programs.find(p => p.program.id === activeProgram.program.id);
+
+    const programData = userDataExport.training_programs.find(
+      p => p.program.id === activeProgram.program.id
+    );
     if (!programData) return null;
-    
+
     const workoutsPerWeek = activeProgram.program_preferences?.program_days_per_week || 3;
     const programProgress = calculateProgramProgress(programData.workouts, workoutsPerWeek);
     const currentWeek = Math.max(activeProgram.program.current_week_number, 1);
-    
+
     return {
       ...programProgress,
       currentWeek,
@@ -229,9 +218,11 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
   // Export handlers
   const handleExportPDF = async () => {
     if (!activeProgram || !userDataExport) return;
-    const programData = userDataExport.training_programs.find(p => p.program.id === activeProgram.program.id);
+    const programData = userDataExport.training_programs.find(
+      p => p.program.id === activeProgram.program.id
+    );
     if (!programData) return;
-    
+
     await exportProgramToPDF(programData, weightUnitPreferences, {
       title: activeProgram.program.name,
       filename: `program-${activeProgram.program.name.replace(/\s+/g, '-').toLowerCase()}`,
@@ -240,18 +231,13 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
 
   // Show loading state while data is being fetched
   if (isLoading) {
-    return (
-      <React.Fragment>
-        <LoadingSpinner message="Loading workout data..." fullHeight={false} />
-      </React.Fragment>
-    );
+    return <LoadingSpinner message="Loading workout data..." fullHeight={false} />;
   }
 
   // Show workout calendar
   return (
     <React.Fragment>
       <Box sx={{ p: 3 }}>
-
         {!activeProgram ? (
           <Card sx={{ mb: 3, mt: 3 }}>
             <CardContent>
@@ -279,8 +265,14 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
                       total={progressMetrics.totalWeeks}
                       showTooltip={true}
                       showTicks={true}
-                      steps={Array.from({ length: progressMetrics.totalWeeks + 1 }, (_, i) => (i / progressMetrics.totalWeeks) * 100)}
-                      ticks={Array.from({ length: progressMetrics.totalWeeks + 1 }, (_, i) => (i / progressMetrics.totalWeeks) * 100)}
+                      steps={Array.from(
+                        { length: progressMetrics.totalWeeks + 1 },
+                        (_, i) => (i / progressMetrics.totalWeeks) * 100
+                      )}
+                      ticks={Array.from(
+                        { length: progressMetrics.totalWeeks + 1 },
+                        (_, i) => (i / progressMetrics.totalWeeks) * 100
+                      )}
                       width="100%"
                       height={8}
                       smooth={true}
@@ -288,19 +280,21 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
                     />
                   )}
                 </Box>
-                
+
                 {/* Export Buttons on the right */}
-                <ExportButtons
-                  onExportPDF={handleExportPDF}
-                  disabled={weeks.length === 0}
-                />
+                <ExportButtons onExportPDF={handleExportPDF} disabled={weeks.length === 0} />
               </Box>
             </Box>
 
             {/* Current Week Section */}
             <Card sx={{ mb: 3 }}>
               <CardContent>
-                <Box display="flex" justifyContent="space-between" alignItems="flex-start" sx={{ mb: 2 }}>
+                <Box
+                  display="flex"
+                  justifyContent="space-between"
+                  alignItems="flex-start"
+                  sx={{ mb: 2 }}
+                >
                   <Box>
                     <Typography variant="h6" gutterBottom>
                       {`Current Week: Week ${Math.max(activeProgram.program.current_week_number, 1)}`}
@@ -326,17 +320,17 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
                 {userDataExport?.training_programs &&
                   userDataExport.training_programs.length > 0 &&
                   userDataExport.training_programs.some(program => program.workouts.length > 0) && (
-                  <Box sx={{ mt: 2 }}>
-                    <StreamChart
-                      userDataExport={userDataExport}
-                      exerciseData={exerciseData}
-                      weightUnitPreferences={weightUnitPreferences}
-                      title="Volume Flow Over Time"
-                      description="Training volume distribution across workout types"
-                      height={300}
-                    />
-                  </Box>
-                )}
+                    <Box sx={{ mt: 2 }}>
+                      <StreamChart
+                        userDataExport={userDataExport}
+                        exerciseData={exerciseData}
+                        weightUnitPreferences={weightUnitPreferences}
+                        title="Volume Flow Over Time"
+                        description="Training volume distribution across workout types"
+                        height={300}
+                      />
+                    </Box>
+                  )}
               </CardContent>
             </Card>
 
@@ -356,8 +350,8 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
                 ) : weeks.length === 0 ? (
                   <Box sx={{ textAlign: 'center', py: 4 }}>
                     <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                      No workouts generated yet. Click &quot;Generate Next Week&quot; to create
-                      your first workout week.
+                      No workouts generated yet. Click &quot;Generate Next Week&quot; to create your
+                      first workout week.
                     </Typography>
                   </Box>
                 ) : (
@@ -373,7 +367,7 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
                           '&:hover': {
                             backgroundColor: 'action.hover',
                             transform: 'translateX(4px)',
-                            transition: 'all 0.2s ease'
+                            transition: 'all 0.2s ease',
                           },
                         }}
                         onClick={() => handleWeekClick(week.weekNumber)}
@@ -396,7 +390,7 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
                                     alignItems: 'center',
                                     justifyContent: 'center',
                                     fontSize: '0.75rem',
-                                    fontWeight: 'bold'
+                                    fontWeight: 'bold',
                                   }}
                                 >
                                   {week.workoutCount}
@@ -406,7 +400,11 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
                           }
                           secondary={
                             <Typography variant="body2" color="text.secondary">
-                              {week.workouts.map(w => replaceUnderscoresWithSpaces(w.name || `Workout ${w.day_number}`)).join(' • ')}
+                              {week.workouts
+                                .map(w =>
+                                  replaceUnderscoresWithSpaces(w.name || `Workout ${w.day_number}`)
+                                )
+                                .join(' • ')}
                             </Typography>
                           }
                         />

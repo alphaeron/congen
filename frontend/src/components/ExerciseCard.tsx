@@ -89,11 +89,7 @@ export function ExerciseCard(props: ExerciseCardProps): React.ReactElement<Exerc
                 borderRadius: 2,
               }}
             />
-            <ExercisePreferenceControls
-              exerciseName={exercise.name}
-              variant="icon"
-              size="small"
-            />
+            <ExercisePreferenceControls exerciseName={exercise.name} variant="icon" size="small" />
           </Box>
 
           {/* Exercise Properties */}

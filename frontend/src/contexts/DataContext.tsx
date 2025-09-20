@@ -1,9 +1,10 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+
 import { useAuth } from './AuthContext';
-import { getUserDataExport } from '../api/gdpr';
 import { getExerciseMuscle } from '../api/exerciseMuscle';
-import { getUserWeightUnitPreferences } from '../api/userWeightUnitPreference';
+import { getUserDataExport } from '../api/gdpr';
 import type { UserDataExport, ExerciseMuscle, UserWeightUnitPreference } from '../api/types';
+import { getUserWeightUnitPreferences } from '../api/userWeightUnitPreference';
 
 interface DataContextType {
   userData: UserDataExport | null;
@@ -25,7 +26,9 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
   const { user } = useAuth();
   const [userData, setUserData] = useState<UserDataExport | null>(null);
   const [exerciseMuscleData, setExerciseMuscleData] = useState<Map<string, string[]>>(new Map());
-  const [weightUnitPreferences, setWeightUnitPreferences] = useState<UserWeightUnitPreference[]>([]);
+  const [weightUnitPreferences, setWeightUnitPreferences] = useState<UserWeightUnitPreference[]>(
+    []
+  );
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastFetchTime, setLastFetchTime] = useState<number>(0);
@@ -36,56 +39,59 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
   const DATA_STALE_THRESHOLD = 5 * 60 * 1000;
   const isDataStale = Date.now() - lastFetchTime > DATA_STALE_THRESHOLD;
 
-  const loadData = useCallback(async (forceRefresh = false) => {
-    if (!user?.keycloak_id) return;
+  const loadData = useCallback(
+    async (forceRefresh = false) => {
+      if (!user?.keycloak_id) return;
 
-    // Don't reload if data is fresh and not forcing refresh
-    if (!forceRefresh && userData && !isDataStale && !isRefreshing) {
-      return;
-    }
-
-    // Prevent multiple simultaneous loads
-    if (isLoadingData) {
-      return;
-    }
-
-    setIsLoadingData(true);
-    try {
-      if (forceRefresh) {
-        setIsRefreshing(true);
-      } else {
-        setIsLoading(true);
+      // Don't reload if data is fresh and not forcing refresh
+      if (!forceRefresh && userData && !isDataStale && !isRefreshing) {
+        return;
       }
-      setError(null);
 
-      // Load all data in parallel to minimize API calls
-      const [dataExport, exerciseMuscleData, weightUnitPreferencesData] = await Promise.all([
-        getUserDataExport({ forceRefresh }),
-        getExerciseMuscle({ forceRefresh }),
-        getUserWeightUnitPreferences(user.keycloak_id, { forceRefresh }),
-      ]);
+      // Prevent multiple simultaneous loads
+      if (isLoadingData) {
+        return;
+      }
 
-      // Convert exercise muscle data to Map for efficient lookup
-      const muscleMap = new Map<string, string[]>();
-      exerciseMuscleData.forEach((item: ExerciseMuscle) => {
-        const existing = muscleMap.get(item.exercise_name) || [];
-        existing.push(item.muscle_name);
-        muscleMap.set(item.exercise_name, existing);
-      });
+      setIsLoadingData(true);
+      try {
+        if (forceRefresh) {
+          setIsRefreshing(true);
+        } else {
+          setIsLoading(true);
+        }
+        setError(null);
 
-      setUserData(dataExport);
-      setExerciseMuscleData(muscleMap);
-      setWeightUnitPreferences(weightUnitPreferencesData || []);
-      setLastFetchTime(Date.now());
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to load data';
-      setError(errorMessage);
-    } finally {
-      setIsLoading(false);
-      setIsRefreshing(false);
-      setIsLoadingData(false);
-    }
-  }, [user?.keycloak_id, userData, isDataStale, isRefreshing, isLoadingData]);
+        // Load all data in parallel to minimize API calls
+        const [dataExport, exerciseMuscleData, weightUnitPreferencesData] = await Promise.all([
+          getUserDataExport({ forceRefresh }),
+          getExerciseMuscle({ forceRefresh }),
+          getUserWeightUnitPreferences(user.keycloak_id, { forceRefresh }),
+        ]);
+
+        // Convert exercise muscle data to Map for efficient lookup
+        const muscleMap = new Map<string, string[]>();
+        exerciseMuscleData.forEach((item: ExerciseMuscle) => {
+          const existing = muscleMap.get(item.exercise_name) || [];
+          existing.push(item.muscle_name);
+          muscleMap.set(item.exercise_name, existing);
+        });
+
+        setUserData(dataExport);
+        setExerciseMuscleData(muscleMap);
+        setWeightUnitPreferences(weightUnitPreferencesData || []);
+        setLastFetchTime(Date.now());
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'Failed to load data';
+        setError(errorMessage);
+      } finally {
+        setIsLoading(false);
+        setIsRefreshing(false);
+        setIsLoadingData(false);
+      }
+    },
+    [user?.keycloak_id, userData, isDataStale, isRefreshing, isLoadingData]
+  );
 
   const refreshData = useCallback(async () => {
     await loadData(true);

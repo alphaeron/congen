@@ -95,22 +95,23 @@ class SupportedEquipmentWeightRoundingService {
         val equipment = exerciseEquipmentMappings[exerciseName] ?: emptyList()
         val equipmentNames = equipment.map { it.equipmentName }.toSet()
 
-        val roundedWeight = when {
-            equipmentNames.any { it in BARBELL_EQUIPMENT } -> {
-                roundWeightForBarbell(targetWeight, weightUnit)
+        val roundedWeight =
+            when {
+                equipmentNames.any { it in BARBELL_EQUIPMENT } -> {
+                    roundWeightForBarbell(targetWeight, weightUnit)
+                }
+                equipmentNames.any { it in KETTLEBELL_EQUIPMENT } -> {
+                    roundWeightForKettlebell(targetWeight, weightUnit)
+                }
+                equipmentNames.any { it in DUMBBELL_EQUIPMENT } -> {
+                    roundWeightForDumbbell(targetWeight, weightUnit)
+                }
+                else -> {
+                    // For exercises without specific equipment requirements, return the original weight
+                    logger.debug("No specific equipment found for exercise: {}, returning original weight", exerciseName)
+                    targetWeight.setScale(2, RoundingMode.HALF_UP)
+                }
             }
-            equipmentNames.any { it in KETTLEBELL_EQUIPMENT } -> {
-                roundWeightForKettlebell(targetWeight, weightUnit)
-            }
-            equipmentNames.any { it in DUMBBELL_EQUIPMENT } -> {
-                roundWeightForDumbbell(targetWeight, weightUnit)
-            }
-            else -> {
-                // For exercises without specific equipment requirements, return the original weight
-                logger.debug("No specific equipment found for exercise: {}, returning original weight", exerciseName)
-                targetWeight.setScale(2, RoundingMode.HALF_UP)
-            }
-        }
 
         return Mono.just(roundedWeight)
     }

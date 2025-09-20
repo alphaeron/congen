@@ -11,10 +11,7 @@ interface ExportButtonsProps {
 /**
  * Simple PDF export button component
  */
-export const ExportButtons: React.FC<ExportButtonsProps> = ({
-  onExportPDF,
-  disabled = false,
-}) => {
+export const ExportButtons: React.FC<ExportButtonsProps> = ({ onExportPDF, disabled = false }) => {
   const { enqueueSnackbar } = useSnackbar();
   const [isExporting, setIsExporting] = useState(false);
 
@@ -23,7 +20,7 @@ export const ExportButtons: React.FC<ExportButtonsProps> = ({
       setIsExporting(true);
       await onExportPDF();
       enqueueSnackbar('PDF opened in new tab', { variant: 'success' });
-    } catch (error) {
+    } catch {
       enqueueSnackbar('Failed to export PDF', { variant: 'error' });
     } finally {
       setIsExporting(false);
@@ -38,12 +35,12 @@ export const ExportButtons: React.FC<ExportButtonsProps> = ({
           disabled={disabled || isExporting}
           size="small"
           aria-label="Export as PDF"
-          sx={{ 
+          sx={{
             border: '1px solid',
             borderColor: 'divider',
             '&:hover': {
               backgroundColor: 'action.hover',
-            }
+            },
           }}
         >
           <PdfIcon />

@@ -1,14 +1,14 @@
 package com.congen.generator
 
 import com.congen.client.PostgresClient
-import com.congen.dal.ProgrammedWorkoutDAL
-import com.congen.dal.WorkoutStageDAL
 import com.congen.dal.ProgrammedExerciseDAL
-import com.congen.dal.WorkoutStageTypeDAL
+import com.congen.dal.ProgrammedWorkoutDAL
 import com.congen.dal.UserWeightUnitPreferenceDAL
-import com.congen.service.SetSchemeService
+import com.congen.dal.WorkoutStageDAL
+import com.congen.dal.WorkoutStageTypeDAL
 import com.congen.model.ProgrammedWorkout
 import com.congen.model.WeightUnit
+import com.congen.service.SetSchemeService
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Mono
@@ -59,8 +59,11 @@ class AtomicWorkoutWriter(
      * @return Mono containing the created programmed workout
      */
     fun writeWorkoutAtomically(workoutResult: WorkoutGenerationResult): Mono<ProgrammedWorkout> {
-        logger.info("Writing workout atomically for program {} day {}", 
-            workoutResult.programId, workoutResult.dayNumber)
+        logger.info(
+            "Writing workout atomically for program {} day {}",
+            workoutResult.programId,
+            workoutResult.dayNumber
+        )
 
         return postgresClient.withTransaction {
             writeWorkoutTransactionally(workoutResult)
@@ -70,8 +73,12 @@ class AtomicWorkoutWriter(
                 logger.info("Successfully wrote workout atomically: {}", workout.id)
             }
             .doOnError { error ->
-                logger.error("Failed to write workout atomically for program {} day {}: {}", 
-                    workoutResult.programId, workoutResult.dayNumber, error.message)
+                logger.error(
+                    "Failed to write workout atomically for program {} day {}: {}",
+                    workoutResult.programId,
+                    workoutResult.dayNumber,
+                    error.message
+                )
             }
     }
 
@@ -81,12 +88,10 @@ class AtomicWorkoutWriter(
      * @param workoutResult The complete workout generation result to write
      * @return Mono containing the created programmed workout
      */
-    private fun writeWorkoutTransactionally(
-        workoutResult: WorkoutGenerationResult
-    ): Mono<ProgrammedWorkout> {
+    private fun writeWorkoutTransactionally(workoutResult: WorkoutGenerationResult): Mono<ProgrammedWorkout> {
         return programmedWorkoutDAL.insertProgrammedWorkout(
-            workoutResult.programId, 
-            workoutResult.dayNumber, 
+            workoutResult.programId,
+            workoutResult.dayNumber,
             workoutResult.dayType
         )
             .flatMap { createdWorkout ->
@@ -95,7 +100,6 @@ class AtomicWorkoutWriter(
                     .then(Mono.just(createdWorkout))
             }
     }
-
 
     /**
      * Gets the weight unit preference for an exercise from prepared data.
@@ -115,15 +119,14 @@ class AtomicWorkoutWriter(
     /**
      * Writes all workout stages for a workout to the database.
      *
-     * @param transactionalClient The transactional client for database operations
      * @param workoutId The ID of the workout these stages belong to
      * @param stagesData List of workout stage data to write
-     * @param userId The user ID for weight unit preferences
+     * @param preparedData The prepared data containing user preferences and mappings
      * @return Mono indicating completion
      */
     private fun writeWorkoutStages(
-        workoutId: Long, 
-        stagesData: List<WorkoutStageData>, 
+        workoutId: Long,
+        stagesData: List<WorkoutStageData>,
         preparedData: WorkoutGenerationPreparedData
     ): Mono<Void> {
         return reactor.core.publisher.Flux.fromIterable(stagesData)
@@ -136,15 +139,14 @@ class AtomicWorkoutWriter(
     /**
      * Writes a single workout stage to the database.
      *
-     * @param transactionalClient The transactional client for database operations
      * @param workoutId The ID of the workout this stage belongs to
      * @param stageData The workout stage data to write
-     * @param userId The user ID for weight unit preferences
+     * @param preparedData The prepared data containing user preferences and mappings
      * @return Mono indicating completion
      */
     private fun writeWorkoutStage(
-        workoutId: Long, 
-        stageData: WorkoutStageData, 
+        workoutId: Long,
+        stageData: WorkoutStageData,
         preparedData: WorkoutGenerationPreparedData
     ): Mono<Void> {
         return workoutStageTypeDAL.selectWorkoutStageTypeByEnum(stageData.stageType)
@@ -164,15 +166,14 @@ class AtomicWorkoutWriter(
     /**
      * Writes all programmed exercises for a stage to the database.
      *
-     * @param transactionalClient The transactional client for database operations
      * @param stageId The ID of the stage these exercises belong to
      * @param exercisesData List of programmed exercise data to write
-     * @param userId The user ID for weight unit preferences
+     * @param preparedData The prepared data containing user preferences and mappings
      * @return Mono indicating completion
      */
     private fun writeProgrammedExercises(
-        stageId: Long, 
-        exercisesData: List<ProgrammedExerciseData>, 
+        stageId: Long,
+        exercisesData: List<ProgrammedExerciseData>,
         preparedData: WorkoutGenerationPreparedData
     ): Mono<Void> {
         return reactor.core.publisher.Flux.fromIterable(exercisesData)
@@ -185,15 +186,14 @@ class AtomicWorkoutWriter(
     /**
      * Writes a single programmed exercise to the database.
      *
-     * @param transactionalClient The transactional client for database operations
      * @param stageId The ID of the stage this exercise belongs to
      * @param exerciseData The programmed exercise data to write
-     * @param userId The user ID for weight unit preferences
+     * @param preparedData The prepared data containing user preferences and mappings
      * @return Mono indicating completion
      */
     private fun writeProgrammedExercise(
-        stageId: Long, 
-        exerciseData: ProgrammedExerciseData, 
+        stageId: Long,
+        exerciseData: ProgrammedExerciseData,
         preparedData: WorkoutGenerationPreparedData
     ): Mono<Void> {
         return programmedExerciseDAL.insertProgrammedExercise(
@@ -210,17 +210,16 @@ class AtomicWorkoutWriter(
     /**
      * Writes all set schemes for an exercise to the database.
      *
-     * @param transactionalClient The transactional client for database operations
      * @param exerciseId The ID of the exercise these set schemes belong to
      * @param setSchemesData List of set scheme data to write
      * @param exerciseName The name of the exercise for weight unit preferences
-     * @param userId The user ID for weight unit preferences
+     * @param preparedData The prepared data containing user preferences and mappings
      * @return Mono indicating completion
      */
     private fun writeSetSchemes(
-        exerciseId: Long, 
-        setSchemesData: List<SetSchemeParams>, 
-        exerciseName: String, 
+        exerciseId: Long,
+        setSchemesData: List<SetSchemeParams>,
+        exerciseName: String,
         preparedData: WorkoutGenerationPreparedData
     ): Mono<Void> {
         return reactor.core.publisher.Flux.fromIterable(setSchemesData)
@@ -233,17 +232,16 @@ class AtomicWorkoutWriter(
     /**
      * Writes a single set scheme to the database.
      *
-     * @param transactionalClient The transactional client for database operations
      * @param exerciseId The ID of the exercise this set scheme belongs to
      * @param setSchemeData The set scheme data to write
      * @param exerciseName The name of the exercise for weight unit preferences
-     * @param userId The user ID for weight unit preferences
+     * @param preparedData The prepared data containing user preferences and mappings
      * @return Mono indicating completion
      */
     private fun writeSetScheme(
-        exerciseId: Long, 
-        setSchemeData: SetSchemeParams, 
-        exerciseName: String, 
+        exerciseId: Long,
+        setSchemeData: SetSchemeParams,
+        exerciseName: String,
         preparedData: WorkoutGenerationPreparedData
     ): Mono<Void> {
         // Get the user's exercise unit preference

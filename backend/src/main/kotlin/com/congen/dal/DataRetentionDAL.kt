@@ -61,17 +61,17 @@ class DataRetentionDAL(
                     listOf(auditResult, DataCleanupResult("CONSENT_RECORDS", 0))
                 }
         }
-        .doOnSuccess { results ->
-            val totalDeleted = results.sumOf { it.count }
-            logger.info(
-                "Cleanup completed: {} records deleted across {} data types",
-                totalDeleted,
-                results.size
-            )
-        }
-        .doOnError { error ->
-            logger.error("Failed to execute cleanup operations", error)
-        }
+            .doOnSuccess { results ->
+                val totalDeleted = results.sumOf { it.count }
+                logger.info(
+                    "Cleanup completed: {} records deleted across {} data types",
+                    totalDeleted,
+                    results.size
+                )
+            }
+            .doOnError { error ->
+                logger.error("Failed to execute cleanup operations", error)
+            }
     }
 
     /**

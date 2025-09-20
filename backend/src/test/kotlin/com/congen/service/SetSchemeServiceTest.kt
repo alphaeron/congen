@@ -67,13 +67,13 @@ class SetSchemeServiceTest {
         unitConversionService = mock()
         postgresClient = mock()
         val oneRepMaxCalculator = OneRepMaxCalculator()
-        
+
         // Mock PostgresClient.withTransaction to execute the block directly
         doAnswer { invocation ->
             val block = invocation.getArgument<() -> Mono<kotlin.Unit>>(0)
             block.invoke()
         }.whenever(postgresClient).withTransaction(any<() -> Mono<kotlin.Unit>>())
-        
+
         setSchemeService =
             SetSchemeService(
                 setSchemeDAL,

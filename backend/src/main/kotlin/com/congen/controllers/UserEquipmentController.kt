@@ -52,6 +52,7 @@ import reactor.core.publisher.Mono
  * @param userEquipmentDAL Data access layer for user equipment operations
  * @param keycloakUtil Utility for Keycloak operations
  * @param gdprComplianceService Service for GDPR compliance operations
+ * @param postgresClient Client for PostgreSQL operations
  *
  * @author Congen Development Team
  * @since 1.0.0
@@ -325,9 +326,9 @@ class UserEquipmentController(
                                 .collectList()
                                 .map { ResponseEntity.ok(it) }
                         }
-                        .doOnError { e ->
-                            logger.error("Error saving bulk user equipment: {} - {}", userId, equipmentNames, e)
-                        }
+                            .doOnError { e ->
+                                logger.error("Error saving bulk user equipment: {} - {}", userId, equipmentNames, e)
+                            }
                     }
                 }
             } else {

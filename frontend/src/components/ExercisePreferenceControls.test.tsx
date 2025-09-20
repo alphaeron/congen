@@ -1,15 +1,15 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { MemoryRouter } from 'react-router';
+import { useSnackbar } from 'notistack';
 import React from 'react';
+import { MemoryRouter } from 'react-router';
 
 import { ExercisePreferenceControls } from './ExercisePreferenceControls';
-import { useAuth } from '../contexts/AuthContext';
-import { useSnackbar } from 'notistack';
 import {
   getUserExercisePreferences,
   upsertUserExercisePreference,
   removeUserExercisePreference,
 } from '../api/userExercisePreference';
+import { useAuth } from '../contexts/AuthContext';
 
 // Mock the dependencies
 jest.mock('../contexts/AuthContext');
@@ -18,9 +18,15 @@ jest.mock('../api/userExercisePreference');
 
 const mockUseAuth = useAuth as jest.MockedFunction<typeof useAuth>;
 const mockUseSnackbar = useSnackbar as jest.MockedFunction<typeof useSnackbar>;
-const mockGetUserExercisePreferences = getUserExercisePreferences as jest.MockedFunction<typeof getUserExercisePreferences>;
-const mockUpsertUserExercisePreference = upsertUserExercisePreference as jest.MockedFunction<typeof upsertUserExercisePreference>;
-const mockRemoveUserExercisePreference = removeUserExercisePreference as jest.MockedFunction<typeof removeUserExercisePreference>;
+const mockGetUserExercisePreferences = getUserExercisePreferences as jest.MockedFunction<
+  typeof getUserExercisePreferences
+>;
+const mockUpsertUserExercisePreference = upsertUserExercisePreference as jest.MockedFunction<
+  typeof upsertUserExercisePreference
+>;
+const mockRemoveUserExercisePreference = removeUserExercisePreference as jest.MockedFunction<
+  typeof removeUserExercisePreference
+>;
 
 describe('ExercisePreferenceControls', () => {
   const mockUser = {
@@ -163,8 +169,14 @@ describe('ExercisePreferenceControls', () => {
     fireEvent.click(screen.getByText('Prefer'));
 
     await waitFor(() => {
-      expect(mockUpsertUserExercisePreference).toHaveBeenCalledWith('test-user-id', 'Bench Press', false);
-      expect(mockEnqueueSnackbar).toHaveBeenCalledWith('Exercise preferred successfully', { variant: 'success' });
+      expect(mockUpsertUserExercisePreference).toHaveBeenCalledWith(
+        'test-user-id',
+        'Bench Press',
+        false
+      );
+      expect(mockEnqueueSnackbar).toHaveBeenCalledWith('Exercise preferred successfully', {
+        variant: 'success',
+      });
     });
   });
 
@@ -182,8 +194,14 @@ describe('ExercisePreferenceControls', () => {
     fireEvent.click(screen.getByText('Ignore'));
 
     await waitFor(() => {
-      expect(mockUpsertUserExercisePreference).toHaveBeenCalledWith('test-user-id', 'Bench Press', true);
-      expect(mockEnqueueSnackbar).toHaveBeenCalledWith('Exercise ignored successfully', { variant: 'success' });
+      expect(mockUpsertUserExercisePreference).toHaveBeenCalledWith(
+        'test-user-id',
+        'Bench Press',
+        true
+      );
+      expect(mockEnqueueSnackbar).toHaveBeenCalledWith('Exercise ignored successfully', {
+        variant: 'success',
+      });
     });
   });
 
@@ -204,16 +222,27 @@ describe('ExercisePreferenceControls', () => {
       </MemoryRouter>
     );
 
-    await waitFor(() => {
-      expect(screen.getByText('Neutral')).toBeInTheDocument();
-    }, { timeout: 10000 });
+    await waitFor(
+      () => {
+        expect(screen.getByText('Neutral')).toBeInTheDocument();
+      },
+      { timeout: 10000 }
+    );
 
     fireEvent.click(screen.getByText('Neutral'));
 
-    await waitFor(() => {
-      expect(mockRemoveUserExercisePreference).toHaveBeenCalledWith('test-user-id', 'Bench Press');
-      expect(mockEnqueueSnackbar).toHaveBeenCalledWith('Exercise preference removed', { variant: 'success' });
-    }, { timeout: 10000 });
+    await waitFor(
+      () => {
+        expect(mockRemoveUserExercisePreference).toHaveBeenCalledWith(
+          'test-user-id',
+          'Bench Press'
+        );
+        expect(mockEnqueueSnackbar).toHaveBeenCalledWith('Exercise preference removed', {
+          variant: 'success',
+        });
+      },
+      { timeout: 10000 }
+    );
   }, 15000);
 
   it('shows neutral state when no preference exists', async () => {

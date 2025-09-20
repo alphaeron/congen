@@ -1,5 +1,5 @@
 import React from 'react';
-import { screen, waitFor, act, render as rtlRender } from '@testing-library/react';
+import { screen, waitFor, render as rtlRender } from '@testing-library/react';
 import { createMockKcContext } from '../../test-utils';
 import type { KcContextWithUser } from '../../test-utils';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
@@ -52,23 +52,24 @@ const render = (ui: React.ReactElement, kcContext?: KcContextWithUser) => {
 describe('KcPage', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    
+
     // Reset fetch mock implementation
     mockFetch.mockReset();
-    
+
     // Mock successful userinfo response
     mockFetch.mockImplementation((url: string) => {
       if (url.includes('/protocol/openid-connect/userinfo')) {
         return Promise.resolve({
           ok: true,
-          json: () => Promise.resolve({
-            sub: 'test-user-id',
-            email: 'test@example.com',
-            given_name: 'Test',
-            family_name: 'User',
-            firstName: 'Test',
-            lastName: 'User',
-          }),
+          json: () =>
+            Promise.resolve({
+              sub: 'test-user-id',
+              email: 'test@example.com',
+              given_name: 'Test',
+              family_name: 'User',
+              firstName: 'Test',
+              lastName: 'User',
+            }),
         });
       }
       // Mock backend user profile update response
@@ -92,13 +93,16 @@ describe('KcPage', () => {
         accountUrl: '/auth/realms/congen/account',
       } as KcContextWithUser['url'],
     });
-    
+
     render(<KcPage kcContext={kcContext} />, kcContext);
 
     // Wait for the component to load and show the main content
-    await waitFor(() => {
-      expect(screen.getByText('ConGen')).toBeInTheDocument();
-    }, { timeout: 10000 });
+    await waitFor(
+      () => {
+        expect(screen.getByText('ConGen')).toBeInTheDocument();
+      },
+      { timeout: 10000 }
+    );
   }, 15000);
 
   it('handles unknown page types gracefully', async () => {
@@ -108,13 +112,16 @@ describe('KcPage', () => {
         accountUrl: '/auth/realms/congen/unknown-page',
       } as KcContextWithUser['url'],
     });
-    
+
     render(<KcPage kcContext={kcContext} />, kcContext);
 
     // The Account component should render with the app bar
-    await waitFor(() => {
-      expect(screen.getByText('ConGen')).toBeInTheDocument();
-    }, { timeout: 5000 });
+    await waitFor(
+      () => {
+        expect(screen.getByText('ConGen')).toBeInTheDocument();
+      },
+      { timeout: 5000 }
+    );
   });
 
   it('passes kcContext to child components', async () => {
@@ -126,13 +133,16 @@ describe('KcPage', () => {
         lastName: 'User',
       },
     });
-    
+
     render(<KcPage kcContext={kcContext} />, kcContext);
 
     // The Account component should render with the app bar
-    await waitFor(() => {
-      expect(screen.getByText('ConGen')).toBeInTheDocument();
-    }, { timeout: 5000 });
+    await waitFor(
+      () => {
+        expect(screen.getByText('ConGen')).toBeInTheDocument();
+      },
+      { timeout: 5000 }
+    );
   });
 
   it('renders with different realm names', async () => {
@@ -142,25 +152,31 @@ describe('KcPage', () => {
         userManagedAccessAllowed: true,
       },
     });
-    
+
     render(<KcPage kcContext={kcContext} />, kcContext);
 
     // The Account component should render with the app bar
-    await waitFor(() => {
-      expect(screen.getByText('ConGen')).toBeInTheDocument();
-    }, { timeout: 5000 });
+    await waitFor(
+      () => {
+        expect(screen.getByText('ConGen')).toBeInTheDocument();
+      },
+      { timeout: 5000 }
+    );
   });
 
   it('handles missing realm information', async () => {
     const kcContext = createMockKcContext({
       realm: undefined,
     });
-    
+
     render(<KcPage kcContext={kcContext} />, kcContext);
 
     // The Account component should render with the app bar
-    await waitFor(() => {
-      expect(screen.getByText('ConGen')).toBeInTheDocument();
-    }, { timeout: 5000 });
+    await waitFor(
+      () => {
+        expect(screen.getByText('ConGen')).toBeInTheDocument();
+      },
+      { timeout: 5000 }
+    );
   });
 });

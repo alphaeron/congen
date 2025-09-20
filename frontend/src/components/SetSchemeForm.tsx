@@ -1,15 +1,10 @@
+import { Box, TextField, Typography, Divider, FormControlLabel, Switch } from '@mui/material';
 import React from 'react';
-import {
-  Box,
-  TextField,
-  Typography,
-  Divider,
-  FormControlLabel,
-  Switch,
-} from '@mui/material';
-import { useForm } from '@tanstack/react-form';
+
 import type { UserWeightUnitPreference } from '../api/types';
 import { convertWeightToPounds } from '../common/utils';
+
+import type { useForm } from '@tanstack/react-form';
 
 export interface SetSchemeFormData {
   totalSets: number;
@@ -46,13 +41,13 @@ export const SetSchemeForm: React.FC<SetSchemeFormProps> = ({
   showSetTypeFields = true,
 }) => {
   // Get user's weight unit preference for this exercise
-  const weightUnitPreference = exerciseName 
+  const weightUnitPreference = exerciseName
     ? weightUnitPreferences.find(pref => pref.exercise_name === exerciseName)
     : undefined;
-  
+
   const preferredUnit = weightUnitPreference?.preferred_unit;
   const weightUnitLabel = preferredUnit === 'LBS' ? 'lbs' : 'kg';
-  
+
   // Convert weight values for display
   const convertWeightForDisplay = (weight: number): number => {
     if (preferredUnit === 'LBS') {
@@ -60,7 +55,7 @@ export const SetSchemeForm: React.FC<SetSchemeFormProps> = ({
     }
     return weight;
   };
-  
+
   // Convert weight values for storage
   const convertWeightForStorage = (weight: number): number => {
     if (preferredUnit === 'LBS') {
@@ -81,11 +76,10 @@ export const SetSchemeForm: React.FC<SetSchemeFormProps> = ({
           <form.Field
             name="totalSets"
             validators={{
-              onChange: ({ value }) =>
-                value < 1 ? 'Must have at least 1 set' : undefined,
+              onChange: ({ value }) => (value < 1 ? 'Must have at least 1 set' : undefined),
             }}
           >
-            {(field) => (
+            {field => (
               <TextField
                 fullWidth
                 size="small"
@@ -93,7 +87,7 @@ export const SetSchemeForm: React.FC<SetSchemeFormProps> = ({
                 type="text"
                 inputProps={{ inputMode: 'decimal' }}
                 value={field.state.value === 0 ? '' : field.state.value.toString()}
-                onChange={(e) => {
+                onChange={e => {
                   const inputValue = e.target.value;
                   // Allow any valid numeric input including decimals
                   if (inputValue === '' || /^\d*\.?\d*$/.test(inputValue)) {
@@ -101,7 +95,7 @@ export const SetSchemeForm: React.FC<SetSchemeFormProps> = ({
                     field.handleChange(inputValue);
                   }
                 }}
-                onBlur={(e) => {
+                onBlur={e => {
                   // Convert to integer on blur for validation
                   const inputValue = e.target.value;
                   if (inputValue !== '') {
@@ -124,11 +118,10 @@ export const SetSchemeForm: React.FC<SetSchemeFormProps> = ({
           <form.Field
             name="restSeconds"
             validators={{
-              onChange: ({ value }) =>
-                value < 0 ? 'Rest period cannot be negative' : undefined,
+              onChange: ({ value }) => (value < 0 ? 'Rest period cannot be negative' : undefined),
             }}
           >
-            {(field) => (
+            {field => (
               <TextField
                 fullWidth
                 size="small"
@@ -136,7 +129,7 @@ export const SetSchemeForm: React.FC<SetSchemeFormProps> = ({
                 type="text"
                 inputProps={{ inputMode: 'decimal' }}
                 value={field.state.value === 0 ? '' : field.state.value.toString()}
-                onChange={(e) => {
+                onChange={e => {
                   const inputValue = e.target.value;
                   // Allow any valid numeric input including decimals
                   if (inputValue === '' || /^\d*\.?\d*$/.test(inputValue)) {
@@ -144,7 +137,7 @@ export const SetSchemeForm: React.FC<SetSchemeFormProps> = ({
                     field.handleChange(inputValue);
                   }
                 }}
-                onBlur={(e) => {
+                onBlur={e => {
                   // Convert to integer on blur for validation
                   const inputValue = e.target.value;
                   if (inputValue !== '') {
@@ -169,11 +162,10 @@ export const SetSchemeForm: React.FC<SetSchemeFormProps> = ({
           <form.Field
             name="targetWeight"
             validators={{
-              onChange: ({ value }) =>
-                value < 0 ? 'Weight cannot be negative' : undefined,
+              onChange: ({ value }) => (value < 0 ? 'Weight cannot be negative' : undefined),
             }}
           >
-            {(field) => (
+            {field => (
               <TextField
                 fullWidth
                 size="small"
@@ -181,7 +173,7 @@ export const SetSchemeForm: React.FC<SetSchemeFormProps> = ({
                 type="text"
                 inputProps={{ inputMode: 'decimal' }}
                 value={field.state.value === 0 ? '' : field.state.value.toString()}
-                onChange={(e) => {
+                onChange={e => {
                   const inputValue = e.target.value;
                   // Allow any valid numeric input including decimals
                   if (inputValue === '' || /^\d*\.?\d*$/.test(inputValue)) {
@@ -189,7 +181,7 @@ export const SetSchemeForm: React.FC<SetSchemeFormProps> = ({
                     field.handleChange(inputValue);
                   }
                 }}
-                onBlur={(e) => {
+                onBlur={e => {
                   // Convert to number on blur for validation
                   const inputValue = e.target.value;
                   if (inputValue !== '') {
@@ -217,15 +209,17 @@ export const SetSchemeForm: React.FC<SetSchemeFormProps> = ({
                   value !== undefined && value < 0 ? 'Weight cannot be negative' : undefined,
               }}
             >
-              {(field) => (
+              {field => (
                 <TextField
                   fullWidth
                   size="small"
                   label={`Performed Weight (${weightUnitLabel})`}
                   type="text"
                   inputProps={{ inputMode: 'decimal' }}
-                  value={field.state.value ? convertWeightForDisplay(field.state.value).toString() : ''}
-                  onChange={(e) => {
+                  value={
+                    field.state.value ? convertWeightForDisplay(field.state.value).toString() : ''
+                  }
+                  onChange={e => {
                     const inputValue = e.target.value;
                     // Allow any valid numeric input including decimals
                     if (inputValue === '' || /^\d*\.?\d*$/.test(inputValue)) {
@@ -233,7 +227,7 @@ export const SetSchemeForm: React.FC<SetSchemeFormProps> = ({
                       field.handleChange(inputValue);
                     }
                   }}
-                  onBlur={(e) => {
+                  onBlur={e => {
                     // Convert to number on blur for validation
                     const inputValue = e.target.value;
                     if (inputValue !== '') {
@@ -263,11 +257,10 @@ export const SetSchemeForm: React.FC<SetSchemeFormProps> = ({
           <form.Field
             name="targetReps"
             validators={{
-              onChange: ({ value }) =>
-                value < 1 ? 'Must have at least 1 rep' : undefined,
+              onChange: ({ value }) => (value < 1 ? 'Must have at least 1 rep' : undefined),
             }}
           >
-            {(field) => (
+            {field => (
               <TextField
                 fullWidth
                 size="small"
@@ -275,7 +268,7 @@ export const SetSchemeForm: React.FC<SetSchemeFormProps> = ({
                 type="text"
                 inputProps={{ inputMode: 'decimal' }}
                 value={field.state.value === 0 ? '' : field.state.value.toString()}
-                onChange={(e) => {
+                onChange={e => {
                   const inputValue = e.target.value;
                   // Allow any valid numeric input including decimals
                   if (inputValue === '' || /^\d*\.?\d*$/.test(inputValue)) {
@@ -283,7 +276,7 @@ export const SetSchemeForm: React.FC<SetSchemeFormProps> = ({
                     field.handleChange(inputValue);
                   }
                 }}
-                onBlur={(e) => {
+                onBlur={e => {
                   // Convert to integer on blur for validation
                   const inputValue = e.target.value;
                   if (inputValue !== '') {
@@ -311,34 +304,34 @@ export const SetSchemeForm: React.FC<SetSchemeFormProps> = ({
                   value !== undefined && value < 0 ? 'Reps cannot be negative' : undefined,
               }}
             >
-              {(field) => (
+              {field => (
                 <TextField
                   fullWidth
                   size="small"
-                label="Performed Reps"
-                type="text"
-                inputProps={{ inputMode: 'decimal' }}
-                value={field.state.value ? field.state.value.toString() : ''}
-                onChange={(e) => {
-                  const inputValue = e.target.value;
-                  // Allow any valid numeric input including decimals
-                  if (inputValue === '' || /^\d*\.?\d*$/.test(inputValue)) {
-                    // Store the raw input value to preserve decimal points during typing
-                    field.handleChange(inputValue);
-                  }
-                }}
-                onBlur={(e) => {
-                  // Convert to integer on blur for validation
-                  const inputValue = e.target.value;
-                  if (inputValue !== '') {
-                    const numValue = parseFloat(inputValue);
-                    if (!isNaN(numValue) && numValue >= 0) {
-                      field.handleChange(Math.floor(numValue)); // Ensure integer for reps
+                  label="Performed Reps"
+                  type="text"
+                  inputProps={{ inputMode: 'decimal' }}
+                  value={field.state.value ? field.state.value.toString() : ''}
+                  onChange={e => {
+                    const inputValue = e.target.value;
+                    // Allow any valid numeric input including decimals
+                    if (inputValue === '' || /^\d*\.?\d*$/.test(inputValue)) {
+                      // Store the raw input value to preserve decimal points during typing
+                      field.handleChange(inputValue);
                     }
-                  } else {
-                    field.handleChange(undefined);
-                  }
-                }}
+                  }}
+                  onBlur={e => {
+                    // Convert to integer on blur for validation
+                    const inputValue = e.target.value;
+                    if (inputValue !== '') {
+                      const numValue = parseFloat(inputValue);
+                      if (!isNaN(numValue) && numValue >= 0) {
+                        field.handleChange(Math.floor(numValue)); // Ensure integer for reps
+                      }
+                    } else {
+                      field.handleChange(undefined);
+                    }
+                  }}
                   disabled={saving}
                   placeholder="Actual reps completed"
                   error={!!field.state.meta.errors.length}
@@ -352,7 +345,7 @@ export const SetSchemeForm: React.FC<SetSchemeFormProps> = ({
 
       {/* Tempo Settings */}
       {showTempoFields && (
-        <>
+        <React.Fragment>
           <Divider sx={{ my: 1 }} />
           <Typography variant="subtitle2" gutterBottom>
             Tempo Settings
@@ -360,12 +353,12 @@ export const SetSchemeForm: React.FC<SetSchemeFormProps> = ({
 
           <Box>
             <form.Field name="useTempo">
-              {(field) => (
+              {field => (
                 <FormControlLabel
                   control={
                     <Switch
                       checked={field.state.value}
-                      onChange={(e) => field.handleChange(e.target.checked)}
+                      onChange={e => field.handleChange(e.target.checked)}
                       disabled={saving}
                     />
                   }
@@ -379,13 +372,13 @@ export const SetSchemeForm: React.FC<SetSchemeFormProps> = ({
             <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
               <Box sx={{ flex: '1 1 150px', minWidth: 150 }}>
                 <form.Field name="eccentricTempo">
-                  {(field) => (
+                  {field => (
                     <TextField
                       fullWidth
                       size="small"
                       label="Eccentric"
                       value={field.state.value}
-                      onChange={(e) => field.handleChange(e.target.value)}
+                      onChange={e => field.handleChange(e.target.value)}
                       disabled={saving}
                       placeholder="e.g., 3"
                     />
@@ -394,13 +387,13 @@ export const SetSchemeForm: React.FC<SetSchemeFormProps> = ({
               </Box>
               <Box sx={{ flex: '1 1 150px', minWidth: 150 }}>
                 <form.Field name="isometricTempo">
-                  {(field) => (
+                  {field => (
                     <TextField
                       fullWidth
                       size="small"
                       label="Isometric"
                       value={field.state.value}
-                      onChange={(e) => field.handleChange(e.target.value)}
+                      onChange={e => field.handleChange(e.target.value)}
                       disabled={saving}
                       placeholder="e.g., 1"
                     />
@@ -409,13 +402,13 @@ export const SetSchemeForm: React.FC<SetSchemeFormProps> = ({
               </Box>
               <Box sx={{ flex: '1 1 150px', minWidth: 150 }}>
                 <form.Field name="concentricTempo">
-                  {(field) => (
+                  {field => (
                     <TextField
                       fullWidth
                       size="small"
                       label="Concentric"
                       value={field.state.value}
-                      onChange={(e) => field.handleChange(e.target.value)}
+                      onChange={e => field.handleChange(e.target.value)}
                       disabled={saving}
                       placeholder="e.g., X"
                     />
@@ -424,12 +417,12 @@ export const SetSchemeForm: React.FC<SetSchemeFormProps> = ({
               </Box>
             </Box>
           )}
-        </>
+        </React.Fragment>
       )}
 
       {/* Set Type Options */}
       {showSetTypeFields && (
-        <>
+        <React.Fragment>
           <Divider sx={{ my: 1 }} />
           <Typography variant="subtitle2" gutterBottom>
             Set Type Options
@@ -437,12 +430,12 @@ export const SetSchemeForm: React.FC<SetSchemeFormProps> = ({
 
           <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
             <form.Field name="isAmrap">
-              {(field) => (
+              {field => (
                 <FormControlLabel
                   control={
                     <Switch
                       checked={field.state.value}
-                      onChange={(e) => field.handleChange(e.target.checked)}
+                      onChange={e => field.handleChange(e.target.checked)}
                       disabled={saving}
                     />
                   }
@@ -452,12 +445,12 @@ export const SetSchemeForm: React.FC<SetSchemeFormProps> = ({
             </form.Field>
 
             <form.Field name="isEmom">
-              {(field) => (
+              {field => (
                 <FormControlLabel
                   control={
                     <Switch
                       checked={field.state.value}
-                      onChange={(e) => field.handleChange(e.target.checked)}
+                      onChange={e => field.handleChange(e.target.checked)}
                       disabled={saving}
                     />
                   }
@@ -466,7 +459,7 @@ export const SetSchemeForm: React.FC<SetSchemeFormProps> = ({
               )}
             </form.Field>
           </Box>
-        </>
+        </React.Fragment>
       )}
     </Box>
   );

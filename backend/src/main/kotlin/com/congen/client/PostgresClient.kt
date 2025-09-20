@@ -10,13 +10,11 @@ import io.vertx.sqlclient.Row
 import io.vertx.sqlclient.RowSet
 import io.vertx.sqlclient.SqlClient
 import io.vertx.sqlclient.SqlConnection
-import io.vertx.sqlclient.Transaction
 import io.vertx.sqlclient.Tuple
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Mono
 import java.net.ConnectException
-import java.time.Duration
 import java.util.concurrent.CompletionStage
 import kotlin.reflect.KClass
 
@@ -50,10 +48,10 @@ class PostgresClient(
     companion object {
         /** Logger instance for this class. */
         private val logger = LoggerFactory.getLogger(PostgresClient::class.java)
-        
+
         /** Thread-local storage for the current transaction connection. */
         private val currentConnection = ThreadLocal<SqlConnection?>()
-        
+
         /**
          * Sets the current transaction connection for this thread.
          * This is used internally by the transaction methods.
@@ -61,7 +59,7 @@ class PostgresClient(
         internal fun setCurrentConnection(connection: SqlConnection?) {
             currentConnection.set(connection)
         }
-        
+
         /**
          * Gets the current transaction connection for this thread.
          * Returns null if no transaction is active.
@@ -269,7 +267,7 @@ class PostgresClient(
         vararg queryArgs: Any?,
     ): Mono<T> {
         logger.debug("Executing individual query: {}", query)
-        
+
         return query(sqlClient, query, cls, *queryArgs)
             .map {
                 if (it.size > 1) {
@@ -305,7 +303,7 @@ class PostgresClient(
         vararg queryArgs: Any?,
     ): Mono<List<T>> {
         logger.debug("Executing query: {}", query)
-        
+
         return Mono.fromCompletionStage(
             beginQuery(sqlClient, query, *queryArgs)
                 .thenApply { rowSet ->
@@ -340,13 +338,13 @@ class PostgresClient(
         // Check if we're in a transaction context
         val currentConnection = getCurrentConnection()
         val clientToUse = currentConnection ?: sqlClient
-        
+
         if (currentConnection != null) {
             logger.debug("Using transactional connection for query: {} with args: {}", query, queryArgs.contentToString())
         } else {
             logger.debug("Using regular connection for query: {} with args: {}", query, queryArgs.contentToString())
         }
-        
+
         return clientToUse
             .preparedQuery(query)
             .execute(Tuple.wrap(arrayOf(*queryArgs)))
@@ -418,7 +416,7 @@ class PostgresClient(
     ): Mono<T> {
         // Cast to Pool since the SqlClient from PgBuilder.client() is actually a pool
         val pool = sqlClient as Pool
-        
+
         // Check if we're already in a transaction context to avoid nested transactions
         val existingConnection = getCurrentConnection()
         if (existingConnection != null) {
@@ -426,29 +424,30 @@ class PostgresClient(
             logger.debug("Reusing existing transaction connection")
             return block()
         }
-        
+
         // Use pool.withTransaction and ensure the connection context is maintained
         return Mono.fromCompletionStage(
             pool.withTransaction<T> { sqlConnection ->
                 logger.debug("Transaction begun with connection: {}", sqlConnection.hashCode())
-                
+
                 // Set the transaction context for this thread
                 setCurrentConnection(sqlConnection)
-                
+
                 try {
                     // Execute the transaction block, ensuring context is preserved
-                    val result = block()
-                        .contextWrite { context ->
-                            // Store the connection in the reactive context as well
-                            context.put("transactionConnection", sqlConnection)
-                        }
-                        .doFinally { signal ->
-                            // Clear the transaction context on completion or error
-                            setCurrentConnection(null)
-                            logger.debug("Transaction context cleared due to signal: {}", signal)
-                        }
-                        .toFuture()
-                    
+                    val result =
+                        block()
+                            .contextWrite { context ->
+                                // Store the connection in the reactive context as well
+                                context.put("transactionConnection", sqlConnection)
+                            }
+                            .doFinally { signal ->
+                                // Clear the transaction context on completion or error
+                                setCurrentConnection(null)
+                                logger.debug("Transaction context cleared due to signal: {}", signal)
+                            }
+                            .toFuture()
+
                     result.whenComplete { _, throwable ->
                         if (throwable != null) {
                             logger.warn("Transaction failed: {}", throwable.message)
@@ -456,7 +455,7 @@ class PostgresClient(
                             logger.debug("Transaction completed successfully")
                         }
                     }
-                    
+
                     // Convert CompletableFuture to Vert.x Future
                     Future.fromCompletionStage(result)
                 } catch (e: Exception) {
@@ -467,17 +466,17 @@ class PostgresClient(
                 }
             }.toCompletionStage()
         )
-        .onErrorMap { throwable: Throwable ->
-            when (throwable) {
-                is ConnectException -> {
-                    logger.error("Database connection error during transaction", throwable)
-                    DatabaseConnectionException(throwable)
-                }
-                else -> {
-                    logger.error("Database query error during transaction", throwable)
-                    DatabaseQueryException("Transaction failed", throwable)
+            .onErrorMap { throwable: Throwable ->
+                when (throwable) {
+                    is ConnectException -> {
+                        logger.error("Database connection error during transaction", throwable)
+                        DatabaseConnectionException(throwable)
+                    }
+                    else -> {
+                        logger.error("Database query error during transaction", throwable)
+                        DatabaseQueryException("Transaction failed", throwable)
+                    }
                 }
             }
-        }
     }
 }

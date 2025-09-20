@@ -8,13 +8,22 @@ import {
   getProgressIcon,
   getProgressColor,
 } from './progressUtils';
-import type { ProgressStatus } from './progressUtils';
 import type {
   SetScheme,
   ProgrammedExerciseWithSetSchemes,
   ProgrammedWorkoutWithStages,
   WorkoutStageWithExercises,
 } from '../api/types';
+
+// Helper function to create exercise objects
+const createExercise = (id: number, name: string) => ({
+  id,
+  workout_stage_id: 1,
+  exercise_name: name,
+  position: 1,
+  created_at: new Date(),
+  updated_at: new Date(),
+});
 
 describe('progressUtils', () => {
   describe('hasPerformedData', () => {
@@ -83,7 +92,7 @@ describe('progressUtils', () => {
     it('should return true when exercise has at least one set scheme with performed data', () => {
       const exercise: ProgrammedExerciseWithSetSchemes = {
         id: 1,
-        exercise: { id: 1, name: 'Bench Press' } as any,
+        exercise: createExercise(1, 'Bench Press'),
         set_schemes: [
           {
             id: 1,
@@ -108,7 +117,7 @@ describe('progressUtils', () => {
     it('should return false when exercise has no set schemes with performed data', () => {
       const exercise: ProgrammedExerciseWithSetSchemes = {
         id: 1,
-        exercise: { id: 1, name: 'Bench Press' } as any,
+        exercise: createExercise(1, 'Bench Press'),
         set_schemes: [
           {
             id: 1,
@@ -133,7 +142,7 @@ describe('progressUtils', () => {
     it('should return false when exercise has no set schemes', () => {
       const exercise: ProgrammedExerciseWithSetSchemes = {
         id: 1,
-        exercise: { id: 1, name: 'Bench Press' } as any,
+        exercise: createExercise(1, 'Bench Press'),
         set_schemes: [],
       };
 
@@ -145,7 +154,7 @@ describe('progressUtils', () => {
     it('should return true when all set schemes have performed data', () => {
       const exercise: ProgrammedExerciseWithSetSchemes = {
         id: 1,
-        exercise: { id: 1, name: 'Bench Press' } as any,
+        exercise: createExercise(1, 'Bench Press'),
         set_schemes: [
           {
             id: 1,
@@ -170,7 +179,7 @@ describe('progressUtils', () => {
     it('should return false when some set schemes are missing performed data', () => {
       const exercise: ProgrammedExerciseWithSetSchemes = {
         id: 1,
-        exercise: { id: 1, name: 'Bench Press' } as any,
+        exercise: createExercise(1, 'Bench Press'),
         set_schemes: [
           {
             id: 1,
@@ -195,7 +204,7 @@ describe('progressUtils', () => {
     it('should return false when exercise has no set schemes', () => {
       const exercise: ProgrammedExerciseWithSetSchemes = {
         id: 1,
-        exercise: { id: 1, name: 'Bench Press' } as any,
+        exercise: createExercise(1, 'Bench Press'),
         set_schemes: [],
       };
 
@@ -206,7 +215,7 @@ describe('progressUtils', () => {
   describe('calculateWorkoutProgress', () => {
     it('should return completed status when all exercises are completed', () => {
       const workout: ProgrammedWorkoutWithStages = {
-        workout: { id: 1, name: 'Test Workout' } as any,
+        workout: { id: 1, name: 'Test Workout' },
         stages: [
           {
             id: 1,
@@ -214,7 +223,7 @@ describe('progressUtils', () => {
             exercises: [
               {
                 id: 1,
-                exercise: { id: 1, name: 'Bench Press' } as any,
+                exercise: createExercise(1, 'Bench Press'),
                 set_schemes: [
                   {
                     id: 1,
@@ -240,7 +249,7 @@ describe('progressUtils', () => {
 
     it('should return in-progress status when some exercises have performed data', () => {
       const workout: ProgrammedWorkoutWithStages = {
-        workout: { id: 1, name: 'Test Workout' } as any,
+        workout: { id: 1, name: 'Test Workout' },
         stages: [
           {
             id: 1,
@@ -248,7 +257,7 @@ describe('progressUtils', () => {
             exercises: [
               {
                 id: 1,
-                exercise: { id: 1, name: 'Bench Press' } as any,
+                exercise: createExercise(1, 'Bench Press'),
                 set_schemes: [
                   {
                     id: 1,
@@ -261,7 +270,7 @@ describe('progressUtils', () => {
               },
               {
                 id: 2,
-                exercise: { id: 2, name: 'Squat' } as any,
+                exercise: createExercise(2, 'Squat'),
                 set_schemes: [
                   {
                     id: 2,
@@ -287,7 +296,7 @@ describe('progressUtils', () => {
 
     it('should return not-started status when no exercises have performed data', () => {
       const workout: ProgrammedWorkoutWithStages = {
-        workout: { id: 1, name: 'Test Workout' } as any,
+        workout: { id: 1, name: 'Test Workout' },
         stages: [
           {
             id: 1,
@@ -295,7 +304,7 @@ describe('progressUtils', () => {
             exercises: [
               {
                 id: 1,
-                exercise: { id: 1, name: 'Bench Press' } as any,
+                exercise: createExercise(1, 'Bench Press'),
                 set_schemes: [
                   {
                     id: 1,
@@ -321,7 +330,7 @@ describe('progressUtils', () => {
 
     it('should handle workout with no stages', () => {
       const workout: ProgrammedWorkoutWithStages = {
-        workout: { id: 1, name: 'Test Workout' } as any,
+        workout: { id: 1, name: 'Test Workout' },
         stages: undefined,
       };
 
@@ -335,7 +344,7 @@ describe('progressUtils', () => {
 
     it('should handle workout with empty stages', () => {
       const workout: ProgrammedWorkoutWithStages = {
-        workout: { id: 1, name: 'Test Workout' } as any,
+        workout: { id: 1, name: 'Test Workout' },
         stages: [],
       };
 
@@ -352,7 +361,7 @@ describe('progressUtils', () => {
     it('should return completed status when all workouts are completed', () => {
       const workouts: ProgrammedWorkoutWithStages[] = [
         {
-          workout: { id: 1, name: 'Workout 1' } as any,
+          workout: { id: 1, name: 'Workout 1' },
           stages: [
             {
               id: 1,
@@ -360,7 +369,7 @@ describe('progressUtils', () => {
               exercises: [
                 {
                   id: 1,
-                  exercise: { id: 1, name: 'Bench Press' } as any,
+                  exercise: createExercise(1, 'Bench Press'),
                   set_schemes: [
                     {
                       id: 1,
@@ -376,7 +385,7 @@ describe('progressUtils', () => {
           ],
         },
         {
-          workout: { id: 2, name: 'Workout 2' } as any,
+          workout: { id: 2, name: 'Workout 2' },
           stages: [
             {
               id: 2,
@@ -384,7 +393,7 @@ describe('progressUtils', () => {
               exercises: [
                 {
                   id: 2,
-                  exercise: { id: 2, name: 'Squat' } as any,
+                  exercise: createExercise(2, 'Squat'),
                   set_schemes: [
                     {
                       id: 2,
@@ -412,7 +421,7 @@ describe('progressUtils', () => {
     it('should return in-progress status when some workouts are completed', () => {
       const workouts: ProgrammedWorkoutWithStages[] = [
         {
-          workout: { id: 1, name: 'Workout 1' } as any,
+          workout: { id: 1, name: 'Workout 1' },
           stages: [
             {
               id: 1,
@@ -420,7 +429,7 @@ describe('progressUtils', () => {
               exercises: [
                 {
                   id: 1,
-                  exercise: { id: 1, name: 'Bench Press' } as any,
+                  exercise: createExercise(1, 'Bench Press'),
                   set_schemes: [
                     {
                       id: 1,
@@ -436,7 +445,7 @@ describe('progressUtils', () => {
           ],
         },
         {
-          workout: { id: 2, name: 'Workout 2' } as any,
+          workout: { id: 2, name: 'Workout 2' },
           stages: [
             {
               id: 2,
@@ -444,7 +453,7 @@ describe('progressUtils', () => {
               exercises: [
                 {
                   id: 2,
-                  exercise: { id: 2, name: 'Squat' } as any,
+                  exercise: createExercise(2, 'Squat'),
                   set_schemes: [
                     {
                       id: 2,
@@ -472,7 +481,7 @@ describe('progressUtils', () => {
     it('should return not-started status when no workouts are completed', () => {
       const workouts: ProgrammedWorkoutWithStages[] = [
         {
-          workout: { id: 1, name: 'Workout 1' } as any,
+          workout: { id: 1, name: 'Workout 1' },
           stages: [
             {
               id: 1,
@@ -480,7 +489,7 @@ describe('progressUtils', () => {
               exercises: [
                 {
                   id: 1,
-                  exercise: { id: 1, name: 'Bench Press' } as any,
+                  exercise: createExercise(1, 'Bench Press'),
                   set_schemes: [
                     {
                       id: 1,
@@ -520,7 +529,7 @@ describe('progressUtils', () => {
       const workouts: ProgrammedWorkoutWithStages[] = [
         // Week 1 - 3 workouts
         {
-          workout: { id: 1, name: 'Workout 1', day_number: 1 } as any,
+          workout: { id: 1, name: 'Workout 1', day_number: 1 },
           stages: [
             {
               id: 1,
@@ -528,7 +537,7 @@ describe('progressUtils', () => {
               exercises: [
                 {
                   id: 1,
-                  exercise: { id: 1, name: 'Bench Press' } as any,
+                  exercise: createExercise(1, 'Bench Press'),
                   set_schemes: [
                     {
                       id: 1,
@@ -544,7 +553,7 @@ describe('progressUtils', () => {
           ],
         },
         {
-          workout: { id: 2, name: 'Workout 2', day_number: 2 } as any,
+          workout: { id: 2, name: 'Workout 2', day_number: 2 },
           stages: [
             {
               id: 2,
@@ -552,7 +561,7 @@ describe('progressUtils', () => {
               exercises: [
                 {
                   id: 2,
-                  exercise: { id: 2, name: 'Squat' } as any,
+                  exercise: createExercise(2, 'Squat'),
                   set_schemes: [
                     {
                       id: 2,
@@ -568,7 +577,7 @@ describe('progressUtils', () => {
           ],
         },
         {
-          workout: { id: 3, name: 'Workout 3', day_number: 3 } as any,
+          workout: { id: 3, name: 'Workout 3', day_number: 3 },
           stages: [
             {
               id: 3,
@@ -576,7 +585,7 @@ describe('progressUtils', () => {
               exercises: [
                 {
                   id: 3,
-                  exercise: { id: 3, name: 'Deadlift' } as any,
+                  exercise: createExercise(3, 'Deadlift'),
                   set_schemes: [
                     {
                       id: 3,
@@ -593,7 +602,7 @@ describe('progressUtils', () => {
         },
         // Week 2 - 3 workouts
         {
-          workout: { id: 4, name: 'Workout 4', day_number: 4 } as any,
+          workout: { id: 4, name: 'Workout 4', day_number: 4 },
           stages: [
             {
               id: 4,
@@ -601,7 +610,7 @@ describe('progressUtils', () => {
               exercises: [
                 {
                   id: 4,
-                  exercise: { id: 4, name: 'Overhead Press' } as any,
+                  exercise: createExercise(4, 'Overhead Press'),
                   set_schemes: [
                     {
                       id: 4,
@@ -617,7 +626,7 @@ describe('progressUtils', () => {
           ],
         },
         {
-          workout: { id: 5, name: 'Workout 5', day_number: 5 } as any,
+          workout: { id: 5, name: 'Workout 5', day_number: 5 },
           stages: [
             {
               id: 5,
@@ -625,7 +634,7 @@ describe('progressUtils', () => {
               exercises: [
                 {
                   id: 5,
-                  exercise: { id: 5, name: 'Row' } as any,
+                  exercise: createExercise(5, 'Row'),
                   set_schemes: [
                     {
                       id: 5,
@@ -641,7 +650,7 @@ describe('progressUtils', () => {
           ],
         },
         {
-          workout: { id: 6, name: 'Workout 6', day_number: 6 } as any,
+          workout: { id: 6, name: 'Workout 6', day_number: 6 },
           stages: [
             {
               id: 6,
@@ -649,7 +658,7 @@ describe('progressUtils', () => {
               exercises: [
                 {
                   id: 6,
-                  exercise: { id: 6, name: 'Pull-up' } as any,
+                  exercise: createExercise(6, 'Pull-up'),
                   set_schemes: [
                     {
                       id: 6,
@@ -678,7 +687,7 @@ describe('progressUtils', () => {
       const workouts: ProgrammedWorkoutWithStages[] = [
         // Week 1 - all completed
         {
-          workout: { id: 1, name: 'Workout 1', day_number: 1 } as any,
+          workout: { id: 1, name: 'Workout 1', day_number: 1 },
           stages: [
             {
               id: 1,
@@ -686,7 +695,7 @@ describe('progressUtils', () => {
               exercises: [
                 {
                   id: 1,
-                  exercise: { id: 1, name: 'Bench Press' } as any,
+                  exercise: createExercise(1, 'Bench Press'),
                   set_schemes: [
                     {
                       id: 1,
@@ -702,7 +711,7 @@ describe('progressUtils', () => {
           ],
         },
         {
-          workout: { id: 2, name: 'Workout 2', day_number: 2 } as any,
+          workout: { id: 2, name: 'Workout 2', day_number: 2 },
           stages: [
             {
               id: 2,
@@ -710,7 +719,7 @@ describe('progressUtils', () => {
               exercises: [
                 {
                   id: 2,
-                  exercise: { id: 2, name: 'Squat' } as any,
+                  exercise: createExercise(2, 'Squat'),
                   set_schemes: [
                     {
                       id: 2,
@@ -727,7 +736,7 @@ describe('progressUtils', () => {
         },
         // Week 2 - not completed
         {
-          workout: { id: 3, name: 'Workout 3', day_number: 3 } as any,
+          workout: { id: 3, name: 'Workout 3', day_number: 3 },
           stages: [
             {
               id: 3,
@@ -735,7 +744,7 @@ describe('progressUtils', () => {
               exercises: [
                 {
                   id: 3,
-                  exercise: { id: 3, name: 'Deadlift' } as any,
+                  exercise: createExercise(3, 'Deadlift'),
                   set_schemes: [
                     {
                       id: 3,

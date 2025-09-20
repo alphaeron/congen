@@ -51,7 +51,7 @@ export const updateProgrammedExercise = (
     exercise_name: exerciseName,
     position: position.toString(),
   });
-  
+
   // Always include notes parameter, even if empty string
   // The backend expects this parameter to be present
   params.append('notes', notes || '');
@@ -114,19 +114,19 @@ export const createProgrammedExercise = async (
     exercise_name: exerciseName,
     position: position.toString(),
   });
-  
+
   // Always include notes parameter, even if empty string
   exerciseParams.append('notes', notes || '');
 
-  const createdExercise = await REQUEST({
+  const createdExercise = (await REQUEST({
     method: 'POST',
     url: `/programmed_exercise/?${exerciseParams.toString()}`,
-  }) as ProgrammedExercise;
+  })) as ProgrammedExercise;
 
   // If set scheme parameters are provided, create set schemes
   if (totalSets && totalSets > 0) {
     const setSchemePromises = [];
-    
+
     for (let setNumber = 1; setNumber <= totalSets; setNumber++) {
       const setSchemeParams = new URLSearchParams({
         programmed_exercise_id: createdExercise.id.toString(),

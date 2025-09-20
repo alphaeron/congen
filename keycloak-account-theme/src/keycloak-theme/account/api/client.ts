@@ -5,7 +5,12 @@
 
 import { type ApiResponse, type UserProfile, type UpdateUserProfileRequest } from './types';
 import { KEYCLOAK_URL } from '../../../globals';
-import { sanitizeToken, isTokenMalformed, isTokenExpired, handleAuthenticationFailure } from '../../../common/authUtils';
+import {
+  sanitizeToken,
+  isTokenMalformed,
+  isTokenExpired,
+  handleAuthenticationFailure,
+} from '../../../common/authUtils';
 
 // Token getter registration
 let getToken: (() => string | null) | null = null;
@@ -188,17 +193,20 @@ export class KeycloakAccountApiClient {
 
       // Get the backend URL - for local environment, use port 8888 with /api/v1 prefix
       const backendUrl = window.location.origin.replace('8080', '8888');
-      
-      const response = await fetch(`${backendUrl}/api/v1/user/me?name=${encodeURIComponent(fullName)}`, {
-        method: 'PATCH',
-        headers: {
-          Authorization: `Bearer ${sanitizedToken}`,
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-          'X-Requested-With': 'XMLHttpRequest', // Force preflight requests like frontend
-        },
-        credentials: 'include',
-      });
+
+      const response = await fetch(
+        `${backendUrl}/api/v1/user/me?name=${encodeURIComponent(fullName)}`,
+        {
+          method: 'PATCH',
+          headers: {
+            Authorization: `Bearer ${sanitizedToken}`,
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+            'X-Requested-With': 'XMLHttpRequest', // Force preflight requests like frontend
+          },
+          credentials: 'include',
+        }
+      );
 
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);

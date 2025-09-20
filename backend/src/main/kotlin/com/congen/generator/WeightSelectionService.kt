@@ -94,7 +94,6 @@ class WeightSelectionService(
         val exerciseMuscleMap = preparedData.exerciseMuscleMappings
 
         return Mono.just(Unit).flatMap {
-
             // Find the target exercise
             val targetExercise = allExercises.find { it.name == exerciseName }
             if (targetExercise == null) {
@@ -154,7 +153,7 @@ class WeightSelectionService(
         currentWeekNumber: Int
     ): Mono<TargetWeightResult> {
         val weightUnit = preparedData.weightUnitPreferences[exerciseName] ?: WeightUnit.KG
-        
+
         return if (isDynamicEffort) {
             val bandWeightResult =
                 bandWeightService.computeBandAndBarWeights(
@@ -175,8 +174,8 @@ class WeightSelectionService(
             }
         } else {
             supportedEquipmentWeightRoundingService.roundWeightForExercise(
-                exerciseName, 
-                calculatedWeight, 
+                exerciseName,
+                calculatedWeight,
                 weightUnit,
                 preparedData.exerciseEquipmentMappings
             ).map { roundedWeight ->
@@ -184,7 +183,7 @@ class WeightSelectionService(
                     targetWeight = roundedWeight,
                     band = null
                 )
-                }
+            }
         }
     }
 

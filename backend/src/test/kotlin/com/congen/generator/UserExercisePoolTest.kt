@@ -12,9 +12,6 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
-import org.mockito.kotlin.mock
-import org.mockito.kotlin.whenever
-import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
 import java.time.Instant
 
@@ -45,15 +42,16 @@ class UserExercisePoolTest {
         val exerciseEquipmentMappings = createSampleExerciseEquipmentMappings()
         val exerciseMuscleMappings = createSampleExerciseMuscleMappings()
 
-        userExercisePool = UserExercisePool(
-            allExercises = exercises,
-            preferences = preferences,
-            userEquipment = userEquipment,
-            exerciseEquipmentMappings = exerciseEquipmentMappings,
-            exerciseMuscleMappings = exerciseMuscleMappings,
-            previouslyUsedExercises = emptyList(),
-            userId = USER_ID
-        )
+        userExercisePool =
+            UserExercisePool(
+                allExercises = exercises,
+                preferences = preferences,
+                userEquipment = userEquipment,
+                exerciseEquipmentMappings = exerciseEquipmentMappings,
+                exerciseMuscleMappings = exerciseMuscleMappings,
+                previouslyUsedExercises = emptyList(),
+                userId = USER_ID
+            )
 
         assertEquals(3, userExercisePool.getAvailableExerciseCount())
         assertEquals(3, userExercisePool.getAvailableExercises().size)
@@ -65,26 +63,28 @@ class UserExercisePoolTest {
     fun `should filter out exercises that user wants to avoid`() {
         val exercises = createSampleExercises()
         val userEquipment = createSampleUserEquipment()
-        val preferences = listOf(
-            UserExercisePreference(
-                userId = USER_ID,
-                exerciseName = "Bench Press",
-                shouldAvoid = true,
-                createdAt = now
+        val preferences =
+            listOf(
+                UserExercisePreference(
+                    userId = USER_ID,
+                    exerciseName = "Bench Press",
+                    shouldAvoid = true,
+                    createdAt = now
+                )
             )
-        )
         val exerciseEquipmentMappings = createSampleExerciseEquipmentMappings()
         val exerciseMuscleMappings = createSampleExerciseMuscleMappings()
 
-        userExercisePool = UserExercisePool(
-            allExercises = exercises,
-            preferences = preferences,
-            userEquipment = userEquipment,
-            exerciseEquipmentMappings = exerciseEquipmentMappings,
-            exerciseMuscleMappings = exerciseMuscleMappings,
-            previouslyUsedExercises = emptyList(),
-            userId = USER_ID
-        )
+        userExercisePool =
+            UserExercisePool(
+                allExercises = exercises,
+                preferences = preferences,
+                userEquipment = userEquipment,
+                exerciseEquipmentMappings = exerciseEquipmentMappings,
+                exerciseMuscleMappings = exerciseMuscleMappings,
+                previouslyUsedExercises = emptyList(),
+                userId = USER_ID
+            )
 
         assertEquals(2, userExercisePool.getAvailableExerciseCount())
         assertFalse(userExercisePool.getAvailableExercises().any { it.name == "Bench Press" })
@@ -96,26 +96,28 @@ class UserExercisePoolTest {
     fun `should include exercises that user prefers`() {
         val exercises = createSampleExercises()
         val userEquipment = createSampleUserEquipment()
-        val preferences = listOf(
-            UserExercisePreference(
-                userId = USER_ID,
-                exerciseName = "Bench Press",
-                shouldAvoid = false,
-                createdAt = now
+        val preferences =
+            listOf(
+                UserExercisePreference(
+                    userId = USER_ID,
+                    exerciseName = "Bench Press",
+                    shouldAvoid = false,
+                    createdAt = now
+                )
             )
-        )
         val exerciseEquipmentMappings = createSampleExerciseEquipmentMappings()
         val exerciseMuscleMappings = createSampleExerciseMuscleMappings()
 
-        userExercisePool = UserExercisePool(
-            allExercises = exercises,
-            preferences = preferences,
-            userEquipment = userEquipment,
-            exerciseEquipmentMappings = exerciseEquipmentMappings,
-            exerciseMuscleMappings = exerciseMuscleMappings,
-            previouslyUsedExercises = emptyList(),
-            userId = USER_ID
-        )
+        userExercisePool =
+            UserExercisePool(
+                allExercises = exercises,
+                preferences = preferences,
+                userEquipment = userEquipment,
+                exerciseEquipmentMappings = exerciseEquipmentMappings,
+                exerciseMuscleMappings = exerciseMuscleMappings,
+                previouslyUsedExercises = emptyList(),
+                userId = USER_ID
+            )
 
         assertEquals(3, userExercisePool.getAvailableExerciseCount())
         assertTrue(userExercisePool.getAvailableExercises().any { it.name == "Bench Press" })
@@ -126,29 +128,32 @@ class UserExercisePoolTest {
     @Test
     fun `should filter exercises by equipment availability`() {
         val exercises = createSampleExercises()
-        val userEquipment = listOf(
-            UserEquipment(USER_ID, "power bar", now),
-            UserEquipment(USER_ID, "bench", now)
-        )
+        val userEquipment =
+            listOf(
+                UserEquipment(USER_ID, "power bar", now),
+                UserEquipment(USER_ID, "bench", now)
+            )
         val preferences = emptyList<UserExercisePreference>()
         val exerciseEquipmentMappings = createSampleExerciseEquipmentMappings()
         val exerciseMuscleMappings = createSampleExerciseMuscleMappings()
 
-        userExercisePool = UserExercisePool(
-            allExercises = exercises,
-            preferences = preferences,
-            userEquipment = userEquipment,
-            exerciseEquipmentMappings = exerciseEquipmentMappings,
-            exerciseMuscleMappings = exerciseMuscleMappings,
-            previouslyUsedExercises = emptyList(),
-            userId = USER_ID
-        )
+        userExercisePool =
+            UserExercisePool(
+                allExercises = exercises,
+                preferences = preferences,
+                userEquipment = userEquipment,
+                exerciseEquipmentMappings = exerciseEquipmentMappings,
+                exerciseMuscleMappings = exerciseMuscleMappings,
+                previouslyUsedExercises = emptyList(),
+                userId = USER_ID
+            )
 
-        val result = userExercisePool.filterExercisesByEquipment(
-            exercises = exercises,
-            isPrimaryExercise = false,
-            isUpperBody = true
-        )
+        val result =
+            userExercisePool.filterExercisesByEquipment(
+                exercises = exercises,
+                isPrimaryExercise = false,
+                isUpperBody = true
+            )
 
         StepVerifier.create(result)
             .expectNextCount(1)
@@ -163,20 +168,22 @@ class UserExercisePoolTest {
         val exerciseEquipmentMappings = createSampleExerciseEquipmentMappings()
         val exerciseMuscleMappings = createSampleExerciseMuscleMappings()
 
-        userExercisePool = UserExercisePool(
-            allExercises = exercises,
-            preferences = preferences,
-            userEquipment = userEquipment,
-            exerciseEquipmentMappings = exerciseEquipmentMappings,
-            exerciseMuscleMappings = exerciseMuscleMappings,
-            previouslyUsedExercises = emptyList(),
-            userId = USER_ID
-        )
+        userExercisePool =
+            UserExercisePool(
+                allExercises = exercises,
+                preferences = preferences,
+                userEquipment = userEquipment,
+                exerciseEquipmentMappings = exerciseEquipmentMappings,
+                exerciseMuscleMappings = exerciseMuscleMappings,
+                previouslyUsedExercises = emptyList(),
+                userId = USER_ID
+            )
 
-        val result = userExercisePool.filterExercisesByMuscles(
-            exercises = exercises,
-            targetMuscles = listOf("chest", "triceps")
-        )
+        val result =
+            userExercisePool.filterExercisesByMuscles(
+                exercises = exercises,
+                targetMuscles = listOf("chest", "triceps")
+            )
 
         StepVerifier.create(result)
             .expectNextCount(1)
@@ -192,15 +199,16 @@ class UserExercisePoolTest {
         val exerciseMuscleMappings = createSampleExerciseMuscleMappings()
         val previouslyUsedExercises = listOf("Bench Press", "Squat")
 
-        userExercisePool = UserExercisePool(
-            allExercises = exercises,
-            preferences = preferences,
-            userEquipment = userEquipment,
-            exerciseEquipmentMappings = exerciseEquipmentMappings,
-            exerciseMuscleMappings = exerciseMuscleMappings,
-            previouslyUsedExercises = previouslyUsedExercises,
-            userId = USER_ID
-        )
+        userExercisePool =
+            UserExercisePool(
+                allExercises = exercises,
+                preferences = preferences,
+                userEquipment = userEquipment,
+                exerciseEquipmentMappings = exerciseEquipmentMappings,
+                exerciseMuscleMappings = exerciseMuscleMappings,
+                previouslyUsedExercises = previouslyUsedExercises,
+                userId = USER_ID
+            )
 
         assertEquals(3, userExercisePool.getAvailableExerciseCount())
         assertTrue(userExercisePool.getAvailableExercises().any { it.name == "Bench Press" })
@@ -216,15 +224,16 @@ class UserExercisePoolTest {
         val exerciseEquipmentMappings = createSampleExerciseEquipmentMappings()
         val exerciseMuscleMappings = createSampleExerciseMuscleMappings()
 
-        userExercisePool = UserExercisePool(
-            allExercises = exercises,
-            preferences = preferences,
-            userEquipment = userEquipment,
-            exerciseEquipmentMappings = exerciseEquipmentMappings,
-            exerciseMuscleMappings = exerciseMuscleMappings,
-            previouslyUsedExercises = emptyList(),
-            userId = USER_ID
-        )
+        userExercisePool =
+            UserExercisePool(
+                allExercises = exercises,
+                preferences = preferences,
+                userEquipment = userEquipment,
+                exerciseEquipmentMappings = exerciseEquipmentMappings,
+                exerciseMuscleMappings = exerciseMuscleMappings,
+                previouslyUsedExercises = emptyList(),
+                userId = USER_ID
+            )
 
         assertEquals(USER_ID, userExercisePool.getUserId())
     }
@@ -237,15 +246,16 @@ class UserExercisePoolTest {
         val exerciseEquipmentMappings = createSampleExerciseEquipmentMappings()
         val exerciseMuscleMappings = createSampleExerciseMuscleMappings()
 
-        userExercisePool = UserExercisePool(
-            allExercises = exercises,
-            preferences = preferences,
-            userEquipment = userEquipment,
-            exerciseEquipmentMappings = exerciseEquipmentMappings,
-            exerciseMuscleMappings = exerciseMuscleMappings,
-            previouslyUsedExercises = emptyList(),
-            userId = USER_ID
-        )
+        userExercisePool =
+            UserExercisePool(
+                allExercises = exercises,
+                preferences = preferences,
+                userEquipment = userEquipment,
+                exerciseEquipmentMappings = exerciseEquipmentMappings,
+                exerciseMuscleMappings = exerciseMuscleMappings,
+                previouslyUsedExercises = emptyList(),
+                userId = USER_ID
+            )
 
         assertEquals(0, userExercisePool.getAvailableExerciseCount())
         assertTrue(userExercisePool.getAvailableExercises().isEmpty())
@@ -255,27 +265,29 @@ class UserExercisePoolTest {
 
     @Test
     fun `should handle exercises with different movement types`() {
-        val exercises = listOf(
-            Exercise("Bench Press", "Sample exercise description", MovementType.HORIZONTAL_PUSH, false, true, false),
-            Exercise("Squat", "Sample exercise description", MovementType.SQUAT, false, false, false),
-            Exercise("Deadlift", "Sample exercise description", MovementType.HINGE, false, false, false),
-            Exercise("Push-ups", "Sample exercise description", MovementType.HORIZONTAL_PUSH, false, true, true),
-            Exercise("Burpees", "Sample exercise description", MovementType.PLYOMETRIC, false, false, false)
-        )
+        val exercises =
+            listOf(
+                Exercise("Bench Press", "Sample exercise description", MovementType.HORIZONTAL_PUSH, false, true, false),
+                Exercise("Squat", "Sample exercise description", MovementType.SQUAT, false, false, false),
+                Exercise("Deadlift", "Sample exercise description", MovementType.HINGE, false, false, false),
+                Exercise("Push-ups", "Sample exercise description", MovementType.HORIZONTAL_PUSH, false, true, true),
+                Exercise("Burpees", "Sample exercise description", MovementType.PLYOMETRIC, false, false, false)
+            )
         val userEquipment = createSampleUserEquipment()
         val preferences = emptyList<UserExercisePreference>()
         val exerciseEquipmentMappings = createSampleExerciseEquipmentMappings()
         val exerciseMuscleMappings = createSampleExerciseMuscleMappings()
 
-        userExercisePool = UserExercisePool(
-            allExercises = exercises,
-            preferences = preferences,
-            userEquipment = userEquipment,
-            exerciseEquipmentMappings = exerciseEquipmentMappings,
-            exerciseMuscleMappings = exerciseMuscleMappings,
-            previouslyUsedExercises = emptyList(),
-            userId = USER_ID
-        )
+        userExercisePool =
+            UserExercisePool(
+                allExercises = exercises,
+                preferences = preferences,
+                userEquipment = userEquipment,
+                exerciseEquipmentMappings = exerciseEquipmentMappings,
+                exerciseMuscleMappings = exerciseMuscleMappings,
+                previouslyUsedExercises = emptyList(),
+                userId = USER_ID
+            )
 
         assertEquals(5, userExercisePool.getAvailableExerciseCount())
         assertEquals(4, userExercisePool.getAvailablePrimaryExercises().size)
@@ -308,18 +320,21 @@ class UserExercisePoolTest {
 
     private fun createSampleExerciseMuscleMappings(): Map<String, List<ExerciseMuscle>> {
         return mapOf(
-            "Bench Press" to listOf(
-                ExerciseMuscle("Bench Press", "chest"),
-                ExerciseMuscle("Bench Press", "triceps")
-            ),
-            "Squat" to listOf(
-                ExerciseMuscle("Squat", "quadriceps"),
-                ExerciseMuscle("Squat", "glutes")
-            ),
-            "Deadlift" to listOf(
-                ExerciseMuscle("Deadlift", "hamstrings"),
-                ExerciseMuscle("Deadlift", "glutes")
-            )
+            "Bench Press" to
+                listOf(
+                    ExerciseMuscle("Bench Press", "chest"),
+                    ExerciseMuscle("Bench Press", "triceps")
+                ),
+            "Squat" to
+                listOf(
+                    ExerciseMuscle("Squat", "quadriceps"),
+                    ExerciseMuscle("Squat", "glutes")
+                ),
+            "Deadlift" to
+                listOf(
+                    ExerciseMuscle("Deadlift", "hamstrings"),
+                    ExerciseMuscle("Deadlift", "glutes")
+                )
         )
     }
 }

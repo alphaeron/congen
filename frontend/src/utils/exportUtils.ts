@@ -1,12 +1,12 @@
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
+
 import type {
   ProgrammedWorkoutWithStages,
   ProgramWithWorkouts,
   UserWeightUnitPreference,
 } from '../api/types';
 import { capitalizeEachWord } from '../common/utils';
-
 
 export interface ExportOptions {
   title: string;
@@ -29,14 +29,14 @@ const formatWeightWithUnit = (weight: number, unit: 'KG' | 'LBS'): string => {
 const sanitizeText = (text: string): string => {
   if (!text) return '';
   // Replace any non-standard dashes with standard ASCII hyphen
-  let sanitized = text
+  const sanitized = text
     .replace(/[–—]/g, '-') // Replace en-dash and em-dash with standard hyphen
     .replace(/[\u2010-\u2015]/g, '-') // Replace various Unicode dash characters
     .trim();
-  
+
   // Only remove characters that could cause PDF formatting issues
   // Keep all common exercise name characters: letters, numbers, spaces, hyphens, periods, forward slashes, parentheses
-  return sanitized.replace(/[^\w\s\-\.\/\(\)]/g, '').trim();
+  return sanitized.replace(/[^\w\s\-./()]/g, '').trim();
 };
 
 /**
@@ -79,9 +79,6 @@ const EXERCISE_DIFFICULTY_COLORS = {
   default: [255, 255, 255] as [number, number, number], // White
 };
 
-
-
-
 /**
  * Determine exercise difficulty/stage type for color coding
  */
@@ -102,50 +99,48 @@ const prepareWorkoutTableData = (
   weightUnitPreferences: UserWeightUnitPreference[]
 ): string[][] => {
   const tableData: string[][] = [];
-  
-  workout.stages.forEach((stage) => {
+
+  workout.stages.forEach(stage => {
     // Add stage name as a full-width row
     tableData.push([sanitizeText(stage.stage.name), '', '', '', '', '']); // Sanitize to ensure proper dash rendering
-    
-    stage.exercises.forEach((exercise) => {
+
+    stage.exercises.forEach(exercise => {
       const exerciseName = sanitizeText(exercise.exercise.exercise_name); // Sanitize to ensure proper dash rendering
       const totalSets = exercise.set_schemes.length;
-      
+
       // Get the first set scheme for reps, weight, and rest (assuming they're consistent)
       const firstSetScheme = exercise.set_schemes[0];
-      const weightUnit = weightUnitPreferences.find(
-        pref => pref.user_id === '1' // Default user ID for weight unit preferences
-      )?.preferred_unit || 'KG';
-      
+      const weightUnit =
+        weightUnitPreferences.find(
+          pref => pref.user_id === '1' // Default user ID for weight unit preferences
+        )?.preferred_unit || 'KG';
+
       tableData.push([
         exerciseName,
         totalSets.toString(),
         firstSetScheme.target_rep_count?.toString() || '0',
         formatWeightWithUnit(firstSetScheme.target_weight || 0, weightUnit as 'KG' | 'LBS'),
         firstSetScheme.rest_seconds?.toString() || '0',
-        '' // No notes field in SetScheme interface
+        '', // No notes field in SetScheme interface
       ]);
     });
   });
-  
+
   return tableData;
 };
 
 /**
  * Add cover page to PDF
  */
-const addCoverPage = (
-  pdf: jsPDF,
-  programData: ProgramWithWorkouts
-): void => {
+const addCoverPage = (pdf: jsPDF, programData: ProgramWithWorkouts): void => {
   // Insert cover page at the beginning
   pdf.insertPage(1);
   pdf.setPage(1);
-  
+
   // Set background color (light gray)
   pdf.setFillColor(248, 250, 252);
   pdf.rect(0, 0, 210, 297, 'F');
-  
+
   // Main title - Program name
   pdf.setFontSize(28);
   pdf.setFont('helvetica', 'bold');
@@ -154,7 +149,7 @@ const addCoverPage = (
   const titleWidth = pdf.getTextWidth(programName);
   const titleX = (210 - titleWidth) / 2; // Center horizontally
   pdf.text(programName, titleX, 120);
-  
+
   // Subtitle
   pdf.setFontSize(16);
   pdf.setFont('helvetica', 'normal');
@@ -163,35 +158,35 @@ const addCoverPage = (
   const subtitleWidth = pdf.getTextWidth(subtitle);
   const subtitleX = (210 - subtitleWidth) / 2;
   pdf.text(subtitle, subtitleX, 140);
-  
+
   // Program details box
   const boxY = 180;
   const boxHeight = 45; // Reduced height since we removed Program ID
   const boxWidth = 150;
   const boxX = (210 - boxWidth) / 2;
-  
+
   // Box background - using Congen lighter orange
   pdf.setFillColor(255, 237, 213); // secondary.100: '#ffedd5'
   pdf.setDrawColor(226, 232, 240);
   pdf.setLineWidth(0.5);
   pdf.roundedRect(boxX, boxY, boxWidth, boxHeight, 8, 8, 'FD');
-  
+
   // Box content
   pdf.setFontSize(12);
   pdf.setFont('helvetica', 'normal');
   pdf.setTextColor(71, 85, 105);
-  
+
   const details = [
     `Current Week: ${programData.program.current_week_number}`,
     `Created: ${programData.program.created_at.toLocaleDateString()}`,
-    `Status: ${programData.program.is_active ? 'Active' : 'Inactive'}`
+    `Status: ${programData.program.is_active ? 'Active' : 'Inactive'}`,
   ];
-  
+
   details.forEach((detail, index) => {
-    const detailY = boxY + 15 + (index * 8);
+    const detailY = boxY + 15 + index * 8;
     pdf.text(detail, boxX + 15, detailY);
   });
-  
+
   // Footer
   pdf.setFontSize(10);
   pdf.setFont('helvetica', 'italic');
@@ -212,27 +207,27 @@ const addTableOfContentsPage = (
   // Insert TOC page at page 2 (after cover page)
   pdf.insertPage(2);
   pdf.setPage(2);
-  
+
   // TOC Header
   pdf.setFontSize(18);
   pdf.setFont('helvetica', 'bold');
   pdf.setTextColor(14, 165, 233); // Congen brand blue
   pdf.text('Table of Contents', 20, 30);
-  
+
   // TOC Entries
   pdf.setFontSize(12);
   pdf.setFont('helvetica', 'normal');
   pdf.setTextColor(0, 0, 0); // Black text
-  
+
   let yPosition = 50;
   const lineHeight = 8;
-  
+
   tocEntries.forEach(entry => {
     const indent = entry.level * 15; // 15mm indent per level
     const title = entry.title;
     // Page numbers are already correct since we track them during content generation
     const pageNum = entry.page.toString();
-    
+
     // Add title with link
     const titleWidth = pdf.getTextWidth(title);
     const availableWidth = 170 - indent - 20; // Total width minus indent and right margin
@@ -240,10 +235,10 @@ const addTableOfContentsPage = (
     const pageWidth = pdf.getTextWidth(pageNum);
     const dotsNeeded = Math.floor((availableWidth - titleWidth - pageWidth) / dotsWidth);
     const dots = '.'.repeat(Math.max(1, dotsNeeded));
-    
+
     // Create the full TOC line text
     const fullText = title + dots + pageNum;
-    
+
     // Add clickable link using textWithLink
     if (entry.anchor) {
       const targetY = entry.level === 1 ? 20 : 28;
@@ -251,7 +246,7 @@ const addTableOfContentsPage = (
     } else {
       pdf.text(fullText, 20 + indent, yPosition);
     }
-    
+
     yPosition += lineHeight;
   });
 };
@@ -272,7 +267,9 @@ const addWeekDetailsToPDF = (
   tocEntries?: Array<{ title: string; page: number; level: number; anchor?: string }> // Optional for program export
 ): number => {
   let currentY = startY;
-  let currentPage = (pdf as any).internal.getCurrentPageInfo().pageNumber;
+  let currentPage = (
+    pdf as { internal: { getCurrentPageInfo: () => { pageNumber: number } } }
+  ).internal.getCurrentPageInfo().pageNumber;
 
   // Add week header
   pdf.setFontSize(18);
@@ -283,11 +280,11 @@ const addWeekDetailsToPDF = (
 
   // Add TOC entry for week if provided
   if (tocEntries) {
-    tocEntries.push({ 
-      title: `Week ${weekNumber}`, 
-      page: currentPage, 
+    tocEntries.push({
+      title: `Week ${weekNumber}`,
+      page: currentPage,
       level: 1,
-      anchor: `week-${weekNumber}`
+      anchor: `week-${weekNumber}`,
     });
   }
 
@@ -300,31 +297,41 @@ const addWeekDetailsToPDF = (
     if (index > 0) {
       pdf.addPage();
       currentY = 20;
-      currentPage = (pdf as any).internal.getCurrentPageInfo().pageNumber;
+      currentPage = (
+        pdf as { internal: { getCurrentPageInfo: () => { pageNumber: number } } }
+      ).internal.getCurrentPageInfo().pageNumber;
     } else {
       // For the first workout, check if we need a new page
       if (currentY > 200) {
         pdf.addPage();
         currentY = 20;
-        currentPage = (pdf as any).internal.getCurrentPageInfo().pageNumber;
+        currentPage = (
+          pdf as { internal: { getCurrentPageInfo: () => { pageNumber: number } } }
+        ).internal.getCurrentPageInfo().pageNumber;
       }
     }
-    
+
     // Add TOC entry for day if provided
     if (tocEntries) {
       const workoutAnchor = `workout-${workout.workout.id}`;
-      tocEntries.push({ 
-        title: capitalizeEachWord(workout.workout.name), 
-        page: currentPage, 
+      tocEntries.push({
+        title: capitalizeEachWord(workout.workout.name),
+        page: currentPage,
         level: 2,
-        anchor: workoutAnchor
+        anchor: workoutAnchor,
       });
     }
-    
+
     // Prepare and add table
     const tableData = prepareWorkoutTableData(workout, weightUnitPreferences);
     const workoutAnchor = `workout-${workout.workout.id}`;
-    currentY = addPDFTable(pdf, tableData, currentY, capitalizeEachWord(workout.workout.name), workoutAnchor);
+    currentY = addPDFTable(
+      pdf,
+      tableData,
+      currentY,
+      capitalizeEachWord(workout.workout.name),
+      workoutAnchor
+    );
   });
 
   return currentY;
@@ -333,15 +340,9 @@ const addWeekDetailsToPDF = (
 /**
  * Add PDF table with modern Congen styling
  */
-const addPDFTable = (
-  pdf: jsPDF,
-  tableData: string[][],
-  startY: number,
-  title?: string,
-  anchorId?: string
-): number => {
+const addPDFTable = (pdf: jsPDF, tableData: string[][], startY: number, title?: string): number => {
   const tableHeaders = ['Exercise', 'Sets', 'Reps', 'Weight', 'Rest (s)', 'Notes'];
-  
+
   if (title) {
     pdf.setFontSize(14);
     pdf.setFont('helvetica', 'bold');
@@ -350,11 +351,11 @@ const addPDFTable = (
     pdf.setTextColor(0, 0, 0); // Reset to black
     startY += 8; // Consistent spacing after title
   }
-  
+
   // Keep original table data for processing
   const processedTableData = tableData;
-  
-  const result = autoTable(pdf, {
+
+  autoTable(pdf, {
     head: [tableHeaders],
     body: processedTableData,
     startY,
@@ -364,32 +365,40 @@ const addPDFTable = (
     showHead: 'everyPage',
     showFoot: 'never',
     // Use full available width
-    tableWidth: '100%' as any,
+    tableWidth: '100%' as const,
     // Use percentage-based column widths that fill the entire available space
     columnStyles: {
-      0: { cellWidth: '42%' as any, halign: 'left' as const }, // Exercise
-      1: { cellWidth: '12%' as any, halign: 'center' as const }, // Sets
-      2: { cellWidth: '12%' as any, halign: 'center' as const }, // Reps
-      3: { cellWidth: '15%' as any, halign: 'center' as const }, // Weight
-      4: { cellWidth: '15%' as any, halign: 'center' as const }, // Rest
-      5: { cellWidth: '19%' as any, halign: 'left' as const }, // Notes
+      0: { cellWidth: '42%' as const, halign: 'left' as const }, // Exercise
+      1: { cellWidth: '12%' as const, halign: 'center' as const }, // Sets
+      2: { cellWidth: '12%' as const, halign: 'center' as const }, // Reps
+      3: { cellWidth: '15%' as const, halign: 'center' as const }, // Weight
+      4: { cellWidth: '15%' as const, halign: 'center' as const }, // Rest
+      5: { cellWidth: '19%' as const, halign: 'left' as const }, // Notes
     },
-    didParseCell: (data: any) => {
+    didParseCell: (data: {
+      section: string;
+      row: { index: number };
+      column: { index: number };
+    }) => {
       // Don't modify header rows - let headStyles handle them
       if (data.section === 'head') {
         return;
       }
-      
+
       // Check if this is a stage name row (has empty cells in other columns)
-      const isStageRow = data.row.raw[1] === '' && data.row.raw[2] === '' && 
-                        data.row.raw[3] === '' && data.row.raw[4] === '' && data.row.raw[5] === '';
-      
+      const isStageRow =
+        data.row.raw[1] === '' &&
+        data.row.raw[2] === '' &&
+        data.row.raw[3] === '' &&
+        data.row.raw[4] === '' &&
+        data.row.raw[5] === '';
+
       if (isStageRow) {
         if (data.column.index === 0) {
           // Get stage type for color coding
           const stageType = getExerciseStageType(data.row.raw[0]);
           const stageColor = EXERCISE_DIFFICULTY_COLORS[stageType];
-          
+
           // Style the stage name cell with difficulty-based colors
           data.cell.styles.fontStyle = 'bold';
           data.cell.styles.fontSize = 10;
@@ -414,13 +423,13 @@ const addPDFTable = (
       }
     },
   });
-  
+
   // Return actual final Y position with proper spacing after table
-  const finalY = (pdf as any).lastAutoTable?.finalY || (startY + (tableData.length * 6) + 20);
+  const finalY =
+    (pdf as { lastAutoTable?: { finalY: number } }).lastAutoTable?.finalY ||
+    startY + tableData.length * 6 + 20;
   return finalY + 4; // Reduced spacing after table
 };
-
-
 
 /**
  * Open PDF file in browser
@@ -429,10 +438,10 @@ const downloadPDFFile = (pdf: jsPDF, filename: string): void => {
   // Create a blob URL and open in new tab instead of downloading
   const pdfBlob = pdf.output('blob');
   const pdfUrl = URL.createObjectURL(pdfBlob);
-  
+
   // Open PDF in new tab
   const newWindow = window.open(pdfUrl, '_blank');
-  
+
   // Clean up the blob URL after a delay to allow the browser to load it
   if (newWindow) {
     setTimeout(() => {
@@ -451,7 +460,7 @@ const downloadPDFFile = (pdf: jsPDF, filename: string): void => {
 const openPrintDialog = async (pdf: jsPDF): Promise<void> => {
   const pdfBlob = pdf.output('blob');
   const pdfUrl = URL.createObjectURL(pdfBlob);
-  
+
   try {
     const printWindow = window.open(pdfUrl, '_blank');
     if (printWindow) {
@@ -462,7 +471,7 @@ const openPrintDialog = async (pdf: jsPDF): Promise<void> => {
     } else {
       throw new Error('Popup blocked. PDF has been downloaded instead.');
     }
-  } catch (error) {
+  } catch {
     // Fallback: download the PDF
     const link = document.createElement('a');
     link.href = pdfUrl;
@@ -483,15 +492,14 @@ export const exportWorkoutToPDF = async (
   options: ExportOptions
 ): Promise<void> => {
   const pdf = new jsPDF('p', 'mm', 'a4');
-  
+
   // Create a single-workout array and use helper function
   const singleWorkoutArray = [workoutData];
   const weekNumber = Math.ceil(workoutData.workout.day_number / 7);
   addWeekDetailsToPDF(pdf, weekNumber, singleWorkoutArray, 20, weightUnitPreferences);
-  
+
   downloadPDFFile(pdf, options.filename);
 };
-
 
 /**
  * Export week workouts to PDF
@@ -502,14 +510,13 @@ export const exportWeekToPDF = async (
   options: ExportOptions
 ): Promise<void> => {
   const pdf = new jsPDF('p', 'mm', 'a4');
-  
+
   // Use helper function to add week details (assuming week 1 for single week export)
   const weekNumber = 1;
   addWeekDetailsToPDF(pdf, weekNumber, weekWorkouts, 20, weightUnitPreferences);
-  
+
   downloadPDFFile(pdf, options.filename);
 };
-
 
 /**
  * Export program workouts to PDF
@@ -520,24 +527,23 @@ export const exportProgramToPDF = async (
   options: ExportOptions
 ): Promise<void> => {
   const pdf = new jsPDF('p', 'mm', 'a4');
-  
+
   // Set document metadata for professional appearance
   pdf.setProperties({
     title: `${programData.program.name} - Training Program`,
     author: 'Congen Fitness',
     subject: 'Workout Program',
     keywords: 'fitness, workout, training, exercise, program',
-    creator: 'Congen App'
+    creator: 'Congen App',
   });
-  
+
   let currentY = 20;
-  let currentPage = 1;
-  
+
   // Collect TOC entries with page numbers and destinations
   const tocEntries: Array<{ title: string; page: number; level: number; anchor?: string }> = [];
-  
+
   // Title is now on cover page, no need to add it here
-  
+
   // Group workouts by week
   const workoutsByWeek = new Map<number, ProgrammedWorkoutWithStages[]>();
   programData.workouts.forEach(workout => {
@@ -547,67 +553,75 @@ export const exportProgramToPDF = async (
     }
     workoutsByWeek.get(weekNumber)!.push(workout);
   });
-  
+
   // Sort weeks
   const sortedWeeks = Array.from(workoutsByWeek.keys()).sort((a, b) => a - b);
-  
+
   // Generate content and track page numbers
-  sortedWeeks.forEach((weekNumber) => {
+  sortedWeeks.forEach(weekNumber => {
     const weekWorkouts = workoutsByWeek.get(weekNumber)!;
-    
+
     // Check if we need a new page
     if (currentY > 180) {
       pdf.addPage();
       currentY = 20;
       currentPage++;
     }
-    
+
     // Use helper function to add week details
-    currentY = addWeekDetailsToPDF(pdf, weekNumber, weekWorkouts, currentY, weightUnitPreferences, tocEntries);
+    currentY = addWeekDetailsToPDF(
+      pdf,
+      weekNumber,
+      weekWorkouts,
+      currentY,
+      weightUnitPreferences,
+      tocEntries
+    );
   });
-  
+
   // Add cover page and table of contents at the beginning
   addCoverPage(pdf, programData);
-  
+
   // Adjust TOC entry page numbers to account for the 2 inserted pages (cover + TOC)
   const adjustedTocEntries = tocEntries.map(entry => ({
     ...entry,
-    page: entry.page + 2 // Add 2 for cover page and TOC page
+    page: entry.page + 2, // Add 2 for cover page and TOC page
   }));
-  
+
   addTableOfContentsPage(pdf, adjustedTocEntries);
-  
+
   // Add page numbers to all pages (except cover page)
-  const totalPages = (pdf as any).internal.getNumberOfPages();
-  for (let i = 2; i <= totalPages; i++) { // Start from page 2 (skip cover page)
+  const totalPages = (
+    pdf as { internal: { getNumberOfPages: () => number } }
+  ).internal.getNumberOfPages();
+  for (let i = 2; i <= totalPages; i++) {
+    // Start from page 2 (skip cover page)
     pdf.setPage(i);
     pdf.setFontSize(8);
     pdf.setFont('helvetica', 'normal');
     pdf.setTextColor(156, 163, 175); // Gray color
     pdf.text(`Page ${i - 1} of ${totalPages - 1}`, 190, 290, { align: 'right' }); // -1 to exclude cover page from count
   }
-  
+
   // Note: PDF outline/bookmarks not available in standard jsPDF
-  
+
   downloadPDFFile(pdf, options.filename);
 };
-
 
 /**
  * Print a workout by generating PDF and opening print dialog
  */
 export const printWorkout = async (
   workoutData: ProgrammedWorkoutWithStages,
-  weightUnitPreferences: UserWeightUnitPreference[],
-  options: ExportOptions
+  weightUnitPreferences: UserWeightUnitPreference[]
 ): Promise<void> => {
   const pdf = new jsPDF('p', 'mm', 'a4');
-  
+
   // Create a single-workout array and use helper function
   const singleWorkoutArray = [workoutData];
   const weekNumber = Math.ceil(workoutData.workout.day_number / 7);
   addWeekDetailsToPDF(pdf, weekNumber, singleWorkoutArray, 20, weightUnitPreferences);
-  
+
   await openPrintDialog(pdf);
 };
 
@@ -616,15 +630,14 @@ export const printWorkout = async (
  */
 export const printWeekWorkouts = async (
   weekWorkouts: ProgrammedWorkoutWithStages[],
-  weightUnitPreferences: UserWeightUnitPreference[],
-  options: ExportOptions
+  weightUnitPreferences: UserWeightUnitPreference[]
 ): Promise<void> => {
   const pdf = new jsPDF('p', 'mm', 'a4');
-  
+
   // Use helper function to add week details (assuming week 1 for single week export)
   const weekNumber = 1;
   addWeekDetailsToPDF(pdf, weekNumber, weekWorkouts, 20, weightUnitPreferences);
-  
+
   await openPrintDialog(pdf);
 };
 
@@ -633,18 +646,16 @@ export const printWeekWorkouts = async (
  */
 export const printProgramWorkouts = async (
   programData: ProgramWithWorkouts,
-  weightUnitPreferences: UserWeightUnitPreference[],
-  options: ExportOptions
+  weightUnitPreferences: UserWeightUnitPreference[]
 ): Promise<void> => {
   const pdf = new jsPDF('p', 'mm', 'a4');
   let currentY = 20;
-  let currentPage = 1;
-  
+
   // Collect TOC entries with page numbers and destinations
   const tocEntries: Array<{ title: string; page: number; level: number; anchor?: string }> = [];
-  
+
   // Title is now on cover page, no need to add it here
-  
+
   // Group workouts by week
   const workoutsByWeek = new Map<number, ProgrammedWorkoutWithStages[]>();
   programData.workouts.forEach(workout => {
@@ -654,37 +665,44 @@ export const printProgramWorkouts = async (
     }
     workoutsByWeek.get(week)!.push(workout);
   });
-  
+
   // Sort weeks
   const sortedWeeks = Array.from(workoutsByWeek.keys()).sort((a, b) => a - b);
-  
+
   // Generate content and track page numbers
   sortedWeeks.forEach(week => {
     const weekWorkouts = workoutsByWeek.get(week)!;
-    
+
     // Check if we need a new page
     if (currentY > 180) {
       pdf.addPage();
       currentY = 20;
       currentPage++;
     }
-    
+
     // Use helper function to add week details
-    currentY = addWeekDetailsToPDF(pdf, week, weekWorkouts, currentY, weightUnitPreferences, tocEntries);
+    currentY = addWeekDetailsToPDF(
+      pdf,
+      week,
+      weekWorkouts,
+      currentY,
+      weightUnitPreferences,
+      tocEntries
+    );
   });
-  
+
   // Add cover page and table of contents at the beginning
   addCoverPage(pdf, programData);
-  
+
   // Adjust TOC entry page numbers to account for the 2 inserted pages (cover + TOC)
   const adjustedTocEntries = tocEntries.map(entry => ({
     ...entry,
-    page: entry.page + 2 // Add 2 for cover page and TOC page
+    page: entry.page + 2, // Add 2 for cover page and TOC page
   }));
-  
+
   addTableOfContentsPage(pdf, adjustedTocEntries);
-  
+
   // Note: PDF outline/bookmarks not available in standard jsPDF
-  
+
   await openPrintDialog(pdf);
 };

@@ -33,9 +33,7 @@ export const getUserExercisePool = (): Promise<UserExercisePoolResponse> => {
  * @param programId The ID of the program to update
  * @returns Promise containing the updated program
  */
-export const updateWorkoutWithOneRepMax = (
-  programId: number
-): Promise<Program> => {
+export const updateWorkoutWithOneRepMax = (programId: number): Promise<Program> => {
   return REQUEST({
     method: 'PATCH',
     url: `/conjugate_workout_generator/${programId}/update_with_1rm`,

@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import { Edit, Save, Cancel, FitnessCenter, Delete } from '@mui/icons-material';
 import {
   Box,
   IconButton,
@@ -10,19 +10,14 @@ import {
   Alert,
   CircularProgress,
 } from '@mui/material';
-import {
-  Edit,
-  Save,
-  Cancel,
-  FitnessCenter,
-  Delete,
-} from '@mui/icons-material';
-import { useSnackbar } from 'notistack';
 import { useForm } from '@tanstack/react-form';
-import { updateSetScheme } from '../api/setScheme';
+import { useSnackbar } from 'notistack';
+import React, { useState } from 'react';
+
+import { SetSchemeForm } from './SetSchemeForm';
 import { deleteProgrammedExercise } from '../api/programmedExercise';
-import { SetSchemeForm, type SetSchemeFormData } from './SetSchemeForm';
-import type { ProgrammedExerciseWithSetSchemes, SetScheme, UserWeightUnitPreference } from '../api/types';
+import { updateSetScheme } from '../api/setScheme';
+import type { ProgrammedExerciseWithSetSchemes, UserWeightUnitPreference } from '../api/types';
 
 interface SetSchemeEditorProps {
   exercise: ProgrammedExerciseWithSetSchemes;
@@ -56,7 +51,11 @@ export const SetSchemeEditor: React.FC<SetSchemeEditorProps> = ({
   };
 
   const handleDelete = async () => {
-    if (!window.confirm(`Are you sure you want to delete "${exercise.exercise.exercise_name}"? This action cannot be undone.`)) {
+    if (
+      !window.confirm(
+        `Are you sure you want to delete "${exercise.exercise.exercise_name}"? This action cannot be undone.`
+      )
+    ) {
       return;
     }
 
@@ -68,7 +67,7 @@ export const SetSchemeEditor: React.FC<SetSchemeEditorProps> = ({
       handleClose();
 
       // Call the update callback to refresh the parent component
-      onExerciseUpdate(null as any); // This will trigger a refresh
+      onExerciseUpdate(null as unknown as ProgrammedExerciseWithSetSchemes); // This will trigger a refresh
     } catch {
       enqueueSnackbar('Failed to delete exercise', { variant: 'error' });
     } finally {
@@ -80,7 +79,9 @@ export const SetSchemeEditor: React.FC<SetSchemeEditorProps> = ({
   const firstSetScheme = exercise.set_schemes[0];
 
   // Get user's weight unit preference for this exercise
-  const weightUnitPreference = weightUnitPreferences.find(pref => pref.exercise_name === exercise.exercise.exercise_name);
+  const weightUnitPreference = weightUnitPreferences.find(
+    pref => pref.exercise_name === exercise.exercise.exercise_name
+  );
   const preferredUnit = weightUnitPreference?.preferred_unit;
 
   // Convert weight values for storage
@@ -102,8 +103,12 @@ export const SetSchemeEditor: React.FC<SetSchemeEditorProps> = ({
   const form = useForm({
     defaultValues: {
       totalSets: exercise.set_schemes.length,
-      targetWeight: firstSetScheme?.target_weight ? convertWeightForDisplay(firstSetScheme.target_weight) : 0,
-      performedWeight: firstSetScheme?.performed_weight ? convertWeightForDisplay(firstSetScheme.performed_weight) : undefined,
+      targetWeight: firstSetScheme?.target_weight
+        ? convertWeightForDisplay(firstSetScheme.target_weight)
+        : 0,
+      performedWeight: firstSetScheme?.performed_weight
+        ? convertWeightForDisplay(firstSetScheme.performed_weight)
+        : undefined,
       targetReps: firstSetScheme?.target_rep_count || 0,
       performedReps: firstSetScheme?.performed_rep_count || undefined,
       restSeconds: firstSetScheme?.rest_seconds || 0,
@@ -165,7 +170,7 @@ export const SetSchemeEditor: React.FC<SetSchemeEditorProps> = ({
         onExerciseUpdate(updatedExercise);
         setAnchorEl(null);
         enqueueSnackbar('Exercise updated successfully', { variant: 'success' });
-      } catch (error) {
+      } catch {
         enqueueSnackbar('Failed to update exercise', { variant: 'error' });
       } finally {
         setSaving(false);
@@ -174,15 +179,12 @@ export const SetSchemeEditor: React.FC<SetSchemeEditorProps> = ({
   });
 
   return (
-    <>
-      <Tooltip title={isMostRecentWeek ? "Edit exercise" : "Editing only available for most recent week"}>
+    <React.Fragment>
+      <Tooltip
+        title={isMostRecentWeek ? 'Edit exercise' : 'Editing only available for most recent week'}
+      >
         {isMostRecentWeek ? (
-          <IconButton
-            size="small"
-            onClick={handleClick}
-            color="primary"
-            aria-label="Edit exercise"
-          >
+          <IconButton size="small" onClick={handleClick} color="primary" aria-label="Edit exercise">
             <Edit fontSize="small" />
           </IconButton>
         ) : (
@@ -213,7 +215,7 @@ export const SetSchemeEditor: React.FC<SetSchemeEditorProps> = ({
           horizontal: 'left',
         }}
         PaperProps={{
-          sx: { width: 600, maxHeight: 700 }
+          sx: { width: 600, maxHeight: 700 },
         }}
       >
         <Box sx={{ p: 2 }}>
@@ -229,7 +231,7 @@ export const SetSchemeEditor: React.FC<SetSchemeEditorProps> = ({
           </Alert>
 
           <form
-            onSubmit={(e) => {
+            onSubmit={e => {
               e.preventDefault();
               e.stopPropagation();
               form.handleSubmit();
@@ -245,12 +247,18 @@ export const SetSchemeEditor: React.FC<SetSchemeEditorProps> = ({
                 showTempoFields={true}
                 showSetTypeFields={true}
               />
-
             </Box>
 
             <Divider sx={{ my: 2 }} />
 
-            <Box sx={{ display: 'flex', gap: 1, justifyContent: 'space-between', alignItems: 'center' }}>
+            <Box
+              sx={{
+                display: 'flex',
+                gap: 1,
+                justifyContent: 'space-between',
+                alignItems: 'center',
+              }}
+            >
               <Button
                 onClick={handleDelete}
                 disabled={saving}
@@ -262,11 +270,7 @@ export const SetSchemeEditor: React.FC<SetSchemeEditorProps> = ({
               </Button>
 
               <Box sx={{ display: 'flex', gap: 1 }}>
-                <Button
-                  onClick={handleClose}
-                  disabled={saving}
-                  startIcon={<Cancel />}
-                >
+                <Button onClick={handleClose} disabled={saving} startIcon={<Cancel />}>
                   Cancel
                 </Button>
                 <Button
@@ -282,6 +286,6 @@ export const SetSchemeEditor: React.FC<SetSchemeEditorProps> = ({
           </form>
         </Box>
       </Popover>
-    </>
+    </React.Fragment>
   );
 };

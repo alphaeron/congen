@@ -4,8 +4,8 @@ import { ResponsivePie } from '@nivo/pie';
 import React, { useState, useMemo } from 'react';
 
 import type { UserExercisePoolResponse } from '../api/types';
-import { createCongenNivoTheme, congenColorSchemes } from '../theme/nivoTheme';
 import { capitalizeEachWord } from '../common/utils';
+import { createCongenNivoTheme, congenColorSchemes } from '../theme/nivoTheme';
 
 interface ExercisePoolPieChartProps {
   exercisePoolData: UserExercisePoolResponse | null;
@@ -34,7 +34,7 @@ export const ExercisePoolPieChart: React.FC<ExercisePoolPieChartProps> = ({
 }) => {
   const theme = useTheme();
   const nivoTheme = createCongenNivoTheme(theme.palette.mode);
-  const [selectedItems, setSelectedItems] = useState<string[]>([]);
+  const [selectedItems] = useState<string[]>([]);
 
   // Prepare chart data
   const chartData = useMemo(() => {

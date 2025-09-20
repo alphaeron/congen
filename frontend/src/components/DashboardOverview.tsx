@@ -22,7 +22,6 @@ import type {
   ProgrammedExerciseWithSetSchemes,
   SetScheme,
   UserDataExport,
-  UserWeightUnitPreference,
 } from '../api/types';
 import { getUserOneRepMaxes } from '../api/userOneRepMax';
 import { getUserWeightUnitPreferences } from '../api/userWeightUnitPreference';
@@ -53,9 +52,6 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ user }) =>
   const [userData, setUserData] = useState<UserDataExport | null>(null);
   const [exerciseData, setExerciseData] = useState<Map<string, Exercise>>(new Map());
   const [isLoading, setIsLoading] = useState(true);
-  const [weightUnitPreferences, setWeightUnitPreferences] = useState<UserWeightUnitPreference[]>(
-    []
-  );
 
   const handleActiveProgramClick = () => {
     if (activeProgram) {
@@ -199,26 +195,28 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ user }) =>
   return (
     <React.Fragment>
       {/* User Status System */}
-      <UserStatusSystem
-        user={user}
-        userData={userData}
-        oneRepMaxes={oneRepMaxes}
-      />
+      <UserStatusSystem user={user} userData={userData} oneRepMaxes={oneRepMaxes} />
 
       {/* Key Performance Indicators */}
       <Card sx={{ mb: 3 }}>
         <CardContent>
           <Box display="flex" alignItems="center" gap={1} sx={{ mb: 2 }}>
-            <Typography variant="h6">
-              Key Performance Indicators
-            </Typography>
+            <Typography variant="h6">Key Performance Indicators</Typography>
             <Typography variant="body2" color="text.secondary">
               • Your training overview
             </Typography>
           </Box>
           <Grid container spacing={2}>
             <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-              <Box textAlign="center" sx={{ p: 2, borderRadius: 1, backgroundColor: 'primary.light', color: 'primary.contrastText' }}>
+              <Box
+                textAlign="center"
+                sx={{
+                  p: 2,
+                  borderRadius: 1,
+                  backgroundColor: 'primary.light',
+                  color: 'primary.contrastText',
+                }}
+              >
                 <Typography variant="h4" fontWeight="bold">
                   {totalWorkouts}
                 </Typography>
@@ -228,7 +226,15 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ user }) =>
               </Box>
             </Grid>
             <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-              <Box textAlign="center" sx={{ p: 2, borderRadius: 1, backgroundColor: 'secondary.light', color: 'secondary.contrastText' }}>
+              <Box
+                textAlign="center"
+                sx={{
+                  p: 2,
+                  borderRadius: 1,
+                  backgroundColor: 'secondary.light',
+                  color: 'secondary.contrastText',
+                }}
+              >
                 <Typography variant="h4" fontWeight="bold">
                   {Math.round(totalVolume / 1000)}k
                 </Typography>
@@ -238,7 +244,15 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ user }) =>
               </Box>
             </Grid>
             <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-              <Box textAlign="center" sx={{ p: 2, borderRadius: 1, backgroundColor: 'success.light', color: 'success.contrastText' }}>
+              <Box
+                textAlign="center"
+                sx={{
+                  p: 2,
+                  borderRadius: 1,
+                  backgroundColor: 'success.light',
+                  color: 'success.contrastText',
+                }}
+              >
                 <Typography variant="h4" fontWeight="bold">
                   {oneRepMaxes.length}
                 </Typography>
@@ -248,7 +262,15 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ user }) =>
               </Box>
             </Grid>
             <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-              <Box textAlign="center" sx={{ p: 2, borderRadius: 1, backgroundColor: 'info.light', color: 'info.contrastText' }}>
+              <Box
+                textAlign="center"
+                sx={{
+                  p: 2,
+                  borderRadius: 1,
+                  backgroundColor: 'info.light',
+                  color: 'info.contrastText',
+                }}
+              >
                 <Typography variant="h4" fontWeight="bold">
                   {Math.round(latestVolume)}
                 </Typography>
@@ -284,9 +306,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ user }) =>
         <Card sx={{ mb: 3 }}>
           <CardContent>
             <Box display="flex" alignItems="center" gap={1} sx={{ mb: 2 }}>
-              <Typography variant="h6">
-                Recent Achievements
-              </Typography>
+              <Typography variant="h6">Recent Achievements</Typography>
               <Typography variant="body2" color="text.secondary">
                 • Your latest personal records
               </Typography>

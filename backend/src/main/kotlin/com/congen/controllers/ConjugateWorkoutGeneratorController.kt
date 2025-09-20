@@ -30,7 +30,6 @@ import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PatchMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import reactor.core.publisher.Mono
@@ -60,6 +59,13 @@ import reactor.core.publisher.Mono
  * @param programService Service for program operations
  * @param keycloakUtil Utility for Keycloak operations
  * @param gdprComplianceService Service for GDPR compliance operations
+ * @param exerciseDAL Data access layer for exercise operations
+ * @param exerciseEquipmentDAL Data access layer for exercise equipment operations
+ * @param exerciseMuscleDAL Data access layer for exercise muscle operations
+ * @param exerciseWorkoutTypeDAL Data access layer for exercise workout type operations
+ * @param programmedExerciseDAL Data access layer for programmed exercise operations
+ * @param userEquipmentDAL Data access layer for user equipment operations
+ * @param userExercisePreferenceDAL Data access layer for user exercise preference operations
  *
  * @author Congen Development Team
  * @since 1.0.0
@@ -199,36 +205,37 @@ class ConjugateWorkoutGeneratorController(
     fun getExercisePool(): Mono<ResponseEntity<UserExercisePoolResponse>> {
         return keycloakUtil.getCurrentUserId().flatMap { userId ->
             gdprComplianceService.withUserConsent(userId) {
-                        // Fetch all required data for creating the exercise pool
-                        Mono.zip(
-                            exerciseDAL.selectExercises(),
-                            userEquipmentDAL.selectUserEquipmentByUser(userId),
-                            userExercisePreferenceDAL.selectUserExercisePreferencesByUser(userId),
-                            programmedExerciseDAL.selectProgrammedExercisesByUserId(userId),
-                            exerciseEquipmentDAL.selectAllExerciseEquipment(),
-                            exerciseMuscleDAL.selectAllExerciseMuscle()
-                        ).map { tuple ->
-                            val allExercises = tuple.t1
-                            val userEquipment = tuple.t2
-                            val userExercisePreferences = tuple.t3
-                            val previouslyUsedExercises = tuple.t4
-                            val allExerciseEquipment = tuple.t5
-                            val allExerciseMuscles = tuple.t6
+                // Fetch all required data for creating the exercise pool
+                Mono.zip(
+                    exerciseDAL.selectExercises(),
+                    userEquipmentDAL.selectUserEquipmentByUser(userId),
+                    userExercisePreferenceDAL.selectUserExercisePreferencesByUser(userId),
+                    programmedExerciseDAL.selectProgrammedExercisesByUserId(userId),
+                    exerciseEquipmentDAL.selectAllExerciseEquipment(),
+                    exerciseMuscleDAL.selectAllExerciseMuscle()
+                ).map { tuple ->
+                    val allExercises = tuple.t1
+                    val userEquipment = tuple.t2
+                    val userExercisePreferences = tuple.t3
+                    val previouslyUsedExercises = tuple.t4
+                    val allExerciseEquipment = tuple.t5
+                    val allExerciseMuscles = tuple.t6
 
-                            // Create exercise equipment and muscle mappings
-                            val exerciseEquipmentMappings = allExerciseEquipment.groupBy { it.exerciseName }
-                            val exerciseMuscleMappings = allExerciseMuscles.groupBy { it.exerciseName }
+                    // Create exercise equipment and muscle mappings
+                    val exerciseEquipmentMappings = allExerciseEquipment.groupBy { it.exerciseName }
+                    val exerciseMuscleMappings = allExerciseMuscles.groupBy { it.exerciseName }
 
-                            // Create user exercise pool from prepared data
-                            val userExercisePool = exercisePoolFactory.createPoolFromPreparedData(
-                                allExercises = allExercises,
-                                userEquipment = userEquipment,
-                                userExercisePreferences = userExercisePreferences,
-                                previouslyUsedExercises = previouslyUsedExercises,
-                                exerciseEquipmentMappings = exerciseEquipmentMappings,
-                                exerciseMuscleMappings = exerciseMuscleMappings,
-                                userId = userId
-                            )
+                    // Create user exercise pool from prepared data
+                    val userExercisePool =
+                        exercisePoolFactory.createPoolFromPreparedData(
+                            allExercises = allExercises,
+                            userEquipment = userEquipment,
+                            userExercisePreferences = userExercisePreferences,
+                            previouslyUsedExercises = previouslyUsedExercises,
+                            exerciseEquipmentMappings = exerciseEquipmentMappings,
+                            exerciseMuscleMappings = exerciseMuscleMappings,
+                            userId = userId
+                        )
 
                     // Convert UserExercisePool to UserExercisePoolResponse
                     val availableExercises = userExercisePool.getAvailableExercises()
@@ -249,7 +256,7 @@ class ConjugateWorkoutGeneratorController(
 
                     ResponseEntity.ok(response)
                 }
-                .doOnError { error ->
+                    .doOnError { error ->
                         logger.error("Error retrieving exercise pool for user: {}", userId, error)
                     }
             }
@@ -263,7 +270,6 @@ class ConjugateWorkoutGeneratorController(
      * to reflect the user's current abilities by adjusting weights for programmed sets/reps.
      *
      * @param programId The ID of the program to update
-     * @param request The request containing 1RM input data
      * @return ResponseEntity containing the updated program
      * @throws NoResultsFoundException if the program is not found
      * @throws ValidationException if the request data is invalid

@@ -18,7 +18,6 @@ import org.mockito.kotlin.whenever
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
 import java.time.Instant
-import kotlin.reflect.KClass
 
 class UserDALTest {
     private lateinit var postgresClient: PostgresClient
@@ -34,13 +33,13 @@ class UserDALTest {
         postgresClient = mock()
         encryptionUtil = mock()
         auditService = mock()
-        
+
         // Mock PostgresClient.withTransaction to execute the block directly
         doAnswer { invocation ->
             val block = invocation.getArgument<() -> Mono<User>>(0)
             block.invoke()
         }.whenever(postgresClient).withTransaction(any<() -> Mono<User>>())
-        
+
         userDAL = UserDAL(postgresClient, encryptionUtil, auditService)
     }
 

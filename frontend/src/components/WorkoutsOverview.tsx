@@ -1,19 +1,18 @@
-import { Add as AddIcon, Tune as TuneIcon, RotateRight as RotateRightIcon } from '@mui/icons-material';
 import {
-  Box,
-  Tabs,
-  Tab,
-  Slide,
-} from '@mui/material';
+  Add as AddIcon,
+  Tune as TuneIcon,
+  RotateRight as RotateRightIcon,
+} from '@mui/icons-material';
+import { Box, Tabs, Tab, Slide } from '@mui/material';
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router';
 
 import { ConjugateProgression } from './ConjugateProgression';
 import { ExerciseRotationVisualization } from './ExerciseRotationVisualization';
+import { WorkoutDetail } from './WorkoutDetail';
 import { WorkoutPreferencesSection } from './WorkoutPreferencesSection';
 import { Workouts } from './Workouts';
 import { WorkoutWeekDetails } from './WorkoutWeekDetails';
-import { WorkoutDetail } from './WorkoutDetail';
 import type { User } from '../api/types';
 
 interface WorkoutsOverviewProps {
@@ -42,23 +41,24 @@ const TabPanel: React.FC<TabPanelProps> = ({ children, value, index, ...other })
   );
 };
 
-export const WorkoutsOverview: React.FC<WorkoutsOverviewProps> = ({
-  user,
-  selectedWorkout,
-}) => {
+export const WorkoutsOverview: React.FC<WorkoutsOverviewProps> = ({ user, selectedWorkout }) => {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState(0);
   const [slideDirection, setSlideDirection] = useState<'left' | 'right'>('left');
   const [workoutsSlideDirection, setWorkoutsSlideDirection] = useState<'left' | 'right'>('left');
-  const [weekDetailsSlideDirection, setWeekDetailsSlideDirection] = useState<'left' | 'right'>('left');
-  const [workoutDetailSlideDirection, setWorkoutDetailSlideDirection] = useState<'left' | 'right'>('left');
+  const [weekDetailsSlideDirection, setWeekDetailsSlideDirection] = useState<'left' | 'right'>(
+    'left'
+  );
+  const [workoutDetailSlideDirection, setWorkoutDetailSlideDirection] = useState<'left' | 'right'>(
+    'left'
+  );
 
   // Set initial slide direction based on current state
   useEffect(() => {
     const selectedWeek = searchParams.get('week');
     const selectedWorkoutId = searchParams.get('workout');
-    
+
     // Only set direction on initial load, not on every URL change
     if (!selectedWeek && !selectedWorkoutId) {
       setWorkoutsSlideDirection('left'); // Default to left for initial load
@@ -73,13 +73,13 @@ export const WorkoutsOverview: React.FC<WorkoutsOverviewProps> = ({
     } else {
       setSlideDirection('right'); // Moving backward to previous tab
     }
-    
+
     setActiveTab(newValue);
-    
+
     // Update URL parameters based on tab selection
     const newSearchParams = new URLSearchParams(searchParams);
     newSearchParams.set('section', 'workouts');
-    
+
     switch (newValue) {
       case 0:
         // Workout Calendar - remove subsection and category
@@ -105,7 +105,7 @@ export const WorkoutsOverview: React.FC<WorkoutsOverviewProps> = ({
         newSearchParams.delete('exercise');
         break;
     }
-    
+
     setSearchParams(newSearchParams);
   };
 
@@ -113,7 +113,7 @@ export const WorkoutsOverview: React.FC<WorkoutsOverviewProps> = ({
   useEffect(() => {
     const subsection = searchParams.get('subsection');
     let newTabIndex = 0;
-    
+
     switch (subsection) {
       case 'progression':
         newTabIndex = 1;
@@ -128,14 +128,14 @@ export const WorkoutsOverview: React.FC<WorkoutsOverviewProps> = ({
         newTabIndex = 0;
         break;
     }
-    
+
     // Set slide direction based on tab navigation
     if (newTabIndex > activeTab) {
       setSlideDirection('left'); // Moving forward to next tab
     } else if (newTabIndex < activeTab) {
       setSlideDirection('right'); // Moving backward to previous tab
     }
-    
+
     setActiveTab(newTabIndex);
   }, [searchParams, activeTab]);
 
@@ -180,11 +180,17 @@ export const WorkoutsOverview: React.FC<WorkoutsOverviewProps> = ({
         {(() => {
           const selectedWeek = searchParams.get('week');
           const selectedWorkoutId = searchParams.get('workout');
-          
+
           // If both week and workout are selected, show WorkoutDetail
           if (selectedWeek && selectedWorkoutId) {
             return (
-              <Slide key={`workout-detail-${workoutDetailSlideDirection}`} direction={workoutDetailSlideDirection} in={true} mountOnEnter unmountOnExit>
+              <Slide
+                key={`workout-detail-${workoutDetailSlideDirection}`}
+                direction={workoutDetailSlideDirection}
+                in={true}
+                mountOnEnter
+                unmountOnExit
+              >
                 <Box>
                   <WorkoutDetail
                     workoutId={parseInt(selectedWorkoutId)}
@@ -203,11 +209,17 @@ export const WorkoutsOverview: React.FC<WorkoutsOverviewProps> = ({
               </Slide>
             );
           }
-          
+
           // If only week is selected, show WorkoutWeekDetails
           if (selectedWeek) {
             return (
-              <Slide key={`workout-week-${weekDetailsSlideDirection}`} direction={weekDetailsSlideDirection} in={true} mountOnEnter unmountOnExit>
+              <Slide
+                key={`workout-week-${weekDetailsSlideDirection}`}
+                direction={weekDetailsSlideDirection}
+                in={true}
+                mountOnEnter
+                unmountOnExit
+              >
                 <Box>
                   <WorkoutWeekDetails
                     user={user}
@@ -224,7 +236,7 @@ export const WorkoutsOverview: React.FC<WorkoutsOverviewProps> = ({
                       newSearchParams.delete('workout');
                       navigate(`/dashboard?${newSearchParams.toString()}`);
                     }}
-                    onWorkoutClick={(workoutId) => {
+                    onWorkoutClick={workoutId => {
                       setWeekDetailsSlideDirection('left'); // WorkoutWeekDetails slides out to the left
                       setWorkoutDetailSlideDirection('left'); // WorkoutDetail slides in from the left
                       const newSearchParams = new URLSearchParams(searchParams);
@@ -239,10 +251,16 @@ export const WorkoutsOverview: React.FC<WorkoutsOverviewProps> = ({
               </Slide>
             );
           }
-          
+
           // No week selected, show the main Workouts calendar
           return (
-            <Slide key={`workouts-${workoutsSlideDirection}`} direction={workoutsSlideDirection} in={true} mountOnEnter unmountOnExit>
+            <Slide
+              key={`workouts-${workoutsSlideDirection}`}
+              direction={workoutsSlideDirection}
+              in={true}
+              mountOnEnter
+              unmountOnExit
+            >
               <Box>
                 <Workouts user={user} selectedWorkout={selectedWorkout} />
               </Box>
@@ -252,13 +270,17 @@ export const WorkoutsOverview: React.FC<WorkoutsOverviewProps> = ({
       </TabPanel>
 
       <TabPanel value={activeTab} index={1}>
-        <ConjugateProgression
-          user={user}
-        />
+        <ConjugateProgression user={user} />
       </TabPanel>
 
       <TabPanel value={activeTab} index={2}>
-        <Slide key={`exercise-rotation-${slideDirection}`} direction={slideDirection} in={true} mountOnEnter unmountOnExit>
+        <Slide
+          key={`exercise-rotation-${slideDirection}`}
+          direction={slideDirection}
+          in={true}
+          mountOnEnter
+          unmountOnExit
+        >
           <Box>
             <ExerciseRotationVisualization />
           </Box>
@@ -266,7 +288,13 @@ export const WorkoutsOverview: React.FC<WorkoutsOverviewProps> = ({
       </TabPanel>
 
       <TabPanel value={activeTab} index={3}>
-        <Slide key={`workout-preferences-${slideDirection}`} direction={slideDirection} in={true} mountOnEnter unmountOnExit>
+        <Slide
+          key={`workout-preferences-${slideDirection}`}
+          direction={slideDirection}
+          in={true}
+          mountOnEnter
+          unmountOnExit
+        >
           <Box>
             <WorkoutPreferencesSection />
           </Box>

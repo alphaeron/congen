@@ -6,17 +6,13 @@ import com.congen.dal.ProgrammedWorkoutDAL
 import com.congen.dal.UserWeightUnitPreferenceDAL
 import com.congen.dal.WorkoutStageDAL
 import com.congen.dal.WorkoutStageTypeDAL
-import com.congen.generator.ProgrammedExerciseData
-import com.congen.generator.SetSchemeParams
-import com.congen.generator.WorkoutGenerationResult
-import com.congen.generator.WorkoutStageData
-import com.congen.model.ProgrammedWorkout
 import com.congen.model.ProgrammedExercise
-import com.congen.model.WorkoutStage
-import com.congen.model.WorkoutStageType
+import com.congen.model.ProgrammedWorkout
 import com.congen.model.SetScheme
 import com.congen.model.UserWeightUnitPreference
 import com.congen.model.WeightUnit
+import com.congen.model.WorkoutStage
+import com.congen.model.WorkoutStageType
 import com.congen.model.WorkoutStageTypeEnum
 import com.congen.service.SetSchemeService
 import org.junit.jupiter.api.BeforeEach
@@ -26,7 +22,6 @@ import org.mockito.kotlin.atLeastOnce
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
-import kotlin.jvm.functions.Function1
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
 import java.math.BigDecimal
@@ -53,16 +48,17 @@ class AtomicWorkoutWriterTest {
         setSchemeService = mock()
         workoutStageTypeDAL = mock()
         userWeightUnitPreferenceDAL = mock()
-        
-        atomicWorkoutWriter = AtomicWorkoutWriter(
-            postgresClient,
-            programmedWorkoutDAL,
-            workoutStageDAL,
-            programmedExerciseDAL,
-            setSchemeService,
-            workoutStageTypeDAL,
-            userWeightUnitPreferenceDAL
-        )
+
+        atomicWorkoutWriter =
+            AtomicWorkoutWriter(
+                postgresClient,
+                programmedWorkoutDAL,
+                workoutStageDAL,
+                programmedExerciseDAL,
+                setSchemeService,
+                workoutStageTypeDAL,
+                userWeightUnitPreferenceDAL
+            )
     }
 
     @Test
@@ -72,14 +68,15 @@ class AtomicWorkoutWriterTest {
         val dayNumber = 1
         val dayType = "ME_Upper"
         val userId = "user-123"
-        
+
         val workoutResult = createWorkoutGenerationResult(programId, dayNumber, dayType, userId)
         val expectedWorkout = createMockProgrammedWorkout(id = 1, programId = programId, dayNumber = dayNumber, name = dayType)
         val expectedStage = createMockWorkoutStage(id = 1, programmedWorkoutId = 1)
         val expectedExercise = createMockProgrammedExercise(id = 1, workoutStageId = 1)
         val expectedSetScheme = createMockSetScheme(id = 1, programmedExerciseId = 1)
         val expectedWorkoutStageType = createMockWorkoutStageType(id = 1, name = WorkoutStageTypeEnum.PRIMARY)
-        val expectedWeightPreference = createMockUserWeightUnitPreference(userId = userId, exerciseName = "Bench Press", preferredUnit = WeightUnit.KG)
+        val expectedWeightPreference =
+            createMockUserWeightUnitPreference(userId = userId, exerciseName = "Bench Press", preferredUnit = WeightUnit.KG)
 
         whenever(programmedWorkoutDAL.insertProgrammedWorkout(programId, dayNumber, dayType))
             .thenReturn(Mono.just(expectedWorkout))
@@ -91,23 +88,25 @@ class AtomicWorkoutWriterTest {
             .thenReturn(Mono.just(expectedExercise))
         whenever(userWeightUnitPreferenceDAL.selectUserWeightUnitPreference(userId, "Bench Press"))
             .thenReturn(Mono.just(expectedWeightPreference))
-        whenever(setSchemeService.insertSetScheme(
-            programmedExerciseId = 1,
-            setNumber = 1,
-            isAmrap = false,
-            isEmom = false,
-            useTempo = false,
-            eccentricTempo = null,
-            isometricTempo = null,
-            concentricTempo = null,
-            targetWeight = "100.0",
-            performedWeight = null,
-            targetRepCount = 5,
-            performedRepCount = null,
-            restSeconds = null,
-            unit = "KG"
-        )).thenReturn(Mono.just(expectedSetScheme))
-        
+        whenever(
+            setSchemeService.insertSetScheme(
+                programmedExerciseId = 1,
+                setNumber = 1,
+                isAmrap = false,
+                isEmom = false,
+                useTempo = false,
+                eccentricTempo = null,
+                isometricTempo = null,
+                concentricTempo = null,
+                targetWeight = "100.0",
+                performedWeight = null,
+                targetRepCount = 5,
+                performedRepCount = null,
+                restSeconds = null,
+                unit = "KG"
+            )
+        ).thenReturn(Mono.just(expectedSetScheme))
+
         // Mock the transaction to execute the block and return the expected workout
         whenever(postgresClient.withTransaction<ProgrammedWorkout>(any()))
             .thenAnswer { invocation ->
@@ -152,7 +151,7 @@ class AtomicWorkoutWriterTest {
         val dayNumber = 1
         val dayType = "ME_Upper"
         val userId = "user-123"
-        
+
         val workoutResult = createWorkoutGenerationResult(programId, dayNumber, dayType, userId)
         val expectedWorkout = createMockProgrammedWorkout(id = 1, programId = programId, dayNumber = dayNumber, name = dayType)
         val expectedWorkoutStageType = createMockWorkoutStageType(id = 1, name = WorkoutStageTypeEnum.PRIMARY)
@@ -163,7 +162,7 @@ class AtomicWorkoutWriterTest {
             .thenReturn(Mono.just(expectedWorkoutStageType))
         whenever(workoutStageDAL.insertWorkoutStage(1, 1, 1, "Primary Movement"))
             .thenReturn(Mono.error(RuntimeException("Database error")))
-        
+
         // Mock the transaction to execute the block
         whenever(postgresClient.withTransaction<ProgrammedWorkout>(any()))
             .thenAnswer { invocation ->
@@ -191,20 +190,21 @@ class AtomicWorkoutWriterTest {
         val dayNumber = 1
         val dayType = "ME_Upper"
         val userId = "user-123"
-        
-        val workoutResult = WorkoutGenerationResult(
-            programId = programId,
-            dayNumber = dayNumber,
-            dayType = dayType,
-            userId = userId,
-            stages = emptyList(),
-            preparedData = createSamplePreparedData()
-        )
+
+        val workoutResult =
+            WorkoutGenerationResult(
+                programId = programId,
+                dayNumber = dayNumber,
+                dayType = dayType,
+                userId = userId,
+                stages = emptyList(),
+                preparedData = createSamplePreparedData()
+            )
         val expectedWorkout = createMockProgrammedWorkout(id = 1, programId = programId, dayNumber = dayNumber, name = dayType)
 
         whenever(programmedWorkoutDAL.insertProgrammedWorkout(programId, dayNumber, dayType))
             .thenReturn(Mono.just(expectedWorkout))
-        
+
         // Mock the transaction to execute the block
         whenever(postgresClient.withTransaction<ProgrammedWorkout>(any()))
             .thenAnswer { invocation ->
@@ -279,21 +279,24 @@ class AtomicWorkoutWriterTest {
         dayType: String,
         userId: String
     ): WorkoutGenerationResult {
-        val setSchemeParams = createSetSchemeParams(
-            setNumber = 1,
-            targetReps = 5,
-            targetWeight = BigDecimal("100.0")
-        )
-        val exerciseData = createProgrammedExerciseData(
-            exerciseName = "Bench Press",
-            setSchemes = listOf(setSchemeParams)
-        )
-        val stageData = createWorkoutStageData(
-            stageType = WorkoutStageTypeEnum.PRIMARY,
-            stageName = "Primary Movement",
-            exercises = listOf(exerciseData)
-        )
-        
+        val setSchemeParams =
+            createSetSchemeParams(
+                setNumber = 1,
+                targetReps = 5,
+                targetWeight = BigDecimal("100.0")
+            )
+        val exerciseData =
+            createProgrammedExerciseData(
+                exerciseName = "Bench Press",
+                setSchemes = listOf(setSchemeParams)
+            )
+        val stageData =
+            createWorkoutStageData(
+                stageType = WorkoutStageTypeEnum.PRIMARY,
+                stageName = "Primary Movement",
+                exercises = listOf(exerciseData)
+            )
+
         return WorkoutGenerationResult(
             programId = programId,
             dayNumber = dayNumber,

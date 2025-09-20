@@ -14,16 +14,17 @@ import {
   StepLabel,
   Typography,
 } from '@mui/material';
+import { useForm } from '@tanstack/react-form';
 import { useSnackbar } from 'notistack';
 import React, { useEffect, useState } from 'react';
-import { useForm } from '@tanstack/react-form';
 
-import { generateNextWeek, getUserExercisePool, updateWorkoutWithOneRepMax } from '../api/conjugateWorkoutGenerator';
 import { OneRepMaxInputStep } from './OneRepMaxInputStep';
-import { upsertUserOneRepMax } from '../api/userOneRepMax';
 import {
-  WizardStep,
-} from '../api/types';
+  generateNextWeek,
+  getUserExercisePool,
+  updateWorkoutWithOneRepMax,
+} from '../api/conjugateWorkoutGenerator';
+import { WizardStep } from '../api/types';
 import type {
   Program,
   UserExercisePoolResponse,
@@ -40,7 +41,7 @@ interface WorkoutGenerationWizardProps {
 
 /**
  * Wizard component for workout generation with 1RM input collection.
- * 
+ *
  * This wizard guides users through:
  * 1. Workout generation confirmation
  * 2. Loading during generation
@@ -59,7 +60,6 @@ export const WorkoutGenerationWizard: React.FC<WorkoutGenerationWizardProps> = (
   const [generatedWorkout, setGeneratedWorkout] = useState<Program | null>(null);
   const [exercisePool, setExercisePool] = useState<UserExercisePoolResponse | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [isRecording, setIsRecording] = useState(false);
   const [isUpdatingWorkout, setIsUpdatingWorkout] = useState(false);
   const [oneRepMaxNavigation, setOneRepMaxNavigation] = useState<{
     onSkipExercise: () => void;
@@ -122,7 +122,7 @@ export const WorkoutGenerationWizard: React.FC<WorkoutGenerationWizardProps> = (
     try {
       const pool = await getUserExercisePool();
       setExercisePool(pool);
-    } catch (error) {
+    } catch {
       enqueueSnackbar('Failed to load exercise pool', { variant: 'error' });
     }
   };
@@ -130,21 +130,21 @@ export const WorkoutGenerationWizard: React.FC<WorkoutGenerationWizardProps> = (
   const handleWorkoutGeneration = async () => {
     setIsGenerating(true);
     setCurrentStep(WizardStep.GENERATION_LOADING);
-    
+
     try {
       const workout = await generateNextWeek(program.id);
       setGeneratedWorkout(workout);
-      
+
       // Check if there are exercises that need 1RM input
       const exercisesNeedingInput = getExercisesNeedingOneRepMax(workout, exercisePool);
-      
+
       if (exercisesNeedingInput.length > 0) {
         setCurrentStep(WizardStep.ONE_REP_MAX_INPUT);
       } else {
         setCurrentStep(WizardStep.UPDATING_WORKOUT_WITH_1RM);
         onComplete(workout);
       }
-    } catch (error) {
+    } catch {
       enqueueSnackbar('Failed to generate workouts', { variant: 'error' });
       onClose(); // Close the dialog when generation fails
     } finally {
@@ -159,15 +159,15 @@ export const WorkoutGenerationWizard: React.FC<WorkoutGenerationWizardProps> = (
 
   const handleWorkoutUpdate = async () => {
     setIsUpdatingWorkout(true);
-    
+
     try {
       // Make API call to update workout with 1RM data (backend will fetch from database)
       const updatedWorkout = await updateWorkoutWithOneRepMax(program.id);
-      
+
       // Show success message and close
       enqueueSnackbar('Workout updated successfully!', { variant: 'success' });
       onComplete(updatedWorkout);
-    } catch (error) {
+    } catch {
       enqueueSnackbar('Failed to update workout with 1RM data', { variant: 'error' });
       setCurrentStep(WizardStep.ONE_REP_MAX_INPUT);
     } finally {
@@ -175,12 +175,15 @@ export const WorkoutGenerationWizard: React.FC<WorkoutGenerationWizardProps> = (
     }
   };
 
-  const getExercisesNeedingOneRepMax = (workout: Program, pool: UserExercisePoolResponse | null): Exercise[] => {
+  const getExercisesNeedingOneRepMax = (
+    workout: Program,
+    pool: UserExercisePoolResponse | null
+  ): Exercise[] => {
     if (!pool || !workout) return [];
-    
+
     // Get all exercises from the generated workout
     const workoutExercises = new Set<string>();
-    
+
     // Extract exercise names from workout data structure
     if (workout.workouts) {
       workout.workouts.forEach(workoutItem => {
@@ -191,17 +194,22 @@ export const WorkoutGenerationWizard: React.FC<WorkoutGenerationWizardProps> = (
         }
       });
     }
-    
+
     // For now, let's return all exercises from the pool that don't have 1RM data
     // This ensures we always show the 1RM input step for testing
-    const exercisesWithoutOneRepMax = pool.primary_exercises.concat(pool.accessory_exercises)
+    const exercisesWithoutOneRepMax = pool.primary_exercises
+      .concat(pool.accessory_exercises)
       .filter(exercise => !exercise.one_rep_max);
-    
+
     return exercisesWithoutOneRepMax;
   };
 
   const handleClose = () => {
-    if (currentStep === WizardStep.GENERATION_LOADING || currentStep === WizardStep.UPDATING_WORKOUT || isUpdatingWorkout) {
+    if (
+      currentStep === WizardStep.GENERATION_LOADING ||
+      currentStep === WizardStep.UPDATING_WORKOUT ||
+      isUpdatingWorkout
+    ) {
       return; // Prevent closing during loading or updating
     }
     onClose();
@@ -213,10 +221,11 @@ export const WorkoutGenerationWizard: React.FC<WorkoutGenerationWizardProps> = (
         return (
           <Alert severity="info">
             <AlertTitle>Generate Workouts</AlertTitle>
-            The next week's workouts will be generated for {program.name}. This will create a new week of workouts based on your program preferences and current progress.
+            The next week&apos;s workouts will be generated for {program.name}. This will create a
+            new week of workouts based on your program preferences and current progress.
           </Alert>
         );
-      
+
       case WizardStep.GENERATION_LOADING:
         return (
           <Box textAlign="center">
@@ -229,8 +238,8 @@ export const WorkoutGenerationWizard: React.FC<WorkoutGenerationWizardProps> = (
             <LinearProgress sx={{ mt: 2 }} />
           </Box>
         );
-      
-      case WizardStep.ONE_REP_MAX_INPUT:
+
+      case WizardStep.ONE_REP_MAX_INPUT: {
         const exercisesNeedingInput = getExercisesNeedingOneRepMax(generatedWorkout!, exercisePool);
         return (
           <OneRepMaxInputStep
@@ -243,7 +252,8 @@ export const WorkoutGenerationWizard: React.FC<WorkoutGenerationWizardProps> = (
             onNavigationChange={setOneRepMaxNavigation}
           />
         );
-      
+      }
+
       case WizardStep.UPDATING_WORKOUT:
         return (
           <Box textAlign="center">
@@ -256,7 +266,7 @@ export const WorkoutGenerationWizard: React.FC<WorkoutGenerationWizardProps> = (
             <LinearProgress sx={{ mt: 2 }} />
           </Box>
         );
-      
+
       case WizardStep.UPDATING_WORKOUT_WITH_1RM:
         return (
           <Box textAlign="center">
@@ -269,7 +279,7 @@ export const WorkoutGenerationWizard: React.FC<WorkoutGenerationWizardProps> = (
             <LinearProgress sx={{ mt: 2 }} />
           </Box>
         );
-      
+
       default:
         return null;
     }
@@ -283,16 +293,12 @@ export const WorkoutGenerationWizard: React.FC<WorkoutGenerationWizardProps> = (
             <Button onClick={handleClose} disabled={isGenerating}>
               Cancel
             </Button>
-            <Button
-              variant="contained"
-              onClick={() => form.handleSubmit()}
-              disabled={isGenerating}
-            >
+            <Button variant="contained" onClick={() => form.handleSubmit()} disabled={isGenerating}>
               {isGenerating ? 'Generating...' : 'Generate Workouts'}
             </Button>
           </Box>
         );
-      
+
       case WizardStep.ONE_REP_MAX_INPUT:
         if (!oneRepMaxNavigation) return null;
         return (
@@ -305,25 +311,19 @@ export const WorkoutGenerationWizard: React.FC<WorkoutGenerationWizardProps> = (
               >
                 Skip Exercise
               </Button>
-              <Button
-                variant="outlined"
-                onClick={oneRepMaxNavigation.onSkipRemaining}
-              >
+              <Button variant="outlined" onClick={oneRepMaxNavigation.onSkipRemaining}>
                 Skip Remaining
               </Button>
             </Box>
-            <Button
-              variant="contained"
-              onClick={oneRepMaxNavigation.onNext}
-            >
+            <Button variant="contained" onClick={oneRepMaxNavigation.onNext}>
               {oneRepMaxNavigation.isLastExercise ? 'Updating Workout' : 'Next Exercise'}
             </Button>
           </Box>
         );
-      
+
       case WizardStep.UPDATING_WORKOUT_WITH_1RM:
         return null; // No action buttons during updating
-      
+
       default:
         return null;
     }
@@ -335,11 +335,17 @@ export const WorkoutGenerationWizard: React.FC<WorkoutGenerationWizardProps> = (
       onClose={handleClose}
       maxWidth="md"
       fullWidth
-      disableEscapeKeyDown={currentStep === WizardStep.GENERATION_LOADING || currentStep === WizardStep.UPDATING_WORKOUT || isUpdatingWorkout}
+      disableEscapeKeyDown={
+        currentStep === WizardStep.GENERATION_LOADING ||
+        currentStep === WizardStep.UPDATING_WORKOUT ||
+        isUpdatingWorkout
+      }
     >
       <DialogTitle>
         <Box>
-          <Typography variant="h6" component="div">Generate Workouts</Typography>
+          <Typography variant="h6" component="div">
+            Generate Workouts
+          </Typography>
           <Box mt={2}>
             <Stepper activeStep={getActiveStep()} alternativeLabel>
               <Step>
@@ -355,17 +361,15 @@ export const WorkoutGenerationWizard: React.FC<WorkoutGenerationWizardProps> = (
           </Box>
         </Box>
       </DialogTitle>
-      
+
       <DialogContent>
-        <Card sx={{ '& .MuiCard-root': { animation: 'none !important' }, animation: 'none !important' }}>
-          <CardContent>
-            {renderStepContent()}
-          </CardContent>
+        <Card
+          sx={{ '& .MuiCard-root': { animation: 'none !important' }, animation: 'none !important' }}
+        >
+          <CardContent>{renderStepContent()}</CardContent>
         </Card>
-        
-        <Box mt={3}>
-          {renderActions()}
-        </Box>
+
+        <Box mt={3}>{renderActions()}</Box>
       </DialogContent>
     </Dialog>
   );

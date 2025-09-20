@@ -91,7 +91,7 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
   // Get the appropriate color based on status
   const getProgressColor = () => {
     if (color) return color;
-    
+
     switch (status) {
       case 'completed':
         return theme.palette.success.main;
@@ -116,7 +116,12 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
           const logVal = Math.log(val);
           return ((logVal - logMin) / (logMax - logMin)) * 100;
         },
-        getValueForClientX: (clientX: number, trackDims: any, min: number, max: number) => {
+        getValueForClientX: (
+          clientX: number,
+          trackDims: { width: number },
+          min: number,
+          max: number
+        ) => {
           const percentage = (clientX / trackDims.width) * 100;
           const logMin = Math.log(min || 1);
           const logMax = Math.log(max);
@@ -133,7 +138,7 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
 
   useEffect(() => {
     if (containerRef.current) {
-      const rangerConfig: any = {
+      const rangerConfig = {
         getRangerElement: () => containerRef.current,
         values: [value],
         min: 0,
@@ -248,22 +253,23 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
           ))}
 
           {/* Render tick markers */}
-          {showTicks && rangerTicks.map((tick) => (
-            <Box
-              key={tick.key}
-              sx={{
-                position: 'absolute',
-                left: `${tick.percentage}%`,
-                top: '50%',
-                transform: 'translateX(-50%) translateY(-50%)',
-                width: 2,
-                height: height + 4,
-                backgroundColor: theme.palette.text.secondary,
-                opacity: 0.6,
-                borderRadius: 1,
-              }}
-            />
-          ))}
+          {showTicks &&
+            rangerTicks.map(tick => (
+              <Box
+                key={tick.key}
+                sx={{
+                  position: 'absolute',
+                  left: `${tick.percentage}%`,
+                  top: '50%',
+                  transform: 'translateX(-50%) translateY(-50%)',
+                  width: 2,
+                  height: height + 4,
+                  backgroundColor: theme.palette.text.secondary,
+                  opacity: 0.6,
+                  borderRadius: 1,
+                }}
+              />
+            ))}
         </Box>
       );
     } else {
@@ -294,22 +300,23 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
           />
 
           {/* Render tick markers for single progress bar */}
-          {showTicks && rangerTicks.map((tick) => (
-            <Box
-              key={tick.key}
-              sx={{
-                position: 'absolute',
-                left: `${tick.percentage}%`,
-                top: '50%',
-                transform: 'translateX(-50%) translateY(-50%)',
-                width: 2,
-                height: height + 4,
-                backgroundColor: theme.palette.text.secondary,
-                opacity: 0.6,
-                borderRadius: 1,
-              }}
-            />
-          ))}
+          {showTicks &&
+            rangerTicks.map(tick => (
+              <Box
+                key={tick.key}
+                sx={{
+                  position: 'absolute',
+                  left: `${tick.percentage}%`,
+                  top: '50%',
+                  transform: 'translateX(-50%) translateY(-50%)',
+                  width: 2,
+                  height: height + 4,
+                  backgroundColor: theme.palette.text.secondary,
+                  opacity: 0.6,
+                  borderRadius: 1,
+                }}
+              />
+            ))}
         </Box>
       );
     }
@@ -318,30 +325,30 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
   // Generate tooltip content
   const getTooltipContent = () => {
     if (!showTooltip) return '';
-    
+
     let tooltipText = `${Math.round(progressPercentage)}%`;
-    
+
     if (current !== undefined && total !== undefined) {
       tooltipText += ` (${current}/${total})`;
     }
-    
+
     return tooltipText;
   };
 
   // Render text content (only when not using tooltip)
   const renderTextContent = () => {
     if (showTooltip) return null; // Don't show text when using tooltip
-    
+
     const elements = [];
-    
+
     if (showPercentage) {
       let percentageText = `${Math.round(progressPercentage)}%`;
-      
+
       // Add count in parentheses if fraction is enabled
       if (showFraction && current !== undefined && total !== undefined) {
         percentageText += ` (${current}/${total})`;
       }
-      
+
       elements.push(
         <Typography key="percentage" variant="caption" color="text.secondary">
           {percentageText}
@@ -355,14 +362,14 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
         </Typography>
       );
     }
-    
-    return elements.length > 0 ? <>{elements}</> : null;
+
+    return elements.length > 0 ? <React.Fragment>{elements}</React.Fragment> : null;
   };
 
   const progressContent = (
-    <Box 
+    <Box
       data-testid="progress-bar"
-      className={className} 
+      className={className}
       sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
     >
       {renderProgressContent()}
@@ -379,7 +386,9 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
     <Tooltip title={getTooltipContent()} arrow>
       {progressContent}
     </Tooltip>
-  ) : progressContent;
+  ) : (
+    progressContent
+  );
 };
 
 // Preset progress bar configurations

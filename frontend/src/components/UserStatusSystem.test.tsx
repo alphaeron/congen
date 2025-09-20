@@ -7,7 +7,21 @@ import type { User, UserDataExport, UserOneRepMax } from '../api/types';
 
 // Mock the StatusCard components
 jest.mock('./StatusCard', () => ({
-  StatusCard: ({ title, status, value, unit, trend, description }: any) => (
+  StatusCard: ({
+    title,
+    status,
+    value,
+    unit,
+    trend,
+    description,
+  }: {
+    title: string;
+    status: string;
+    value: number;
+    unit: string;
+    trend: string;
+    description: string;
+  }) => (
     <div data-testid={`status-card-${title.toLowerCase().replace(/\s+/g, '-')}`}>
       <div data-testid="status-title">{title}</div>
       <div data-testid="status-status">{status}</div>
@@ -17,10 +31,10 @@ jest.mock('./StatusCard', () => ({
       <div data-testid="status-description">{description}</div>
     </div>
   ),
-  StatusIndicator: ({ status }: any) => (
+  StatusIndicator: ({ status }: { status: string }) => (
     <div data-testid={`status-indicator-${status}`}>Status: {status}</div>
   ),
-  StatusProgress: ({ value, status }: any) => (
+  StatusProgress: ({ value, status }: { value: number; status: string }) => (
     <div data-testid={`status-progress-${status}`}>Progress: {value}%</div>
   ),
 }));
@@ -29,9 +43,7 @@ jest.mock('./StatusCard', () => ({
 const theme = createTheme();
 
 const renderWithTheme = (component: React.ReactElement) => {
-  return render(
-    <ThemeProvider theme={theme}>{component}</ThemeProvider>
-  );
+  return render(<ThemeProvider theme={theme}>{component}</ThemeProvider>);
 };
 
 describe('UserStatusSystem', () => {
@@ -192,13 +204,7 @@ describe('UserStatusSystem', () => {
       data_retention_policies: [],
     };
 
-    renderWithTheme(
-      <UserStatusSystem
-        user={mockUser}
-        userData={emptyUserData}
-        oneRepMaxes={[]}
-      />
-    );
+    renderWithTheme(<UserStatusSystem user={mockUser} userData={emptyUserData} oneRepMaxes={[]} />);
 
     expect(screen.getByText('Overall Health & Fitness Status')).toBeInTheDocument();
     expect(screen.getByTestId('status-card-strength-training')).toBeInTheDocument();
@@ -208,13 +214,7 @@ describe('UserStatusSystem', () => {
   });
 
   it('handles null user data gracefully', () => {
-    renderWithTheme(
-      <UserStatusSystem
-        user={mockUser}
-        userData={null}
-        oneRepMaxes={[]}
-      />
-    );
+    renderWithTheme(<UserStatusSystem user={mockUser} userData={null} oneRepMaxes={[]} />);
 
     expect(screen.getByText('Overall Health & Fitness Status')).toBeInTheDocument();
     expect(screen.getByTestId('status-card-strength-training')).toBeInTheDocument();

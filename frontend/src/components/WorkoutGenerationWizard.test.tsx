@@ -1,7 +1,7 @@
-import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { MemoryRouter } from 'react-router';
 import MockAdapter from 'axios-mock-adapter';
+import React from 'react';
+import { MemoryRouter } from 'react-router';
 
 import { WorkoutGenerationWizard } from './WorkoutGenerationWizard';
 import { ENDPOINT } from '../api/endpoint';
@@ -42,11 +42,7 @@ const mockUserExercisePool = {
 };
 
 const renderWithProviders = (component: React.ReactElement) => {
-  return render(
-    <MemoryRouter>
-      {component}
-    </MemoryRouter>
-  );
+  return render(<MemoryRouter>{component}</MemoryRouter>);
 };
 
 describe('WorkoutGenerationWizard', () => {
@@ -96,7 +92,11 @@ describe('WorkoutGenerationWizard', () => {
     );
 
     expect(screen.getByRole('button', { name: 'Generate Workouts' })).toBeInTheDocument();
-    expect(screen.getByText(`The next week's workouts will be generated for ${mockProgram.name}. This will create a new week of workouts based on your program preferences and current progress.`)).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        `The next week's workouts will be generated for ${mockProgram.name}. This will create a new week of workouts based on your program preferences and current progress.`
+      )
+    ).toBeInTheDocument();
   });
 
   it('calls onClose when cancel button is clicked', () => {
@@ -144,7 +144,7 @@ describe('WorkoutGenerationWizard', () => {
 
   it('handles generation errors gracefully', async () => {
     const onClose = jest.fn();
-    
+
     mock.onPost('/conjugate_workout_generator/1').reply(500, { error: 'Generation failed' });
     mock.onGet('/conjugate_workout_generator/exercise_pool').reply(200, mockUserExercisePool);
 

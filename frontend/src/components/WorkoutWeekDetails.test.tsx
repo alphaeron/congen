@@ -128,9 +128,12 @@ describe('WorkoutWeekDetails', () => {
     });
 
     // Should render the component without errors
-    await waitFor(() => {
-      expect(screen.getByText('No Active Program')).toBeInTheDocument();
-    }, { timeout: 15000 });
+    await waitFor(
+      () => {
+        expect(screen.getByText('No Active Program')).toBeInTheDocument();
+      },
+      { timeout: 15000 }
+    );
   }, 20000);
 
   it('displays no active program message when no active program exists', async () => {
@@ -262,9 +265,7 @@ describe('WorkoutWeekDetails', () => {
 
     await waitFor(
       () => {
-        expect(
-          screen.getByText('Failed to load week data.')
-        ).toBeInTheDocument();
+        expect(screen.getByText('Failed to load week data.')).toBeInTheDocument();
       },
       { timeout: 15000 }
     );

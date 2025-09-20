@@ -1,18 +1,18 @@
 package com.congen.generator
 
-import com.congen.dal.ProgramPreferencesDAL
-import com.congen.dal.ProgrammedExerciseDAL
-import com.congen.dal.ProgrammedWorkoutDAL
-import com.congen.dal.SetSchemeDAL
-import com.congen.dal.UserOneRepMaxDAL
-import com.congen.dal.UserWeakMuscleDAL
-import com.congen.dal.UserWeightUnitPreferenceDAL
 import com.congen.dal.ExerciseDAL
 import com.congen.dal.ExerciseEquipmentDAL
 import com.congen.dal.ExerciseMuscleDAL
 import com.congen.dal.ExerciseWorkoutTypeDAL
+import com.congen.dal.ProgramPreferencesDAL
+import com.congen.dal.ProgrammedExerciseDAL
+import com.congen.dal.ProgrammedWorkoutDAL
+import com.congen.dal.SetSchemeDAL
 import com.congen.dal.UserEquipmentDAL
 import com.congen.dal.UserExercisePreferenceDAL
+import com.congen.dal.UserOneRepMaxDAL
+import com.congen.dal.UserWeakMuscleDAL
+import com.congen.dal.UserWeightUnitPreferenceDAL
 import com.congen.model.Program
 import com.congen.model.ProgramPreferences
 import com.congen.model.ProgrammedWorkout
@@ -23,7 +23,6 @@ import com.congen.service.SetSchemeService
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
-import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
@@ -119,7 +118,7 @@ class ConjugateWorkoutGeneratorServiceTest {
         val programPreferences = createSampleProgramPreferences()
         val userWeakMuscles = createSampleUserWeakMuscles()
         val template = createSampleTemplate()
-        
+
         println("Debug: program = $program")
         println("Debug: oneRepMaxes = $oneRepMaxes")
         println("Debug: programPreferences = $programPreferences")
@@ -131,23 +130,29 @@ class ConjugateWorkoutGeneratorServiceTest {
         whenever(programPreferencesDAL.selectProgramPreferences(any())).thenReturn(Mono.just(programPreferences))
         whenever(userWeakMuscleDAL.selectUserWeakMusclesByUser(any())).thenReturn(Mono.just(userWeakMuscles))
         whenever(conjugateTemplates.selectTemplate(any())).thenReturn(template)
-        
+
         // Mock the additional DAL methods needed for data preparation
         whenever(userWeightUnitPreferenceDAL.selectUserWeightUnitPreferencesByUser(any())).thenReturn(Mono.just(emptyList()))
         whenever(exerciseDAL.selectExercises()).thenReturn(Mono.just(createSampleExercises()))
-        whenever(exerciseEquipmentDAL.selectAllExerciseEquipment()).thenReturn(Mono.just(createSampleExerciseEquipmentMappings().values.flatten()))
+        whenever(
+            exerciseEquipmentDAL.selectAllExerciseEquipment()
+        ).thenReturn(Mono.just(createSampleExerciseEquipmentMappings().values.flatten()))
         whenever(exerciseMuscleDAL.selectAllExerciseMuscle()).thenReturn(Mono.just(createSampleExerciseMuscleMappings().values.flatten()))
         whenever(exerciseWorkoutTypeDAL.selectAllExerciseWorkoutTypes()).thenReturn(Mono.just(emptyList()))
         whenever(programmedExerciseDAL.selectProgrammedExercisesByUserId(any())).thenReturn(Mono.just(emptyList()))
         whenever(userEquipmentDAL.selectUserEquipmentByUser(any())).thenReturn(Mono.just(createSampleUserEquipment()))
         whenever(userExercisePreferenceDAL.selectUserExercisePreferencesByUser(any())).thenReturn(Mono.just(emptyList()))
-        
+
         // Mock the exercise pool factory
         val samplePreparedData = createSamplePreparedData()
-        whenever(exercisePoolFactory.createPoolFromPreparedData(any(), any(), any(), any(), any(), any(), any())).thenReturn(samplePreparedData.userExercisePool)
-        
+        whenever(
+            exercisePoolFactory.createPoolFromPreparedData(any(), any(), any(), any(), any(), any(), any())
+        ).thenReturn(samplePreparedData.userExercisePool)
+
         // Mock the DAL methods for atomic workout generation
-        whenever(workoutStageGenerationOrchestrator.generateWorkoutStages(any(), any(), any(), any())).thenReturn(Mono.just(WorkoutGenerationResult(PROGRAM_ID, 1, "max_effort", USER_ID, emptyList(), samplePreparedData)))
+        whenever(
+            workoutStageGenerationOrchestrator.generateWorkoutStages(any(), any(), any(), any())
+        ).thenReturn(Mono.just(WorkoutGenerationResult(PROGRAM_ID, 1, "max_effort", USER_ID, emptyList(), samplePreparedData)))
         whenever(atomicWorkoutWriter.writeWorkoutAtomically(any())).thenReturn(Mono.just(createSampleProgrammedWorkout()))
         whenever(programService.updateProgram(any(), any(), any(), any())).thenReturn(Mono.just(updatedProgram))
 
@@ -164,7 +169,6 @@ class ConjugateWorkoutGeneratorServiceTest {
         verify(conjugateTemplates).selectTemplate(4)
     }
 
-
     @Test
     fun `generateNextWeek should handle empty weak muscles`() {
         val program = createSampleProgram()
@@ -179,7 +183,7 @@ class ConjugateWorkoutGeneratorServiceTest {
         whenever(programPreferencesDAL.selectProgramPreferences(PROGRAM_ID)).thenReturn(Mono.just(programPreferences))
         whenever(userWeakMuscleDAL.selectUserWeakMusclesByUser(USER_ID)).thenReturn(Mono.just(emptyUserWeakMuscles))
         whenever(conjugateTemplates.selectTemplate(4)).thenReturn(template)
-        
+
         // Mock the additional DAL methods needed for data preparation
         whenever(userWeightUnitPreferenceDAL.selectUserWeightUnitPreferencesByUser(USER_ID)).thenReturn(Mono.just(emptyList()))
         whenever(exerciseDAL.selectExercises()).thenReturn(Mono.just(emptyList()))
@@ -189,13 +193,17 @@ class ConjugateWorkoutGeneratorServiceTest {
         whenever(programmedExerciseDAL.selectProgrammedExercisesByUserId(USER_ID)).thenReturn(Mono.just(emptyList()))
         whenever(userEquipmentDAL.selectUserEquipmentByUser(USER_ID)).thenReturn(Mono.just(emptyList()))
         whenever(userExercisePreferenceDAL.selectUserExercisePreferencesByUser(USER_ID)).thenReturn(Mono.just(emptyList()))
-        
+
         // Mock the exercise pool factory
         val samplePreparedData = createSamplePreparedData()
-        whenever(exercisePoolFactory.createPoolFromPreparedData(any(), any(), any(), any(), any(), any(), any())).thenReturn(samplePreparedData.userExercisePool)
-        
+        whenever(
+            exercisePoolFactory.createPoolFromPreparedData(any(), any(), any(), any(), any(), any(), any())
+        ).thenReturn(samplePreparedData.userExercisePool)
+
         // Mock the DAL methods for atomic workout generation
-        whenever(workoutStageGenerationOrchestrator.generateWorkoutStages(any(), any(), any(), any())).thenReturn(Mono.just(WorkoutGenerationResult(PROGRAM_ID, 1, "max_effort", USER_ID, emptyList(), samplePreparedData)))
+        whenever(
+            workoutStageGenerationOrchestrator.generateWorkoutStages(any(), any(), any(), any())
+        ).thenReturn(Mono.just(WorkoutGenerationResult(PROGRAM_ID, 1, "max_effort", USER_ID, emptyList(), samplePreparedData)))
         whenever(atomicWorkoutWriter.writeWorkoutAtomically(any())).thenReturn(Mono.just(createSampleProgrammedWorkout()))
         whenever(programService.updateProgram(any(), any(), any(), any())).thenReturn(Mono.just(updatedProgram))
 
@@ -360,7 +368,7 @@ class ConjugateWorkoutGeneratorServiceTest {
         whenever(programPreferencesDAL.selectProgramPreferences(PROGRAM_ID)).thenReturn(Mono.just(programPreferences))
         whenever(userWeakMuscleDAL.selectUserWeakMusclesByUser(USER_ID)).thenReturn(Mono.just(userWeakMuscles))
         whenever(conjugateTemplates.selectTemplate(3)).thenReturn(template)
-        
+
         // Mock the additional DAL methods needed for data preparation
         whenever(userWeightUnitPreferenceDAL.selectUserWeightUnitPreferencesByUser(USER_ID)).thenReturn(Mono.just(emptyList()))
         whenever(exerciseDAL.selectExercises()).thenReturn(Mono.just(emptyList()))
@@ -370,13 +378,17 @@ class ConjugateWorkoutGeneratorServiceTest {
         whenever(programmedExerciseDAL.selectProgrammedExercisesByUserId(USER_ID)).thenReturn(Mono.just(emptyList()))
         whenever(userEquipmentDAL.selectUserEquipmentByUser(USER_ID)).thenReturn(Mono.just(emptyList()))
         whenever(userExercisePreferenceDAL.selectUserExercisePreferencesByUser(USER_ID)).thenReturn(Mono.just(emptyList()))
-        
+
         // Mock the exercise pool factory
         val samplePreparedData = createSamplePreparedData()
-        whenever(exercisePoolFactory.createPoolFromPreparedData(any(), any(), any(), any(), any(), any(), any())).thenReturn(samplePreparedData.userExercisePool)
-        
+        whenever(
+            exercisePoolFactory.createPoolFromPreparedData(any(), any(), any(), any(), any(), any(), any())
+        ).thenReturn(samplePreparedData.userExercisePool)
+
         // Mock the DAL methods for atomic workout generation
-        whenever(workoutStageGenerationOrchestrator.generateWorkoutStages(any(), any(), any(), any())).thenReturn(Mono.just(WorkoutGenerationResult(PROGRAM_ID, 1, "max_effort", USER_ID, emptyList(), samplePreparedData)))
+        whenever(
+            workoutStageGenerationOrchestrator.generateWorkoutStages(any(), any(), any(), any())
+        ).thenReturn(Mono.just(WorkoutGenerationResult(PROGRAM_ID, 1, "max_effort", USER_ID, emptyList(), samplePreparedData)))
         whenever(atomicWorkoutWriter.writeWorkoutAtomically(any())).thenReturn(Mono.just(createSampleProgrammedWorkout()))
         whenever(programService.updateProgram(any(), any(), any(), any())).thenReturn(Mono.just(updatedProgram))
 
@@ -461,17 +473,18 @@ class ConjugateWorkoutGeneratorServiceTest {
         val sampleOneRepMaxes = createSampleOneRepMaxes()
         val sampleUserWeakMuscles = createSampleUserWeakMuscles()
         val sampleProgramPreferences = createSampleProgramPreferences()
-        
+
         return WorkoutGenerationPreparedData(
-            userExercisePool = UserExercisePool(
-                allExercises = sampleExercises,
-                preferences = emptyList(),
-                userEquipment = createSampleUserEquipment(),
-                exerciseEquipmentMappings = createSampleExerciseEquipmentMappings(),
-                exerciseMuscleMappings = createSampleExerciseMuscleMappings(),
-                previouslyUsedExercises = emptyList(),
-                userId = USER_ID
-            ),
+            userExercisePool =
+                UserExercisePool(
+                    allExercises = sampleExercises,
+                    preferences = emptyList(),
+                    userEquipment = createSampleUserEquipment(),
+                    exerciseEquipmentMappings = createSampleExerciseEquipmentMappings(),
+                    exerciseMuscleMappings = createSampleExerciseMuscleMappings(),
+                    previouslyUsedExercises = emptyList(),
+                    userId = USER_ID
+                ),
             oneRepMaxes = sampleOneRepMaxes,
             programPreferences = sampleProgramPreferences,
             weakMuscles = sampleUserWeakMuscles.map { it.muscleName },
@@ -544,22 +557,26 @@ class ConjugateWorkoutGeneratorServiceTest {
 
     private fun createSampleExerciseMuscleMappings(): Map<String, List<com.congen.model.ExerciseMuscle>> {
         return mapOf(
-            "Bench Press" to listOf(
-                com.congen.model.ExerciseMuscle("Bench Press", "chest"),
-                com.congen.model.ExerciseMuscle("Bench Press", "triceps")
-            ),
-            "Squat" to listOf(
-                com.congen.model.ExerciseMuscle("Squat", "quadriceps"),
-                com.congen.model.ExerciseMuscle("Squat", "glutes")
-            ),
-            "Deadlift" to listOf(
-                com.congen.model.ExerciseMuscle("Deadlift", "hamstrings"),
-                com.congen.model.ExerciseMuscle("Deadlift", "glutes")
-            ),
-            "Incline Bench Press" to listOf(
-                com.congen.model.ExerciseMuscle("Incline Bench Press", "chest"),
-                com.congen.model.ExerciseMuscle("Incline Bench Press", "triceps")
-            )
+            "Bench Press" to
+                listOf(
+                    com.congen.model.ExerciseMuscle("Bench Press", "chest"),
+                    com.congen.model.ExerciseMuscle("Bench Press", "triceps")
+                ),
+            "Squat" to
+                listOf(
+                    com.congen.model.ExerciseMuscle("Squat", "quadriceps"),
+                    com.congen.model.ExerciseMuscle("Squat", "glutes")
+                ),
+            "Deadlift" to
+                listOf(
+                    com.congen.model.ExerciseMuscle("Deadlift", "hamstrings"),
+                    com.congen.model.ExerciseMuscle("Deadlift", "glutes")
+                ),
+            "Incline Bench Press" to
+                listOf(
+                    com.congen.model.ExerciseMuscle("Incline Bench Press", "chest"),
+                    com.congen.model.ExerciseMuscle("Incline Bench Press", "triceps")
+                )
         )
     }
 

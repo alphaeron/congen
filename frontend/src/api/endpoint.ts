@@ -144,7 +144,7 @@ ENDPOINT.interceptors.response.use(
 );
 
 // Request deduplication cache
-const requestCache = new Map<string, Promise<any>>();
+const requestCache = new Map<string, Promise<unknown>>();
 const CACHE_DURATION = 30000; // 30 seconds
 const cacheTimestamps = new Map<string, number>();
 
@@ -168,14 +168,18 @@ const isCacheValid = (key: string): boolean => {
 /**
  * Congen backend request main helper with retry logic, deduplication, and caching.
  */
-export const REQUEST = async <T>(options: AxiosRequestConfig & { forceRefresh?: boolean }, retryCount = 0): Promise<T> => {
+export const REQUEST = async <T>(
+  options: AxiosRequestConfig & { forceRefresh?: boolean },
+  retryCount = 0
+): Promise<T> => {
   const maxRetries = 3;
   const retryDelay = 1000; // 1 second
 
   // Only cache GET requests and respect forceRefresh flag
   // Disable caching in test environments
   const isTestEnvironment = process.env.NODE_ENV === 'test' || typeof jest !== 'undefined';
-  const shouldCache = (options.method === 'GET' || !options.method) && !options.forceRefresh && !isTestEnvironment;
+  const shouldCache =
+    (options.method === 'GET' || !options.method) && !options.forceRefresh && !isTestEnvironment;
   const cacheKey = shouldCache ? generateCacheKey(options) : null;
 
   // Check for existing request (deduplication) - skip if forceRefresh is true
@@ -220,7 +224,7 @@ export const REQUEST = async <T>(options: AxiosRequestConfig & { forceRefresh?: 
   if (cacheKey && shouldCache) {
     requestCache.set(cacheKey, requestPromise);
     cacheTimestamps.set(cacheKey, Date.now());
-    
+
     // Clean up cache after request completes
     requestPromise.finally(() => {
       setTimeout(() => {

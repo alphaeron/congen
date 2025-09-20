@@ -1,15 +1,14 @@
+import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import React from 'react';
 import { MemoryRouter } from 'react-router';
-import { ThemeProvider, createTheme } from '@mui/material/styles';
+
 import { WorkoutsOverview } from './WorkoutsOverview';
 import type { User } from '../api/types';
 
 // Mock the child components to prevent Nivo chart issues
 jest.mock('./Workouts', () => ({
-  Workouts: ({ user }: { user: User }) => (
-    <div data-testid="workouts">Mock Workouts Component</div>
-  ),
+  Workouts: () => <div data-testid="workouts">Mock Workouts Component</div>,
 }));
 
 jest.mock('./ConjugateProgression', () => ({
@@ -51,7 +50,7 @@ describe('WorkoutsOverview', () => {
 
   it('renders component without errors', () => {
     renderWithTheme(<WorkoutsOverview user={mockUser} />);
-    
+
     expect(screen.getByText('Workout Calendar')).toBeInTheDocument();
     expect(screen.getByText('Conjugate Progression')).toBeInTheDocument();
     expect(screen.getByText('Exercise Rotation')).toBeInTheDocument();
@@ -60,7 +59,7 @@ describe('WorkoutsOverview', () => {
 
   it('displays Workouts component by default', () => {
     renderWithTheme(<WorkoutsOverview user={mockUser} />);
-    
+
     expect(screen.getByTestId('workouts')).toBeInTheDocument();
   });
 
@@ -110,7 +109,7 @@ describe('WorkoutsOverview', () => {
 
   it('passes user prop to Workouts component', () => {
     renderWithTheme(<WorkoutsOverview user={mockUser} />);
-    
+
     // The Workouts component should be rendered (we can't easily test prop passing with mocks)
     expect(screen.getByTestId('workouts')).toBeInTheDocument();
   });

@@ -2,16 +2,8 @@ import {
   CheckCircle as CheckCircleIcon,
   Warning as WarningIcon,
   Error as ErrorIcon,
-  Info as InfoIcon,
 } from '@mui/icons-material';
-import {
-  Box,
-  Card,
-  CardContent,
-  Typography,
-  Chip,
-  Tooltip,
-} from '@mui/material';
+import { Box, Card, CardContent, Typography, Chip } from '@mui/material';
 import React from 'react';
 
 export type StatusLevel = 'excellent' | 'good' | 'fair' | 'needs_attention';
@@ -105,11 +97,13 @@ export const StatusCard: React.FC<StatusCardProps> = ({
         transition: 'all 0.2s ease-in-out',
         border: `2px solid ${config.color}`,
         backgroundColor: config.bgColor,
-        '&:hover': onClick ? {
-          transform: 'translateY(-2px)',
-          boxShadow: 4,
-          backgroundColor: 'background.paper',
-        } : {},
+        '&:hover': onClick
+          ? {
+              transform: 'translateY(-2px)',
+              boxShadow: 4,
+              backgroundColor: 'background.paper',
+            }
+          : {},
       }}
       onClick={onClick}
     >
@@ -192,7 +186,7 @@ export const StatusIndicator: React.FC<{
 }> = ({ status, size = 'medium', showLabel = false }) => {
   const config = statusConfig[status];
   const IconComponent = config.icon;
-  
+
   const sizeConfig = {
     small: { icon: 16, chip: 'small' as const },
     medium: { icon: 20, chip: 'medium' as const },
@@ -236,21 +230,21 @@ export const StatusProgress: React.FC<{
   showValue?: boolean;
 }> = ({ value, status, label, showValue = true }) => {
   const config = statusConfig[status];
-  
+
   return (
     <Box>
-        <Box display="flex" justifyContent="space-between" alignItems="center" sx={{ mb: 0.5 }}>
-          {label && (
-            <Typography variant="body2" color="text.secondary">
-              {label}
-            </Typography>
-          )}
-          {showValue && (
-            <Typography variant="body2" fontWeight="medium" color={config.color}>
-              {Math.round(Math.min(100, Math.max(0, value)))}%
-            </Typography>
-          )}
-        </Box>
+      <Box display="flex" justifyContent="space-between" alignItems="center" sx={{ mb: 0.5 }}>
+        {label && (
+          <Typography variant="body2" color="text.secondary">
+            {label}
+          </Typography>
+        )}
+        {showValue && (
+          <Typography variant="body2" fontWeight="medium" color={config.color}>
+            {Math.round(Math.min(100, Math.max(0, value)))}%
+          </Typography>
+        )}
+      </Box>
       <Box
         sx={{
           width: '100%',

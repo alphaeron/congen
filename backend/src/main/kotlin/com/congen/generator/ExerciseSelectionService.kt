@@ -48,6 +48,8 @@ class ExerciseSelectionService(
      * @param dayType The day type (e.g., "ME_Upper", "DE_Lower")
      * @param movementBalanceState Current movement balance state (optional)
      * @param isWarmup Whether this is for a warmup exercise (optional, defaults to false)
+     * @param exerciseWorkoutTypeMappings Pre-computed mappings of exercise names to their workout types
+     * @param exerciseMuscleMappings Pre-computed mappings of exercise names to their muscle targets
      * @return Mono containing selected exercise or null if none available
      */
     fun selectExercise(
@@ -59,8 +61,7 @@ class ExerciseSelectionService(
         movementBalanceState: MovementBalanceService.MovementBalanceState? = null,
         isWarmup: Boolean = false,
         exerciseWorkoutTypeMappings: Map<String, List<String>>,
-        exerciseMuscleMappings: Map<String, List<ExerciseMuscle>>,
-        exerciseEquipmentMappings: Map<String, List<ExerciseEquipment>>
+        exerciseMuscleMappings: Map<String, List<ExerciseMuscle>>
     ): Mono<Exercise> {
         return selectRotatingExerciseInternal(
             userExercisePool = userExercisePool,
@@ -71,8 +72,7 @@ class ExerciseSelectionService(
             movementBalanceState = movementBalanceState,
             isWarmup = isWarmup,
             exerciseWorkoutTypeMappings = exerciseWorkoutTypeMappings,
-            exerciseMuscleMappings = exerciseMuscleMappings,
-            exerciseEquipmentMappings = exerciseEquipmentMappings
+            exerciseMuscleMappings = exerciseMuscleMappings
         ).flatMap { selectedExercise ->
             if (selectedExercise != null) {
                 // Mark the exercise as used and removed from the pool
@@ -114,6 +114,8 @@ class ExerciseSelectionService(
      * @param dayType The day type (e.g., "ME_Upper", "DE_Lower")
      * @param movementBalanceState Current movement balance state (optional)
      * @param isWarmup Whether this is for a warmup exercise (optional, defaults to false)
+     * @param exerciseWorkoutTypeMappings Pre-computed mappings of exercise names to their workout types
+     * @param exerciseMuscleMappings Pre-computed mappings of exercise names to their muscle targets
      * @return Mono containing selected exercise or null if none available
      */
     private fun selectRotatingExerciseInternal(
@@ -125,8 +127,7 @@ class ExerciseSelectionService(
         movementBalanceState: MovementBalanceService.MovementBalanceState? = null,
         isWarmup: Boolean = false,
         exerciseWorkoutTypeMappings: Map<String, List<String>>,
-        exerciseMuscleMappings: Map<String, List<ExerciseMuscle>>,
-        exerciseEquipmentMappings: Map<String, List<ExerciseEquipment>>,
+        exerciseMuscleMappings: Map<String, List<ExerciseMuscle>>
     ): Mono<Exercise?> {
         return selectRotatingExerciseInternalImpl(
             userExercisePool = userExercisePool,
@@ -138,7 +139,6 @@ class ExerciseSelectionService(
             isWarmup = isWarmup,
             exerciseWorkoutTypeMappings = exerciseWorkoutTypeMappings,
             exerciseMuscleMappings = exerciseMuscleMappings,
-            exerciseEquipmentMappings = exerciseEquipmentMappings,
             isSecondary = false
         ).onErrorResume { error ->
             if (error is ExerciseSelectionException) {
@@ -156,7 +156,6 @@ class ExerciseSelectionService(
                         isWarmup = isWarmup,
                         exerciseWorkoutTypeMappings = exerciseWorkoutTypeMappings,
                         exerciseMuscleMappings = exerciseMuscleMappings,
-                        exerciseEquipmentMappings = exerciseEquipmentMappings,
                         isSecondary = false
                     )
                 } else {
@@ -179,7 +178,6 @@ class ExerciseSelectionService(
         isWarmup: Boolean = false,
         exerciseWorkoutTypeMappings: Map<String, List<String>>,
         exerciseMuscleMappings: Map<String, List<ExerciseMuscle>>,
-        exerciseEquipmentMappings: Map<String, List<ExerciseEquipment>>,
         isSecondary: Boolean = false
     ): Mono<Exercise?> {
         return Mono.defer {
@@ -221,17 +219,21 @@ class ExerciseSelectionService(
                 if (poolRefreshed) {
                     logger.info("Pool refreshed successfully, retrying exercise selection...")
                     // Retry with refreshed pool
-                    val refreshedAvailableExercises = if (isAccessory) {
-                        userExercisePool.getAvailableAccessoryExercises()
-                    } else {
-                        userExercisePool.getAvailablePrimaryExercises()
-                    }
+                    val refreshedAvailableExercises =
+                        if (isAccessory) {
+                            userExercisePool.getAvailableAccessoryExercises()
+                        } else {
+                            userExercisePool.getAvailablePrimaryExercises()
+                        }
                     val refreshedDayTypeFilteredExercises = filterExercisesByDayType(refreshedAvailableExercises, dayType)
                     if (refreshedDayTypeFilteredExercises.isEmpty()) {
                         // For primary exercises, we must have at least one exercise available
                         // If day-type filtering fails even after pool refresh, fall back to any available primary exercise
                         if (!isAccessory) {
-                            logger.warn("No exercises available after day-type filtering for primary exercise even after pool refresh, falling back to any available primary exercise")
+                            logger.warn(
+                                "No exercises available after day-type filtering for primary exercise even after pool refresh, " +
+                                    "falling back to any available primary exercise"
+                            )
                             val fallbackExercises = refreshedAvailableExercises.filter { !it.isAccessory }
                             if (fallbackExercises.isNotEmpty()) {
                                 dayTypeFilteredExercises = fallbackExercises
@@ -249,7 +251,12 @@ class ExerciseSelectionService(
                                 )
                             }
                         } else {
-                            logger.error("No exercises available after day-type filtering for dayType: {} and isAccessory: {} even after pool refresh", dayType, isAccessory)
+                            logger.error(
+                                "No exercises available after day-type filtering for dayType: {} and isAccessory: {} " +
+                                    "even after pool refresh",
+                                dayType,
+                                isAccessory
+                            )
                             return@defer Mono.error(
                                 ExerciseSelectionException.noSuitableExerciseFound(
                                     targetMuscles = targetMuscles,
@@ -352,12 +359,13 @@ class ExerciseSelectionService(
                 }
                 .flatMap { workoutTypeFilteredExercises ->
                     // Apply banded exercise restrictions
-                    val bandedFilteredExercises = applyBandedExerciseRestrictions(
-                        workoutTypeFilteredExercises,
-                        dayType = dayType,
-                        isSecondary = isSecondary,
-                        isAccessory = isAccessory
-                    )
+                    val bandedFilteredExercises =
+                        applyBandedExerciseRestrictions(
+                            workoutTypeFilteredExercises,
+                            dayType = dayType,
+                            isSecondary = isSecondary,
+                            isAccessory = isAccessory
+                        )
 
                     // Filter exercises by equipment and muscles reactively
                     userExercisePool
@@ -436,14 +444,14 @@ class ExerciseSelectionService(
 
     /**
      * Selects the least recently used exercise from the available exercises using sliding window logic.
-     * 
+     *
      * The sliding window works by:
      * 1. Getting all exercises the user has used in previous workouts (sorted oldest to newest)
      * 2. Filtering to only include exercises of the same type (accessory vs primary)
      * 3. The sliding window size is the total number of available exercises of the same type
      * 4. If we have fewer programmed exercises than available, return the first available exercise
      * 5. Otherwise, return the exercise that was scheduled longest ago (first in the sorted list)
-     * 
+     *
      * @param availableExercises List of exercises available for selection
      * @param userExercisePool The user's exercise pool
      * @param isAccessory Whether we're selecting accessory exercises (affects sliding window logic)
@@ -455,7 +463,7 @@ class ExerciseSelectionService(
         isAccessory: Boolean
     ): Mono<Exercise> {
         val userId = userExercisePool.getUserId()
-        
+
         if (userId.isEmpty()) {
             // No user ID, return first available exercise
             return Mono.just(availableExercises.first())
@@ -463,19 +471,20 @@ class ExerciseSelectionService(
 
         // Use prepared data from UserExercisePool instead of making database calls
         val previouslyUsedExerciseNames = userExercisePool.getPreviouslyUsedExercises()
-        
+
         if (previouslyUsedExerciseNames.isEmpty()) {
             // No previous exercises, return the first available exercise
             return Mono.just(availableExercises.first())
         } else {
             // Filter previously used exercises to only those that match our available exercises
             // AND are of the same type (accessory vs primary)
-            val matchingPreviouslyUsedExercises = previouslyUsedExerciseNames.filter { exerciseName ->
-                availableExercises.any { availableExercise ->
-                    availableExercise.name == exerciseName &&
-                    availableExercise.isAccessory == isAccessory
+            val matchingPreviouslyUsedExercises =
+                previouslyUsedExerciseNames.filter { exerciseName ->
+                    availableExercises.any { availableExercise ->
+                        availableExercise.name == exerciseName &&
+                            availableExercise.isAccessory == isAccessory
+                    }
                 }
-            }
 
             // The sliding window size is the total number of available exercises
             val windowSize = availableExercises.size
@@ -484,35 +493,49 @@ class ExerciseSelectionService(
             // but never runs out of exercises to choose from
             return if (matchingPreviouslyUsedExercises.size < windowSize) {
                 // Not all exercises have been used yet - prioritize unused exercises
-                val unusedExercises = availableExercises.filter { exercise ->
-                    !matchingPreviouslyUsedExercises.contains(exercise.name)
-                }
-                
-                val selectedExercise = if (unusedExercises.isNotEmpty()) {
-                    // Prefer unused exercises to ensure variety
-                    unusedExercises.first()
-                } else {
-                    // If all available exercises have been used, select the least recently used one
-                    val leastRecentlyUsedExerciseName = matchingPreviouslyUsedExercises.first()
-                    availableExercises.find { exercise ->
-                        exercise.name == leastRecentlyUsedExerciseName
-                    } ?: availableExercises.first()
-                }
-                
-                logger.debug("Selected exercise for variety: {} from {} available exercises, {} unused exercises, {} matching previously used exercises",
-                    selectedExercise.name, availableExercises.size, unusedExercises.size, matchingPreviouslyUsedExercises.size)
-                
+                val unusedExercises =
+                    availableExercises.filter { exercise ->
+                        !matchingPreviouslyUsedExercises.contains(exercise.name)
+                    }
+
+                val selectedExercise =
+                    if (unusedExercises.isNotEmpty()) {
+                        // Prefer unused exercises to ensure variety
+                        unusedExercises.first()
+                    } else {
+                        // If all available exercises have been used, select the least recently used one
+                        val leastRecentlyUsedExerciseName = matchingPreviouslyUsedExercises.first()
+                        availableExercises.find { exercise ->
+                            exercise.name == leastRecentlyUsedExerciseName
+                        } ?: availableExercises.first()
+                    }
+
+                logger.debug(
+                    "Selected exercise for variety: {} from {} available exercises, {} unused exercises, " +
+                        "{} matching previously used exercises",
+                    selectedExercise.name,
+                    availableExercises.size,
+                    unusedExercises.size,
+                    matchingPreviouslyUsedExercises.size
+                )
+
                 Mono.just(selectedExercise)
             } else {
                 // All exercises have been used - implement proper cycling
                 // Find the exercise that was scheduled longest ago (first in the sorted list)
                 val leastRecentlyUsedExerciseName = matchingPreviouslyUsedExercises.first()
-                val leastRecentlyUsedExercise = availableExercises.find { exercise ->
-                    exercise.name == leastRecentlyUsedExerciseName
-                } ?: availableExercises.first()
+                val leastRecentlyUsedExercise =
+                    availableExercises.find { exercise ->
+                        exercise.name == leastRecentlyUsedExerciseName
+                    } ?: availableExercises.first()
 
-                logger.debug("Selected least recently used exercise for cycling: {} from {} available exercises, {} matching previously used exercises",
-                    leastRecentlyUsedExercise.name, availableExercises.size, matchingPreviouslyUsedExercises.size)
+                logger.debug(
+                    "Selected least recently used exercise for cycling: {} from {} available exercises, " +
+                        "{} matching previously used exercises",
+                    leastRecentlyUsedExercise.name,
+                    availableExercises.size,
+                    matchingPreviouslyUsedExercises.size
+                )
 
                 Mono.just(leastRecentlyUsedExercise)
             }
@@ -529,6 +552,7 @@ class ExerciseSelectionService(
      * @param dayType The day type (e.g., "ME_Upper", "DE_Lower")
      * @param exerciseMuscleMappings Pre-computed mappings of exercise names to their muscle targets
      * @param movementBalanceState Current movement balance state (optional)
+     * @param exerciseWorkoutTypeMappings Pre-computed mappings of exercise names to their workout types
      * @return Selected secondary exercise or empty if none available
      */
     fun selectSimilarSecondaryExercise(
@@ -538,13 +562,12 @@ class ExerciseSelectionService(
         dayType: String,
         exerciseMuscleMappings: Map<String, List<ExerciseMuscle>>,
         movementBalanceState: MovementBalanceService.MovementBalanceState? = null,
-        exerciseWorkoutTypeMappings: Map<String, List<String>>,
-        exerciseEquipmentMappings: Map<String, List<ExerciseEquipment>>
+        exerciseWorkoutTypeMappings: Map<String, List<String>>
     ): Mono<Exercise> {
         // Get primary exercise muscles to use as target muscles from prepared data
         val primaryExerciseMuscles = exerciseMuscleMappings[primaryExercise.name] ?: emptyList()
         val primaryMuscles = primaryExerciseMuscles.map { it.muscleName }
-        
+
         // Use the specialized secondary exercise selection method that applies banded exercise restrictions
         return selectSecondaryExerciseInternal(
             userExercisePool = userExercisePool,
@@ -553,8 +576,7 @@ class ExerciseSelectionService(
             dayType = dayType,
             movementBalanceState = movementBalanceState,
             exerciseWorkoutTypeMappings = exerciseWorkoutTypeMappings,
-            exerciseMuscleMappings = exerciseMuscleMappings,
-            exerciseEquipmentMappings = exerciseEquipmentMappings
+            exerciseMuscleMappings = exerciseMuscleMappings
         ).flatMap { selectedExercise ->
             // Mark the exercise as used and removed from the pool
             userExercisePool.markExerciseAsUsed(selectedExercise.name)
@@ -638,7 +660,8 @@ class ExerciseSelectionService(
         if (filteredExercises.isEmpty()) {
             logger.warn(
                 "No exercises available for day type '{}', falling back to all {} available exercises to prevent algorithm failure",
-                dayType, exercises.size
+                dayType,
+                exercises.size
             )
             return exercises
         }
@@ -661,17 +684,19 @@ class ExerciseSelectionService(
         exercises: List<Exercise>,
         exerciseWorkoutTypeMappings: Map<String, List<String>>
     ): Mono<List<Exercise>> {
-        val dynamicEffortExerciseNames = exerciseWorkoutTypeMappings
-            .filter { (_, workoutTypes) -> workoutTypes.contains("dynamic_effort") }
-            .keys
-            .toSet()
+        val dynamicEffortExerciseNames =
+            exerciseWorkoutTypeMappings
+                .filter { (_, workoutTypes) -> workoutTypes.contains("dynamic_effort") }
+                .keys
+                .toSet()
 
-        val filteredExercises = exercises.filter { exercise ->
-            // Include exercises marked as dynamic_effort
-            dynamicEffortExerciseNames.contains(exercise.name) ||
-                // Include plyometric exercises (regardless of accessory status)
-                exercise.movementType == MovementType.PLYOMETRIC
-        }
+        val filteredExercises =
+            exercises.filter { exercise ->
+                // Include exercises marked as dynamic_effort
+                dynamicEffortExerciseNames.contains(exercise.name) ||
+                    // Include plyometric exercises (regardless of accessory status)
+                    exercise.movementType == MovementType.PLYOMETRIC
+            }
 
         logger.debug("Filtered {} exercises for DE workout from {} total exercises", filteredExercises.size, exercises.size)
         return Mono.just(filteredExercises)
@@ -690,26 +715,34 @@ class ExerciseSelectionService(
         workoutType: String,
         exerciseWorkoutTypeMappings: Map<String, List<String>>
     ): Mono<List<Exercise>> {
-        val suitableExerciseNames = exerciseWorkoutTypeMappings
-            .filter { (_, workoutTypes) -> workoutTypes.contains(workoutType) }
-            .keys
-            .toSet()
+        val suitableExerciseNames =
+            exerciseWorkoutTypeMappings
+                .filter { (_, workoutTypes) -> workoutTypes.contains(workoutType) }
+                .keys
+                .toSet()
 
-        val filteredExercises = exercises.filter { exercise ->
-            suitableExerciseNames.contains(exercise.name)
-        }
+        val filteredExercises =
+            exercises.filter { exercise ->
+                suitableExerciseNames.contains(exercise.name)
+            }
 
         // If no exercises are available for the specific workout type, fall back to all exercises
         // This prevents the algorithm from failing when the exercise pool is limited
         if (filteredExercises.isEmpty()) {
             logger.warn(
                 "No exercises available for workout type '{}', falling back to all {} available exercises to prevent algorithm failure",
-                workoutType, exercises.size
+                workoutType,
+                exercises.size
             )
             return Mono.just(exercises)
         }
 
-        logger.debug("Filtered {} exercises for workout type '{}' from {} total exercises", filteredExercises.size, workoutType, exercises.size)
+        logger.debug(
+            "Filtered {} exercises for workout type '{}' from {} total exercises",
+            filteredExercises.size,
+            workoutType,
+            exercises.size
+        )
         return Mono.just(filteredExercises)
     }
 
@@ -729,13 +762,15 @@ class ExerciseSelectionService(
             return exercises
         }
 
-        val bandedExercises = exercises.filter { exercise ->
-            exercise.name.contains("Banded", ignoreCase = true)
-        }
-        
-        val filteredExercises = exercises.filter { exercise ->
-            !exercise.name.contains("Banded", ignoreCase = true)
-        }
+        val bandedExercises =
+            exercises.filter { exercise ->
+                exercise.name.contains("Banded", ignoreCase = true)
+            }
+
+        val filteredExercises =
+            exercises.filter { exercise ->
+                !exercise.name.contains("Banded", ignoreCase = true)
+            }
 
         // Only filter out banded exercises if we have enough non-banded exercises available
         if (filteredExercises.isNotEmpty()) {
@@ -768,18 +803,20 @@ class ExerciseSelectionService(
         dayType: String
     ): List<Exercise> {
         val isDEDay = dayType.contains("DE", ignoreCase = true)
-        
+
         if (isDEDay) {
             return exercises
         }
 
-        val bandedExercises = exercises.filter { exercise ->
-            exercise.name.contains("Banded", ignoreCase = true)
-        }
-        
-        val filteredExercises = exercises.filter { exercise ->
-            !exercise.name.contains("Banded", ignoreCase = true)
-        }
+        val bandedExercises =
+            exercises.filter { exercise ->
+                exercise.name.contains("Banded", ignoreCase = true)
+            }
+
+        val filteredExercises =
+            exercises.filter { exercise ->
+                !exercise.name.contains("Banded", ignoreCase = true)
+            }
 
         // Only filter out banded exercises if we have enough non-banded exercises available
         if (filteredExercises.isNotEmpty()) {
@@ -803,7 +840,7 @@ class ExerciseSelectionService(
 
     /**
      * Applies banded exercise restrictions based on day type and movement role.
-     * 
+     *
      * Rules:
      * 1. Banded exercises should only be used on DE (Dynamic Effort) day types
      * 2. Banded exercises should only be used for primary movements, never secondary or accessory
@@ -845,7 +882,6 @@ class ExerciseSelectionService(
      * @param movementBalanceState Current movement balance state (optional)
      * @param exerciseWorkoutTypeMappings Pre-computed mappings of exercise names to their workout types
      * @param exerciseMuscleMappings Pre-computed mappings of exercise names to their muscle targets
-     * @param exerciseEquipmentMappings Pre-computed mappings of exercise names to their equipment requirements
      * @return Mono containing selected exercise or null if none available
      */
     private fun selectSecondaryExerciseInternal(
@@ -855,8 +891,7 @@ class ExerciseSelectionService(
         dayType: String,
         movementBalanceState: MovementBalanceService.MovementBalanceState? = null,
         exerciseWorkoutTypeMappings: Map<String, List<String>>,
-        exerciseMuscleMappings: Map<String, List<ExerciseMuscle>>,
-        exerciseEquipmentMappings: Map<String, List<ExerciseEquipment>>
+        exerciseMuscleMappings: Map<String, List<ExerciseMuscle>>
     ): Mono<Exercise> {
         return selectRotatingExerciseInternalImpl(
             userExercisePool = userExercisePool,
@@ -868,8 +903,8 @@ class ExerciseSelectionService(
             isWarmup = false,
             exerciseWorkoutTypeMappings = exerciseWorkoutTypeMappings,
             exerciseMuscleMappings = exerciseMuscleMappings,
-            exerciseEquipmentMappings = exerciseEquipmentMappings,
-            isSecondary = true // This ensures banded exercises are filtered out
+            // This ensures banded exercises are filtered out
+            isSecondary = true
         ).flatMap { selectedExercise ->
             if (selectedExercise != null) {
                 Mono.just(selectedExercise)
@@ -917,6 +952,9 @@ class ExerciseSelectionService(
      * @param isFourDayTemplate Whether this is a 4-day template
      * @param dayType The type of workout day
      * @param workoutType The workout type (e.g., "maximal_effort", "dynamic_effort")
+     * @param exerciseMuscleMappings Pre-computed mappings of exercise names to their muscle targets
+     * @param exerciseEquipmentMappings Pre-computed mappings of exercise names to their equipment requirements
+     * @param exerciseWorkoutTypeMappings Pre-computed mappings of exercise names to their workout types
      * @return Mono containing list of selected warmup exercises
      */
     fun selectWarmupExercises(
@@ -950,8 +988,7 @@ class ExerciseSelectionService(
                 dayType = dayType,
                 workoutType = workoutType,
                 exerciseMuscleMappings = exerciseMuscleMappings,
-                exerciseWorkoutTypeMappings = exerciseWorkoutTypeMappings,
-                exerciseEquipmentMappings = exerciseEquipmentMappings
+                exerciseWorkoutTypeMappings = exerciseWorkoutTypeMappings
             )
         }
     }
@@ -963,6 +1000,9 @@ class ExerciseSelectionService(
      * @param primaryExercise The primary exercise for the day
      * @param dayType The type of workout day
      * @param workoutType The workout type (e.g., "maximal_effort", "dynamic_effort")
+     * @param exerciseMuscleMappings Pre-computed mappings of exercise names to their muscle targets
+     * @param exerciseEquipmentMappings Pre-computed mappings of exercise names to their equipment requirements
+     * @param exerciseWorkoutTypeMappings Pre-computed mappings of exercise names to their workout types
      * @return Mono containing list of selected warmup exercises
      */
     private fun selectFourDayWarmupExercises(
@@ -991,8 +1031,7 @@ class ExerciseSelectionService(
                     dayType = dayType,
                     workoutType = workoutType,
                     exerciseWorkoutTypeMappings = exerciseWorkoutTypeMappings,
-                    exerciseMuscleMappings = exerciseMuscleMappings,
-                    exerciseEquipmentMappings = exerciseEquipmentMappings
+                    exerciseMuscleMappings = exerciseMuscleMappings
                 )
 
             // Select 1 movement pattern exercise
@@ -1025,8 +1064,7 @@ class ExerciseSelectionService(
                 dayType = dayType,
                 workoutType = workoutType,
                 exerciseWorkoutTypeMappings = exerciseWorkoutTypeMappings,
-                exerciseMuscleMappings = exerciseMuscleMappings,
-                exerciseEquipmentMappings = exerciseEquipmentMappings
+                exerciseMuscleMappings = exerciseMuscleMappings
             )
         }
     }
@@ -1039,6 +1077,8 @@ class ExerciseSelectionService(
      * @param secondaryExercise The secondary exercise for the day (if available)
      * @param dayType The type of workout day
      * @param workoutType The workout type (e.g., "maximal_effort", "dynamic_effort")
+     * @param exerciseMuscleMappings Pre-computed mappings of exercise names to their muscle targets
+     * @param exerciseWorkoutTypeMappings Pre-computed mappings of exercise names to their workout types
      * @return Mono containing list of selected warmup exercises
      */
     private fun selectTwoThreeDayWarmupExercises(
@@ -1048,23 +1088,24 @@ class ExerciseSelectionService(
         dayType: String,
         workoutType: String,
         exerciseMuscleMappings: Map<String, List<ExerciseMuscle>>,
-        exerciseWorkoutTypeMappings: Map<String, List<String>>,
-        exerciseEquipmentMappings: Map<String, List<ExerciseEquipment>>
+        exerciseWorkoutTypeMappings: Map<String, List<String>>
     ): Mono<List<Exercise>> {
         // For 2 and 3 day templates, use muscles from the actual primary exercises selected
-        val primaryMuscles = if (primaryExercise != null) {
-            val primaryExerciseMuscles = exerciseMuscleMappings[primaryExercise.name] ?: emptyList()
-            primaryExerciseMuscles.map { it.muscleName.lowercase() }
-        } else {
-            emptyList<String>()
-        }
+        val primaryMuscles =
+            if (primaryExercise != null) {
+                val primaryExerciseMuscles = exerciseMuscleMappings[primaryExercise.name] ?: emptyList()
+                primaryExerciseMuscles.map { it.muscleName.lowercase() }
+            } else {
+                emptyList<String>()
+            }
 
-        val secondaryMuscles = if (secondaryExercise != null) {
-            val secondaryExerciseMuscles = exerciseMuscleMappings[secondaryExercise.name] ?: emptyList()
-            secondaryExerciseMuscles.map { it.muscleName.lowercase() }
-        } else {
-            emptyList<String>()
-        }
+        val secondaryMuscles =
+            if (secondaryExercise != null) {
+                val secondaryExerciseMuscles = exerciseMuscleMappings[secondaryExercise.name] ?: emptyList()
+                secondaryExerciseMuscles.map { it.muscleName.lowercase() }
+            } else {
+                emptyList<String>()
+            }
 
         val allMuscles = (primaryMuscles + secondaryMuscles).toSet().toList()
 
@@ -1075,8 +1116,7 @@ class ExerciseSelectionService(
             dayType = dayType,
             workoutType = workoutType,
             exerciseWorkoutTypeMappings = exerciseWorkoutTypeMappings,
-            exerciseMuscleMappings = exerciseMuscleMappings,
-            exerciseEquipmentMappings = exerciseEquipmentMappings
+            exerciseMuscleMappings = exerciseMuscleMappings
         )
     }
 
@@ -1088,6 +1128,8 @@ class ExerciseSelectionService(
      * @param count Number of exercises to select
      * @param dayType The day type (e.g., "ME_Upper", "DE_Lower")
      * @param workoutType The workout type (e.g., "maximal_effort", "dynamic_effort")
+     * @param exerciseWorkoutTypeMappings Pre-computed mappings of exercise names to their workout types
+     * @param exerciseMuscleMappings Pre-computed mappings of exercise names to their muscle targets
      * @return Mono containing list of selected warmup exercises
      */
     private fun selectMuscleFocusedWarmupExercises(
@@ -1097,8 +1139,7 @@ class ExerciseSelectionService(
         dayType: String,
         workoutType: String,
         exerciseWorkoutTypeMappings: Map<String, List<String>>,
-        exerciseMuscleMappings: Map<String, List<ExerciseMuscle>>,
-        exerciseEquipmentMappings: Map<String, List<ExerciseEquipment>>
+        exerciseMuscleMappings: Map<String, List<ExerciseMuscle>>
     ): Mono<List<Exercise>> {
         if (count <= 0) {
             return Mono.just(emptyList())
@@ -1111,8 +1152,7 @@ class ExerciseSelectionService(
             dayType = dayType,
             workoutType = workoutType,
             exerciseWorkoutTypeMappings = exerciseWorkoutTypeMappings,
-            exerciseMuscleMappings = exerciseMuscleMappings,
-            exerciseEquipmentMappings = exerciseEquipmentMappings
+            exerciseMuscleMappings = exerciseMuscleMappings
         ).onErrorResume { error ->
             if (error.message?.contains("No exercises available after workout-type filtering") == true) {
                 logger.info("Pool refresh needed for warmup exercises, refreshing and retrying...")
@@ -1126,8 +1166,7 @@ class ExerciseSelectionService(
                         dayType = dayType,
                         workoutType = workoutType,
                         exerciseWorkoutTypeMappings = exerciseWorkoutTypeMappings,
-                        exerciseMuscleMappings = exerciseMuscleMappings,
-                        exerciseEquipmentMappings = exerciseEquipmentMappings
+                        exerciseMuscleMappings = exerciseMuscleMappings
                     )
                 } else {
                     logger.error("Pool refresh failed for warmup exercises, returning empty list")
@@ -1154,8 +1193,7 @@ class ExerciseSelectionService(
         dayType: String,
         workoutType: String,
         exerciseWorkoutTypeMappings: Map<String, List<String>>,
-        exerciseMuscleMappings: Map<String, List<ExerciseMuscle>>,
-        exerciseEquipmentMappings: Map<String, List<ExerciseEquipment>>
+        exerciseMuscleMappings: Map<String, List<ExerciseMuscle>>
     ): Mono<List<Exercise>> {
         // Use Flux.range to select multiple exercises sequentially
         return Flux.range(1, count)
@@ -1171,8 +1209,7 @@ class ExerciseSelectionService(
                     movementBalanceState = null,
                     isWarmup = true,
                     exerciseWorkoutTypeMappings = exerciseWorkoutTypeMappings,
-                    exerciseMuscleMappings = exerciseMuscleMappings,
-                    exerciseEquipmentMappings = exerciseEquipmentMappings
+                    exerciseMuscleMappings = exerciseMuscleMappings
                 )
             }
             .collectList()
@@ -1250,8 +1287,7 @@ class ExerciseSelectionService(
             movementBalanceState = null,
             isWarmup = true,
             exerciseWorkoutTypeMappings = exerciseWorkoutTypeMappings,
-            exerciseMuscleMappings = exerciseMuscleMappings,
-            exerciseEquipmentMappings = exerciseEquipmentMappings
+            exerciseMuscleMappings = exerciseMuscleMappings
         ).filter { selectedExercise ->
             selectedExercise.movementType == primaryExercise.movementType
         }.switchIfEmpty(
@@ -1266,8 +1302,7 @@ class ExerciseSelectionService(
                 movementBalanceState = null,
                 isWarmup = true,
                 exerciseWorkoutTypeMappings = exerciseWorkoutTypeMappings,
-                exerciseMuscleMappings = exerciseMuscleMappings,
-                exerciseEquipmentMappings = exerciseEquipmentMappings
+                exerciseMuscleMappings = exerciseMuscleMappings
             ).flatMap { selectedExercise ->
                 // For movement pattern matching, allow primary exercises that:
                 // 1. Have the same movement type
@@ -1316,6 +1351,8 @@ class ExerciseSelectionService(
      * @param count Number of exercises to select
      * @param dayType The day type (e.g., "ME_Upper", "DE_Lower")
      * @param workoutType The workout type (e.g., "maximal_effort", "dynamic_effort")
+     * @param exerciseWorkoutTypeMappings Pre-computed mappings of exercise names to their workout types
+     * @param exerciseMuscleMappings Pre-computed mappings of exercise names to their muscle targets
      * @return Mono containing list of selected warmup exercises
      */
     private fun selectGeneralWarmupExercises(
@@ -1324,8 +1361,7 @@ class ExerciseSelectionService(
         dayType: String,
         workoutType: String,
         exerciseWorkoutTypeMappings: Map<String, List<String>>,
-        exerciseMuscleMappings: Map<String, List<ExerciseMuscle>>,
-        exerciseEquipmentMappings: Map<String, List<ExerciseEquipment>>
+        exerciseMuscleMappings: Map<String, List<ExerciseMuscle>>
     ): Mono<List<Exercise>> {
         if (count <= 0) {
             return Mono.just(emptyList())
@@ -1343,8 +1379,7 @@ class ExerciseSelectionService(
                     movementBalanceState = null,
                     isWarmup = true,
                     exerciseWorkoutTypeMappings = exerciseWorkoutTypeMappings,
-                    exerciseMuscleMappings = exerciseMuscleMappings,
-                    exerciseEquipmentMappings = exerciseEquipmentMappings
+                    exerciseMuscleMappings = exerciseMuscleMappings
                 )
             }
             .collectList()
@@ -1386,22 +1421,23 @@ class ExerciseSelectionService(
             return Mono.just(emptyList())
         }
 
-        val filteredExercises = exercises.filter { exercise ->
-            val muscleList = exerciseMuscleMappings[exercise.name] ?: emptyList()
-            val muscleCount = muscleList.size
-            val isAppropriate = muscleCount <= MAX_MUSCLES_FOR_WARMUP
+        val filteredExercises =
+            exercises.filter { exercise ->
+                val muscleList = exerciseMuscleMappings[exercise.name] ?: emptyList()
+                val muscleCount = muscleList.size
+                val isAppropriate = muscleCount <= MAX_MUSCLES_FOR_WARMUP
 
-            if (!isAppropriate) {
-                logger.debug(
-                    "Excluding exercise '{}' from warmup selection due to muscle count: {} (max allowed: {})",
-                    exercise.name,
-                    muscleCount,
-                    MAX_MUSCLES_FOR_WARMUP
-                )
+                if (!isAppropriate) {
+                    logger.debug(
+                        "Excluding exercise '{}' from warmup selection due to muscle count: {} (max allowed: {})",
+                        exercise.name,
+                        muscleCount,
+                        MAX_MUSCLES_FOR_WARMUP
+                    )
+                }
+
+                isAppropriate
             }
-
-            isAppropriate
-        }
 
         return Mono.just(filteredExercises)
     }
@@ -1419,18 +1455,20 @@ class ExerciseSelectionService(
         exerciseEquipmentMappings: Map<String, List<ExerciseEquipment>>
     ): Mono<Boolean> {
         val equipmentList = exerciseEquipmentMappings[exercise.name] ?: emptyList()
-        
+
         // For warmup exercises, we want exercises that use lighter equipment
         // or bodyweight exercises that are suitable for warming up
-        val isAppropriate = equipmentList.any { equipment ->
-            equipment.equipmentName.lowercase() in listOf(
-                "bodyweight",
-                "dumbbell",
-                "resistance band",
-                "kettlebell",
-                "medicine ball"
-            )
-        } || equipmentList.isEmpty()
+        val isAppropriate =
+            equipmentList.any { equipment ->
+                equipment.equipmentName.lowercase() in
+                    listOf(
+                        "bodyweight",
+                        "dumbbell",
+                        "resistance band",
+                        "kettlebell",
+                        "medicine ball"
+                    )
+            } || equipmentList.isEmpty()
 
         logger.debug(
             "Exercise '{}' is {} for warmup (equipment: {})",

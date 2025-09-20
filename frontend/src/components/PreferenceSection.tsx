@@ -51,11 +51,7 @@ export const PreferenceSection: React.FC<PreferenceSectionProps> = ({
         <Divider sx={{ mb: 2 }} />
 
         {!hasItems && emptyMessage ? (
-          <Typography
-            variant="body2"
-            color="text.secondary"
-            sx={{ textAlign: 'center', py: 2 }}
-          >
+          <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', py: 2 }}>
             {emptyMessage}
           </Typography>
         ) : (

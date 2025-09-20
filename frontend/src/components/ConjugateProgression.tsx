@@ -12,18 +12,21 @@ import React, { useMemo, useState, useRef, useEffect } from 'react';
 
 import { ExerciseName } from './ExerciseName';
 import { LineChart } from './LineChart';
-import { PieChart } from './PieChart';
 import { LoadingSpinner } from './LoadingSpinner';
+import { PieChart } from './PieChart';
 import { getIndividualExercise } from '../api/exercise';
 import { getUserDataExport } from '../api/gdpr';
-import { getUserWeightUnitPreferences } from '../api/userWeightUnitPreference';
 import type {
   User,
   Exercise,
   UserOneRepMax,
   UserDataExport,
-  UserWeightUnitPreference,
+  ProgramWithWorkouts,
+  ProgrammedWorkoutWithStages,
+  ProgrammedExerciseWithSetSchemes,
+  WorkoutStageWithExercises,
 } from '../api/types';
+import { getUserWeightUnitPreferences } from '../api/userWeightUnitPreference';
 
 interface ConjugateProgressionProps {
   user: User;
@@ -41,14 +44,14 @@ interface ConjugateProgressionProps {
  * @param user The user data
  * @return Enhanced conjugate progression component
  */
-export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({
-  user,
-}) => {
+export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({ user }) => {
   // State for loaded data
   const [userData, setUserData] = useState<UserDataExport | null>(null);
   const [exerciseData, setExerciseData] = useState<Map<string, Exercise>>(new Map());
   const [oneRepMaxes, setOneRepMaxes] = useState<UserOneRepMax[]>([]);
-  const [weightUnitPreferences, setWeightUnitPreferences] = useState<UserWeightUnitPreference[]>([]);
+  const [weightUnitPreferences, setWeightUnitPreferences] = useState<UserWeightUnitPreference[]>(
+    []
+  );
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [globalFilter, setGlobalFilter] = useState('');
@@ -73,12 +76,14 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({
 
         // Extract unique exercises from the export data and fetch exercise details
         const uniqueExercises = new Set<string>();
-        (userDataResponse.training_programs as any[])?.forEach(program => {
-          program.workouts.forEach((workoutWithStages: any) => {
-            workoutWithStages.stages.forEach((stageWithExercises: any) => {
-              stageWithExercises.exercises.forEach((exerciseWithSetSchemes: any) => {
-                uniqueExercises.add(exerciseWithSetSchemes.exercise.exercise_name);
-              });
+        (userDataResponse.training_programs as ProgramWithWorkouts[])?.forEach(program => {
+          program.workouts.forEach((workoutWithStages: ProgrammedWorkoutWithStages) => {
+            workoutWithStages.stages.forEach((stageWithExercises: WorkoutStageWithExercises) => {
+              stageWithExercises.exercises.forEach(
+                (exerciseWithSetSchemes: ProgrammedExerciseWithSetSchemes) => {
+                  uniqueExercises.add(exerciseWithSetSchemes.exercise.exercise_name);
+                }
+              );
             });
           });
         });
@@ -96,7 +101,6 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({
           }
         });
         setExerciseData(exerciseMap);
-
       } catch {
         setError('Failed to load progression data');
       } finally {
@@ -175,12 +179,7 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({
 
   // Show loading state
   if (isLoading) {
-    return (
-      <LoadingSpinner
-        message="Loading progression data..."
-        fullHeight={false}
-      />
-    );
+    return <LoadingSpinner message="Loading progression data..." fullHeight={false} />;
   }
 
   // Show error state
@@ -238,11 +237,15 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({
 
       {/* 1RM Table and Progress Tracking - Enhanced UX design */}
       <Grid size={{ xs: 12 }}>
-        <Card variant="outlined" sx={{
-          background: 'linear-gradient(135deg, rgba(25, 118, 210, 0.05) 0%, rgba(156, 39, 176, 0.05) 100%)',
-          border: '1px solid',
-          borderColor: 'primary.light'
-        }}>
+        <Card
+          variant="outlined"
+          sx={{
+            background:
+              'linear-gradient(135deg, rgba(25, 118, 210, 0.05) 0%, rgba(156, 39, 176, 0.05) 100%)',
+            border: '1px solid',
+            borderColor: 'primary.light',
+          }}
+        >
           <CardContent>
             <Box display="flex" alignItems="center" gap={1} sx={{ mb: 2 }}>
               <Typography variant="h6" fontWeight="medium">
@@ -259,7 +262,7 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({
                   alignItems: 'center',
                   justifyContent: 'center',
                   fontSize: '0.75rem',
-                  fontWeight: 'bold'
+                  fontWeight: 'bold',
                 }}
               >
                 {oneRepMaxes.length}
@@ -287,8 +290,8 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({
                   backgroundColor: 'background.paper',
                   '&:hover': {
                     backgroundColor: 'action.hover',
-                  }
-                }
+                  },
+                },
               }}
             />
             <Box
@@ -300,14 +303,16 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({
                 borderRadius: 1,
                 border: 1,
                 borderColor: 'divider',
-                backgroundColor: 'background.paper'
+                backgroundColor: 'background.paper',
               }}
             >
-              <table style={{
-                width: '100%',
-                borderCollapse: 'collapse',
-                fontFamily: 'inherit'
-              }}>
+              <table
+                style={{
+                  width: '100%',
+                  borderCollapse: 'collapse',
+                  fontFamily: 'inherit',
+                }}
+              >
                 <thead>
                   {table.getHeaderGroups().map(headerGroup => (
                     <tr key={headerGroup.id}>
@@ -323,7 +328,7 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({
                             color: '#495057',
                             fontSize: '0.875rem',
                             textTransform: 'uppercase',
-                            letterSpacing: '0.5px'
+                            letterSpacing: '0.5px',
                           }}
                         >
                           {flexRender(header.column.columnDef.header, header.getContext())}
@@ -364,12 +369,12 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({
                               padding: '12px 16px',
                               borderBottom: '1px solid #f0f0f0',
                               fontSize: '0.875rem',
-                              transition: 'background-color 0.2s ease'
+                              transition: 'background-color 0.2s ease',
                             }}
-                            onMouseEnter={(e) => {
+                            onMouseEnter={e => {
                               e.currentTarget.style.backgroundColor = '#f8f9fa';
                             }}
-                            onMouseLeave={(e) => {
+                            onMouseLeave={e => {
                               e.currentTarget.style.backgroundColor = 'transparent';
                             }}
                           >
@@ -385,7 +390,6 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({
           </CardContent>
         </Card>
       </Grid>
-
     </Grid>
   );
 };

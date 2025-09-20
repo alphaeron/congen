@@ -4,7 +4,6 @@ import Container from '@mui/material/Container';
 import Typography from '@mui/material/Typography';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
-import Avatar from '@mui/material/Avatar';
 import Button from '@mui/material/Button';
 import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid';
@@ -103,7 +102,9 @@ export default function Account({ kcContext, i18n: _i18n }: AccountProps) {
               }
             }, 1000); // Wait 1 second to show the success message
           } else {
-            enqueueSnackbar('Profile updated in Keycloak but failed to update backend profile', { variant: 'warning' });
+            enqueueSnackbar('Profile updated in Keycloak but failed to update backend profile', {
+              variant: 'warning',
+            });
           }
         } else {
           enqueueSnackbar('Failed to update user profile', { variant: 'error' });
@@ -155,7 +156,6 @@ export default function Account({ kcContext, i18n: _i18n }: AccountProps) {
       </Box>
     );
   }
-
 
   const handlePageChange = (page: string) => {
     setCurrentPage(page);
@@ -309,10 +309,7 @@ export default function Account({ kcContext, i18n: _i18n }: AccountProps) {
                                   'lastName',
                                   (user.lastName as string) || (user.family_name as string) || ''
                                 );
-                                form.setFieldValue(
-                                  'email',
-                                  (user.email as string) || ''
-                                );
+                                form.setFieldValue('email', (user.email as string) || '');
                               }
                             }}
                             disabled={authLoading}
@@ -325,7 +322,11 @@ export default function Account({ kcContext, i18n: _i18n }: AccountProps) {
                             sx={{ borderRadius: '12px', px: 3 }}
                             disabled={authLoading || !form.state.isValid || form.state.isSubmitting}
                           >
-                            {form.state.isSubmitting ? <LoadingSpinner size={20} /> : 'Save Changes'}
+                            {form.state.isSubmitting ? (
+                              <LoadingSpinner size={20} />
+                            ) : (
+                              'Save Changes'
+                            )}
                           </Button>
                         </Box>
                       </CardContent>

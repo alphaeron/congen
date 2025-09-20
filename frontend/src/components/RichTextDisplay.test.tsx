@@ -1,25 +1,51 @@
-import React from 'react';
 import { render, screen } from '@testing-library/react';
+import React from 'react';
+
 import { RichTextDisplay } from './RichTextDisplay';
 
 // Mock the RichTextEditor component
+interface MockSlateNode {
+  children?: Array<{
+    text: string;
+    bold?: boolean;
+    italic?: boolean;
+    underline?: boolean;
+  }>;
+}
+
 jest.mock('./RichTextEditor', () => ({
-  RichTextEditor: ({ value, readOnly, showToolbar, onChange }: any) => (
+  RichTextEditor: ({
+    value,
+    readOnly,
+    showToolbar,
+  }: {
+    value: MockSlateNode[];
+    readOnly: boolean;
+    showToolbar: boolean;
+    onChange: (value: MockSlateNode[]) => void;
+  }) => (
     <div data-testid="rich-text-editor" data-readonly={readOnly} data-showtoolbar={showToolbar}>
-      {Array.isArray(value) ? value.map((node: any, index: number) => (
-        <div key={index} data-testid={`slate-node-${index}`}>
-          {node.children?.map((child: any, childIndex: number) => (
-            <span 
-              key={childIndex} 
-              data-bold={child.bold} 
-              data-italic={child.italic} 
-              data-underline={child.underline}
-            >
-              {child.text}
-            </span>
-          ))}
-        </div>
-      )) : value}
+      {Array.isArray(value)
+        ? value.map((node: MockSlateNode, index: number) => (
+            <div key={index} data-testid={`slate-node-${index}`}>
+              {node.children?.map(
+                (
+                  child: { text: string; bold?: boolean; italic?: boolean; underline?: boolean },
+                  childIndex: number
+                ) => (
+                  <span
+                    key={childIndex}
+                    data-bold={child.bold}
+                    data-italic={child.italic}
+                    data-underline={child.underline}
+                  >
+                    {child.text}
+                  </span>
+                )
+              )}
+            </div>
+          ))
+        : value}
     </div>
   ),
 }));
@@ -70,18 +96,21 @@ describe('RichTextDisplay', () => {
   });
 
   it('handles complex formatting combinations', () => {
-    render(<RichTextDisplay content="**Bold** *italic* __underline__ **Bold *with italic* inside**" />);
-    
+    render(
+      <RichTextDisplay content="**Bold** *italic* __underline__ **Bold *with italic* inside**" />
+    );
+
     // Check that all formatting is applied correctly
     expect(screen.getByText('Bold')).toHaveAttribute('data-bold', 'true');
     expect(screen.getByText('italic')).toHaveAttribute('data-italic', 'true');
     expect(screen.getByText('underline')).toHaveAttribute('data-underline', 'true');
   });
 
-          it('passes through Box props', () => {
-            const { container } = render(<RichTextDisplay content="Test" sx={{ backgroundColor: 'red' }} />);
-            const box = container.firstChild as HTMLElement;
-            expect(box).toHaveStyle({ backgroundColor: 'red' });
-          });
-
-        });
+  it('passes through Box props', () => {
+    const { container } = render(
+      <RichTextDisplay content="Test" sx={{ backgroundColor: 'red' }} />
+    );
+    const box = container.firstChild as HTMLElement;
+    expect(box).toHaveStyle({ backgroundColor: 'red' });
+  });
+});

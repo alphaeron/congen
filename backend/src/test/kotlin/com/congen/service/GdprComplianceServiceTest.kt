@@ -60,7 +60,7 @@ class GdprComplianceServiceTest {
         programDAL = mock()
         keycloakClient = mock()
         val postgresClient = mock<PostgresClient>()
-        
+
         // Mock PostgresClient.withTransaction to execute the block directly
         doAnswer { invocation ->
             val block = invocation.getArgument<() -> reactor.core.publisher.Mono<kotlin.Unit>>(0)

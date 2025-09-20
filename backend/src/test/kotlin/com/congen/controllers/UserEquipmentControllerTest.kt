@@ -51,13 +51,13 @@ class UserEquipmentControllerTest {
         keycloakUtil = mock()
         gdprComplianceService = createGdprComplianceServiceSpy()
         val postgresClient = mock<PostgresClient>()
-        
+
         // Mock PostgresClient.withTransaction to execute the block directly
         doAnswer { invocation ->
             val block = invocation.getArgument<() -> Mono<ResponseEntity<List<com.congen.model.UserEquipment>>>>(0)
             block.invoke()
         }.whenever(postgresClient).withTransaction(any<() -> Mono<ResponseEntity<List<com.congen.model.UserEquipment>>>>())
-        
+
         userEquipmentController = UserEquipmentController(userEquipmentDAL, keycloakUtil, gdprComplianceService, postgresClient)
 
         // Mock KeycloakUtil methods for all tests

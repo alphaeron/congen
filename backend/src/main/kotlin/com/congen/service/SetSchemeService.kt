@@ -375,7 +375,8 @@ class SetSchemeService(
                                             userOneRepMaxDAL.updateUserOneRepMax(userId, exerciseName, estimatedOneRepMax)
                                                 .doOnSuccess {
                                                     logger.info(
-                                                        "Updated 1RM for user {} exercise {} from {} to {} (calculated from {} lbs × {} reps)",
+                                                        "Updated 1RM for user {} exercise {} from {} to {} " +
+                                                            "(calculated from {} lbs × {} reps)",
                                                         userId,
                                                         exerciseName,
                                                         currentOneRepMax.oneRepMax,

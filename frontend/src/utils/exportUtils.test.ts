@@ -4,7 +4,6 @@ import type {
   WorkoutStageWithExercises,
   ProgrammedExerciseWithSetSchemes,
   SetScheme,
-  Exercise,
   UserWeightUnitPreference,
   ProgramWithWorkouts,
 } from '../api/types';
@@ -66,11 +65,6 @@ Object.defineProperty(URL, 'revokeObjectURL', {
 });
 
 describe('exportUtils', () => {
-  const mockExerciseData = new Map<string, Exercise>([
-    ['Bench Press', { id: 1, name: 'Bench Press', exercise_name: 'Bench Press' } as Exercise],
-    ['Squat', { id: 2, name: 'Squat', exercise_name: 'Squat' } as Exercise],
-  ]);
-
   const mockSetScheme: SetScheme = {
     id: 1,
     programmed_exercise_id: 1,
@@ -130,7 +124,7 @@ describe('exportUtils', () => {
       await exportWorkoutToPDF(mockWorkoutData, mockWeightUnitPreferences, options);
 
       // Verify jsPDF methods were called
-      const { jsPDF } = require('jspdf');
+      const { jsPDF } = jest.requireActual('jspdf');
       expect(jsPDF).toHaveBeenCalled();
     });
   });
@@ -146,7 +140,7 @@ describe('exportUtils', () => {
       await exportWeekToPDF(weekWorkouts, mockWeightUnitPreferences, options);
 
       // Verify jsPDF methods were called
-      const { jsPDF } = require('jspdf');
+      const { jsPDF } = jest.requireActual('jspdf');
       expect(jsPDF).toHaveBeenCalled();
     });
   });
@@ -173,7 +167,7 @@ describe('exportUtils', () => {
       await exportProgramToPDF(programData, mockWeightUnitPreferences, options);
 
       // Verify jsPDF methods were called
-      const { jsPDF } = require('jspdf');
+      const { jsPDF } = jest.requireActual('jspdf');
       expect(jsPDF).toHaveBeenCalled();
     });
   });

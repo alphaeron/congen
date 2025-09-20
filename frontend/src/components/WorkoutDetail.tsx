@@ -1,43 +1,64 @@
 import {
   ExpandMore as ExpandMoreIcon,
   ExpandLess as ExpandLessIcon,
-  Edit as EditIcon,
   FitnessCenter as FitnessCenterIcon,
   Save,
   Add as AddIcon,
   ArrowBack as ArrowBackIcon,
 } from '@mui/icons-material';
-import { Box, Typography, Alert, IconButton, Tooltip, Paper, useTheme, Grid, Button, CircularProgress, Dialog, DialogTitle, DialogContent, DialogActions, Autocomplete, TextField, FormControl, InputLabel, Select, MenuItem, Divider, Switch, FormControlLabel } from '@mui/material';
+import {
+  Box,
+  Typography,
+  Alert,
+  IconButton,
+  Paper,
+  useTheme,
+  Grid,
+  Button,
+  CircularProgress,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Autocomplete,
+  TextField,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+} from '@mui/material';
+import { useForm } from '@tanstack/react-form';
 import {
   useReactTable,
   getCoreRowModel,
   flexRender,
   createColumnHelper,
 } from '@tanstack/react-table';
-import { useForm } from '@tanstack/react-form';
 import { useSnackbar } from 'notistack';
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
-import { useNavigate, useSearchParams } from 'react-router';
 
 import { ChordChart } from './ChordChart';
 import { ExerciseName } from './ExerciseName';
 import { ExportButtons } from './ExportButtons';
 import { LoadingSpinner } from './LoadingSpinner';
 import { ProgressBar } from './ProgressBar';
-import { calculateWorkoutProgress } from '../utils/progressUtils';
-
-import { SunburstChart } from './SunburstChart';
-import { SetSchemeEditor } from './SetSchemeEditor';
-import { SetSchemeForm, type SetSchemeFormData } from './SetSchemeForm';
-import { RichTextEditor } from './RichTextEditor';
 import { RichTextDisplay } from './RichTextDisplay';
-import { updateProgrammedExercise, createProgrammedExercise } from '../api/programmedExercise';
+import { RichTextEditor } from './RichTextEditor';
+import { SetSchemeEditor } from './SetSchemeEditor';
+import { SetSchemeForm } from './SetSchemeForm';
+import { SunburstChart } from './SunburstChart';
 import { getExercises } from '../api/exercise';
-import type { UserDataExport, UserWeightUnitPreference, Exercise } from '../api/types';
+import { updateProgrammedExercise, createProgrammedExercise } from '../api/programmedExercise';
+import type {
+  Exercise,
+  ProgramWithWorkouts,
+  ProgrammedWorkoutWithStages,
+  ProgrammedExerciseWithSetSchemes,
+} from '../api/types';
 import { replaceUnderscoresWithSpaces, formatWeightWithUnit } from '../common/utils';
-import { useAuth } from '../contexts/AuthContext';
 import { useData } from '../contexts/DataContext';
 import { exportWorkoutToPDF } from '../utils/exportUtils';
+import { calculateWorkoutProgress } from '../utils/progressUtils';
 
 interface WorkoutDetailProps {
   workoutId: number;
@@ -64,8 +85,8 @@ interface TableRow {
   exerciseNotes?: string;
   stageId?: number;
   exerciseId?: number;
-  setSchemes?: any[];
-  exerciseData?: any;
+  setSchemes?: Record<string, unknown>[];
+  exerciseData?: ProgrammedExerciseWithSetSchemes;
 }
 
 const columnHelper = createColumnHelper<TableRow>();
@@ -88,19 +109,17 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
 }) => {
   const theme = useTheme();
   const { enqueueSnackbar } = useSnackbar();
-  const { user } = useAuth();
-  const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
 
   // Use shared data context instead of local state
-  const { userData, exerciseMuscleData, weightUnitPreferences, isLoading, error, refreshData } = useData();
+  const { userData, exerciseMuscleData, weightUnitPreferences, isLoading, refreshData } = useData();
 
   const [collapsedStages, setCollapsedStages] = useState<Set<number>>(new Set());
   // Remove local exerciseData state - we'll use the data from context directly
   const [isMostRecentWeek, setIsMostRecentWeek] = useState(false);
   const [saving, setSaving] = useState(false);
   const [notesEditorOpen, setNotesEditorOpen] = useState(false);
-  const [selectedExerciseForNotes, setSelectedExerciseForNotes] = useState<any>(null);
+  const [selectedExerciseForNotes, setSelectedExerciseForNotes] =
+    useState<ProgrammedExerciseWithSetSchemes | null>(null);
   const [notesContent, setNotesContent] = useState('');
   const [addExerciseDialogOpen, setAddExerciseDialogOpen] = useState(false);
   const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null);
@@ -110,7 +129,9 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
 
   // Weight conversion functions for Add Exercise dialog
   const convertWeightForStorage = (weight: number, exerciseName: string): number => {
-    const weightUnitPreference = weightUnitPreferences.find(pref => pref.exercise_name === exerciseName);
+    const weightUnitPreference = weightUnitPreferences.find(
+      pref => pref.exercise_name === exerciseName
+    );
     if (weightUnitPreference?.preferred_unit === 'LBS') {
       return weight / 2.20462; // Convert lbs to kg
     }
@@ -147,7 +168,7 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
         const nextPosition = selectedStage ? selectedStage.exercises.length + 1 : 1;
 
         // Create the programmed exercise
-        const result = await createProgrammedExercise(
+        await createProgrammedExercise(
           selectedStageId as number,
           selectedExercise.name,
           nextPosition,
@@ -156,9 +177,13 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
           convertWeightForStorage(value.targetWeight, selectedExercise.name),
           value.targetReps,
           value.restSeconds,
-          value.performedWeight ? convertWeightForStorage(value.performedWeight, selectedExercise.name) : undefined,
+          value.performedWeight
+            ? convertWeightForStorage(value.performedWeight, selectedExercise.name)
+            : undefined,
           value.performedReps,
-          value.useTempo ? `${value.eccentricTempo}-${value.isometricTempo}-${value.concentricTempo}` : undefined,
+          value.useTempo
+            ? `${value.eccentricTempo}-${value.isometricTempo}-${value.concentricTempo}`
+            : undefined,
           value.isAmrap,
           value.isEmom
         );
@@ -168,7 +193,7 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
 
         handleCloseAddExerciseDialog();
         enqueueSnackbar('Exercise added successfully', { variant: 'success' });
-      } catch (error) {
+      } catch {
         enqueueSnackbar('Failed to add exercise', { variant: 'error' });
       } finally {
         setSaving(false);
@@ -207,22 +232,27 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
     setSelectedStageId('');
   }, []);
 
-
   // Determine if this is the most recent week when userData is available
   useEffect(() => {
     if (userData?.training_programs && userData.training_programs.length > 0) {
-      const activeProgram = userData.training_programs.find((program: any) => program.program.is_active);
+      const activeProgram = userData.training_programs.find(
+        (program: ProgramWithWorkouts) => program.program.is_active
+      );
       if (activeProgram) {
         // Find the current workout's week
-        const currentWorkout = activeProgram.workouts.find((workout: any) => workout.workout.id === workoutId);
+        const currentWorkout = activeProgram.workouts.find(
+          (workout: ProgrammedWorkoutWithStages) => workout.workout.id === workoutId
+        );
         if (currentWorkout) {
           const workoutsPerWeek = activeProgram.program_preferences.program_days_per_week;
           const currentWeek = Math.ceil(currentWorkout.workout.day_number / workoutsPerWeek);
 
           // Find the highest week number in the program
-          const maxWeek = Math.max(...activeProgram.workouts.map((workout: any) =>
-            Math.ceil(workout.workout.day_number / workoutsPerWeek)
-          ));
+          const maxWeek = Math.max(
+            ...activeProgram.workouts.map((workout: ProgrammedWorkoutWithStages) =>
+              Math.ceil(workout.workout.day_number / workoutsPerWeek)
+            )
+          );
 
           setIsMostRecentWeek(currentWeek === maxWeek);
         }
@@ -230,17 +260,21 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
     }
   }, [userData, workoutId]);
 
-
   // Handle opening notes editor
-  const handleOpenNotesEditor = useCallback((exerciseData: any) => {
-    if (!isMostRecentWeek) {
-      enqueueSnackbar('Editing is only available for the most recent week', { variant: 'warning' });
-      return;
-    }
-    setSelectedExerciseForNotes(exerciseData);
-    setNotesContent(exerciseData.exercise.notes || '');
-    setNotesEditorOpen(true);
-  }, [isMostRecentWeek, enqueueSnackbar]);
+  const handleOpenNotesEditor = useCallback(
+    (exerciseData: ProgrammedExerciseWithSetSchemes) => {
+      if (!isMostRecentWeek) {
+        enqueueSnackbar('Editing is only available for the most recent week', {
+          variant: 'warning',
+        });
+        return;
+      }
+      setSelectedExerciseForNotes(exerciseData);
+      setNotesContent(exerciseData.exercise.notes || '');
+      setNotesEditorOpen(true);
+    },
+    [isMostRecentWeek, enqueueSnackbar]
+  );
 
   // Handle closing notes editor
   const handleCloseNotesEditor = useCallback(() => {
@@ -256,7 +290,7 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
     try {
       setSaving(true);
 
-      const result = await updateProgrammedExercise(
+      await updateProgrammedExercise(
         selectedExerciseForNotes.exercise.id,
         selectedExerciseForNotes.exercise.workout_stage_id,
         selectedExerciseForNotes.exercise.exercise_name,
@@ -269,7 +303,7 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
 
       handleCloseNotesEditor();
       enqueueSnackbar('Exercise notes saved successfully', { variant: 'success' });
-    } catch (error) {
+    } catch {
       enqueueSnackbar('Failed to save exercise notes', { variant: 'error' });
     } finally {
       setSaving(false);
@@ -323,40 +357,6 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
     });
   };
 
-
-  // Breadcrumb navigation functions
-  const handleBreadcrumbClick = (target: string) => {
-    const newSearchParams = new URLSearchParams(searchParams);
-    newSearchParams.set('section', 'workouts');
-
-    if (target === 'workouts') {
-      newSearchParams.delete('week');
-      newSearchParams.delete('workout');
-    } else if (target === 'week') {
-      // Calculate week number from workout day number
-      if (workoutData && userData) {
-        const dayNumber = workoutData.workout.day_number;
-
-        // Find the active program to get workouts per week
-        let weekNumber = 1;
-        if (userData.training_programs?.length) {
-          const activeProgram = userData.training_programs.find(program =>
-            (program.program as any).is_active
-          );
-          if (activeProgram && (activeProgram as any).program_preferences) {
-            const workoutsPerWeek = (activeProgram as any).program_preferences.program_days_per_week;
-            weekNumber = Math.ceil(dayNumber / workoutsPerWeek);
-          }
-        }
-
-        newSearchParams.set('week', weekNumber.toString());
-        newSearchParams.delete('workout');
-      }
-    }
-
-    navigate(`/dashboard?${newSearchParams.toString()}`);
-  };
-
   // Calculate workout progress metrics
   const getWorkoutProgressMetrics = () => {
     if (!workoutData) return null;
@@ -367,130 +367,6 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
   // Render breadcrumbs with integrated progress
   // Get progress metrics for the component
   const progressMetrics = getWorkoutProgressMetrics();
-
-  const renderBreadcrumbs = () => {
-    if (!workoutData || !userData) return null;
-
-    const workoutName = replaceUnderscoresWithSpaces(workoutData.workout.name);
-    const dayNumber = workoutData.workout.day_number;
-
-    // Find the active program to get workouts per week and program name
-    let weekNumber = 1;
-    let programName = 'Workouts';
-    if (userData.training_programs?.length) {
-      const activeProgram = userData.training_programs.find(program =>
-        (program.program as any).is_active
-      );
-      if (activeProgram) {
-        programName = (activeProgram.program as any).name || 'Workouts';
-        if ((activeProgram as any).program_preferences) {
-          const workoutsPerWeek = (activeProgram as any).program_preferences.program_days_per_week;
-          weekNumber = Math.ceil(dayNumber / workoutsPerWeek);
-        }
-      }
-    }
-
-    return (
-      <Box
-        position="sticky"
-        top={0}
-        zIndex={1001}
-        sx={{
-          backgroundColor: 'background.default',
-          pt: 2,
-          pb: 2,
-          borderBottom: 1,
-          borderColor: 'divider',
-        }}
-      >
-        <Box sx={{ mb: 2 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-            <Button
-              variant="text"
-              onClick={() => handleBreadcrumbClick('workouts')}
-              sx={{
-                color: 'text.secondary',
-                textTransform: 'none',
-                fontSize: '1rem',
-                fontWeight: 'normal',
-                p: 0,
-                minWidth: 'auto',
-              }}
-            >
-              {programName}
-            </Button>
-            <Typography variant="body1" color="text.primary">
-              /
-            </Typography>
-            <Button
-              variant="text"
-              onClick={() => handleBreadcrumbClick('week')}
-              sx={{
-                color: 'text.secondary',
-                textTransform: 'none',
-                fontSize: '1rem',
-                fontWeight: 'normal',
-                p: 0,
-                minWidth: 'auto',
-              }}
-            >
-              Week {weekNumber}
-            </Button>
-            <Typography variant="body1" color="text.primary">
-              /
-            </Typography>
-            <Typography variant="body1" color="text.primary">
-              {workoutName}
-            </Typography>
-
-            {/* Export buttons */}
-            <Box sx={{ flexGrow: 1 }} />
-            <ExportButtons
-              onExportPDF={handleExportPDF}
-              disabled={!workoutData}
-            />
-
-            {/* Add Exercise button - only show for most recent week */}
-            {isMostRecentWeek && (
-              <Button
-                variant="contained"
-                color="primary"
-                startIcon={<AddIcon />}
-                onClick={handleOpenAddExerciseDialog}
-                sx={{
-                  ml: 2,
-                  textTransform: 'none',
-                  fontSize: '0.875rem',
-                }}
-              >
-                Add Exercise
-              </Button>
-            )}
-          </Box>
-
-            {/* Workout progress indicator integrated into breadcrumb */}
-            {progressMetrics && (
-              <Box sx={{ mt: 1 }}>
-                <ProgressBar
-                  value={progressMetrics.completionRate}
-                  status={progressMetrics.status}
-                  current={progressMetrics.completedExercises}
-                  total={progressMetrics.totalExercises}
-                  showTooltip={true}
-                  showTicks={true}
-                  steps={Array.from({ length: progressMetrics.totalExercises + 1 }, (_, i) => (i / progressMetrics.totalExercises) * 100)}
-                  ticks={Array.from({ length: progressMetrics.totalExercises + 1 }, (_, i) => (i / progressMetrics.totalExercises) * 100)}
-                  width="100%"
-                  height={8}
-                  smooth={true}
-                  animationDuration={500}
-                />
-              </Box>
-            )}
-        </Box>
-      </Box>
-    );
-  };
 
   // Transform data for table
   const tableData = useMemo(() => {
@@ -576,22 +452,22 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
               <Box display="flex" alignItems="center" gap={1} minHeight={40}>
                 <SetSchemeEditor
                   exercise={row.original.exerciseData}
-                  onExerciseUpdate={async (updatedExercise) => {
+                  onExerciseUpdate={async () => {
                     // Refresh data from server to get the updated exercise
                     await refreshData();
                   }}
                   isMostRecentWeek={isMostRecentWeek}
                   weightUnitPreferences={weightUnitPreferences}
                 />
-                          <ExerciseName
-                            exerciseName={row.original.exerciseName || ''}
-                            variant="body2"
-                            sx={{
-                              wordWrap: 'break-word',
-                              whiteSpace: 'normal',
-                              lineHeight: 1.4,
-                            }}
-                          />
+                <ExerciseName
+                  exerciseName={row.original.exerciseName || ''}
+                  variant="body2"
+                  sx={{
+                    wordWrap: 'break-word',
+                    whiteSpace: 'normal',
+                    lineHeight: 1.4,
+                  }}
+                />
               </Box>
             );
           }
@@ -606,9 +482,7 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
         header: 'Sets',
         cell: ({ row }) => {
           if (row.original.type === 'exercise') {
-            return (
-              <Typography variant="body2">{row.original.sets}</Typography>
-            );
+            return <Typography variant="body2">{row.original.sets}</Typography>;
           }
           return null;
         },
@@ -621,9 +495,7 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
         header: 'Reps',
         cell: ({ row }) => {
           if (row.original.type === 'exercise') {
-            return (
-              <Typography variant="body2">{row.original.reps || '-'}</Typography>
-            );
+            return <Typography variant="body2">{row.original.reps || '-'}</Typography>;
           }
           return null;
         },
@@ -636,9 +508,7 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
         header: 'Tempo',
         cell: ({ row }) => {
           if (row.original.type === 'exercise') {
-            return (
-              <Typography variant="body2">{row.original.tempo || '-'}</Typography>
-            );
+            return <Typography variant="body2">{row.original.tempo || '-'}</Typography>;
           }
           return null;
         },
@@ -651,9 +521,7 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
         header: 'Weight',
         cell: ({ row }) => {
           if (row.original.type === 'exercise') {
-            return (
-              <Typography variant="body2">{row.original.weight || '-'}</Typography>
-            );
+            return <Typography variant="body2">{row.original.weight || '-'}</Typography>;
           }
           return null;
         },
@@ -666,9 +534,7 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
         header: 'Rest',
         cell: ({ row }) => {
           if (row.original.type === 'exercise') {
-            return (
-              <Typography variant="body2">{row.original.rest || '-'}</Typography>
-            );
+            return <Typography variant="body2">{row.original.rest || '-'}</Typography>;
           }
           return null;
         },
@@ -693,11 +559,13 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
                   p: 1,
                   borderRadius: 1,
                   border: canEdit ? '1px dashed transparent' : 'none',
-                  '&:hover': canEdit ? {
-                    border: '1px dashed',
-                    borderColor: 'primary.main',
-                    backgroundColor: 'action.hover',
-                  } : {},
+                  '&:hover': canEdit
+                    ? {
+                        border: '1px dashed',
+                        borderColor: 'primary.main',
+                        backgroundColor: 'action.hover',
+                      }
+                    : {},
                 }}
                 onClick={() => {
                   if (canEdit) {
@@ -719,11 +587,7 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
                     }}
                   />
                 ) : (
-                  <Typography
-                    variant="body2"
-                    color="text.secondary"
-                    sx={{ fontStyle: 'italic' }}
-                  >
+                  <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
                     {canEdit ? 'Click to add notes...' : 'No notes'}
                   </Typography>
                 )}
@@ -793,8 +657,14 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
                   total={progressMetrics.totalExercises}
                   showTooltip={true}
                   showTicks={true}
-                  steps={Array.from({ length: progressMetrics.totalExercises + 1 }, (_, i) => (i / progressMetrics.totalExercises) * 100)}
-                  ticks={Array.from({ length: progressMetrics.totalExercises + 1 }, (_, i) => (i / progressMetrics.totalExercises) * 100)}
+                  steps={Array.from(
+                    { length: progressMetrics.totalExercises + 1 },
+                    (_, i) => (i / progressMetrics.totalExercises) * 100
+                  )}
+                  ticks={Array.from(
+                    { length: progressMetrics.totalExercises + 1 },
+                    (_, i) => (i / progressMetrics.totalExercises) * 100
+                  )}
                   width="100%"
                   height={8}
                   smooth={true}
@@ -803,16 +673,25 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
               )}
             </Box>
 
-            {/* Export Buttons on the right */}
-            <ExportButtons
-              onExportPDF={handleExportPDF}
-              disabled={!workoutData}
-            />
+            {/* Action Buttons on the right */}
+            <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+              <ExportButtons onExportPDF={handleExportPDF} disabled={!workoutData} />
+              {isMostRecentWeek && (
+                <Button
+                  variant="contained"
+                  startIcon={<AddIcon />}
+                  onClick={handleOpenAddExerciseDialog}
+                  disabled={saving}
+                >
+                  Add Exercise
+                </Button>
+              )}
+            </Box>
           </Box>
         </Box>
       </Box>
 
-        <Grid container spacing={3} sx={{ p: 3, pt: 0 }}>
+      <Grid container spacing={3} sx={{ p: 3, pt: 0 }}>
         {/* Table Container - 2/3 width */}
         <Grid size={{ xs: 12, lg: 8 }}>
           <Paper sx={{ width: '100%', overflow: 'hidden', height: '100%' }}>
@@ -966,7 +845,7 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
             />
           </Box>
         </Grid>
-        </Grid>
+      </Grid>
 
       {/* Notes Editor Modal */}
       <Dialog
@@ -975,7 +854,7 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
         maxWidth="md"
         fullWidth
         PaperProps={{
-          sx: { minHeight: '60vh' }
+          sx: { minHeight: '60vh' },
         }}
       >
         <DialogTitle>
@@ -989,7 +868,8 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
 
         <DialogContent>
           <Alert severity="info" sx={{ mb: 2 }}>
-            Add detailed notes for this exercise. Use formatting to organize your thoughts and instructions.
+            Add detailed notes for this exercise. Use formatting to organize your thoughts and
+            instructions.
           </Alert>
 
           <RichTextEditor
@@ -1004,10 +884,7 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
         </DialogContent>
 
         <DialogActions>
-          <Button
-            onClick={handleCloseNotesEditor}
-            disabled={saving}
-          >
+          <Button onClick={handleCloseNotesEditor} disabled={saving}>
             Cancel
           </Button>
           <Button
@@ -1028,21 +905,20 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
         maxWidth="sm"
         fullWidth
         PaperProps={{
-          sx: { minHeight: '50vh' }
+          sx: { minHeight: '50vh' },
         }}
       >
         <DialogTitle>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <AddIcon />
-            <Typography variant="h6">
-              Add Exercise to Workout
-            </Typography>
+            <Typography variant="h6">Add Exercise to Workout</Typography>
           </Box>
         </DialogTitle>
 
         <DialogContent>
           <Alert severity="info" sx={{ mb: 2 }}>
-            Select an exercise and the stage where it should be added. Configure the set scheme details below.
+            Select an exercise and the stage where it should be added. Configure the set scheme
+            details below.
           </Alert>
 
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -1051,9 +927,9 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
               options={availableExercises}
               value={selectedExercise}
               onChange={(_, newValue) => setSelectedExercise(newValue)}
-              getOptionLabel={(option) => option.name}
+              getOptionLabel={option => option.name}
               loading={loadingExercises}
-              renderInput={(params) => (
+              renderInput={params => (
                 <TextField
                   {...params}
                   label="Exercise"
@@ -1079,10 +955,10 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
               <InputLabel>Stage</InputLabel>
               <Select
                 value={selectedStageId}
-                onChange={(e) => setSelectedStageId(e.target.value as number)}
+                onChange={e => setSelectedStageId(e.target.value as number)}
                 label="Stage"
               >
-                {workoutData?.stages.map((stageData) => (
+                {workoutData?.stages.map(stageData => (
                   <MenuItem key={stageData.stage.id} value={stageData.stage.id}>
                     {stageData.stage.name}
                   </MenuItem>
@@ -1104,10 +980,7 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
         </DialogContent>
 
         <DialogActions>
-          <Button
-            onClick={handleCloseAddExerciseDialog}
-            disabled={saving}
-          >
+          <Button onClick={handleCloseAddExerciseDialog} disabled={saving}>
             Cancel
           </Button>
           <Button
@@ -1120,7 +993,6 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
           </Button>
         </DialogActions>
       </Dialog>
-
     </Box>
   );
 };

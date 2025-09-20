@@ -11,7 +11,8 @@ describe('KeycloakAccountApiClient', () => {
   const mockBaseUrl = 'http://localhost:8080';
   const mockRealm = 'congen';
   // Use a valid JWT token format for testing
-  const mockAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyLCJleHAiOjk5OTk5OTk5OTl9.test';
+  const mockAccessToken =
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyLCJleHAiOjk5OTk5OTk5OTl9.test';
 
   beforeEach(() => {
     (fetch as jest.Mock).mockClear();

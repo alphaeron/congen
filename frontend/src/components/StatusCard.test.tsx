@@ -2,15 +2,13 @@ import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { render, screen, fireEvent } from '@testing-library/react';
 import React from 'react';
 
-import { StatusCard, StatusIndicator, StatusProgress, StatusLevel } from './StatusCard';
+import { StatusCard, StatusIndicator, StatusProgress } from './StatusCard';
 
 // Create a theme for testing
 const theme = createTheme();
 
 const renderWithTheme = (component: React.ReactElement) => {
-  return render(
-    <ThemeProvider theme={theme}>{component}</ThemeProvider>
-  );
+  return render(<ThemeProvider theme={theme}>{component}</ThemeProvider>);
 };
 
 describe('StatusCard', () => {
@@ -39,14 +37,7 @@ describe('StatusCard', () => {
   });
 
   it('renders with good status', () => {
-    renderWithTheme(
-      <StatusCard
-        title="Good Status"
-        status="good"
-        value={85}
-        unit="score"
-      />
-    );
+    renderWithTheme(<StatusCard title="Good Status" status="good" value={85} unit="score" />);
 
     expect(screen.getByText('Good Status')).toBeInTheDocument();
     expect(screen.getByText('Good')).toBeInTheDocument();
@@ -55,14 +46,7 @@ describe('StatusCard', () => {
   });
 
   it('renders with fair status', () => {
-    renderWithTheme(
-      <StatusCard
-        title="Fair Status"
-        status="fair"
-        value={65}
-        unit="%"
-      />
-    );
+    renderWithTheme(<StatusCard title="Fair Status" status="fair" value={65} unit="%" />);
 
     expect(screen.getByText('Fair Status')).toBeInTheDocument();
     expect(screen.getByText('Fair')).toBeInTheDocument();
@@ -71,12 +55,7 @@ describe('StatusCard', () => {
 
   it('renders with needs_attention status', () => {
     renderWithTheme(
-      <StatusCard
-        title="Needs Attention"
-        status="needs_attention"
-        value={30}
-        unit="%"
-      />
+      <StatusCard title="Needs Attention" status="needs_attention" value={30} unit="%" />
     );
 
     expect(screen.getAllByText('Needs Attention')).toHaveLength(2); // Title and chip
@@ -85,13 +64,7 @@ describe('StatusCard', () => {
 
   it('renders with trend indicators', () => {
     renderWithTheme(
-      <StatusCard
-        title="Trending Status"
-        status="good"
-        value={80}
-        unit="%"
-        trend="up"
-      />
+      <StatusCard title="Trending Status" status="good" value={80} unit="%" trend="up" />
     );
 
     expect(screen.getByText('↗ Improving')).toBeInTheDocument();
@@ -99,13 +72,7 @@ describe('StatusCard', () => {
 
   it('renders with down trend', () => {
     renderWithTheme(
-      <StatusCard
-        title="Declining Status"
-        status="fair"
-        value={60}
-        unit="%"
-        trend="down"
-      />
+      <StatusCard title="Declining Status" status="fair" value={60} unit="%" trend="down" />
     );
 
     expect(screen.getByText('↘ Declining')).toBeInTheDocument();
@@ -113,13 +80,7 @@ describe('StatusCard', () => {
 
   it('renders with stable trend', () => {
     renderWithTheme(
-      <StatusCard
-        title="Stable Status"
-        status="good"
-        value={75}
-        unit="%"
-        trend="stable"
-      />
+      <StatusCard title="Stable Status" status="good" value={75} unit="%" trend="stable" />
     );
 
     expect(screen.getByText('→ Stable')).toBeInTheDocument();
@@ -153,20 +114,13 @@ describe('StatusCard', () => {
 
     const card = screen.getByText('Clickable Status').closest('.MuiCard-root');
     expect(card).toBeInTheDocument();
-    
+
     fireEvent.click(card!);
     expect(mockOnClick).toHaveBeenCalledTimes(1);
   });
 
   it('renders without click cursor when onClick is not provided', () => {
-    renderWithTheme(
-      <StatusCard
-        title="Non-clickable Status"
-        status="good"
-        value={80}
-        unit="%"
-      />
-    );
+    renderWithTheme(<StatusCard title="Non-clickable Status" status="good" value={80} unit="%" />);
 
     const card = screen.getByText('Non-clickable Status').closest('.MuiCard-root');
     expect(card).toHaveStyle('cursor: default');
@@ -174,12 +128,7 @@ describe('StatusCard', () => {
 
   it('renders with children content', () => {
     renderWithTheme(
-      <StatusCard
-        title="Status with Children"
-        status="good"
-        value={80}
-        unit="%"
-      >
+      <StatusCard title="Status with Children" status="good" value={80} unit="%">
         <div data-testid="child-content">Child content</div>
       </StatusCard>
     );
@@ -190,11 +139,7 @@ describe('StatusCard', () => {
 
   it('renders without value when not provided', () => {
     renderWithTheme(
-      <StatusCard
-        title="Status without Value"
-        status="good"
-        description="No value provided"
-      />
+      <StatusCard title="Status without Value" status="good" description="No value provided" />
     );
 
     expect(screen.getByText('Status without Value')).toBeInTheDocument();
@@ -207,52 +152,40 @@ describe('StatusCard', () => {
 
 describe('StatusIndicator', () => {
   it('renders with small size', () => {
-    renderWithTheme(
-      <StatusIndicator status="excellent" size="small" />
-    );
+    renderWithTheme(<StatusIndicator status="excellent" size="small" />);
 
     const indicator = screen.getByTestId('CheckCircleIcon');
     expect(indicator).toBeInTheDocument();
   });
 
   it('renders with medium size by default', () => {
-    renderWithTheme(
-      <StatusIndicator status="good" />
-    );
+    renderWithTheme(<StatusIndicator status="good" />);
 
     const indicator = screen.getByTestId('CheckCircleIcon');
     expect(indicator).toBeInTheDocument();
   });
 
   it('renders with large size', () => {
-    renderWithTheme(
-      <StatusIndicator status="fair" size="large" />
-    );
+    renderWithTheme(<StatusIndicator status="fair" size="large" />);
 
     const indicator = screen.getByTestId('WarningIcon');
     expect(indicator).toBeInTheDocument();
   });
 
   it('renders with label when showLabel is true', () => {
-    renderWithTheme(
-      <StatusIndicator status="needs_attention" showLabel={true} />
-    );
+    renderWithTheme(<StatusIndicator status="needs_attention" showLabel={true} />);
 
     expect(screen.getByText('Needs Attention')).toBeInTheDocument();
   });
 
   it('renders without label when showLabel is false', () => {
-    renderWithTheme(
-      <StatusIndicator status="excellent" showLabel={false} />
-    );
+    renderWithTheme(<StatusIndicator status="excellent" showLabel={false} />);
 
     expect(screen.queryByText('Excellent')).not.toBeInTheDocument();
   });
 
   it('renders correct icons for each status', () => {
-    const { rerender } = renderWithTheme(
-      <StatusIndicator status="excellent" />
-    );
+    const { rerender } = renderWithTheme(<StatusIndicator status="excellent" />);
     expect(screen.getByTestId('CheckCircleIcon')).toBeInTheDocument();
 
     rerender(
@@ -281,12 +214,7 @@ describe('StatusIndicator', () => {
 describe('StatusProgress', () => {
   it('renders progress bar with value', () => {
     renderWithTheme(
-      <StatusProgress
-        value={75}
-        status="good"
-        label="Test Progress"
-        showValue={true}
-      />
+      <StatusProgress value={75} status="good" label="Test Progress" showValue={true} />
     );
 
     expect(screen.getByText('Test Progress')).toBeInTheDocument();
@@ -295,12 +223,7 @@ describe('StatusProgress', () => {
 
   it('renders progress bar without value when showValue is false', () => {
     renderWithTheme(
-      <StatusProgress
-        value={60}
-        status="fair"
-        label="Hidden Value Progress"
-        showValue={false}
-      />
+      <StatusProgress value={60} status="fair" label="Hidden Value Progress" showValue={false} />
     );
 
     expect(screen.getByText('Hidden Value Progress')).toBeInTheDocument();
@@ -308,13 +231,7 @@ describe('StatusProgress', () => {
   });
 
   it('renders progress bar without label when not provided', () => {
-    renderWithTheme(
-      <StatusProgress
-        value={90}
-        status="excellent"
-        showValue={true}
-      />
-    );
+    renderWithTheme(<StatusProgress value={90} status="excellent" showValue={true} />);
 
     expect(screen.getByText('90%')).toBeInTheDocument();
     expect(screen.queryByText('Test Progress')).not.toBeInTheDocument();
@@ -322,22 +239,14 @@ describe('StatusProgress', () => {
 
   it('clamps value between 0 and 100', () => {
     const { rerender } = renderWithTheme(
-      <StatusProgress
-        value={-10}
-        status="needs_attention"
-        showValue={true}
-      />
+      <StatusProgress value={-10} status="needs_attention" showValue={true} />
     );
 
     expect(screen.getByText('0%')).toBeInTheDocument();
 
     rerender(
       <ThemeProvider theme={theme}>
-        <StatusProgress
-          value={150}
-          status="excellent"
-          showValue={true}
-        />
+        <StatusProgress value={150} status="excellent" showValue={true} />
       </ThemeProvider>
     );
 
@@ -346,11 +255,7 @@ describe('StatusProgress', () => {
 
   it('renders with correct status colors', () => {
     const { rerender } = renderWithTheme(
-      <StatusProgress
-        value={95}
-        status="excellent"
-        showValue={true}
-      />
+      <StatusProgress value={95} status="excellent" showValue={true} />
     );
 
     // Check that the percentage is displayed correctly
@@ -358,11 +263,7 @@ describe('StatusProgress', () => {
 
     rerender(
       <ThemeProvider theme={theme}>
-        <StatusProgress
-          value={30}
-          status="needs_attention"
-          showValue={true}
-        />
+        <StatusProgress value={30} status="needs_attention" showValue={true} />
       </ThemeProvider>
     );
 

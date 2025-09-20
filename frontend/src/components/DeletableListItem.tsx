@@ -1,5 +1,11 @@
-import { ListItem, ListItemText, ListItemSecondaryAction, IconButton, Tooltip } from '@mui/material';
 import { Delete as DeleteIcon } from '@mui/icons-material';
+import {
+  ListItem,
+  ListItemText,
+  ListItemSecondaryAction,
+  IconButton,
+  Tooltip,
+} from '@mui/material';
 import React from 'react';
 
 interface DeletableListItemProps {
@@ -37,22 +43,12 @@ export const DeletableListItem: React.FC<DeletableListItemProps> = ({
         <Tooltip title={deleteTooltip}>
           {disabled ? (
             <span>
-              <IconButton
-                edge="end"
-                aria-label="delete"
-                onClick={onDelete}
-                disabled={disabled}
-              >
+              <IconButton edge="end" aria-label="delete" onClick={onDelete} disabled={disabled}>
                 <DeleteIcon />
               </IconButton>
             </span>
           ) : (
-            <IconButton
-              edge="end"
-              aria-label="delete"
-              onClick={onDelete}
-              disabled={disabled}
-            >
+            <IconButton edge="end" aria-label="delete" onClick={onDelete} disabled={disabled}>
               <DeleteIcon />
             </IconButton>
           )}

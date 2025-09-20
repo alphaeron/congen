@@ -1,29 +1,21 @@
 package com.congen.generator
 
-import com.congen.dal.ProgramPreferencesDAL
-import com.congen.dal.ProgrammedExerciseDAL
-import com.congen.dal.ProgrammedWorkoutDAL
-import com.congen.dal.SetSchemeDAL
-import com.congen.dal.UserOneRepMaxDAL
-import com.congen.dal.UserWeakMuscleDAL
-import com.congen.dal.UserWeightUnitPreferenceDAL
 import com.congen.dal.ExerciseDAL
 import com.congen.dal.ExerciseEquipmentDAL
 import com.congen.dal.ExerciseMuscleDAL
 import com.congen.dal.ExerciseWorkoutTypeDAL
+import com.congen.dal.ProgramPreferencesDAL
+import com.congen.dal.ProgrammedExerciseDAL
+import com.congen.dal.ProgrammedWorkoutDAL
+import com.congen.dal.SetSchemeDAL
 import com.congen.dal.UserEquipmentDAL
 import com.congen.dal.UserExercisePreferenceDAL
+import com.congen.dal.UserOneRepMaxDAL
+import com.congen.dal.UserWeakMuscleDAL
+import com.congen.dal.UserWeightUnitPreferenceDAL
 import com.congen.model.Program
-import com.congen.model.ProgramPreferences
 import com.congen.model.SetScheme
-import com.congen.model.UserOneRepMax
 import com.congen.model.WeightUnit
-import com.congen.model.Exercise
-import com.congen.model.ExerciseEquipment
-import com.congen.model.ExerciseMuscle
-import com.congen.model.ExerciseWorkoutType
-import com.congen.model.UserEquipment
-import com.congen.model.UserExercisePreference
 import com.congen.service.ProgramService
 import com.congen.service.SetSchemeService
 import org.slf4j.LoggerFactory
@@ -62,10 +54,21 @@ import reactor.core.publisher.Mono
  * @param programPreferencesDAL Data access layer for program preferences
  * @param programService Service for program operations
  * @param programmedWorkoutDAL Data access layer for programmed workout operations
+ * @param programmedExerciseDAL Data access layer for programmed exercise operations
+ * @param setSchemeDAL Data access layer for set scheme operations
  * @param conjugateTemplates Service for managing workout templates
  * @param workoutStageGenerationOrchestrator Service for orchestrating workout stage generation
+ * @param atomicWorkoutWriter Service for atomic workout writing operations
  * @param userWeakMuscleDAL Data access layer for user weak muscle data
  * @param exercisePoolFactory Service for managing exercise pools and filtering
+ * @param setSchemeService Service for set scheme operations
+ * @param userWeightUnitPreferenceDAL Data access layer for user weight unit preferences
+ * @param exerciseDAL Data access layer for exercise operations
+ * @param exerciseEquipmentDAL Data access layer for exercise equipment operations
+ * @param exerciseMuscleDAL Data access layer for exercise muscle operations
+ * @param exerciseWorkoutTypeDAL Data access layer for exercise workout type operations
+ * @param userEquipmentDAL Data access layer for user equipment operations
+ * @param userExercisePreferenceDAL Data access layer for user exercise preference operations
  *
  * @author Congen Development Team
  * @since 1.0.0
@@ -155,40 +158,43 @@ class ConjugateWorkoutGeneratorService(
                         // Create mappings for exercise relationships
                         val exerciseEquipmentMappings = allExerciseEquipment.groupBy { it.exerciseName }
                         val exerciseMuscleMappings = allExerciseMuscles.groupBy { it.exerciseName }
-                        val exerciseWorkoutTypeMappings = allExerciseWorkoutTypes.groupBy { it.exerciseName }
-                            .mapValues { (_, workoutTypes) -> workoutTypes.map { it.workoutType } }
+                        val exerciseWorkoutTypeMappings =
+                            allExerciseWorkoutTypes.groupBy { it.exerciseName }
+                                .mapValues { (_, workoutTypes) -> workoutTypes.map { it.workoutType } }
 
                         // Extract exercise names from previously programmed exercises
                         val previouslyProgrammedExerciseNames = previouslyProgrammedExercises.map { it.exerciseName }
 
                         // Create user exercise pool from prepared data
-                        val userExercisePool = exercisePoolFactory.createPoolFromPreparedData(
-                            allExercises = allExercises,
-                            userEquipment = userEquipment,
-                            userExercisePreferences = userExercisePreferences,
-                            previouslyUsedExercises = previouslyProgrammedExercises,
-                            exerciseEquipmentMappings = exerciseEquipmentMappings,
-                            exerciseMuscleMappings = exerciseMuscleMappings,
-                            userId = program.userId
-                        )
+                        val userExercisePool =
+                            exercisePoolFactory.createPoolFromPreparedData(
+                                allExercises = allExercises,
+                                userEquipment = userEquipment,
+                                userExercisePreferences = userExercisePreferences,
+                                previouslyUsedExercises = previouslyProgrammedExercises,
+                                exerciseEquipmentMappings = exerciseEquipmentMappings,
+                                exerciseMuscleMappings = exerciseMuscleMappings,
+                                userId = program.userId
+                            )
 
                         // Stage 1: Data Preparation - Prepare all required data upfront
-                        val preparedData = WorkoutGenerationPreparedData(
-                            userExercisePool = userExercisePool,
-                            oneRepMaxes = oneRepMaxes,
-                            programPreferences = programPreferences,
-                            weakMuscles = weakMuscles,
-                            currentWeekNumber = program.currentWeekNumber,
-                            userId = program.userId,
-                            weightUnitPreferences = weightUnitMap,
-                            exerciseMuscleMappings = exerciseMuscleMappings,
-                            exerciseWorkoutTypeMappings = exerciseWorkoutTypeMappings,
-                            exerciseEquipmentMappings = exerciseEquipmentMappings,
-                            previouslyProgrammedExercises = previouslyProgrammedExerciseNames,
-                            allExercises = allExercises,
-                            userEquipment = userEquipment,
-                            userExercisePreferences = userExercisePreferences
-                        )
+                        val preparedData =
+                            WorkoutGenerationPreparedData(
+                                userExercisePool = userExercisePool,
+                                oneRepMaxes = oneRepMaxes,
+                                programPreferences = programPreferences,
+                                weakMuscles = weakMuscles,
+                                currentWeekNumber = program.currentWeekNumber,
+                                userId = program.userId,
+                                weightUnitPreferences = weightUnitMap,
+                                exerciseMuscleMappings = exerciseMuscleMappings,
+                                exerciseWorkoutTypeMappings = exerciseWorkoutTypeMappings,
+                                exerciseEquipmentMappings = exerciseEquipmentMappings,
+                                previouslyProgrammedExercises = previouslyProgrammedExerciseNames,
+                                allExercises = allExercises,
+                                userEquipment = userEquipment,
+                                userExercisePreferences = userExercisePreferences
+                            )
 
                         // Stage 2: Workout Generation - Generate all workouts using prepared data
                         Flux.fromIterable(template)
@@ -245,9 +251,7 @@ class ConjugateWorkoutGeneratorService(
      * @throws ValidationException if the input data is invalid
      * @throws NoResultsFoundException if the program is not found
      */
-    fun updateWorkoutWithOneRepMax(
-        programId: Long
-    ): Mono<Program> {
+    fun updateWorkoutWithOneRepMax(programId: Long): Mono<Program> {
         logger.info("Updating workout with 1RM data for program {}", programId)
 
         return programService.selectProgramById(programId)
@@ -274,6 +278,7 @@ class ConjugateWorkoutGeneratorService(
      *
      * @param programId The ID of the program
      * @param oneRepMaxValues Map of exercise names to their 1RM values
+     * @param userId The ID of the user
      * @return Mono indicating completion
      */
     private fun updateSetSchemeWeightsForProgram(
@@ -309,6 +314,7 @@ class ConjugateWorkoutGeneratorService(
      *
      * @param setScheme The set scheme to update
      * @param oneRepMaxValues Map of exercise names to their 1RM values
+     * @param userId The ID of the user
      * @return Mono indicating completion
      */
     private fun updateSetSchemeWeight(
@@ -333,8 +339,14 @@ class ConjugateWorkoutGeneratorService(
                 val percentage = calculateTargetPercentage(setScheme)
                 val newTargetWeight = (oneRepMax * percentage).toBigDecimal()
 
-                logger.debug("Updating set scheme {} for exercise {}: {}% of {}kg = {}kg", 
-                    setScheme.id, exerciseName, (percentage * 100).toInt(), oneRepMax, newTargetWeight)
+                logger.debug(
+                    "Updating set scheme {} for exercise {}: {}% of {}kg = {}kg",
+                    setScheme.id,
+                    exerciseName,
+                    (percentage * 100).toInt(),
+                    oneRepMax,
+                    newTargetWeight
+                )
 
                 // Get the user's exercise unit preference and update the set scheme
                 getWeightUnitForExercise(userId, exerciseName)

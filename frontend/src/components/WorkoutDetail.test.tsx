@@ -1,6 +1,6 @@
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, act, waitFor } from '@testing-library/react';
+import { render, screen, act } from '@testing-library/react';
 import MockAdapter from 'axios-mock-adapter';
 import React from 'react';
 import { MemoryRouter } from 'react-router';
@@ -24,14 +24,14 @@ jest.mock('react-oidc-context', () => ({
 // Mock DataContext
 jest.mock('../contexts/DataContext', () => ({
   useData: jest.fn(),
-  DataProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  DataProvider: ({ children }: { children: React.ReactNode }) => (
+    <React.Fragment>{children}</React.Fragment>
+  ),
 }));
 
 // Mock other components
 jest.mock('./ExerciseName', () => ({
-  ExerciseName: ({ exerciseName }: { exerciseName: string }) => (
-    <span>{exerciseName}</span>
-  ),
+  ExerciseName: ({ exerciseName }: { exerciseName: string }) => <span>{exerciseName}</span>,
 }));
 
 jest.mock('./ExportButtons', () => ({
@@ -44,14 +44,17 @@ jest.mock('./LoadingSpinner', () => ({
   ),
 }));
 
-
 jest.mock('./SetSchemeEditor', () => ({
   SetSchemeEditor: () => <div data-testid="set-scheme-editor">Set Scheme Editor</div>,
 }));
 
 jest.mock('./RichTextEditor', () => ({
   RichTextEditor: ({ value, onChange }: { value: string; onChange: (value: string) => void }) => (
-    <textarea data-testid="rich-text-editor" value={value} onChange={(e) => onChange(e.target.value)} />
+    <textarea
+      data-testid="rich-text-editor"
+      value={value}
+      onChange={e => onChange(e.target.value)}
+    />
   ),
 }));
 
@@ -70,13 +73,13 @@ jest.mock('../utils/exportUtils', () => ({
 // Mock chart components to avoid rendering issues in tests
 jest.mock('./ChordChart', () => ({
   ChordChart: ({ data }: { data: unknown }) => (
-    <div data-testid="chord-chart">{(data as any)?.length || 0} items</div>
+    <div data-testid="chord-chart">{(data as Record<string, unknown>)?.length || 0} items</div>
   ),
 }));
 
 jest.mock('./SunburstChart', () => ({
   SunburstChart: ({ data }: { data: unknown }) => (
-    <div data-testid="sunburst-chart">{(data as any)?.length || 0} items</div>
+    <div data-testid="sunburst-chart">{(data as Record<string, unknown>)?.length || 0} items</div>
   ),
 }));
 
@@ -218,7 +221,7 @@ const renderWithTheme = (component: React.ReactElement) => {
 
 describe('WorkoutDetail', () => {
   const mockOnBack = jest.fn();
-  const mockUseData = require('../contexts/DataContext').useData;
+  const mockUseData = jest.requireActual('../contexts/DataContext').useData;
 
   beforeEach(() => {
     mock.reset();
@@ -762,7 +765,7 @@ describe('WorkoutDetail', () => {
   describe('Component Props', () => {
     it('should call onWorkoutDetailsUpdate when workout data is loaded', async () => {
       const mockOnWorkoutDetailsUpdate = jest.fn();
-      
+
       // Mock useData to return the expected data
       mockUseData.mockReturnValue({
         userData: mockUserDataExport,

@@ -9,11 +9,7 @@ import type {
   ProgrammedWorkoutWithStages,
   WorkoutStageWithExercises,
 } from '../api/types';
-import {
-  categorizeExerciseVolume,
-  replaceUnderscoresWithSpaces,
-  formatDate,
-} from '../common/utils';
+import { formatDate } from '../common/utils';
 import { createCongenNivoTheme, congenColorSchemes } from '../theme/nivoTheme';
 
 interface LineChartProps {
@@ -49,7 +45,6 @@ interface LineChartProps {
  */
 export const LineChart: React.FC<LineChartProps> = ({
   userDataExport,
-  exerciseData,
   title = 'Volume Progression',
   description = 'Total weight lifted over time (including band resistance)',
   xAxisLabel = 'Workout Date',
@@ -57,7 +52,6 @@ export const LineChart: React.FC<LineChartProps> = ({
   height = 300,
   showLegend = true,
   colors,
-  chartType,
 }) => {
   const theme = useTheme();
   const nivoTheme = createCongenNivoTheme(theme.palette.mode);
@@ -74,7 +68,6 @@ export const LineChart: React.FC<LineChartProps> = ({
 
     return allWorkouts;
   }, [userDataExport]);
-
 
   // Calculate progress data for progress charts
   const progressData = useMemo(() => {
@@ -223,43 +216,43 @@ export const LineChart: React.FC<LineChartProps> = ({
             useMesh={true}
             colors={colors || congenColorSchemes.strength}
             theme={nivoTheme}
-             tooltip={({ point }) => (
-               <div
-                 style={{
-                   padding: '8px 12px',
-                   color: nivoTheme.tooltip.container.color,
-                   background: nivoTheme.tooltip.container.background,
-                   borderRadius: nivoTheme.tooltip.container.borderRadius,
-                   boxShadow: nivoTheme.tooltip.container.boxShadow,
-                   border: nivoTheme.tooltip.container.border,
-                   whiteSpace: 'nowrap',
-                   fontSize: nivoTheme.tooltip.container.fontSize,
-                   fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
-                   lineHeight: '1.4',
-                   display: 'flex',
-                   alignItems: 'center',
-                   gap: '8px',
-                 }}
-               >
-                 <div
-                   style={{
-                     width: '12px',
-                     height: '12px',
-                     backgroundColor: point.seriesColor,
-                     borderRadius: '2px',
-                     flexShrink: 0,
-                   }}
-                 />
-                 <div>
-                   <div>
-                     Date: <span style={{ fontWeight: 'bold' }}>{point.data.x}</span>
-                   </div>
-                   <div>
-                     Weight: <span style={{ fontWeight: 'bold' }}>{point.data.y} lbs</span>
-                   </div>
-                 </div>
-               </div>
-             )}
+            tooltip={({ point }) => (
+              <div
+                style={{
+                  padding: '8px 12px',
+                  color: nivoTheme.tooltip.container.color,
+                  background: nivoTheme.tooltip.container.background,
+                  borderRadius: nivoTheme.tooltip.container.borderRadius,
+                  boxShadow: nivoTheme.tooltip.container.boxShadow,
+                  border: nivoTheme.tooltip.container.border,
+                  whiteSpace: 'nowrap',
+                  fontSize: nivoTheme.tooltip.container.fontSize,
+                  fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
+                  lineHeight: '1.4',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                }}
+              >
+                <div
+                  style={{
+                    width: '12px',
+                    height: '12px',
+                    backgroundColor: point.seriesColor,
+                    borderRadius: '2px',
+                    flexShrink: 0,
+                  }}
+                />
+                <div>
+                  <div>
+                    Date: <span style={{ fontWeight: 'bold' }}>{point.data.x}</span>
+                  </div>
+                  <div>
+                    Weight: <span style={{ fontWeight: 'bold' }}>{point.data.y} lbs</span>
+                  </div>
+                </div>
+              </div>
+            )}
             legends={
               showLegend
                 ? [

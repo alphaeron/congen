@@ -55,7 +55,10 @@ export const exerciseHasPerformedData = (exercise: ProgrammedExerciseWithSetSche
  * Check if an exercise is fully completed (all set schemes have performed data)
  */
 export const exerciseIsCompleted = (exercise: ProgrammedExerciseWithSetSchemes): boolean => {
-  return exercise.set_schemes.length > 0 && exercise.set_schemes.every(setScheme => hasPerformedData(setScheme));
+  return (
+    exercise.set_schemes.length > 0 &&
+    exercise.set_schemes.every(setScheme => hasPerformedData(setScheme))
+  );
 };
 
 /**
@@ -64,7 +67,7 @@ export const exerciseIsCompleted = (exercise: ProgrammedExerciseWithSetSchemes):
  */
 export const calculateWorkoutProgress = (workout: ProgrammedWorkoutWithStages): WorkoutProgress => {
   const allExercises: ProgrammedExerciseWithSetSchemes[] = [];
-  
+
   // Collect all exercises from all stages (handle case where stages might be undefined)
   if (workout.stages && Array.isArray(workout.stages)) {
     workout.stages.forEach((stage: WorkoutStageWithExercises) => {
@@ -73,11 +76,13 @@ export const calculateWorkoutProgress = (workout: ProgrammedWorkoutWithStages): 
       }
     });
   }
-  
+
   const totalExercises = allExercises.length;
   const completedExercises = allExercises.filter(exercise => exerciseIsCompleted(exercise)).length;
-  const exercisesWithSomeData = allExercises.filter(exercise => exerciseHasPerformedData(exercise)).length;
-  
+  const exercisesWithSomeData = allExercises.filter(exercise =>
+    exerciseHasPerformedData(exercise)
+  ).length;
+
   let status: ProgressStatus;
   if (completedExercises === totalExercises && totalExercises > 0) {
     status = 'completed';
@@ -86,7 +91,7 @@ export const calculateWorkoutProgress = (workout: ProgrammedWorkoutWithStages): 
   } else {
     status = 'not-started';
   }
-  
+
   return {
     status,
     completedExercises,
@@ -105,12 +110,12 @@ export const calculateWeekProgress = (workouts: ProgrammedWorkoutWithStages[]): 
     const workoutProgress = calculateWorkoutProgress(workout);
     return workoutProgress.status === 'completed';
   }).length;
-  
+
   const workoutsWithSomeData = workouts.filter(workout => {
     const workoutProgress = calculateWorkoutProgress(workout);
     return workoutProgress.status === 'in-progress' || workoutProgress.status === 'completed';
   }).length;
-  
+
   let status: ProgressStatus;
   if (completedWorkouts === totalWorkouts && totalWorkouts > 0) {
     status = 'completed';
@@ -119,7 +124,7 @@ export const calculateWeekProgress = (workouts: ProgrammedWorkoutWithStages[]): 
   } else {
     status = 'not-started';
   }
-  
+
   return {
     status,
     completedWorkouts,
@@ -138,7 +143,7 @@ export const calculateProgramProgress = (
 ): ProgramProgress => {
   // Group workouts by week
   const weeksMap = new Map<number, ProgrammedWorkoutWithStages[]>();
-  
+
   workouts.forEach(workout => {
     const weekNumber = Math.ceil(workout.workout.day_number / workoutsPerWeek);
     if (!weeksMap.has(weekNumber)) {
@@ -146,18 +151,18 @@ export const calculateProgramProgress = (
     }
     weeksMap.get(weekNumber)!.push(workout);
   });
-  
+
   const totalWeeks = weeksMap.size;
   const completedWeeks = Array.from(weeksMap.values()).filter(weekWorkouts => {
     const weekProgress = calculateWeekProgress(weekWorkouts);
     return weekProgress.status === 'completed';
   }).length;
-  
+
   const weeksWithSomeData = Array.from(weeksMap.values()).filter(weekWorkouts => {
     const weekProgress = calculateWeekProgress(weekWorkouts);
     return weekProgress.status === 'in-progress' || weekProgress.status === 'completed';
   }).length;
-  
+
   let status: ProgressStatus;
   if (completedWeeks === totalWeeks && totalWeeks > 0) {
     status = 'completed';
@@ -166,7 +171,7 @@ export const calculateProgramProgress = (
   } else {
     status = 'not-started';
   }
-  
+
   return {
     status,
     completedWeeks,

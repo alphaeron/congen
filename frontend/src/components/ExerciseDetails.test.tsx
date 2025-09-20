@@ -51,9 +51,12 @@ describe('ExerciseDetails component', () => {
     });
 
     // Wait for all async operations to complete
-    await waitFor(() => {
-      expect(mockAdapter.history.get.length).toBe(6);
-    }, { timeout: 10000 });
+    await waitFor(
+      () => {
+        expect(mockAdapter.history.get.length).toBe(6);
+      },
+      { timeout: 10000 }
+    );
   });
 
   afterEach(() => {

@@ -3,12 +3,8 @@ package com.congen.generator
 import com.congen.model.Exercise
 import com.congen.model.ExerciseEquipment
 import com.congen.model.ExerciseMuscle
-import com.congen.model.ExerciseWorkoutType
 import com.congen.model.MovementType
 import com.congen.model.ProgramPreferences
-import com.congen.model.ProgrammedWorkout
-import com.congen.model.UserEquipment
-import com.congen.model.UserExercisePreference
 import com.congen.model.UserOneRepMax
 import com.congen.model.WeightUnit
 import com.congen.model.WorkoutStageTypeEnum
@@ -17,7 +13,6 @@ import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
-import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
@@ -53,14 +48,15 @@ class FourDayWorkoutStageGenerationServiceTest {
         sessionTimeCalculator = mock()
         conjugateTemplates = mock()
 
-        fourDayService = FourDayWorkoutStageGenerationService(
-            prilepinGuidelinesService = prilepinGuidelinesService,
-            weightSelectionService = weightSelectionService,
-            exerciseSelectionService = exerciseSelectionService,
-            movementBalanceService = movementBalanceService,
-            sessionTimeCalculator = sessionTimeCalculator,
-            conjugateTemplates = conjugateTemplates
-        )
+        fourDayService =
+            FourDayWorkoutStageGenerationService(
+                prilepinGuidelinesService = prilepinGuidelinesService,
+                weightSelectionService = weightSelectionService,
+                exerciseSelectionService = exerciseSelectionService,
+                movementBalanceService = movementBalanceService,
+                sessionTimeCalculator = sessionTimeCalculator,
+                conjugateTemplates = conjugateTemplates
+            )
     }
 
     @Test
@@ -193,13 +189,13 @@ class FourDayWorkoutStageGenerationServiceTest {
             )
         ).thenReturn(2)
 
-        // Mock movement balance service  
+        // Mock movement balance service
         val mockMovementBalanceState = mock<MovementBalanceService.MovementBalanceState>()
         whenever(mockMovementBalanceState.addExercise(any(), any())).thenReturn(mockMovementBalanceState)
         whenever(
             movementBalanceService.createInitialState()
         ).thenReturn(mockMovementBalanceState)
-        
+
         whenever(
             movementBalanceService.logBalanceState(any(), any())
         ).thenAnswer { /* do nothing */ }
@@ -228,12 +224,13 @@ class FourDayWorkoutStageGenerationServiceTest {
             )
         ).thenReturn(Mono.just(listOf(primaryExercise)))
 
-        val result = fourDayService.generateStagesForDayType(
-            programId = 1L,
-            dayNumber = 1,
-            dayType = dayType,
-            preparedData = preparedData
-        )
+        val result =
+            fourDayService.generateStagesForDayType(
+                programId = 1L,
+                dayNumber = 1,
+                dayType = dayType,
+                preparedData = preparedData
+            )
 
         StepVerifier.create(result)
             .expectNextCount(1)
@@ -344,13 +341,13 @@ class FourDayWorkoutStageGenerationServiceTest {
             )
         ).thenReturn(2)
 
-        // Mock movement balance service  
+        // Mock movement balance service
         val mockMovementBalanceState = mock<MovementBalanceService.MovementBalanceState>()
         whenever(mockMovementBalanceState.addExercise(any(), any())).thenReturn(mockMovementBalanceState)
         whenever(
             movementBalanceService.createInitialState()
         ).thenReturn(mockMovementBalanceState)
-        
+
         whenever(
             movementBalanceService.logBalanceState(any(), any())
         ).thenAnswer { /* do nothing */ }
@@ -379,12 +376,13 @@ class FourDayWorkoutStageGenerationServiceTest {
             )
         ).thenReturn(Mono.just(listOf(primaryExercise)))
 
-        val result = fourDayService.generateStagesForDayType(
-            programId = 1L,
-            dayNumber = 1,
-            dayType = dayType,
-            preparedData = preparedData
-        )
+        val result =
+            fourDayService.generateStagesForDayType(
+                programId = 1L,
+                dayNumber = 1,
+                dayType = dayType,
+                preparedData = preparedData
+            )
 
         StepVerifier.create(result)
             .expectNextCount(1)
@@ -495,13 +493,13 @@ class FourDayWorkoutStageGenerationServiceTest {
             )
         ).thenReturn(2)
 
-        // Mock movement balance service  
+        // Mock movement balance service
         val mockMovementBalanceState = mock<MovementBalanceService.MovementBalanceState>()
         whenever(mockMovementBalanceState.addExercise(any(), any())).thenReturn(mockMovementBalanceState)
         whenever(
             movementBalanceService.createInitialState()
         ).thenReturn(mockMovementBalanceState)
-        
+
         whenever(
             movementBalanceService.logBalanceState(any(), any())
         ).thenAnswer { /* do nothing */ }
@@ -530,12 +528,13 @@ class FourDayWorkoutStageGenerationServiceTest {
             )
         ).thenReturn(Mono.just(listOf(primaryExercise)))
 
-        val result = fourDayService.generateStagesForDayType(
-            programId = 1L,
-            dayNumber = 1,
-            dayType = dayType,
-            preparedData = preparedData
-        )
+        val result =
+            fourDayService.generateStagesForDayType(
+                programId = 1L,
+                dayNumber = 1,
+                dayType = dayType,
+                preparedData = preparedData
+            )
 
         StepVerifier.create(result)
             .expectNextCount(1)
@@ -672,13 +671,13 @@ class FourDayWorkoutStageGenerationServiceTest {
             )
         ).thenReturn(2)
 
-        // Mock movement balance service  
+        // Mock movement balance service
         val mockMovementBalanceState = mock<MovementBalanceService.MovementBalanceState>()
         whenever(mockMovementBalanceState.addExercise(any(), any())).thenReturn(mockMovementBalanceState)
         whenever(
             movementBalanceService.createInitialState()
         ).thenReturn(mockMovementBalanceState)
-        
+
         whenever(
             movementBalanceService.logBalanceState(any(), any())
         ).thenAnswer { /* do nothing */ }
@@ -707,12 +706,13 @@ class FourDayWorkoutStageGenerationServiceTest {
             )
         ).thenReturn(Mono.just(listOf(primaryExercise)))
 
-        val result = fourDayService.generateStagesForDayType(
-            programId = 1L,
-            dayNumber = 1,
-            dayType = dayType,
-            preparedData = preparedData
-        )
+        val result =
+            fourDayService.generateStagesForDayType(
+                programId = 1L,
+                dayNumber = 1,
+                dayType = dayType,
+                preparedData = preparedData
+            )
 
         StepVerifier.create(result)
             .expectNextCount(1)
@@ -740,13 +740,13 @@ class FourDayWorkoutStageGenerationServiceTest {
             )
         ).thenReturn(Mono.empty())
 
-        // Mock movement balance service  
+        // Mock movement balance service
         val mockMovementBalanceState = mock<MovementBalanceService.MovementBalanceState>()
         whenever(mockMovementBalanceState.addExercise(any(), any())).thenReturn(mockMovementBalanceState)
         whenever(
             movementBalanceService.createInitialState()
         ).thenReturn(mockMovementBalanceState)
-        
+
         whenever(
             movementBalanceService.logBalanceState(any(), any())
         ).thenAnswer { /* do nothing */ }
@@ -756,24 +756,28 @@ class FourDayWorkoutStageGenerationServiceTest {
             conjugateTemplates.hasSecondaryMovement(dayType)
         ).thenReturn(true)
 
-        val result = fourDayService.generateStagesForDayType(
-            programId = 1L,
-            dayNumber = 1,
-            dayType = dayType,
-            preparedData = preparedData
-        )
+        val result =
+            fourDayService.generateStagesForDayType(
+                programId = 1L,
+                dayNumber = 1,
+                dayType = dayType,
+                preparedData = preparedData
+            )
 
         StepVerifier.create(result)
             .expectNextMatches { stages ->
                 // When no primary exercise is found, should return fallback stages (warmup + accessory)
-                stages.size >= 2 && 
-                stages.any { it.stageType == WorkoutStageTypeEnum.WARMUP } &&
-                stages.any { it.stageType == WorkoutStageTypeEnum.ACCESSORY }
+                stages.size >= 2 &&
+                    stages.any { it.stageType == WorkoutStageTypeEnum.WARMUP } &&
+                    stages.any { it.stageType == WorkoutStageTypeEnum.ACCESSORY }
             }
             .verifyComplete()
     }
 
-    private fun createSampleExercise(name: String, movementType: MovementType): Exercise {
+    private fun createSampleExercise(
+        name: String,
+        movementType: MovementType
+    ): Exercise {
         return Exercise(
             name = name,
             description = "Sample exercise description",
@@ -781,17 +785,6 @@ class FourDayWorkoutStageGenerationServiceTest {
             isUnilateral = false,
             isUpper = true,
             isAccessory = false
-        )
-    }
-
-    private fun createSampleWorkout(): ProgrammedWorkout {
-        return ProgrammedWorkout(
-            id = 1L,
-            programId = 1L,
-            dayNumber = 1,
-            name = "Test Workout",
-            createdAt = now,
-            updatedAt = now
         )
     }
 
@@ -821,35 +814,42 @@ class FourDayWorkoutStageGenerationServiceTest {
             weakMuscles = emptyList(),
             currentWeekNumber = 1,
             userId = "user123",
-            weightUnitPreferences = mapOf(
-                "Bench Press" to WeightUnit.LBS,
-                "Squat" to WeightUnit.LBS,
-                "Deadlift" to WeightUnit.LBS
-            ),
-            exerciseMuscleMappings = mapOf(
-                "Bench Press" to listOf(
-                    ExerciseMuscle("Bench Press", "chest"),
-                    ExerciseMuscle("Bench Press", "triceps")
+            weightUnitPreferences =
+                mapOf(
+                    "Bench Press" to WeightUnit.LBS,
+                    "Squat" to WeightUnit.LBS,
+                    "Deadlift" to WeightUnit.LBS
                 ),
-                "Squat" to listOf(
-                    ExerciseMuscle("Squat", "quadriceps"),
-                    ExerciseMuscle("Squat", "glutes")
+            exerciseMuscleMappings =
+                mapOf(
+                    "Bench Press" to
+                        listOf(
+                            ExerciseMuscle("Bench Press", "chest"),
+                            ExerciseMuscle("Bench Press", "triceps")
+                        ),
+                    "Squat" to
+                        listOf(
+                            ExerciseMuscle("Squat", "quadriceps"),
+                            ExerciseMuscle("Squat", "glutes")
+                        ),
+                    "Deadlift" to
+                        listOf(
+                            ExerciseMuscle("Deadlift", "hamstrings"),
+                            ExerciseMuscle("Deadlift", "glutes")
+                        )
                 ),
-                "Deadlift" to listOf(
-                    ExerciseMuscle("Deadlift", "hamstrings"),
-                    ExerciseMuscle("Deadlift", "glutes")
-                )
-            ),
-            exerciseEquipmentMappings = mapOf(
-                "Bench Press" to listOf(ExerciseEquipment("Bench Press", "power bar")),
-                "Squat" to listOf(ExerciseEquipment("Squat", "power bar")),
-                "Deadlift" to listOf(ExerciseEquipment("Deadlift", "power bar"))
-            ),
-            exerciseWorkoutTypeMappings = mapOf(
-                "Bench Press" to listOf("maximal_effort", "dynamic_effort"),
-                "Squat" to listOf("maximal_effort", "dynamic_effort"),
-                "Deadlift" to listOf("maximal_effort")
-            ),
+            exerciseEquipmentMappings =
+                mapOf(
+                    "Bench Press" to listOf(ExerciseEquipment("Bench Press", "power bar")),
+                    "Squat" to listOf(ExerciseEquipment("Squat", "power bar")),
+                    "Deadlift" to listOf(ExerciseEquipment("Deadlift", "power bar"))
+                ),
+            exerciseWorkoutTypeMappings =
+                mapOf(
+                    "Bench Press" to listOf("maximal_effort", "dynamic_effort"),
+                    "Squat" to listOf("maximal_effort", "dynamic_effort"),
+                    "Deadlift" to listOf("maximal_effort")
+                ),
             previouslyProgrammedExercises = emptyList(),
             allExercises = listOf(createSampleExercise("Bench Press", MovementType.HORIZONTAL_PUSH)),
             userEquipment = emptyList(),

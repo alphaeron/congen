@@ -9,18 +9,20 @@ class ExerciseSelectionException(
     message: String,
     cause: Throwable? = null
 ) : IllegalStateException(message, cause) {
-    
     companion object {
         /**
          * Creates an exception for when no exercises are available after workout-type filtering.
          */
-        fun noExercisesAfterWorkoutTypeFiltering(workoutType: String, isAccessory: Boolean): ExerciseSelectionException {
+        fun noExercisesAfterWorkoutTypeFiltering(
+            workoutType: String,
+            isAccessory: Boolean
+        ): ExerciseSelectionException {
             return ExerciseSelectionException(
                 "No exercises available after workout-type filtering for " +
                     "workoutType: $workoutType and isAccessory: $isAccessory"
             )
         }
-        
+
         /**
          * Creates an exception for when no suitable exercise is found for given criteria.
          */
@@ -37,7 +39,7 @@ class ExerciseSelectionException(
                     "workoutType=$workoutType, dayType=$dayType, movementBalanceState=$movementBalanceState"
             )
         }
-        
+
         /**
          * Creates an exception for when no exercises are found for target muscles.
          */

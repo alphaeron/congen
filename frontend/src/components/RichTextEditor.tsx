@@ -1,18 +1,3 @@
-import React, { useCallback, useMemo } from 'react';
-import { createEditor, Editor, Transforms, Text } from 'slate';
-import type { Descendant } from 'slate';
-import { Slate, Editable, withReact } from 'slate-react';
-import type { RenderElementProps, RenderLeafProps } from 'slate-react';
-import { withHistory } from 'slate-history';
-import {
-  Box,
-  IconButton,
-  Toolbar,
-  Tooltip,
-  Typography,
-  Paper,
-  Divider,
-} from '@mui/material';
 import {
   FormatBold,
   FormatItalic,
@@ -20,6 +5,14 @@ import {
   FormatListBulleted,
   Save,
 } from '@mui/icons-material';
+import { Box, IconButton, Toolbar, Tooltip, Typography, Paper, Divider } from '@mui/material';
+import React, { useCallback, useMemo } from 'react';
+import { createEditor, Editor, Transforms, Text } from 'slate';
+import { withHistory } from 'slate-history';
+import { Slate, Editable, withReact } from 'slate-react';
+
+import type { Descendant } from 'slate';
+import type { RenderElementProps, RenderLeafProps } from 'slate-react';
 
 // Define custom types for our text formatting
 interface CustomText {
@@ -35,19 +28,25 @@ interface CustomElement {
 }
 
 // Define our own custom set of helpers.
+interface TextMarks {
+  bold?: boolean;
+  italic?: boolean;
+  underline?: boolean;
+}
+
 const CustomEditor = {
   isBoldMarkActive(editor: Editor) {
-    const marks = Editor.marks(editor) as any;
+    const marks = Editor.marks(editor) as TextMarks;
     return marks ? marks.bold === true : false;
   },
 
   isItalicMarkActive(editor: Editor) {
-    const marks = Editor.marks(editor) as any;
+    const marks = Editor.marks(editor) as TextMarks;
     return marks ? marks.italic === true : false;
   },
 
   isUnderlineMarkActive(editor: Editor) {
-    const marks = Editor.marks(editor) as any;
+    const marks = Editor.marks(editor) as TextMarks;
     return marks ? marks.underline === true : false;
   },
 
@@ -81,7 +80,7 @@ const CustomEditor = {
   toggleBulletedList(editor: Editor) {
     const isActive = CustomEditor.isBlockActive(editor, 'bulleted-list');
     Transforms.unwrapNodes(editor, {
-      match: (n: any) => {
+      match: (n: Node) => {
         if (Editor.isEditor(n) || !Editor.isBlock(editor, n) || !('type' in n)) return false;
         return n.type === 'bulleted-list';
       },
@@ -97,7 +96,6 @@ const CustomEditor = {
     }
   },
 
-
   isBlockActive(editor: Editor, format: string) {
     const { selection } = editor;
     if (!selection) return false;
@@ -105,7 +103,7 @@ const CustomEditor = {
     const [match] = Array.from(
       Editor.nodes(editor, {
         at: Editor.unhangRange(editor, selection),
-        match: (n: any) => {
+        match: (n: Node) => {
           if (Editor.isEditor(n) || !Editor.isBlock(editor, n) || !('type' in n)) return false;
           return n.type === format;
         },
@@ -118,54 +116,56 @@ const CustomEditor = {
 
 // Define a serializing function that takes a value and returns a string.
 const serialize = (value: Descendant[]): string => {
-  return value.map(n => {
-    if (Text.isText(n)) {
-      const text = n as CustomText;
-      let result = text.text;
-      
-      // Apply formatting based on marks
-      if (text.bold) result = `**${result}**`;
-      if (text.italic) result = `*${result}*`;
-      if (text.underline) result = `__${result}__`;
-      
-      return result;
-    }
-    
-    // Handle element nodes by recursively processing their children
-    if ('children' in n && n.children) {
-      const childrenText = serialize(n.children as Descendant[]);
-      const element = n as CustomElement;
-      
-      if (element.type === 'paragraph') {
-        return childrenText;
-      } else if (element.type === 'list-item') {
-        return `- ${childrenText}`;
-      } else if (element.type === 'bulleted-list') {
-        return childrenText; // List items will handle the bullet points
+  return value
+    .map(n => {
+      if (Text.isText(n)) {
+        const text = n as CustomText;
+        let result = text.text;
+
+        // Apply formatting based on marks
+        if (text.bold) result = `**${result}**`;
+        if (text.italic) result = `*${result}*`;
+        if (text.underline) result = `__${result}__`;
+
+        return result;
       }
-      
-      return childrenText;
-    }
-    
-    return '';
-  }).join('\n');
+
+      // Handle element nodes by recursively processing their children
+      if ('children' in n && n.children) {
+        const childrenText = serialize(n.children as Descendant[]);
+        const element = n as CustomElement;
+
+        if (element.type === 'paragraph') {
+          return childrenText;
+        } else if (element.type === 'list-item') {
+          return `- ${childrenText}`;
+        } else if (element.type === 'bulleted-list') {
+          return childrenText; // List items will handle the bullet points
+        }
+
+        return childrenText;
+      }
+
+      return '';
+    })
+    .join('\n');
 };
 
 // Define a deserializing function that takes a string and returns a value.
 const deserialize = (string: string): Descendant[] => {
   if (!string) return [{ type: 'paragraph', children: [{ text: '' }] } as CustomElement];
-  
+
   const lines = string.split('\n');
   const result: Descendant[] = [];
   let currentList: Descendant[] | null = null;
   let listType: 'bulleted-list' | null = null;
-  
+
   for (const line of lines) {
     // Check for bullet list item
     if (line.match(/^-\s+/)) {
       const content = line.substring(2); // Remove "- "
       const children = parseFormattedText(content);
-      
+
       if (listType !== 'bulleted-list') {
         // Close previous list if exists
         if (currentList) {
@@ -175,7 +175,7 @@ const deserialize = (string: string): Descendant[] => {
         currentList = [];
         listType = 'bulleted-list';
       }
-      
+
       if (currentList) {
         currentList.push({
           type: 'list-item',
@@ -191,7 +191,7 @@ const deserialize = (string: string): Descendant[] => {
         currentList = null;
         listType = null;
       }
-      
+
       const children = parseFormattedText(line);
       result.push({
         type: 'paragraph',
@@ -199,20 +199,22 @@ const deserialize = (string: string): Descendant[] => {
       } as CustomElement);
     }
   }
-  
+
   // Close any remaining list
   if (currentList) {
     result.push({ type: listType!, children: currentList } as CustomElement);
   }
-  
-  return result.length > 0 ? result : [{ type: 'paragraph', children: [{ text: '' }] } as CustomElement];
+
+  return result.length > 0
+    ? result
+    : [{ type: 'paragraph', children: [{ text: '' }] } as CustomElement];
 };
 
 // Helper function to parse formatted text (bold, italic, underline)
 const parseFormattedText = (text: string): CustomText[] => {
   const children: CustomText[] = [];
   let remainingText = text;
-  
+
   while (remainingText.length > 0) {
     // Check for bold (**text**)
     const boldMatch = remainingText.match(/^\*\*(.*?)\*\*/);
@@ -221,7 +223,7 @@ const parseFormattedText = (text: string): CustomText[] => {
       remainingText = remainingText.substring(boldMatch[0].length);
       continue;
     }
-    
+
     // Check for italic (*text*)
     const italicMatch = remainingText.match(/^\*(.*?)\*/);
     if (italicMatch) {
@@ -229,7 +231,7 @@ const parseFormattedText = (text: string): CustomText[] => {
       remainingText = remainingText.substring(italicMatch[0].length);
       continue;
     }
-    
+
     // Check for underline (__text__)
     const underlineMatch = remainingText.match(/^__(.*?)__/);
     if (underlineMatch) {
@@ -237,18 +239,18 @@ const parseFormattedText = (text: string): CustomText[] => {
       remainingText = remainingText.substring(underlineMatch[0].length);
       continue;
     }
-    
+
     // No formatting found, add as plain text
     const nextBold = remainingText.indexOf('**');
     const nextItalic = remainingText.indexOf('*');
     const nextUnderline = remainingText.indexOf('__');
-    
+
     const nextFormat = Math.min(
       nextBold === -1 ? Infinity : nextBold,
       nextItalic === -1 ? Infinity : nextItalic,
       nextUnderline === -1 ? Infinity : nextUnderline
     );
-    
+
     if (nextFormat === Infinity) {
       children.push({ text: remainingText });
       break;
@@ -257,7 +259,7 @@ const parseFormattedText = (text: string): CustomText[] => {
       remainingText = remainingText.substring(nextFormat);
     }
   }
-  
+
   return children;
 };
 
@@ -323,7 +325,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
   maxHeight = 300,
 }) => {
   const editor = useMemo(() => withHistory(withReact(createEditor())), []);
-  
+
   const initialValue = useMemo(() => {
     if (value) {
       // If value is already a Slate.js value (array), use it directly
@@ -340,44 +342,50 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
     return [{ type: 'paragraph', children: [{ text: '' }] }];
   }, [value]);
 
-  const handleChange = useCallback((newValue: Descendant[]) => {
-    if (readOnly) return; // Don't call onChange in read-only mode
-    
-    const serialized = serialize(newValue);
-    onChange(serialized);
-    
-    if (autoSave && onSave) {
-      // Debounce auto-save
-      setTimeout(() => {
-        onSave();
-      }, 1000);
-    }
-  }, [onChange, autoSave, onSave, readOnly]);
+  const handleChange = useCallback(
+    (newValue: Descendant[]) => {
+      if (readOnly) return; // Don't call onChange in read-only mode
 
-  const handleKeyDown = useCallback((event: React.KeyboardEvent) => {
-    if (event.ctrlKey || event.metaKey) {
-      switch (event.key) {
-        case 'b':
-          event.preventDefault();
-          CustomEditor.toggleBoldMark(editor);
-          break;
-        case 'i':
-          event.preventDefault();
-          CustomEditor.toggleItalicMark(editor);
-          break;
-        case 'u':
-          event.preventDefault();
-          CustomEditor.toggleUnderlineMark(editor);
-          break;
-        case 's':
-          event.preventDefault();
-          if (onSave) {
-            onSave();
-          }
-          break;
+      const serialized = serialize(newValue);
+      onChange(serialized);
+
+      if (autoSave && onSave) {
+        // Debounce auto-save
+        setTimeout(() => {
+          onSave();
+        }, 1000);
       }
-    }
-  }, [editor, onSave]);
+    },
+    [onChange, autoSave, onSave, readOnly]
+  );
+
+  const handleKeyDown = useCallback(
+    (event: React.KeyboardEvent) => {
+      if (event.ctrlKey || event.metaKey) {
+        switch (event.key) {
+          case 'b':
+            event.preventDefault();
+            CustomEditor.toggleBoldMark(editor);
+            break;
+          case 'i':
+            event.preventDefault();
+            CustomEditor.toggleItalicMark(editor);
+            break;
+          case 'u':
+            event.preventDefault();
+            CustomEditor.toggleUnderlineMark(editor);
+            break;
+          case 's':
+            event.preventDefault();
+            if (onSave) {
+              onSave();
+            }
+            break;
+        }
+      }
+    },
+    [editor, onSave]
+  );
 
   return (
     <Box>
@@ -387,7 +395,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
             <Tooltip title="Bold (Ctrl+B)">
               <IconButton
                 size="small"
-                onMouseDown={(event) => {
+                onMouseDown={event => {
                   event.preventDefault();
                   CustomEditor.toggleBoldMark(editor);
                 }}
@@ -396,11 +404,11 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
                 <FormatBold fontSize="small" />
               </IconButton>
             </Tooltip>
-            
+
             <Tooltip title="Italic (Ctrl+I)">
               <IconButton
                 size="small"
-                onMouseDown={(event) => {
+                onMouseDown={event => {
                   event.preventDefault();
                   CustomEditor.toggleItalicMark(editor);
                 }}
@@ -409,11 +417,11 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
                 <FormatItalic fontSize="small" />
               </IconButton>
             </Tooltip>
-            
+
             <Tooltip title="Underline (Ctrl+U)">
               <IconButton
                 size="small"
-                onMouseDown={(event) => {
+                onMouseDown={event => {
                   event.preventDefault();
                   CustomEditor.toggleUnderlineMark(editor);
                 }}
@@ -422,13 +430,13 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
                 <FormatUnderlined fontSize="small" />
               </IconButton>
             </Tooltip>
-            
+
             <Divider orientation="vertical" flexItem sx={{ mx: 1 }} />
-            
+
             <Tooltip title="Bulleted List">
               <IconButton
                 size="small"
-                onMouseDown={(event) => {
+                onMouseDown={event => {
                   event.preventDefault();
                   CustomEditor.toggleBulletedList(editor);
                 }}
@@ -437,26 +445,21 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
                 <FormatListBulleted fontSize="small" />
               </IconButton>
             </Tooltip>
-            
-            
+
             {onSave && (
-              <>
+              <React.Fragment>
                 <Divider orientation="vertical" flexItem sx={{ mx: 1 }} />
                 <Tooltip title="Save (Ctrl+S)">
-                  <IconButton
-                    size="small"
-                    onClick={onSave}
-                    color="primary"
-                  >
+                  <IconButton size="small" onClick={onSave} color="primary">
                     <Save fontSize="small" />
                   </IconButton>
                 </Tooltip>
-              </>
+              </React.Fragment>
             )}
           </Toolbar>
         </Paper>
       )}
-      
+
       <Paper
         elevation={1}
         sx={{
@@ -470,11 +473,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
           },
         }}
       >
-        <Slate
-          editor={editor}
-          initialValue={initialValue}
-          onChange={handleChange}
-        >
+        <Slate editor={editor} initialValue={initialValue} onChange={handleChange}>
           <Editable
             renderElement={Element}
             renderLeaf={Leaf}
@@ -489,7 +488,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
           />
         </Slate>
       </Paper>
-      
+
       {!readOnly && (
         <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
           Use Ctrl+B, Ctrl+I, Ctrl+U for formatting. Ctrl+S to save.

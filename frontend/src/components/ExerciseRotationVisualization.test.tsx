@@ -37,9 +37,10 @@ jest.mock('./RadialBarChart', () => ({
   RadialBarChart: () => <div data-testid="radial-bar-chart">Mock Radial Bar Chart</div>,
 }));
 
-
 jest.mock('./ExercisePoolSunburstChart', () => ({
-  ExercisePoolSunburstChart: () => <div data-testid="exercise-pool-sunburst-chart">Mock Sunburst Chart</div>,
+  ExercisePoolSunburstChart: () => (
+    <div data-testid="exercise-pool-sunburst-chart">Mock Sunburst Chart</div>
+  ),
 }));
 
 const mockPrograms: Program[] = [
@@ -128,9 +129,12 @@ describe('ExerciseRotationVisualization', () => {
 
     renderWithProviders(<ExerciseRotationVisualization />);
 
-    await waitFor(() => {
-      expect(screen.getByText('Available Exercises')).toBeInTheDocument();
-    }, { timeout: 10000 });
+    await waitFor(
+      () => {
+        expect(screen.getByText('Available Exercises')).toBeInTheDocument();
+      },
+      { timeout: 10000 }
+    );
 
     expect(screen.getAllByText('Primary Exercises')).toHaveLength(1);
     expect(screen.getAllByText('Accessory Exercises')).toHaveLength(1);
@@ -145,9 +149,12 @@ describe('ExerciseRotationVisualization', () => {
 
     renderWithProviders(<ExerciseRotationVisualization />);
 
-    await waitFor(() => {
-      expect(screen.getByTestId('ArrowBackIcon')).toBeInTheDocument();
-    }, { timeout: 10000 });
+    await waitFor(
+      () => {
+        expect(screen.getByTestId('ArrowBackIcon')).toBeInTheDocument();
+      },
+      { timeout: 10000 }
+    );
   }, 15000);
 
   it('should display exercise pool statistics', async () => {
@@ -156,9 +163,12 @@ describe('ExerciseRotationVisualization', () => {
 
     renderWithProviders(<ExerciseRotationVisualization />);
 
-    await waitFor(() => {
-      expect(screen.getByText('Available Exercises')).toBeInTheDocument();
-    }, { timeout: 10000 });
+    await waitFor(
+      () => {
+        expect(screen.getByText('Available Exercises')).toBeInTheDocument();
+      },
+      { timeout: 10000 }
+    );
 
     // Should show the exercise counts - there are multiple "1" elements, so we check they exist
     expect(screen.getAllByText('1')).toHaveLength(2); // Multiple "1" elements in the stats
@@ -170,9 +180,12 @@ describe('ExerciseRotationVisualization', () => {
 
     renderWithProviders(<ExerciseRotationVisualization />);
 
-    await waitFor(() => {
-      expect(screen.getByText('Available Exercises')).toBeInTheDocument();
-    }, { timeout: 10000 });
+    await waitFor(
+      () => {
+        expect(screen.getByText('Available Exercises')).toBeInTheDocument();
+      },
+      { timeout: 10000 }
+    );
   }, 15000);
 
   it('should handle empty exercise pool data', async () => {
@@ -192,9 +205,12 @@ describe('ExerciseRotationVisualization', () => {
 
     renderWithProviders(<ExerciseRotationVisualization />);
 
-    await waitFor(() => {
-      expect(screen.getByText('Available Exercises')).toBeInTheDocument();
-    }, { timeout: 10000 });
+    await waitFor(
+      () => {
+        expect(screen.getByText('Available Exercises')).toBeInTheDocument();
+      },
+      { timeout: 10000 }
+    );
   }, 15000);
 
   it('should show back button when in category view', async () => {
@@ -256,9 +272,12 @@ describe('ExerciseRotationVisualization', () => {
 
     renderWithProviders(<ExerciseRotationVisualization />);
 
-    await waitFor(() => {
-      expect(screen.getByTestId('ArrowBackIcon')).toBeInTheDocument();
-    }, { timeout: 10000 });
+    await waitFor(
+      () => {
+        expect(screen.getByTestId('ArrowBackIcon')).toBeInTheDocument();
+      },
+      { timeout: 10000 }
+    );
 
     // Should show back button (using data-testid since it doesn't have accessible name)
     expect(screen.getByTestId('ArrowBackIcon')).toBeInTheDocument();

@@ -1,5 +1,5 @@
 import { default as ShowChartIcon } from '@mui/icons-material/ShowChart';
-import { Box, Card, CardContent, Typography, useTheme } from '@mui/material';
+import { Box, Typography, useTheme } from '@mui/material';
 import { ResponsiveStream } from '@nivo/stream';
 import React, { useMemo } from 'react';
 
@@ -153,7 +153,9 @@ export const StreamChart: React.FC<StreamChartProps> = ({
     <Box>
       <Box display="flex" alignItems="center" gap={1} sx={{ mb: 1 }}>
         <ShowChartIcon color="secondary" fontSize="small" />
-        <Typography variant="subtitle1" fontWeight="medium">{title}</Typography>
+        <Typography variant="subtitle1" fontWeight="medium">
+          {title}
+        </Typography>
       </Box>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
         {description}

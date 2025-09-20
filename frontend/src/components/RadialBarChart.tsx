@@ -3,9 +3,9 @@ import { Box, Card, CardContent, Typography, useTheme } from '@mui/material';
 import { ResponsiveRadialBar } from '@nivo/radial-bar';
 import React, { useState, useMemo } from 'react';
 
-import type { UserExercisePoolResponse } from '../api/types';
-import { createCongenNivoTheme, congenColorSchemes } from '../theme/nivoTheme';
+import type { UserExercisePoolResponse, Exercise } from '../api/types';
 import { capitalizeEachWord } from '../common/utils';
+import { createCongenNivoTheme } from '../theme/nivoTheme';
 
 interface RadialBarChartProps {
   exercisePoolData: UserExercisePoolResponse | null;
@@ -34,7 +34,7 @@ export const RadialBarChart: React.FC<RadialBarChartProps> = ({
 }) => {
   const theme = useTheme();
   const nivoTheme = createCongenNivoTheme(theme.palette.mode);
-  const [selectedItems, setSelectedItems] = useState<string[]>([]);
+  const [selectedItems] = useState<string[]>([]);
 
   // Prepare chart data
   const chartData = useMemo(() => {
@@ -47,7 +47,7 @@ export const RadialBarChart: React.FC<RadialBarChartProps> = ({
         y: number;
       }>;
     }> = [];
-    
+
     // Define all available exercise categories based on workout stages
     const exerciseCategories = [
       { key: 'primary_exercises', id: 'Primary', name: 'Primary' },
@@ -58,8 +58,8 @@ export const RadialBarChart: React.FC<RadialBarChartProps> = ({
 
     // Process all exercise categories dynamically
     exerciseCategories.forEach(({ key, id, name }) => {
-      const exercises = exercisePoolData[key as keyof UserExercisePoolResponse] as any[];
-      
+      const exercises = exercisePoolData[key as keyof UserExercisePoolResponse] as Exercise[];
+
       if (exercises && exercises.length > 0) {
         categories.push({
           id,
@@ -110,14 +110,21 @@ export const RadialBarChart: React.FC<RadialBarChartProps> = ({
             circularAxisOuter={{ tickSize: 5, tickPadding: 12, tickRotation: 0 }}
             theme={nivoTheme}
             colors={{ scheme: 'nivo' }}
-            tooltip={(props: any) => {
+            tooltip={(props: {
+              bar?: {
+                data?: { x?: string; y?: number };
+                category?: string;
+                value?: number;
+                color?: string;
+              };
+            }) => {
               if (!props?.bar) return null;
-              
+
               const { bar } = props;
               const label = bar.data?.x || bar.category || 'Unknown';
               const value = bar.data?.y || bar.value || 0;
               const color = bar.color || '#000';
-              
+
               return (
                 <div
                   style={{

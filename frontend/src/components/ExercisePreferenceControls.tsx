@@ -1,4 +1,8 @@
-import { Favorite as FavoriteIcon, Block as BlockIcon, Remove as RemoveIcon } from '@mui/icons-material';
+import {
+  Favorite as FavoriteIcon,
+  Block as BlockIcon,
+  Remove as RemoveIcon,
+} from '@mui/icons-material';
 import {
   Chip,
   IconButton,
@@ -11,12 +15,12 @@ import { useSnackbar } from 'notistack';
 import React, { useState, useEffect } from 'react';
 
 import { LoadingSpinner } from './LoadingSpinner';
+import type { UserExercisePreference } from '../api/types';
 import {
   getUserExercisePreferences,
   upsertUserExercisePreference,
   removeUserExercisePreference,
 } from '../api/userExercisePreference';
-import type { UserExercisePreference } from '../api/types';
 import { useAuth } from '../contexts/AuthContext';
 
 /**
@@ -99,13 +103,12 @@ export function ExercisePreferenceControls(
         );
         setPreference(newPreference);
         onPreferenceChange?.(newPreference);
-        
-        enqueueSnackbar(
-          `Exercise ${shouldAvoid ? 'ignored' : 'preferred'} successfully`,
-          { variant: 'success' }
-        );
+
+        enqueueSnackbar(`Exercise ${shouldAvoid ? 'ignored' : 'preferred'} successfully`, {
+          variant: 'success',
+        });
       }
-    } catch (error) {
+    } catch {
       enqueueSnackbar('Failed to update exercise preference', { variant: 'error' });
     } finally {
       setSaving(false);
@@ -166,25 +169,34 @@ export function ExercisePreferenceControls(
   if (variant === 'chip') {
     const getChipColor = () => {
       switch (currentState) {
-        case 'prefer': return 'success';
-        case 'ignore': return 'error';
-        default: return 'default';
+        case 'prefer':
+          return 'success';
+        case 'ignore':
+          return 'error';
+        default:
+          return 'default';
       }
     };
 
     const getChipLabel = () => {
       switch (currentState) {
-        case 'prefer': return 'Preferred';
-        case 'ignore': return 'Ignored';
-        default: return 'Neutral';
+        case 'prefer':
+          return 'Preferred';
+        case 'ignore':
+          return 'Ignored';
+        default:
+          return 'Neutral';
       }
     };
 
     const getChipIcon = () => {
       switch (currentState) {
-        case 'prefer': return <FavoriteIcon />;
-        case 'ignore': return <BlockIcon />;
-        default: return <RemoveIcon />;
+        case 'prefer':
+          return <FavoriteIcon />;
+        case 'ignore':
+          return <BlockIcon />;
+        default:
+          return <RemoveIcon />;
       }
     };
 
@@ -196,8 +208,12 @@ export function ExercisePreferenceControls(
         size={size}
         onClick={() => {
           // Cycle through states: neutral -> prefer -> ignore -> neutral
-          const nextState = currentState === 'neutral' ? 'prefer' : 
-                           currentState === 'prefer' ? 'ignore' : 'neutral';
+          const nextState =
+            currentState === 'neutral'
+              ? 'prefer'
+              : currentState === 'prefer'
+                ? 'ignore'
+                : 'neutral';
           handlePreferenceChange(nextState);
         }}
         disabled={saving}
@@ -209,25 +225,34 @@ export function ExercisePreferenceControls(
   if (variant === 'icon') {
     const getIconColor = () => {
       switch (currentState) {
-        case 'prefer': return 'success';
-        case 'ignore': return 'error';
-        default: return 'default';
+        case 'prefer':
+          return 'success';
+        case 'ignore':
+          return 'error';
+        default:
+          return 'default';
       }
     };
 
     const getIcon = () => {
       switch (currentState) {
-        case 'prefer': return <FavoriteIcon />;
-        case 'ignore': return <BlockIcon />;
-        default: return <RemoveIcon />;
+        case 'prefer':
+          return <FavoriteIcon />;
+        case 'ignore':
+          return <BlockIcon />;
+        default:
+          return <RemoveIcon />;
       }
     };
 
     const getTooltipText = () => {
       switch (currentState) {
-        case 'prefer': return 'Preferred - Click to change';
-        case 'ignore': return 'Ignored - Click to change';
-        default: return 'Neutral - Click to set preference';
+        case 'prefer':
+          return 'Preferred - Click to change';
+        case 'ignore':
+          return 'Ignored - Click to change';
+        default:
+          return 'Neutral - Click to set preference';
       }
     };
 
@@ -237,8 +262,12 @@ export function ExercisePreferenceControls(
           size={size}
           onClick={() => {
             // Cycle through states: neutral -> prefer -> ignore -> neutral
-            const nextState = currentState === 'neutral' ? 'prefer' : 
-                             currentState === 'prefer' ? 'ignore' : 'neutral';
+            const nextState =
+              currentState === 'neutral'
+                ? 'prefer'
+                : currentState === 'prefer'
+                  ? 'ignore'
+                  : 'neutral';
             handlePreferenceChange(nextState);
           }}
           disabled={saving}

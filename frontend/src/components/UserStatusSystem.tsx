@@ -1,6 +1,8 @@
-import React, { useMemo } from 'react';
 import { Box, Grid, Typography, Card, CardContent } from '@mui/material';
-import { StatusCard, StatusLevel, StatusMetric } from './StatusCard';
+import React, { useMemo } from 'react';
+
+import type { StatusLevel, StatusMetric } from './StatusCard';
+import { StatusCard } from './StatusCard';
 import type { User, UserDataExport, UserOneRepMax } from '../api/types';
 
 export interface UserStatus {
@@ -24,44 +26,49 @@ interface UserStatusSystemProps {
  * This component calculates and displays various health and fitness metrics
  * with status indicators and color coding.
  *
- * @param user The user data
  * @param userData The user's training data
  * @param oneRepMaxes The user's one rep max records
  * @return UserStatusSystem component
  */
-export const UserStatusSystem: React.FC<UserStatusSystemProps> = ({
-  user,
-  userData,
-  oneRepMaxes,
-}) => {
+export const UserStatusSystem: React.FC<UserStatusSystemProps> = ({ userData, oneRepMaxes }) => {
   // Calculate user status metrics
   const userStatus = useMemo((): UserStatus => {
     const now = new Date();
-    
+
     // Calculate strength status based on recent 1RM improvements
     const recentOneRepMaxes = oneRepMaxes.slice(-10); // Last 10 records
-    const strengthImprovement = recentOneRepMaxes.length > 1 
-      ? (recentOneRepMaxes[recentOneRepMaxes.length - 1]?.one_rep_max || 0) - 
-        (recentOneRepMaxes[0]?.one_rep_max || 0)
-      : 0;
-    
-    const strengthStatus: StatusLevel = strengthImprovement > 0 ? 'excellent' : 
-      strengthImprovement === 0 ? 'good' : 'fair';
-    
+    const strengthImprovement =
+      recentOneRepMaxes.length > 1
+        ? (recentOneRepMaxes[recentOneRepMaxes.length - 1]?.one_rep_max || 0) -
+          (recentOneRepMaxes[0]?.one_rep_max || 0)
+        : 0;
+
+    const strengthStatus: StatusLevel =
+      strengthImprovement > 0 ? 'excellent' : strengthImprovement === 0 ? 'good' : 'fair';
+
     // Calculate training frequency
-    const totalWorkouts = userData?.training_programs?.reduce(
-      (total, program) => total + program.workouts.length, 0
-    ) || 0;
-    
-    const trainingFrequency = totalWorkouts > 20 ? 'excellent' :
-      totalWorkouts > 10 ? 'good' :
-      totalWorkouts > 5 ? 'fair' : 'needs_attention';
-    
+    const totalWorkouts =
+      userData?.training_programs?.reduce((total, program) => total + program.workouts.length, 0) ||
+      0;
+
+    const trainingFrequency =
+      totalWorkouts > 20
+        ? 'excellent'
+        : totalWorkouts > 10
+          ? 'good'
+          : totalWorkouts > 5
+            ? 'fair'
+            : 'needs_attention';
+
     // Calculate overall status
-    const overallStatus: StatusLevel = 
-      strengthStatus === 'excellent' && trainingFrequency === 'excellent' ? 'excellent' :
-      strengthStatus === 'good' && trainingFrequency === 'good' ? 'good' :
-      strengthStatus === 'fair' || trainingFrequency === 'fair' ? 'fair' : 'needs_attention';
+    const overallStatus: StatusLevel =
+      strengthStatus === 'excellent' && trainingFrequency === 'excellent'
+        ? 'excellent'
+        : strengthStatus === 'good' && trainingFrequency === 'good'
+          ? 'good'
+          : strengthStatus === 'fair' || trainingFrequency === 'fair'
+            ? 'fair'
+            : 'needs_attention';
 
     return {
       overall: overallStatus,
@@ -131,7 +138,7 @@ export const UserStatusSystem: React.FC<UserStatusSystemProps> = ({
             description="Based on recent 1RM improvements"
           />
         </Grid>
-        
+
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <StatusCard
             title="Cardio Fitness"
@@ -143,7 +150,7 @@ export const UserStatusSystem: React.FC<UserStatusSystemProps> = ({
             description="VO2 Max and cardiovascular health"
           />
         </Grid>
-        
+
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <StatusCard
             title="Recovery"
@@ -155,7 +162,7 @@ export const UserStatusSystem: React.FC<UserStatusSystemProps> = ({
             description="Sleep quality and recovery metrics"
           />
         </Grid>
-        
+
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <StatusCard
             title="Nutrition"

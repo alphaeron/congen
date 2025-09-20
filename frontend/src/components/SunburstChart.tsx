@@ -137,7 +137,7 @@ export const SunburstChart: React.FC<SunburstChartProps> = ({
         stage.exercises?.forEach(exercise => {
           const exerciseName = (exercise.exercise as Record<string, unknown>)
             .exercise_name as string;
-          
+
           // Always get or create the exercise entry
           const existing = map.get(exerciseName) || { totalVolume: 0 };
 
@@ -159,7 +159,7 @@ export const SunburstChart: React.FC<SunburstChartProps> = ({
         });
       });
     });
-    
+
     return map;
   }, [workouts, weightUnitPreferences]);
 
@@ -209,7 +209,7 @@ export const SunburstChart: React.FC<SunburstChartProps> = ({
         // For exercises that belong to multiple muscle groups, divide the volume
         // by the number of muscles to avoid artificial inflation
         const volumePerMuscle = exercise.totalVolume / individualMuscles.length;
-        
+
         individualMuscles.forEach(muscle => {
           const existing = muscleGroups.get(muscle);
           // Create unique exercise name with muscle in parentheses

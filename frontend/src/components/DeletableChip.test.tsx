@@ -11,25 +11,13 @@ describe('DeletableChip', () => {
   });
 
   it('renders with label', () => {
-    render(
-      <DeletableChip
-        label="Test Chip"
-        onDelete={mockOnDelete}
-        deleteTooltip="Delete chip"
-      />
-    );
+    render(<DeletableChip label="Test Chip" onDelete={mockOnDelete} deleteTooltip="Delete chip" />);
 
     expect(screen.getByText('Test Chip')).toBeInTheDocument();
   });
 
   it('calls onDelete when delete button is clicked', () => {
-    render(
-      <DeletableChip
-        label="Test Chip"
-        onDelete={mockOnDelete}
-        deleteTooltip="Delete chip"
-      />
-    );
+    render(<DeletableChip label="Test Chip" onDelete={mockOnDelete} deleteTooltip="Delete chip" />);
 
     // Find the delete icon and click it
     const deleteIcon = screen.getByTestId('DeleteIcon');
@@ -38,13 +26,7 @@ describe('DeletableChip', () => {
   });
 
   it('shows tooltip on delete button', () => {
-    render(
-      <DeletableChip
-        label="Test Chip"
-        onDelete={mockOnDelete}
-        deleteTooltip="Delete chip"
-      />
-    );
+    render(<DeletableChip label="Test Chip" onDelete={mockOnDelete} deleteTooltip="Delete chip" />);
 
     // The chip has the aria-label for the delete functionality
     const chip = screen.getByLabelText('Delete chip');

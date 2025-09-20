@@ -3,9 +3,9 @@ import { Box, Card, CardContent, Typography, useTheme } from '@mui/material';
 import { ResponsiveSunburst } from '@nivo/sunburst';
 import React, { useState, useMemo } from 'react';
 
-import type { UserExercisePoolResponse } from '../api/types';
-import { createCongenNivoTheme, congenColorSchemes } from '../theme/nivoTheme';
+import type { UserExercisePoolResponse, Exercise } from '../api/types';
 import { capitalizeEachWord } from '../common/utils';
+import { createCongenNivoTheme } from '../theme/nivoTheme';
 
 interface ExercisePoolSunburstChartProps {
   exercisePoolData: UserExercisePoolResponse | null;
@@ -34,7 +34,7 @@ export const ExercisePoolSunburstChart: React.FC<ExercisePoolSunburstChartProps>
 }) => {
   const theme = useTheme();
   const nivoTheme = createCongenNivoTheme(theme.palette.mode);
-  const [selectedItems, setSelectedItems] = useState<string[]>([]);
+  const [selectedItems] = useState<string[]>([]);
 
   // Prepare sunburst data
   const sunburstData = useMemo(() => {
@@ -58,22 +58,22 @@ export const ExercisePoolSunburstChart: React.FC<ExercisePoolSunburstChartProps>
 
     // Process all exercise categories dynamically
     exerciseCategories.forEach(({ key, name }) => {
-      const exercises = exercisePoolData[key as keyof UserExercisePoolResponse] as any[];
-      
+      const exercises = exercisePoolData[key as keyof UserExercisePoolResponse] as Exercise[];
+
       if (exercises && exercises.length > 0) {
         exercises.forEach(exercise => {
           const category = name;
           const movementType = exercise.movement_type || 'Other';
-          
+
           if (!categoryMap.has(category)) {
             categoryMap.set(category, new Map());
           }
-          
+
           const movementMap = categoryMap.get(category)!;
           if (!movementMap.has(movementType)) {
             movementMap.set(movementType, []);
           }
-          
+
           // Keep all exercises to preserve original distribution
           movementMap.get(movementType)!.push(exercise.name);
         });
@@ -107,7 +107,7 @@ export const ExercisePoolSunburstChart: React.FC<ExercisePoolSunburstChartProps>
     if (selectedItems.length === 0) {
       return sunburstData;
     }
-    
+
     // This is a simplified filter - in a real implementation you'd want more sophisticated filtering
     return sunburstData;
   }, [sunburstData, selectedItems]);

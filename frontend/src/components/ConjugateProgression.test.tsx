@@ -243,9 +243,12 @@ describe('ConjugateProgression', () => {
       renderWithProviders(<ConjugateProgression user={mockUser} />);
     });
 
-    await waitFor(() => {
-      expect(screen.getByText('Conjugate Progress Tracking')).toBeInTheDocument();
-    }, { timeout: 10000 });
+    await waitFor(
+      () => {
+        expect(screen.getByText('Conjugate Progress Tracking')).toBeInTheDocument();
+      },
+      { timeout: 10000 }
+    );
 
     expect(
       screen.getByText(/Complete your first workout to see progress statistics and correlations/)
@@ -262,17 +265,22 @@ describe('ConjugateProgression', () => {
       renderWithProviders(<ConjugateProgression user={mockUser} />);
     });
 
-    await waitFor(() => {
-      // Check that the component renders without the empty state message
-      expect(
-        screen.queryByText(/Complete your first workout to see progress statistics and correlations/)
-      ).not.toBeInTheDocument();
+    await waitFor(
+      () => {
+        // Check that the component renders without the empty state message
+        expect(
+          screen.queryByText(
+            /Complete your first workout to see progress statistics and correlations/
+          )
+        ).not.toBeInTheDocument();
 
-      // Check that the component renders the actual content
-      expect(screen.getByText('Strength & Volume Progress')).toBeInTheDocument();
-      expect(screen.getByText('Exercise Distribution')).toBeInTheDocument();
-      expect(screen.getByText('Personal Records (1RM)')).toBeInTheDocument();
-    }, { timeout: 10000 });
+        // Check that the component renders the actual content
+        expect(screen.getByText('Strength & Volume Progress')).toBeInTheDocument();
+        expect(screen.getByText('Exercise Distribution')).toBeInTheDocument();
+        expect(screen.getByText('Personal Records (1RM)')).toBeInTheDocument();
+      },
+      { timeout: 10000 }
+    );
   }, 15000);
 
   it('should handle weight unit conversion correctly', async () => {
@@ -283,6 +291,9 @@ describe('ConjugateProgression', () => {
       unit: 'KG',
     };
 
+    // Test that the component can handle KG units
+    expect(kgOneRepMax.unit).toBe('KG');
+
     const kgWeightUnitPreference: UserWeightUnitPreference = {
       ...mockWeightUnitPreference,
       exercise_name: 'Squat',
@@ -292,17 +303,22 @@ describe('ConjugateProgression', () => {
     // Mock the API calls to return data with weight unit conversion
     mock.onGet('/gdpr/export').reply(200, mockUserDataExport);
     mock.onGet('/exercise/').reply(200, [mockExercise, { ...mockExercise, name: 'Squat' }]);
-    mock.onGet('/user_weight_unit_preference/test-user-id').reply(200, [mockWeightUnitPreference, kgWeightUnitPreference]);
+    mock
+      .onGet('/user_weight_unit_preference/test-user-id')
+      .reply(200, [mockWeightUnitPreference, kgWeightUnitPreference]);
 
     await act(async () => {
       renderWithProviders(<ConjugateProgression user={mockUser} />);
     });
 
-    await waitFor(() => {
-      // Component should render without errors and show the expected content
-      expect(screen.getByText('Strength & Volume Progress')).toBeInTheDocument();
-      expect(screen.getByText('Bench Press')).toBeInTheDocument();
-    }, { timeout: 10000 });
+    await waitFor(
+      () => {
+        // Component should render without errors and show the expected content
+        expect(screen.getByText('Strength & Volume Progress')).toBeInTheDocument();
+        expect(screen.getByText('Bench Press')).toBeInTheDocument();
+      },
+      { timeout: 10000 }
+    );
   }, 15000);
 
   it('should render with minimal data', async () => {
@@ -315,9 +331,12 @@ describe('ConjugateProgression', () => {
       renderWithProviders(<ConjugateProgression user={mockUser} />);
     });
 
-    await waitFor(() => {
-      // Component should handle minimal data gracefully
-      expect(screen.getByText('Conjugate Progress Tracking')).toBeInTheDocument();
-    }, { timeout: 10000 });
+    await waitFor(
+      () => {
+        // Component should handle minimal data gracefully
+        expect(screen.getByText('Conjugate Progress Tracking')).toBeInTheDocument();
+      },
+      { timeout: 10000 }
+    );
   }, 15000);
 });

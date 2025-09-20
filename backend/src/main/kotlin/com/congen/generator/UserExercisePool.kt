@@ -1,8 +1,8 @@
 package com.congen.generator
 
+import com.congen.model.Exercise
 import com.congen.model.ExerciseEquipment
 import com.congen.model.ExerciseMuscle
-import com.congen.model.Exercise
 import com.congen.model.UserEquipment
 import com.congen.model.UserExercisePreference
 import org.slf4j.LoggerFactory
@@ -23,6 +23,8 @@ import java.util.concurrent.ConcurrentHashMap
  * @param exerciseEquipmentMappings Pre-computed mappings of exercise names to their equipment requirements
  * @param exerciseMuscleMappings Pre-computed mappings of exercise names to their muscle targets
  * @param previouslyUsedExercises List of exercise names that have been used in previous weeks
+ * @param userId The ID of the user
+ * @param excludedExercises Set of exercise names to exclude from the pool
  *
  * @author Congen Development Team
  * @since 1.0.0
@@ -53,7 +55,6 @@ class UserExercisePool(
      * @return The user ID
      */
     fun getUserId(): String = userId
-
 
     init {
         // Initialize available exercises with all exercises that match user preferences
@@ -88,7 +89,8 @@ class UserExercisePool(
 
         logger.info(
             "Initialized UserExercisePool with {} exercises (filtered by preferences and {} excluded by sliding window)",
-            availableExercises.size, excludedExercises.size
+            availableExercises.size,
+            excludedExercises.size
         )
     }
 
@@ -331,13 +333,14 @@ class UserExercisePool(
             return Mono.just(exercises)
         }
 
-        val muscleFilteredExercises = exercises.filter { exercise ->
-            val exerciseMuscles = exerciseMuscleMappings[exercise.name] ?: emptyList()
-            val exerciseMuscleNames = exerciseMuscles.map { it.muscleName.lowercase() }.toSet()
-            val targetMuscleNames = targetMuscles.map { it.lowercase() }.toSet()
-            val hasTargetMuscle = exerciseMuscleNames.any { muscle -> targetMuscleNames.contains(muscle) }
-            hasTargetMuscle
-        }
+        val muscleFilteredExercises =
+            exercises.filter { exercise ->
+                val exerciseMuscles = exerciseMuscleMappings[exercise.name] ?: emptyList()
+                val exerciseMuscleNames = exerciseMuscles.map { it.muscleName.lowercase() }.toSet()
+                val targetMuscleNames = targetMuscles.map { it.lowercase() }.toSet()
+                val hasTargetMuscle = exerciseMuscleNames.any { muscle -> targetMuscleNames.contains(muscle) }
+                hasTargetMuscle
+            }
 
         return if (muscleFilteredExercises.isEmpty()) {
             // If no exact muscle matches found, fall back to all available exercises

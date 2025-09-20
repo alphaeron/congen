@@ -1,7 +1,8 @@
-import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 import { useForm } from '@tanstack/react-form';
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import React from 'react';
+
 import { SetSchemeForm, type SetSchemeFormData } from './SetSchemeForm';
 import type { UserWeightUnitPreference } from '../api/types';
 
@@ -20,20 +21,19 @@ const mockWeightUnitPreferences: UserWeightUnitPreference[] = [
     user_id: 'user1',
     exercise_name: 'Bench Press',
     preferred_unit: 'LBS',
-    created_at: '2023-01-01T00:00:00Z',
-    updated_at: '2023-01-01T00:00:00Z',
+    created_at: new Date('2023-01-01T00:00:00Z'),
+    updated_at: new Date('2023-01-01T00:00:00Z'),
   },
   {
     user_id: 'user1',
     exercise_name: 'Squat',
     preferred_unit: 'KG',
-    created_at: '2023-01-01T00:00:00Z',
-    updated_at: '2023-01-01T00:00:00Z',
+    created_at: new Date('2023-01-01T00:00:00Z'),
+    updated_at: new Date('2023-01-01T00:00:00Z'),
   },
 ];
 
 const TestWrapper: React.FC<{
-  children: React.ReactNode;
   defaultValues?: Partial<SetSchemeFormData>;
   exerciseName?: string;
   weightUnitPreferences?: UserWeightUnitPreference[];
@@ -41,7 +41,6 @@ const TestWrapper: React.FC<{
   showTempoFields?: boolean;
   showSetTypeFields?: boolean;
 }> = ({
-  children,
   defaultValues = {},
   exerciseName,
   weightUnitPreferences = [],
@@ -98,10 +97,7 @@ describe('SetSchemeForm', () => {
 
   it('shows weight unit in lbs when user prefers lbs for the exercise', () => {
     render(
-      <TestWrapper
-        exerciseName="Bench Press"
-        weightUnitPreferences={mockWeightUnitPreferences}
-      />
+      <TestWrapper exerciseName="Bench Press" weightUnitPreferences={mockWeightUnitPreferences} />
     );
 
     expect(screen.getByLabelText('Target Weight (lbs)')).toBeInTheDocument();
@@ -109,12 +105,7 @@ describe('SetSchemeForm', () => {
   });
 
   it('shows weight unit in kg when user prefers kg for the exercise', () => {
-    render(
-      <TestWrapper
-        exerciseName="Squat"
-        weightUnitPreferences={mockWeightUnitPreferences}
-      />
-    );
+    render(<TestWrapper exerciseName="Squat" weightUnitPreferences={mockWeightUnitPreferences} />);
 
     expect(screen.getByLabelText('Target Weight (kg)')).toBeInTheDocument();
     expect(screen.getByLabelText('Performed Weight (kg)')).toBeInTheDocument();
@@ -122,10 +113,7 @@ describe('SetSchemeForm', () => {
 
   it('defaults to kg when no weight unit preference is found', () => {
     render(
-      <TestWrapper
-        exerciseName="Deadlift"
-        weightUnitPreferences={mockWeightUnitPreferences}
-      />
+      <TestWrapper exerciseName="Deadlift" weightUnitPreferences={mockWeightUnitPreferences} />
     );
 
     expect(screen.getByLabelText('Target Weight (kg)')).toBeInTheDocument();
@@ -153,7 +141,6 @@ describe('SetSchemeForm', () => {
   });
 
   it('shows tempo input fields when tempo is enabled', async () => {
-    const user = userEvent.setup();
     render(<TestWrapper defaultValues={{ useTempo: true }} />);
 
     // The tempo fields should be visible when useTempo is true
@@ -179,7 +166,6 @@ describe('SetSchemeForm', () => {
   });
 
   it('handles weight conversion for display', async () => {
-    const user = userEvent.setup();
     render(
       <TestWrapper
         exerciseName="Bench Press"
@@ -196,10 +182,7 @@ describe('SetSchemeForm', () => {
   it('handles weight conversion for storage', async () => {
     const user = userEvent.setup();
     render(
-      <TestWrapper
-        exerciseName="Bench Press"
-        weightUnitPreferences={mockWeightUnitPreferences}
-      />
+      <TestWrapper exerciseName="Bench Press" weightUnitPreferences={mockWeightUnitPreferences} />
     );
 
     const targetWeightInput = screen.getByLabelText('Target Weight (lbs)');
@@ -234,15 +217,15 @@ describe('SetSchemeForm', () => {
     render(<TestWrapper />);
 
     const totalSetsInput = screen.getByLabelText('Total Sets');
-    
+
     // Test clearing the field
     await user.clear(totalSetsInput);
     expect(totalSetsInput).toHaveValue('');
-    
+
     // Test typing with leading zeros
     await user.type(totalSetsInput, '024');
     expect(totalSetsInput).toHaveValue('024'); // Leading zeros are preserved during typing
-    
+
     // Test clearing and typing a single digit
     await user.clear(totalSetsInput);
     await user.type(totalSetsInput, '5');
@@ -252,31 +235,27 @@ describe('SetSchemeForm', () => {
   it('handles floating point numbers correctly for weight fields', async () => {
     const user = userEvent.setup();
     render(
-      <TestWrapper
-        exerciseName="Bench Press"
-        weightUnitPreferences={mockWeightUnitPreferences}
-      />
+      <TestWrapper exerciseName="Bench Press" weightUnitPreferences={mockWeightUnitPreferences} />
     );
 
     const targetWeightInput = screen.getByLabelText('Target Weight (lbs)');
-    
+
     // Test entering a decimal weight
     await user.clear(targetWeightInput);
     await user.type(targetWeightInput, '135.5');
     // The input should accept the decimal value
     expect(targetWeightInput).toHaveValue('135.5');
-    
+
     // Test entering a weight with multiple decimal places
     await user.clear(targetWeightInput);
     await user.type(targetWeightInput, '225.75');
     expect(targetWeightInput).toHaveValue('225.75');
-    
+
     // Test entering a weight that starts with decimal
     await user.clear(targetWeightInput);
     await user.type(targetWeightInput, '.5');
     expect(targetWeightInput).toHaveValue('.5');
   });
-
 
   it('handles integer fields correctly (sets, reps, rest)', async () => {
     const user = userEvent.setup();
@@ -285,30 +264,30 @@ describe('SetSchemeForm', () => {
     const totalSetsInput = screen.getByLabelText('Total Sets');
     const targetRepsInput = screen.getByLabelText('Target Reps');
     const restInput = screen.getByLabelText('Rest Period (seconds)');
-    
+
     // Test that decimal values are preserved during typing
     await user.clear(totalSetsInput);
     await user.type(totalSetsInput, '3.7');
     expect(totalSetsInput).toHaveValue('3.7'); // Should preserve decimal during typing
-    
+
     // Test that decimal values are converted to integers on blur
     await user.click(document.body); // Blur the input
     expect(totalSetsInput).toHaveValue('3'); // Should be floored to 3 on blur
-    
+
     // Test that decimal values are preserved during typing for reps
     await user.clear(targetRepsInput);
     await user.type(targetRepsInput, '8.9');
     expect(targetRepsInput).toHaveValue('8.9'); // Should preserve decimal during typing
-    
+
     // Test that decimal values are converted to integers on blur for reps
     await user.click(document.body); // Blur the input
     expect(targetRepsInput).toHaveValue('8'); // Should be floored to 8 on blur
-    
+
     // Test that decimal values are preserved during typing for rest
     await user.clear(restInput);
     await user.type(restInput, '90.5');
     expect(restInput).toHaveValue('90.5'); // Should preserve decimal during typing
-    
+
     // Test that decimal values are converted to integers on blur for rest
     await user.click(document.body); // Blur the input
     expect(restInput).toHaveValue('90'); // Should be floored to 90 on blur

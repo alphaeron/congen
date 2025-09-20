@@ -2,11 +2,11 @@ package com.congen.generator
 
 import com.congen.model.Exercise
 import com.congen.model.WorkoutStageTypeEnum
+import org.jetbrains.annotations.VisibleForTesting
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
-import org.jetbrains.annotations.VisibleForTesting
 
 /**
  * Service for generating workout stages for 4-day conjugate powerlifting programs.
@@ -173,40 +173,45 @@ class FourDayWorkoutStageGenerationService(
                         )
 
                     // Create all workout stages
-                    val primaryStageMono = createPrimaryStage(
-                        exercise = primaryExercise,
-                        setSchemes = primarySetSchemes
-                    )
-
-                    val secondaryStageMono = if (hasSecondary && secondaryExercise != null) {
-                        createSecondaryStage(
-                            exercise = secondaryExercise,
-                            setSchemes = secondarySetSchemes
+                    val primaryStageMono =
+                        createPrimaryStage(
+                            exercise = primaryExercise,
+                            setSchemes = primarySetSchemes
                         )
-                    } else {
-                        Mono.empty()
-                    }
 
-                    val warmupStageMono = createWarmupStage(
-                        preparedData = preparedData,
-                        dayType = dayType,
-                        primaryExercise = primaryExercise,
-                        secondaryExercise = secondaryExercise,
-                        isFourDayTemplate = true
-                    )
+                    val secondaryStageMono =
+                        if (hasSecondary && secondaryExercise != null) {
+                            createSecondaryStage(
+                                exercise = secondaryExercise,
+                                setSchemes = secondarySetSchemes
+                            )
+                        } else {
+                            Mono.empty()
+                        }
 
-                    val accessoryStageMono = createAccessoryStage(
-                        preparedData = preparedData,
-                        dayType = dayType,
-                        numAccessoryExercises = numAccessoryExercises,
-                        movementBalanceState = movementBalanceState
-                    )
+                    val warmupStageMono =
+                        createWarmupStage(
+                            preparedData = preparedData,
+                            dayType = dayType,
+                            primaryExercise = primaryExercise,
+                            secondaryExercise = secondaryExercise,
+                            isFourDayTemplate = true
+                        )
 
-                    val conditioningStageMono = createConditioningStage(
-                        preparedData = preparedData,
-                        dayType = dayType,
-                        movementBalanceState = movementBalanceState
-                    )
+                    val accessoryStageMono =
+                        createAccessoryStage(
+                            preparedData = preparedData,
+                            dayType = dayType,
+                            numAccessoryExercises = numAccessoryExercises,
+                            movementBalanceState = movementBalanceState
+                        )
+
+                    val conditioningStageMono =
+                        createConditioningStage(
+                            preparedData = preparedData,
+                            dayType = dayType,
+                            movementBalanceState = movementBalanceState
+                        )
 
                     // Combine all stages - collect non-empty stages
                     Flux.merge(

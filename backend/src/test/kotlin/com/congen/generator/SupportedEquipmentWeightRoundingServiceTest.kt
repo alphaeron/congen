@@ -44,7 +44,13 @@ class SupportedEquipmentWeightRoundingServiceTest {
 
         val exerciseEquipmentMappings = mapOf(exerciseName to equipment)
 
-        val result = supportedEquipmentWeightRoundingService.roundWeightForExercise(exerciseName, targetWeight, weightUnit, exerciseEquipmentMappings)
+        val result =
+            supportedEquipmentWeightRoundingService.roundWeightForExercise(
+                exerciseName,
+                targetWeight,
+                weightUnit,
+                exerciseEquipmentMappings
+            )
 
         StepVerifier.create(result)
             .expectNext(BigDecimal("185.00")) // 45lb bar + 2x45lb + 2x25lb plates = 185lbs
@@ -63,7 +69,13 @@ class SupportedEquipmentWeightRoundingServiceTest {
 
         val exerciseEquipmentMappings = mapOf(exerciseName to equipment)
 
-        val result = supportedEquipmentWeightRoundingService.roundWeightForExercise(exerciseName, targetWeight, weightUnit, exerciseEquipmentMappings)
+        val result =
+            supportedEquipmentWeightRoundingService.roundWeightForExercise(
+                exerciseName,
+                targetWeight,
+                weightUnit,
+                exerciseEquipmentMappings
+            )
 
         StepVerifier.create(result)
             .expectNext(BigDecimal("45.00")) // Should return bar weight
@@ -82,7 +94,13 @@ class SupportedEquipmentWeightRoundingServiceTest {
 
         val exerciseEquipmentMappings = mapOf(exerciseName to equipment)
 
-        val result = supportedEquipmentWeightRoundingService.roundWeightForExercise(exerciseName, targetWeight, weightUnit, exerciseEquipmentMappings)
+        val result =
+            supportedEquipmentWeightRoundingService.roundWeightForExercise(
+                exerciseName,
+                targetWeight,
+                weightUnit,
+                exerciseEquipmentMappings
+            )
 
         StepVerifier.create(result)
             .expectNext(BigDecimal("35.00")) // Should match available kettlebell weight
@@ -101,7 +119,13 @@ class SupportedEquipmentWeightRoundingServiceTest {
 
         val exerciseEquipmentMappings = mapOf(exerciseName to equipment)
 
-        val result = supportedEquipmentWeightRoundingService.roundWeightForExercise(exerciseName, targetWeight, weightUnit, exerciseEquipmentMappings)
+        val result =
+            supportedEquipmentWeightRoundingService.roundWeightForExercise(
+                exerciseName,
+                targetWeight,
+                weightUnit,
+                exerciseEquipmentMappings
+            )
 
         // 37 is closer to 35 (difference of 2) than to 40 (difference of 3)
         StepVerifier.create(result)
@@ -121,7 +145,13 @@ class SupportedEquipmentWeightRoundingServiceTest {
 
         val exerciseEquipmentMappings = mapOf(exerciseName to equipment)
 
-        val result = supportedEquipmentWeightRoundingService.roundWeightForExercise(exerciseName, targetWeight, weightUnit, exerciseEquipmentMappings)
+        val result =
+            supportedEquipmentWeightRoundingService.roundWeightForExercise(
+                exerciseName,
+                targetWeight,
+                weightUnit,
+                exerciseEquipmentMappings
+            )
 
         StepVerifier.create(result)
             .expectNext(BigDecimal("30.00")) // Should round to nearest 5lb increment
@@ -140,7 +170,13 @@ class SupportedEquipmentWeightRoundingServiceTest {
 
         val exerciseEquipmentMappings = mapOf(exerciseName to equipment)
 
-        val result = supportedEquipmentWeightRoundingService.roundWeightForExercise(exerciseName, targetWeight, weightUnit, exerciseEquipmentMappings)
+        val result =
+            supportedEquipmentWeightRoundingService.roundWeightForExercise(
+                exerciseName,
+                targetWeight,
+                weightUnit,
+                exerciseEquipmentMappings
+            )
 
         StepVerifier.create(result)
             .expectNext(BigDecimal("12.50")) // Should round to nearest 2.5kg increment
@@ -156,7 +192,13 @@ class SupportedEquipmentWeightRoundingServiceTest {
 
         val exerciseEquipmentMappings = mapOf(exerciseName to equipment)
 
-        val result = supportedEquipmentWeightRoundingService.roundWeightForExercise(exerciseName, targetWeight, weightUnit, exerciseEquipmentMappings)
+        val result =
+            supportedEquipmentWeightRoundingService.roundWeightForExercise(
+                exerciseName,
+                targetWeight,
+                weightUnit,
+                exerciseEquipmentMappings
+            )
 
         StepVerifier.create(result)
             .expectNext(targetWeight.setScale(2, RoundingMode.HALF_UP)) // Should return original weight with proper scale
@@ -171,7 +213,13 @@ class SupportedEquipmentWeightRoundingServiceTest {
 
         val exerciseEquipmentMappings = emptyMap<String, List<ExerciseEquipment>>()
 
-        val result = supportedEquipmentWeightRoundingService.roundWeightForExercise(exerciseName, targetWeight, weightUnit, exerciseEquipmentMappings)
+        val result =
+            supportedEquipmentWeightRoundingService.roundWeightForExercise(
+                exerciseName,
+                targetWeight,
+                weightUnit,
+                exerciseEquipmentMappings
+            )
 
         StepVerifier.create(result)
             .expectNext(targetWeight.setScale(2, RoundingMode.HALF_UP)) // Should return original weight when no equipment found
@@ -190,7 +238,13 @@ class SupportedEquipmentWeightRoundingServiceTest {
 
         val exerciseEquipmentMappings = mapOf(exerciseName to equipment)
 
-        val result = supportedEquipmentWeightRoundingService.roundWeightForExercise(exerciseName, targetWeight, weightUnit, exerciseEquipmentMappings)
+        val result =
+            supportedEquipmentWeightRoundingService.roundWeightForExercise(
+                exerciseName,
+                targetWeight,
+                weightUnit,
+                exerciseEquipmentMappings
+            )
 
         StepVerifier.create(result)
             .expectNext(BigDecimal("100.00")) // 20kg bar + 2x25kg + 2x15kg plates = 100kg
@@ -209,7 +263,13 @@ class SupportedEquipmentWeightRoundingServiceTest {
 
         val exerciseEquipmentMappings = mapOf(exerciseName to equipment)
 
-        val result = supportedEquipmentWeightRoundingService.roundWeightForExercise(exerciseName, targetWeight, weightUnit, exerciseEquipmentMappings)
+        val result =
+            supportedEquipmentWeightRoundingService.roundWeightForExercise(
+                exerciseName,
+                targetWeight,
+                weightUnit,
+                exerciseEquipmentMappings
+            )
 
         StepVerifier.create(result)
             .expectNext(BigDecimal("18.00")) // Should match available kettlebell weight
@@ -228,7 +288,13 @@ class SupportedEquipmentWeightRoundingServiceTest {
 
         val exerciseEquipmentMappings = mapOf(exerciseName to equipment)
 
-        val result = supportedEquipmentWeightRoundingService.roundWeightForExercise(exerciseName, targetWeight, weightUnit, exerciseEquipmentMappings)
+        val result =
+            supportedEquipmentWeightRoundingService.roundWeightForExercise(
+                exerciseName,
+                targetWeight,
+                weightUnit,
+                exerciseEquipmentMappings
+            )
 
         StepVerifier.create(result)
             .expectNext(BigDecimal("225.00")) // Should use barbell plate logic
@@ -248,7 +314,13 @@ class SupportedEquipmentWeightRoundingServiceTest {
 
         val exerciseEquipmentMappings = mapOf(exerciseName to equipment)
 
-        val result = supportedEquipmentWeightRoundingService.roundWeightForExercise(exerciseName, targetWeight, weightUnit, exerciseEquipmentMappings)
+        val result =
+            supportedEquipmentWeightRoundingService.roundWeightForExercise(
+                exerciseName,
+                targetWeight,
+                weightUnit,
+                exerciseEquipmentMappings
+            )
 
         StepVerifier.create(result)
             .expectNext(BigDecimal("135.00")) // Should use barbell plate logic

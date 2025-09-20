@@ -58,6 +58,7 @@ import java.time.Instant
  * @param programDAL Data access layer for training programs
  * @param auditService Service for audit logging
  * @param keycloakClient Client for Keycloak operations
+ * @param postgresClient Client for PostgreSQL operations
  *
  * @author Congen Development Team
  * @since 1.0.0

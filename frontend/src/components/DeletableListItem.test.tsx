@@ -12,11 +12,7 @@ describe('DeletableListItem', () => {
 
   it('renders with primary text', () => {
     render(
-      <DeletableListItem
-        primary="Test Item"
-        onDelete={mockOnDelete}
-        deleteTooltip="Delete item"
-      />
+      <DeletableListItem primary="Test Item" onDelete={mockOnDelete} deleteTooltip="Delete item" />
     );
 
     expect(screen.getByText('Test Item')).toBeInTheDocument();
@@ -38,11 +34,7 @@ describe('DeletableListItem', () => {
 
   it('calls onDelete when delete button is clicked', () => {
     render(
-      <DeletableListItem
-        primary="Test Item"
-        onDelete={mockOnDelete}
-        deleteTooltip="Delete item"
-      />
+      <DeletableListItem primary="Test Item" onDelete={mockOnDelete} deleteTooltip="Delete item" />
     );
 
     const deleteButton = screen.getByLabelText('delete');
@@ -52,11 +44,7 @@ describe('DeletableListItem', () => {
 
   it('shows tooltip on delete button', () => {
     render(
-      <DeletableListItem
-        primary="Test Item"
-        onDelete={mockOnDelete}
-        deleteTooltip="Delete item"
-      />
+      <DeletableListItem primary="Test Item" onDelete={mockOnDelete} deleteTooltip="Delete item" />
     );
 
     const deleteButton = screen.getByLabelText('delete');

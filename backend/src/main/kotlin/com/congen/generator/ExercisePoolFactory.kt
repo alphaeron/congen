@@ -8,7 +8,6 @@ import com.congen.model.UserEquipment
 import com.congen.model.UserExercisePreference
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
-import reactor.core.publisher.Mono
 
 /**
  * Factory for creating user exercise pools, handling all filtering logic
@@ -39,6 +38,8 @@ class ExercisePoolFactory(
      * @param userEquipment User's available equipment
      * @param userExercisePreferences User's exercise preferences
      * @param previouslyUsedExercises Previously programmed exercises
+     * @param exerciseEquipmentMappings Pre-computed mappings of exercise names to their equipment requirements
+     * @param exerciseMuscleMappings Pre-computed mappings of exercise names to their muscle targets
      * @param userId The user ID to create the pool for
      * @return The user's exercise pool
      */
@@ -52,17 +53,20 @@ class ExercisePoolFactory(
         userId: String
     ): UserExercisePool {
         // Apply sliding window logic to determine which exercises should be excluded
-        val excludedExercises = applySlidingWindowLogic(
-            allExercises = allExercises,
-            preferences = userExercisePreferences,
-            previouslyUsedExercises = previouslyUsedExercises
-        )
-        
+        val excludedExercises =
+            applySlidingWindowLogic(
+                allExercises = allExercises,
+                preferences = userExercisePreferences,
+                previouslyUsedExercises = previouslyUsedExercises
+            )
+
         logger.info(
             "Created exercise pool with sliding window logic: {} total exercises, {} excluded, {} available",
-            allExercises.size, excludedExercises.size, allExercises.size - excludedExercises.size
+            allExercises.size,
+            excludedExercises.size,
+            allExercises.size - excludedExercises.size
         )
-        
+
         return UserExercisePool(
             allExercises = allExercises,
             preferences = userExercisePreferences,
@@ -77,9 +81,9 @@ class ExercisePoolFactory(
 
     /**
      * Applies sliding window logic to determine which exercises should be available for selection.
-     * 
+     *
      * The key principle: ensure all exercises in a category are used before any repetition.
-     * 
+     *
      * @param allExercises All available exercises in the system
      * @param preferences User's exercise preferences
      * @param previouslyUsedExercises List of previously used exercises
@@ -103,9 +107,10 @@ class ExercisePoolFactory(
 
         // Calculate available exercises per category (is_upper + is_accessory combinations)
         // Apply dumbbell restriction for primary upper body exercises
-        val availablePrimaryUpperExercises = preferenceFilteredExercises.filter { exercise ->
-            !exercise.isAccessory && exercise.isUpper && !(exercise.name.lowercase().contains("dumbbell"))
-        }
+        val availablePrimaryUpperExercises =
+            preferenceFilteredExercises.filter { exercise ->
+                !exercise.isAccessory && exercise.isUpper && !(exercise.name.lowercase().contains("dumbbell"))
+            }
         val availablePrimaryLowerExercises = preferenceFilteredExercises.filter { !it.isAccessory && !it.isUpper }
         val availableAccessoryUpperExercises = preferenceFilteredExercises.filter { it.isAccessory && it.isUpper }
         val availableAccessoryLowerExercises = preferenceFilteredExercises.filter { it.isAccessory && !it.isUpper }
@@ -167,10 +172,18 @@ class ExercisePoolFactory(
             "Applied sliding window logic per category: Primary Upper: {}/{} (window: {}), " +
                 "Primary Lower: {}/{} (window: {}), Accessory Upper: {}/{} (window: {}), " +
                 "Accessory Lower: {}/{} (window: {}), total excluded: {}",
-            excludedPrimaryUpperExercises.size, availablePrimaryUpperExercises.size, availablePrimaryUpperExercises.size,
-            excludedPrimaryLowerExercises.size, availablePrimaryLowerExercises.size, availablePrimaryLowerExercises.size,
-            excludedAccessoryUpperExercises.size, availableAccessoryUpperExercises.size, availableAccessoryUpperExercises.size,
-            excludedAccessoryLowerExercises.size, availableAccessoryLowerExercises.size, availableAccessoryLowerExercises.size,
+            excludedPrimaryUpperExercises.size,
+            availablePrimaryUpperExercises.size,
+            availablePrimaryUpperExercises.size,
+            excludedPrimaryLowerExercises.size,
+            availablePrimaryLowerExercises.size,
+            availablePrimaryLowerExercises.size,
+            excludedAccessoryUpperExercises.size,
+            availableAccessoryUpperExercises.size,
+            availableAccessoryUpperExercises.size,
+            excludedAccessoryLowerExercises.size,
+            availableAccessoryLowerExercises.size,
+            availableAccessoryLowerExercises.size,
             excludedExercises.size
         )
 

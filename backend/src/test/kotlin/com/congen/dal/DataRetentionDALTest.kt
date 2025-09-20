@@ -26,13 +26,13 @@ class DataRetentionDALTest {
     @BeforeEach
     fun setUp() {
         postgresClient = mock()
-        
+
         // Mock PostgresClient.withTransaction to execute the block directly
         doAnswer { invocation ->
             val block = invocation.getArgument<() -> Mono<List<com.congen.model.DataCleanupResult>>>(0)
             block.invoke()
         }.whenever(postgresClient).withTransaction(any<() -> Mono<List<com.congen.model.DataCleanupResult>>>())
-        
+
         dataRetentionDAL = DataRetentionDAL(postgresClient)
     }
 

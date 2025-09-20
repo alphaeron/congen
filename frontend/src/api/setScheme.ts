@@ -79,7 +79,8 @@ export const updateSetScheme = (
   if (targetWeight !== undefined) params.append('target_weight', targetWeight.toString());
   if (performedWeight !== undefined) params.append('performed_weight', performedWeight.toString());
   if (targetRepCount !== undefined) params.append('target_rep_count', targetRepCount.toString());
-  if (performedRepCount !== undefined) params.append('performed_rep_count', performedRepCount.toString());
+  if (performedRepCount !== undefined)
+    params.append('performed_rep_count', performedRepCount.toString());
   if (restSeconds !== undefined) params.append('rest_seconds', restSeconds.toString());
 
   return REQUEST({
