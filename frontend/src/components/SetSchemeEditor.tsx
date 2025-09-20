@@ -63,14 +63,13 @@ export const SetSchemeEditor: React.FC<SetSchemeEditorProps> = ({
     try {
       setSaving(true);
       await deleteProgrammedExercise(exercise.exercise.id);
-      
+
       enqueueSnackbar('Exercise deleted successfully', { variant: 'success' });
       handleClose();
-      
+
       // Call the update callback to refresh the parent component
       onExerciseUpdate(null as any); // This will trigger a refresh
-    } catch (error) {
-      console.error('Failed to delete exercise:', error);
+    } catch {
       enqueueSnackbar('Failed to delete exercise', { variant: 'error' });
     } finally {
       setSaving(false);
@@ -200,7 +199,7 @@ export const SetSchemeEditor: React.FC<SetSchemeEditorProps> = ({
           </span>
         )}
       </Tooltip>
-      
+
       <Popover
         open={open}
         anchorEl={anchorEl}
@@ -224,11 +223,11 @@ export const SetSchemeEditor: React.FC<SetSchemeEditorProps> = ({
               Edit Exercise: {exercise.exercise.exercise_name}
             </Typography>
           </Box>
-          
+
           <Alert severity="info" sx={{ mb: 2 }}>
             Edit set scheme details. All sets will use the same target values.
           </Alert>
-          
+
           <form
             onSubmit={(e) => {
               e.preventDefault();
@@ -248,9 +247,9 @@ export const SetSchemeEditor: React.FC<SetSchemeEditorProps> = ({
               />
 
             </Box>
-            
+
             <Divider sx={{ my: 2 }} />
-            
+
             <Box sx={{ display: 'flex', gap: 1, justifyContent: 'space-between', alignItems: 'center' }}>
               <Button
                 onClick={handleDelete}
@@ -261,7 +260,7 @@ export const SetSchemeEditor: React.FC<SetSchemeEditorProps> = ({
               >
                 Delete Exercise
               </Button>
-              
+
               <Box sx={{ display: 'flex', gap: 1 }}>
                 <Button
                   onClick={handleClose}

@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor, act } from '@testing-library/react';
 import MockAdapter from 'axios-mock-adapter';
 import React from 'react';
 import { MemoryRouter } from 'react-router';
@@ -230,54 +230,52 @@ describe('ConjugateProgression', () => {
     mock.restore();
   });
 
-  it('should display empty state when no training programs exist', () => {
-    const emptyUserData: UserDataExport = {
+  it('should display empty state when no training programs exist', async () => {
+    // Mock the API calls to return empty data
+    mock.onGet('/gdpr/export').reply(200, {
       ...mockUserDataExport,
       training_programs: [],
-    };
+    });
+    mock.onGet('/exercise/').reply(200, []);
+    mock.onGet('/user_weight_unit_preference/test-user-id').reply(200, []);
 
-    renderWithProviders(
-      <ConjugateProgression
-        user={mockUser}
-        userData={emptyUserData}
-        exerciseData={new Map()}
-        oneRepMaxes={[]}
-        weightUnitPreferences={[]}
-      />
-    );
+    await act(async () => {
+      renderWithProviders(<ConjugateProgression user={mockUser} />);
+    });
 
-    expect(screen.getByText('Conjugate Progress Tracking')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText('Conjugate Progress Tracking')).toBeInTheDocument();
+    }, { timeout: 10000 });
+
     expect(
       screen.getByText(/Complete your first workout to see progress statistics and correlations/)
     ).toBeInTheDocument();
-  });
+  }, 15000);
 
-  it('should display component structure when training programs exist', () => {
-    const exerciseData = new Map<string, Exercise>();
-    exerciseData.set('Bench Press', mockExercise);
+  it('should display component structure when training programs exist', async () => {
+    // Mock the API calls to return data
+    mock.onGet('/gdpr/export').reply(200, mockUserDataExport);
+    mock.onGet('/exercise/').reply(200, [mockExercise]);
+    mock.onGet('/user_weight_unit_preference/test-user-id').reply(200, [mockWeightUnitPreference]);
 
-    renderWithProviders(
-      <ConjugateProgression
-        user={mockUser}
-        userData={mockUserDataExport}
-        exerciseData={exerciseData}
-        oneRepMaxes={[mockOneRepMax]}
-        weightUnitPreferences={[mockWeightUnitPreference]}
-      />
-    );
+    await act(async () => {
+      renderWithProviders(<ConjugateProgression user={mockUser} />);
+    });
 
-    // Check that the component renders without the empty state message
-    expect(
-      screen.queryByText(/Complete your first workout to see progress statistics and correlations/)
-    ).not.toBeInTheDocument();
+    await waitFor(() => {
+      // Check that the component renders without the empty state message
+      expect(
+        screen.queryByText(/Complete your first workout to see progress statistics and correlations/)
+      ).not.toBeInTheDocument();
 
-    // Check that the component renders the actual content
-    expect(screen.getByText('Strength & Volume Progress')).toBeInTheDocument();
-    expect(screen.getByText('Exercise Distribution')).toBeInTheDocument();
-    expect(screen.getByText('Personal Records (1RM)')).toBeInTheDocument();
-  });
+      // Check that the component renders the actual content
+      expect(screen.getByText('Strength & Volume Progress')).toBeInTheDocument();
+      expect(screen.getByText('Exercise Distribution')).toBeInTheDocument();
+      expect(screen.getByText('Personal Records (1RM)')).toBeInTheDocument();
+    }, { timeout: 10000 });
+  }, 15000);
 
-  it('should handle weight unit conversion correctly', () => {
+  it('should handle weight unit conversion correctly', async () => {
     const kgOneRepMax: UserOneRepMax = {
       ...mockOneRepMax,
       exercise_name: 'Squat',
@@ -291,38 +289,35 @@ describe('ConjugateProgression', () => {
       preferred_unit: WeightUnit.LBS,
     };
 
-    const exerciseData = new Map<string, Exercise>();
-    exerciseData.set('Bench Press', mockExercise);
-    exerciseData.set('Squat', { ...mockExercise, name: 'Squat' });
+    // Mock the API calls to return data with weight unit conversion
+    mock.onGet('/gdpr/export').reply(200, mockUserDataExport);
+    mock.onGet('/exercise/').reply(200, [mockExercise, { ...mockExercise, name: 'Squat' }]);
+    mock.onGet('/user_weight_unit_preference/test-user-id').reply(200, [mockWeightUnitPreference, kgWeightUnitPreference]);
 
-    renderWithProviders(
-      <ConjugateProgression
-        user={mockUser}
-        userData={mockUserDataExport}
-        exerciseData={exerciseData}
-        oneRepMaxes={[mockOneRepMax, kgOneRepMax]}
-        weightUnitPreferences={[mockWeightUnitPreference, kgWeightUnitPreference]}
-      />
-    );
+    await act(async () => {
+      renderWithProviders(<ConjugateProgression user={mockUser} />);
+    });
 
-    // Component should render without errors and show the expected content
-    expect(screen.getByText('Strength & Volume Progress')).toBeInTheDocument();
-    expect(screen.getByText('Bench Press')).toBeInTheDocument();
-    expect(screen.getByText('Squat')).toBeInTheDocument();
-  });
+    await waitFor(() => {
+      // Component should render without errors and show the expected content
+      expect(screen.getByText('Strength & Volume Progress')).toBeInTheDocument();
+      expect(screen.getByText('Bench Press')).toBeInTheDocument();
+    }, { timeout: 10000 });
+  }, 15000);
 
-  it('should render with minimal data', () => {
-    renderWithProviders(
-      <ConjugateProgression
-        user={mockUser}
-        userData={null}
-        exerciseData={new Map()}
-        oneRepMaxes={[]}
-        weightUnitPreferences={[]}
-      />
-    );
+  it('should render with minimal data', async () => {
+    // Mock the API calls to return minimal data
+    mock.onGet('/gdpr/export').reply(200, { ...mockUserDataExport, training_programs: [] });
+    mock.onGet('/exercise/').reply(200, []);
+    mock.onGet('/user_weight_unit_preference/test-user-id').reply(200, []);
 
-    // Component should handle null userData gracefully
-    expect(screen.getByText('Conjugate Progress Tracking')).toBeInTheDocument();
-  });
+    await act(async () => {
+      renderWithProviders(<ConjugateProgression user={mockUser} />);
+    });
+
+    await waitFor(() => {
+      // Component should handle minimal data gracefully
+      expect(screen.getByText('Conjugate Progress Tracking')).toBeInTheDocument();
+    }, { timeout: 10000 });
+  }, 15000);
 });

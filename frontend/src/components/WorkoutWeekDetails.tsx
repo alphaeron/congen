@@ -134,7 +134,6 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
         }
         setExerciseMuscleData(exerciseMuscleMap);
       } catch (error) {
-        console.error('Failed to load week data:', error);
         enqueueSnackbar('Failed to load week data.', { variant: 'error' });
       } finally {
         setIsLoading(false);
@@ -189,7 +188,7 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
   // Aggregate workout data for charts - combine at stage and exercise level
   const aggregatedWorkoutData = useMemo((): ProgrammedWorkoutWithStages | null => {
     if (!weekWorkouts.length) return null;
-    
+
     // Collect all stages from all workouts
     const allStages: WorkoutStageWithExercises[] = [];
     weekWorkouts.forEach(weekWorkout => {
@@ -199,18 +198,18 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
         });
       }
     });
-    
+
     // Group stages by stage type/name and merge exercises within each stage
     const stageMap = new Map<string, WorkoutStageWithExercises>();
-    
+
     allStages.forEach(stage => {
       const stageKey = `${stage.stage.stage_type_id}-${stage.stage.name}`;
-      
+
       if (stageMap.has(stageKey)) {
         // Merge exercises from this stage
         const existingStage = stageMap.get(stageKey)!;
         const exerciseMap = new Map<string, ProgrammedExerciseWithSetSchemes>();
-        
+
         // Don't merge exercises - preserve all exercises as they exist in source data
         // This maintains the same duplication that exists in WorkoutDetail
         existingStage.exercises = [...existingStage.exercises, ...stage.exercises];
@@ -219,10 +218,10 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
         stageMap.set(stageKey, { ...stage });
       }
     });
-    
+
     const mergedStages: WorkoutStageWithExercises[] = Array.from(stageMap.values());
-    
-    
+
+
     return {
       workout: {
         id: weekNumber * 1000,
@@ -331,7 +330,7 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
               <ArrowBackIcon />
             </IconButton>
           )}
-          
+
           {/* Progress Bar and Export Buttons */}
           <Box sx={{ p: 3, pb: 0 }}>
             <Box display="flex" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
@@ -362,7 +361,7 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
               />
             </Box>
           </Box>
-          
+
           <Box id="week-details-content" sx={{ p: 3, pt: 0 }}>
             <Grid container spacing={3} sx={{ height: 'calc(100vh - 200px)' }}>
               {/* Workout List - 2/3 width */}
@@ -437,7 +436,7 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
                                   border: 1,
                                   borderColor: 'divider',
                                   backgroundColor: 'transparent',
-                                  '&:hover': { 
+                                  '&:hover': {
                                     backgroundColor: 'action.hover',
                                     transform: 'translateX(4px)',
                                     transition: 'all 0.2s ease'
@@ -452,25 +451,25 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
                                         Day {weekWorkout.dayInWeek}
                                       </Typography>
                                       {workoutProgress.status === 'completed' ? (
-                                        <CheckCircleIcon 
-                                          sx={{ 
-                                            fontSize: 18, 
-                                            color: 'success.main' 
-                                          }} 
+                                        <CheckCircleIcon
+                                          sx={{
+                                            fontSize: 18,
+                                            color: 'success.main'
+                                          }}
                                         />
                                       ) : workoutProgress.status === 'in-progress' ? (
-                                        <ScheduleIcon 
-                                          sx={{ 
-                                            fontSize: 18, 
-                                            color: 'warning.main' 
-                                          }} 
+                                        <ScheduleIcon
+                                          sx={{
+                                            fontSize: 18,
+                                            color: 'warning.main'
+                                          }}
                                         />
                                       ) : (
-                                        <PauseCircleIcon 
-                                          sx={{ 
-                                            fontSize: 18, 
-                                            color: 'text.disabled' 
-                                          }} 
+                                        <PauseCircleIcon
+                                          sx={{
+                                            fontSize: 18,
+                                            color: 'text.disabled'
+                                          }}
                                         />
                                       )}
                                     </Box>

@@ -90,7 +90,7 @@ const mockWeightUnitPreferences = [
 // Test component that uses the DataContext
 const TestComponent = () => {
   const { userData, exerciseMuscleData, weightUnitPreferences, isLoading, error, refreshData } = useData();
-  
+
   return (
     <div>
       <div data-testid="loading">{isLoading ? 'Loading' : 'Not Loading'}</div>
@@ -190,7 +190,7 @@ describe('DataContext', () => {
     const promise = new Promise((resolve) => {
       resolvePromise = resolve;
     });
-    
+
     mockGetUserDataExport.mockReturnValue(promise);
     mockGetExerciseMuscle.mockResolvedValue([]);
     mockGetUserWeightUnitPreferences.mockResolvedValue([]);
@@ -230,14 +230,9 @@ describe('DataContext', () => {
   });
 
   it('throws error when useData is used outside DataProvider', () => {
-    // Suppress console.error for this test
-    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
-    
     expect(() => {
       render(<TestComponent />);
     }).toThrow('useData must be used within a DataProvider');
-    
-    consoleSpy.mockRestore();
   });
 
   it('converts exercise muscle data to Map correctly', async () => {

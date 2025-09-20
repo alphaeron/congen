@@ -88,7 +88,7 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({
           getIndividualExercise(exerciseName).catch(() => null)
         );
         const exerciseResults = await Promise.all(exercisePromises);
-        
+
         const exerciseMap = new Map<string, Exercise>();
         exerciseResults.forEach(exercise => {
           if (exercise) {
@@ -97,8 +97,7 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({
         });
         setExerciseData(exerciseMap);
 
-      } catch (err) {
-        console.error('Error loading conjugate progression data:', err);
+      } catch {
         setError('Failed to load progression data');
       } finally {
         setIsLoading(false);
@@ -177,8 +176,8 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({
   // Show loading state
   if (isLoading) {
     return (
-      <LoadingSpinner 
-        message="Loading progression data..." 
+      <LoadingSpinner
+        message="Loading progression data..."
         fullHeight={false}
       />
     );
@@ -239,7 +238,7 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({
 
       {/* 1RM Table and Progress Tracking - Enhanced UX design */}
       <Grid size={{ xs: 12 }}>
-        <Card variant="outlined" sx={{ 
+        <Card variant="outlined" sx={{
           background: 'linear-gradient(135deg, rgba(25, 118, 210, 0.05) 0%, rgba(156, 39, 176, 0.05) 100%)',
           border: '1px solid',
           borderColor: 'primary.light'
@@ -282,7 +281,7 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({
                   </InputAdornment>
                 ),
               }}
-              sx={{ 
+              sx={{
                 mb: 2,
                 '& .MuiOutlinedInput-root': {
                   backgroundColor: 'background.paper',
@@ -304,8 +303,8 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({
                 backgroundColor: 'background.paper'
               }}
             >
-              <table style={{ 
-                width: '100%', 
+              <table style={{
+                width: '100%',
                 borderCollapse: 'collapse',
                 fontFamily: 'inherit'
               }}>

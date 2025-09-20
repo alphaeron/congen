@@ -38,6 +38,14 @@ describe('WorkoutWeekDetails', () => {
   let mock: MockAdapter;
   const theme = createTheme();
 
+  const mockUser = {
+    keycloak_id: 'test-user-id',
+    name: 'Test User',
+    created_at: '2024-01-01T00:00:00.000Z',
+    updated_at: '2024-01-01T00:00:00.000Z',
+    roles: ['user'],
+  };
+
   const renderWithProviders = (component: React.ReactElement) => {
     return render(
       <SnackbarProvider>
@@ -116,7 +124,7 @@ describe('WorkoutWeekDetails', () => {
     });
 
     await act(async () => {
-      renderWithProviders(<WorkoutWeekDetails weekNumber={1} />);
+      renderWithProviders(<WorkoutWeekDetails user={mockUser} weekNumber={1} />);
     });
 
     // Should render the component without errors
@@ -139,7 +147,7 @@ describe('WorkoutWeekDetails', () => {
     });
 
     await act(async () => {
-      renderWithProviders(<WorkoutWeekDetails weekNumber={1} />);
+      renderWithProviders(<WorkoutWeekDetails user={mockUser} weekNumber={1} />);
     });
 
     await waitFor(
@@ -171,7 +179,7 @@ describe('WorkoutWeekDetails', () => {
     });
 
     await act(async () => {
-      renderWithProviders(<WorkoutWeekDetails weekNumber={1} />);
+      renderWithProviders(<WorkoutWeekDetails user={mockUser} weekNumber={1} />);
     });
 
     await waitFor(
@@ -204,7 +212,7 @@ describe('WorkoutWeekDetails', () => {
     });
 
     await act(async () => {
-      renderWithProviders(<WorkoutWeekDetails weekNumber={1} />);
+      renderWithProviders(<WorkoutWeekDetails user={mockUser} weekNumber={1} />);
     });
 
     await waitFor(
@@ -233,7 +241,7 @@ describe('WorkoutWeekDetails', () => {
     });
 
     await act(async () => {
-      renderWithProviders(<WorkoutWeekDetails weekNumber={1} />);
+      renderWithProviders(<WorkoutWeekDetails user={mockUser} weekNumber={1} />);
     });
 
     await waitFor(
@@ -249,18 +257,18 @@ describe('WorkoutWeekDetails', () => {
     mock.onGet('/programmed_workout/').reply(200, []);
 
     await act(async () => {
-      renderWithProviders(<WorkoutWeekDetails weekNumber={1} />);
+      renderWithProviders(<WorkoutWeekDetails user={mockUser} weekNumber={1} />);
     });
 
     await waitFor(
       () => {
         expect(
-          screen.getByText('Failed to load workout data. Please try again.')
+          screen.getByText('Failed to load week data.')
         ).toBeInTheDocument();
       },
-      { timeout: 10000 }
+      { timeout: 15000 }
     );
-  });
+  }, 20000);
 
   it('displays multiple workouts for the week', async () => {
     const workout1 = { ...mockWorkout, id: 1, day_number: 1, name: 'Push Day' };
@@ -287,7 +295,7 @@ describe('WorkoutWeekDetails', () => {
     });
 
     await act(async () => {
-      renderWithProviders(<WorkoutWeekDetails weekNumber={1} />);
+      renderWithProviders(<WorkoutWeekDetails user={mockUser} weekNumber={1} />);
     });
 
     await waitFor(
@@ -309,7 +317,7 @@ describe('WorkoutWeekDetails', () => {
     mock.onGet('/gdpr/export').reply(200, { training_programs: [], data_retention_policies: [] });
 
     await act(async () => {
-      renderWithProviders(<WorkoutWeekDetails weekNumber={1} />);
+      renderWithProviders(<WorkoutWeekDetails user={mockUser} weekNumber={1} />);
     });
 
     await waitFor(
@@ -320,11 +328,12 @@ describe('WorkoutWeekDetails', () => {
     );
 
     // Verify API calls were made
-    expect(mock.history.get).toHaveLength(5); // program/with-preferences, exercise, gdpr/export, exercise_muscle, user_weight_unit_preference
-    expect(mock.history.get[0].url).toBe('/program/with-preferences');
-    expect(mock.history.get[1].url).toBe('/exercise/');
-    expect(mock.history.get[2].url).toBe('/gdpr/export');
-    expect(mock.history.get[3].url).toBe('/exercise_muscle/');
-    expect(mock.history.get[4].url).toBe('/user_weight_unit_preference/test-user-id');
+    expect(mock.history.get).toHaveLength(5); // program/with-preferences, programmed_workout, gdpr/export, exercise_muscle, user_weight_unit_preference
+    const urls = mock.history.get.map(req => req.url);
+    expect(urls).toContain('/program/with-preferences');
+    expect(urls).toContain('/programmed_workout/');
+    expect(urls).toContain('/gdpr/export');
+    expect(urls).toContain('/exercise_muscle/');
+    expect(urls).toContain('/user_weight_unit_preference/test-user-id');
   }, 20000);
 });

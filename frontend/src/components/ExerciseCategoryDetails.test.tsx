@@ -91,7 +91,8 @@ describe('ExerciseCategoryDetails', () => {
     // Wait for the content to appear
     await waitFor(
       () => {
-        expect(screen.getByText('2 primary exercises in your rotation.')).toBeInTheDocument();
+        expect(screen.getByText('Bench Press')).toBeInTheDocument();
+        expect(screen.getByText('Squat')).toBeInTheDocument();
       },
       { timeout: 10000 }
     );
@@ -123,7 +124,7 @@ describe('ExerciseCategoryDetails', () => {
 
     await waitFor(
       () => {
-        expect(screen.getByText('1 accessory exercise in your rotation.')).toBeInTheDocument();
+        expect(screen.getByText('Bicep Curls')).toBeInTheDocument();
       },
       { timeout: 10000 }
     );
@@ -154,7 +155,8 @@ describe('ExerciseCategoryDetails', () => {
 
     await waitFor(
       () => {
-        expect(screen.getByText('2 recent exercises in your rotation.')).toBeInTheDocument();
+        expect(screen.getByText('Deadlift')).toBeInTheDocument();
+        expect(screen.getByText('Overhead Press')).toBeInTheDocument();
       },
       { timeout: 10000 }
     );
@@ -187,7 +189,9 @@ describe('ExerciseCategoryDetails', () => {
 
     await waitFor(
       () => {
-        expect(screen.getByText('No primary exercises in your rotation.')).toBeInTheDocument();
+        // When there are no exercises, the grid should be empty
+        expect(screen.queryByText('Bench Press')).not.toBeInTheDocument();
+        expect(screen.queryByText('Squat')).not.toBeInTheDocument();
       },
       { timeout: 10000 }
     );
@@ -254,7 +258,7 @@ describe('ExerciseCategoryDetails', () => {
 
     await waitFor(
       () => {
-        expect(screen.getByText('1 primary exercise in your rotation.')).toBeInTheDocument();
+        expect(screen.getByText('Bench Press')).toBeInTheDocument();
       },
       { timeout: 10000 }
     );
