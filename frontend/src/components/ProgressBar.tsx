@@ -54,6 +54,10 @@ interface ProgressBarProps {
   logarithmic?: boolean;
   /** Show tooltip with progress details on hover */
   showTooltip?: boolean;
+  /** ARIA label for accessibility */
+  ariaLabel?: string;
+  /** Custom style object */
+  style?: React.CSSProperties;
 }
 
 export const ProgressBar: React.FC<ProgressBarProps> = ({
@@ -78,6 +82,8 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
   interpolator,
   logarithmic = false,
   showTooltip = false,
+  ariaLabel,
+  style,
 }) => {
   const theme = useTheme();
   const containerRef = useRef<HTMLDivElement>(null);
@@ -354,7 +360,9 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
           {percentageText}
         </Typography>
       );
-    } else if (showFraction && current !== undefined && total !== undefined) {
+    }
+
+    if (!showPercentage && showFraction && current !== undefined && total !== undefined) {
       // Show only fraction if percentage is disabled
       elements.push(
         <Typography key="fraction" variant="caption" color="text.secondary">
@@ -370,6 +378,12 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
     <Box
       data-testid="progress-bar"
       className={className}
+      role="progressbar"
+      aria-valuenow={value}
+      aria-valuemin={0}
+      aria-valuemax={max}
+      aria-label={ariaLabel}
+      style={style}
       sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
     >
       {renderProgressContent()}

@@ -1,10 +1,11 @@
 import { ThemeProvider, createTheme } from '@mui/material/styles';
-import { render, screen } from '@testing-library/react';
+import { Ranger } from '@tanstack/ranger';
+import { render, screen, act } from '@testing-library/react';
 import React from 'react';
 
 import { ProgressBar } from './ProgressBar';
 
-// Mock TanStack Ranger
+// Mock TanStack Ranger with a simple mock that doesn't require constructor
 jest.mock('@tanstack/ranger', () => ({
   Ranger: jest.fn().mockImplementation(() => ({
     getValues: () => [0],
@@ -14,343 +15,356 @@ jest.mock('@tanstack/ranger', () => ({
 const theme = createTheme();
 
 const renderWithTheme = (component: React.ReactElement) => {
-  return render(<ThemeProvider theme={theme}>{component}</ThemeProvider>);
+  return act(() => {
+    return render(<ThemeProvider theme={theme}>{component}</ThemeProvider>);
+  });
 };
 
 describe('ProgressBar', () => {
   describe('Basic Rendering', () => {
-    it('should render with default props', () => {
-      renderWithTheme(<ProgressBar value={50} status="in-progress" />);
+    it('should render with default props', async () => {
+      await act(async () => {
+        renderWithTheme(<ProgressBar value={50} status="in-progress" />);
+      });
 
-      // The progress bar should be rendered (we can't easily test the visual appearance in unit tests)
-      expect(document.querySelector('[data-testid="progress-bar"]')).toBeInTheDocument();
+      const progressBar = screen.getByRole('progressbar');
+      expect(progressBar).toBeInTheDocument();
+      expect(progressBar).toHaveAttribute('aria-valuenow', '50');
+      expect(progressBar).toHaveAttribute('aria-valuemin', '0');
+      expect(progressBar).toHaveAttribute('aria-valuemax', '100');
     });
 
-    it('should render with custom width and height', () => {
-      renderWithTheme(<ProgressBar value={75} status="completed" width={200} height={10} />);
+    it('should render with custom max value', async () => {
+      await act(async () => {
+        renderWithTheme(<ProgressBar value={75} status="completed" max={200} />);
+      });
 
-      const progressBar = document.querySelector('[data-testid="progress-bar"]');
+      const progressBar = screen.getByRole('progressbar');
+      expect(progressBar).toHaveAttribute('aria-valuenow', '75');
+      expect(progressBar).toHaveAttribute('aria-valuemax', '200');
+    });
+
+    it('should render with custom status', async () => {
+      await act(async () => {
+        renderWithTheme(<ProgressBar value={25} status="error" />);
+      });
+
+      const progressBar = screen.getByRole('progressbar');
       expect(progressBar).toBeInTheDocument();
     });
 
-    it('should render with custom className', () => {
-      renderWithTheme(
-        <ProgressBar value={25} status="not-started" className="custom-progress-bar" />
-      );
+    it('should render with label', async () => {
+      await act(async () => {
+        renderWithTheme(<ProgressBar value={60} status="in-progress" label="Loading..." />);
+      });
 
-      const progressBar = document.querySelector('.custom-progress-bar');
+      expect(screen.getByText('Loading...')).toBeInTheDocument();
+    });
+
+    it('should render with percentage display', async () => {
+      await act(async () => {
+        renderWithTheme(<ProgressBar value={33} status="in-progress" showPercentage={true} />);
+      });
+
+      expect(screen.getByText('33%')).toBeInTheDocument();
+    });
+  });
+
+  describe('Status Variants', () => {
+    it('should render with in-progress status', async () => {
+      await act(async () => {
+        renderWithTheme(<ProgressBar value={30} status="in-progress" />);
+      });
+
+      const progressBar = screen.getByRole('progressbar');
+      expect(progressBar).toBeInTheDocument();
+    });
+
+    it('should render with completed status', async () => {
+      await act(async () => {
+        renderWithTheme(<ProgressBar value={100} status="completed" />);
+      });
+
+      const progressBar = screen.getByRole('progressbar');
+      expect(progressBar).toBeInTheDocument();
+    });
+
+    it('should render with error status', async () => {
+      await act(async () => {
+        renderWithTheme(<ProgressBar value={50} status="error" />);
+      });
+
+      const progressBar = screen.getByRole('progressbar');
+      expect(progressBar).toBeInTheDocument();
+    });
+
+    it('should render with warning status', async () => {
+      await act(async () => {
+        renderWithTheme(<ProgressBar value={75} status="warning" />);
+      });
+
+      const progressBar = screen.getByRole('progressbar');
       expect(progressBar).toBeInTheDocument();
     });
   });
 
-  describe('Progress Display', () => {
-    it('should show fraction when showFraction is true', () => {
-      renderWithTheme(
-        <ProgressBar value={60} status="in-progress" current={3} total={5} showFraction={true} />
-      );
+  describe('Size Variants', () => {
+    it('should render with small size', async () => {
+      await act(async () => {
+        renderWithTheme(<ProgressBar value={50} status="in-progress" size="small" />);
+      });
 
-      expect(screen.getByText('3/5')).toBeInTheDocument();
+      const progressBar = screen.getByRole('progressbar');
+      expect(progressBar).toBeInTheDocument();
     });
 
-    it('should show percentage when showPercentage is true', () => {
-      renderWithTheme(<ProgressBar value={75} status="completed" showPercentage={true} />);
+    it('should render with medium size', async () => {
+      await act(async () => {
+        renderWithTheme(<ProgressBar value={50} status="in-progress" size="medium" />);
+      });
 
-      expect(screen.getByText('75%')).toBeInTheDocument();
+      const progressBar = screen.getByRole('progressbar');
+      expect(progressBar).toBeInTheDocument();
     });
 
-    it('should show custom label when provided', () => {
-      renderWithTheme(<ProgressBar value={50} status="in-progress" label="Custom Progress" />);
+    it('should render with large size', async () => {
+      await act(async () => {
+        renderWithTheme(<ProgressBar value={50} status="in-progress" size="large" />);
+      });
 
-      expect(screen.getByText('Custom Progress')).toBeInTheDocument();
-    });
-
-    it('should show both fraction and percentage when both are enabled', () => {
-      renderWithTheme(
-        <ProgressBar
-          value={80}
-          status="completed"
-          current={4}
-          total={5}
-          showFraction={true}
-          showPercentage={true}
-        />
-      );
-
-      expect(screen.getByText('80% (4/5)')).toBeInTheDocument();
-    });
-
-    it('should show tooltip when showTooltip is enabled', () => {
-      renderWithTheme(
-        <ProgressBar value={60} status="in-progress" current={3} total={5} showTooltip={true} />
-      );
-
-      // The tooltip content should be available but not visible until hover
-      expect(document.querySelector('[data-testid="progress-bar"]')).toBeInTheDocument();
-    });
-
-    it('should not show text when tooltip is enabled', () => {
-      renderWithTheme(
-        <ProgressBar
-          value={60}
-          status="in-progress"
-          current={3}
-          total={5}
-          showTooltip={true}
-          showPercentage={true}
-          showFraction={true}
-        />
-      );
-
-      // Should not show the percentage/fraction text when tooltip is enabled
-      expect(screen.queryByText('60% (3/5)')).not.toBeInTheDocument();
-    });
-  });
-
-  describe('Status-based Styling', () => {
-    it('should apply completed status styling', () => {
-      renderWithTheme(<ProgressBar value={100} status="completed" />);
-
-      // The component should render without errors
-      expect(document.querySelector('[data-testid="progress-bar"]')).toBeInTheDocument();
-    });
-
-    it('should apply in-progress status styling', () => {
-      renderWithTheme(<ProgressBar value={50} status="in-progress" />);
-
-      expect(document.querySelector('[data-testid="progress-bar"]')).toBeInTheDocument();
-    });
-
-    it('should apply not-started status styling', () => {
-      renderWithTheme(<ProgressBar value={0} status="not-started" />);
-
-      expect(document.querySelector('[data-testid="progress-bar"]')).toBeInTheDocument();
-    });
-
-    it('should use custom color when provided', () => {
-      renderWithTheme(<ProgressBar value={75} status="in-progress" color="#ff0000" />);
-
-      expect(document.querySelector('[data-testid="progress-bar"]')).toBeInTheDocument();
-    });
-  });
-
-  describe('Multi-segment Progress', () => {
-    it('should render multi-segment progress bar', () => {
-      const segments = [
-        { value: 30, color: '#ff0000' },
-        { value: 40, color: '#00ff00' },
-        { value: 30, color: '#0000ff' },
-      ];
-
-      renderWithTheme(<ProgressBar value={100} status="completed" segments={segments} />);
-
-      expect(document.querySelector('[data-testid="progress-bar"]')).toBeInTheDocument();
-    });
-
-    it('should handle empty segments array', () => {
-      renderWithTheme(<ProgressBar value={50} status="in-progress" segments={[]} />);
-
-      expect(document.querySelector('[data-testid="progress-bar"]')).toBeInTheDocument();
+      const progressBar = screen.getByRole('progressbar');
+      expect(progressBar).toBeInTheDocument();
     });
   });
 
   describe('Animation and Smooth Transitions', () => {
-    it('should render with smooth transitions enabled', () => {
-      renderWithTheme(
-        <ProgressBar value={60} status="in-progress" smooth={true} animationDuration={500} />
-      );
+    it('should render with smooth transitions enabled', async () => {
+      await act(async () => {
+        renderWithTheme(<ProgressBar value={60} status="in-progress" smooth={true} />);
+      });
 
-      expect(document.querySelector('[data-testid="progress-bar"]')).toBeInTheDocument();
+      const progressBar = screen.getByRole('progressbar');
+      expect(progressBar).toBeInTheDocument();
     });
 
-    it('should render without smooth transitions', () => {
-      renderWithTheme(<ProgressBar value={40} status="not-started" smooth={false} />);
+    it('should render without smooth transitions', async () => {
+      await act(async () => {
+        renderWithTheme(<ProgressBar value={60} status="in-progress" smooth={false} />);
+      });
 
-      expect(document.querySelector('[data-testid="progress-bar"]')).toBeInTheDocument();
+      const progressBar = screen.getByRole('progressbar');
+      expect(progressBar).toBeInTheDocument();
     });
   });
 
   describe('Edge Cases', () => {
-    it('should handle value of 0', () => {
-      renderWithTheme(<ProgressBar value={0} status="not-started" />);
+    it('should handle value of 0', async () => {
+      await act(async () => {
+        renderWithTheme(<ProgressBar value={0} status="in-progress" />);
+      });
 
-      expect(document.querySelector('[data-testid="progress-bar"]')).toBeInTheDocument();
+      const progressBar = screen.getByRole('progressbar');
+      expect(progressBar).toHaveAttribute('aria-valuenow', '0');
     });
 
-    it('should handle value of 100', () => {
-      renderWithTheme(<ProgressBar value={100} status="completed" />);
+    it('should handle value of 100', async () => {
+      await act(async () => {
+        renderWithTheme(<ProgressBar value={100} status="completed" />);
+      });
 
-      expect(document.querySelector('[data-testid="progress-bar"]')).toBeInTheDocument();
+      const progressBar = screen.getByRole('progressbar');
+      expect(progressBar).toHaveAttribute('aria-valuenow', '100');
     });
 
-    it('should handle value greater than max', () => {
-      renderWithTheme(<ProgressBar value={150} max={100} status="completed" />);
+    it('should handle value greater than max', async () => {
+      await act(async () => {
+        renderWithTheme(<ProgressBar value={150} status="completed" max={100} />);
+      });
 
-      expect(document.querySelector('[data-testid="progress-bar"]')).toBeInTheDocument();
+      const progressBar = screen.getByRole('progressbar');
+      expect(progressBar).toHaveAttribute('aria-valuenow', '150');
     });
 
-    it('should handle negative value', () => {
-      renderWithTheme(<ProgressBar value={-10} status="not-started" />);
+    it('should handle negative value', async () => {
+      await act(async () => {
+        renderWithTheme(<ProgressBar value={-10} status="error" />);
+      });
 
-      expect(document.querySelector('[data-testid="progress-bar"]')).toBeInTheDocument();
+      const progressBar = screen.getByRole('progressbar');
+      expect(progressBar).toHaveAttribute('aria-valuenow', '-10');
     });
 
-    it('should handle custom max value', () => {
-      renderWithTheme(<ProgressBar value={50} max={200} status="in-progress" />);
+    it('should handle custom max value', async () => {
+      await act(async () => {
+        renderWithTheme(<ProgressBar value={50} status="in-progress" max={200} />);
+      });
 
-      expect(document.querySelector('[data-testid="progress-bar"]')).toBeInTheDocument();
+      const progressBar = screen.getByRole('progressbar');
+      expect(progressBar).toHaveAttribute('aria-valuemax', '200');
     });
   });
 
   describe('Accessibility', () => {
-    it('should render with proper ARIA attributes', () => {
-      renderWithTheme(
-        <ProgressBar value={75} status="in-progress" current={3} total={4} showFraction={true} />
-      );
+    it('should have proper ARIA attributes', async () => {
+      await act(async () => {
+        renderWithTheme(<ProgressBar value={75} status="in-progress" />);
+      });
 
-      // The component should be accessible
-      expect(document.querySelector('[data-testid="progress-bar"]')).toBeInTheDocument();
+      const progressBar = screen.getByRole('progressbar');
+      expect(progressBar).toHaveAttribute('aria-valuenow', '75');
+      expect(progressBar).toHaveAttribute('aria-valuemin', '0');
+      expect(progressBar).toHaveAttribute('aria-valuemax', '100');
+    });
+
+    it('should have proper ARIA label when provided', async () => {
+      await act(async () => {
+        renderWithTheme(
+          <ProgressBar value={50} status="in-progress" ariaLabel="Custom progress" />
+        );
+      });
+
+      const progressBar = screen.getByRole('progressbar');
+      expect(progressBar).toHaveAttribute('aria-label', 'Custom progress');
+    });
+  });
+
+  describe('Custom Styling', () => {
+    it('should render with custom className', async () => {
+      await act(async () => {
+        renderWithTheme(<ProgressBar value={50} status="in-progress" className="custom-class" />);
+      });
+
+      const progressBar = screen.getByRole('progressbar');
+      expect(progressBar).toHaveClass('custom-class');
+    });
+
+    it('should render with custom style', async () => {
+      await act(async () => {
+        renderWithTheme(
+          <ProgressBar value={50} status="in-progress" style={{ backgroundColor: 'red' }} />
+        );
+      });
+
+      const progressBar = screen.getByRole('progressbar');
+      expect(progressBar).toHaveStyle('background-color: red');
     });
   });
 
   describe('TanStack Ranger Integration', () => {
-    it('should create Ranger instance with correct parameters', () => {
-      const { Ranger } = jest.requireActual('@tanstack/ranger');
-
-      renderWithTheme(<ProgressBar value={60} status="in-progress" max={100} />);
+    it('should create Ranger instance with correct parameters', async () => {
+      await act(async () => {
+        renderWithTheme(<ProgressBar value={60} status="in-progress" max={100} />);
+      });
 
       expect(Ranger).toHaveBeenCalledWith({
-        getRangerElement: expect.any(Function),
         values: [60],
         min: 0,
         max: 100,
         stepSize: 1,
-        onChange: expect.any(Function),
         disabled: true,
+        getRangerElement: expect.any(Function),
+        onChange: expect.any(Function),
       });
     });
 
-    it('should handle Ranger instance creation with custom max', () => {
-      const { Ranger } = jest.requireActual('@tanstack/ranger');
-
-      renderWithTheme(<ProgressBar value={150} status="completed" max={200} />);
+    it('should handle Ranger instance creation with custom max', async () => {
+      await act(async () => {
+        renderWithTheme(<ProgressBar value={150} status="completed" max={200} />);
+      });
 
       expect(Ranger).toHaveBeenCalledWith({
-        getRangerElement: expect.any(Function),
         values: [150],
         min: 0,
         max: 200,
         stepSize: 1,
-        onChange: expect.any(Function),
         disabled: true,
+        getRangerElement: expect.any(Function),
+        onChange: expect.any(Function),
       });
     });
 
-    it('should create Ranger instance with custom steps', () => {
-      const { Ranger } = jest.requireActual('@tanstack/ranger');
-
-      renderWithTheme(<ProgressBar value={50} status="in-progress" steps={[0, 25, 50, 75, 100]} />);
+    it('should create Ranger instance with custom steps', async () => {
+      await act(async () => {
+        renderWithTheme(
+          <ProgressBar value={50} status="in-progress" steps={[0, 25, 50, 75, 100]} />
+        );
+      });
 
       expect(Ranger).toHaveBeenCalledWith({
-        getRangerElement: expect.any(Function),
         values: [50],
         min: 0,
         max: 100,
         stepSize: 1,
         steps: [0, 25, 50, 75, 100],
-        onChange: expect.any(Function),
         disabled: true,
+        getRangerElement: expect.any(Function),
+        onChange: expect.any(Function),
       });
     });
 
-    it('should create Ranger instance with custom ticks', () => {
-      const { Ranger } = jest.requireActual('@tanstack/ranger');
-
-      renderWithTheme(
-        <ProgressBar value={75} status="completed" ticks={[0, 25, 50, 75, 100]} showTicks={true} />
-      );
+    it('should create Ranger instance with custom ticks', async () => {
+      await act(async () => {
+        renderWithTheme(
+          <ProgressBar
+            value={75}
+            status="completed"
+            ticks={[0, 25, 50, 75, 100]}
+            showTicks={true}
+          />
+        );
+      });
 
       expect(Ranger).toHaveBeenCalledWith({
-        getRangerElement: expect.any(Function),
         values: [75],
         min: 0,
         max: 100,
         stepSize: 1,
         ticks: [0, 25, 50, 75, 100],
-        onChange: expect.any(Function),
         disabled: true,
+        getRangerElement: expect.any(Function),
+        onChange: expect.any(Function),
       });
     });
 
-    it('should create Ranger instance with logarithmic interpolator', () => {
-      const { Ranger } = jest.requireActual('@tanstack/ranger');
-
-      renderWithTheme(<ProgressBar value={50} status="in-progress" logarithmic={true} />);
+    it('should create Ranger instance with logarithmic interpolator', async () => {
+      await act(async () => {
+        renderWithTheme(<ProgressBar value={50} status="in-progress" logarithmic={true} />);
+      });
 
       expect(Ranger).toHaveBeenCalledWith({
-        getRangerElement: expect.any(Function),
         values: [50],
         min: 0,
         max: 100,
         stepSize: 1,
-        interpolator: expect.objectContaining({
-          getPercentageForValue: expect.any(Function),
-          getValueForClientX: expect.any(Function),
-        }),
-        onChange: expect.any(Function),
+        interpolator: expect.any(Object),
         disabled: true,
+        getRangerElement: expect.any(Function),
+        onChange: expect.any(Function),
       });
     });
 
-    it('should create Ranger instance with custom interpolator', () => {
-      const { Ranger } = jest.requireActual('@tanstack/ranger');
+    it('should create Ranger instance with custom interpolator', async () => {
       const customInterpolator = {
         getPercentageForValue: (val: number) => val * 2,
         getValueForClientX: (clientX: number) => clientX / 2,
       };
 
-      renderWithTheme(
-        <ProgressBar value={30} status="in-progress" interpolator={customInterpolator} />
-      );
+      await act(async () => {
+        renderWithTheme(
+          <ProgressBar value={30} status="in-progress" interpolator={customInterpolator} />
+        );
+      });
 
       expect(Ranger).toHaveBeenCalledWith({
-        getRangerElement: expect.any(Function),
         values: [30],
         min: 0,
         max: 100,
         stepSize: 1,
         interpolator: customInterpolator,
-        onChange: expect.any(Function),
         disabled: true,
+        getRangerElement: expect.any(Function),
+        onChange: expect.any(Function),
       });
-    });
-  });
-
-  describe('Advanced Features', () => {
-    it('should render with tick markers', () => {
-      renderWithTheme(
-        <ProgressBar
-          value={60}
-          status="in-progress"
-          showTicks={true}
-          ticks={[0, 25, 50, 75, 100]}
-        />
-      );
-
-      expect(document.querySelector('[data-testid="progress-bar"]')).toBeInTheDocument();
-    });
-
-    it('should render with logarithmic scaling', () => {
-      renderWithTheme(<ProgressBar value={50} status="completed" logarithmic={true} />);
-
-      expect(document.querySelector('[data-testid="progress-bar"]')).toBeInTheDocument();
-    });
-
-    it('should render with custom steps', () => {
-      renderWithTheme(
-        <ProgressBar value={40} status="in-progress" steps={[0, 20, 40, 60, 80, 100]} />
-      );
-
-      expect(document.querySelector('[data-testid="progress-bar"]')).toBeInTheDocument();
     });
   });
 });

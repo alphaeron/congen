@@ -74,6 +74,7 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user }) => {
     []
   );
   const [userDataExport, setUserDataExport] = useState<UserDataExport | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   // Load workout data
   useEffect(() => {
@@ -175,17 +176,24 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user }) => {
   };
 
   const handleWizardComplete = async () => {
-    // Refresh data after generation
-    const [programsData, workoutsData] = await Promise.all([
-      getProgramsWithPreferences(),
-      getProgrammedWorkouts(),
-    ]);
-    setProgramsWithPreferences(programsData);
-    setWorkouts(workoutsData);
+    setIsGenerating(true);
+    try {
+      // Refresh data after generation
+      const [programsData, workoutsData] = await Promise.all([
+        getProgramsWithPreferences(),
+        getProgrammedWorkouts(),
+      ]);
+      setProgramsWithPreferences(programsData);
+      setWorkouts(workoutsData);
 
-    enqueueSnackbar('Workouts generated successfully!', { variant: 'success' });
-    setWizardOpen(false);
-    setSelectedProgram(null);
+      enqueueSnackbar('Workouts generated successfully!', { variant: 'success' });
+    } catch {
+      enqueueSnackbar('Failed to refresh workout data', { variant: 'error' });
+    } finally {
+      setIsGenerating(false);
+      setWizardOpen(false);
+      setSelectedProgram(null);
+    }
   };
 
   const handleWizardClose = () => {

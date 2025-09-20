@@ -1,3 +1,5 @@
+import { jsPDF } from 'jspdf';
+
 import { exportWorkoutToPDF, exportWeekToPDF, exportProgramToPDF } from './exportUtils';
 import type {
   ProgrammedWorkoutWithStages,
@@ -124,7 +126,6 @@ describe('exportUtils', () => {
       await exportWorkoutToPDF(mockWorkoutData, mockWeightUnitPreferences, options);
 
       // Verify jsPDF methods were called
-      const { jsPDF } = jest.requireActual('jspdf');
       expect(jsPDF).toHaveBeenCalled();
     });
   });
@@ -140,7 +141,6 @@ describe('exportUtils', () => {
       await exportWeekToPDF(weekWorkouts, mockWeightUnitPreferences, options);
 
       // Verify jsPDF methods were called
-      const { jsPDF } = jest.requireActual('jspdf');
       expect(jsPDF).toHaveBeenCalled();
     });
   });
@@ -167,7 +167,6 @@ describe('exportUtils', () => {
       await exportProgramToPDF(programData, mockWeightUnitPreferences, options);
 
       // Verify jsPDF methods were called
-      const { jsPDF } = jest.requireActual('jspdf');
       expect(jsPDF).toHaveBeenCalled();
     });
   });

@@ -24,7 +24,6 @@ import type {
   UserDataExport,
 } from '../api/types';
 import { getUserOneRepMaxes } from '../api/userOneRepMax';
-import { getUserWeightUnitPreferences } from '../api/userWeightUnitPreference';
 import {
   formatDate,
   categorizeExerciseVolume,
@@ -64,18 +63,16 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ user }) =>
       setIsLoading(true);
 
       // Load all dashboard data in parallel
-      const [programsData, , oneRepMaxesData, dataExport, weightUnitData] = await Promise.all([
+      const [programsData, , oneRepMaxesData, dataExport] = await Promise.all([
         getPrograms(),
         getProgrammedWorkouts(),
         getUserOneRepMaxes(user.keycloak_id),
         getUserDataExport(),
-        getUserWeightUnitPreferences(user.keycloak_id),
       ]);
 
       setPrograms(programsData);
       setOneRepMaxes(oneRepMaxesData);
       setUserData(dataExport);
-      setWeightUnitPreferences(weightUnitData || []);
 
       // Fetch exercise data for all unique exercises
       const uniqueExercises = new Set<string>();

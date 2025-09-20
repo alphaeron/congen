@@ -61,7 +61,11 @@ jest.mock('slate-react', () => ({
     placeholder,
     onKeyDown,
     style,
-    ...props
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    renderElement: _renderElement,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    renderLeaf: _renderLeaf,
+    ...otherProps
   }: {
     placeholder: string;
     onKeyDown: (event: React.KeyboardEvent) => void;
@@ -85,7 +89,7 @@ jest.mock('slate-react', () => ({
       onKeyDown={onKeyDown}
       contentEditable
       suppressContentEditableWarning
-      {...props}
+      {...otherProps}
     >
       Content
     </div>

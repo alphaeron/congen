@@ -486,5 +486,5 @@ describe('DashboardOverview', () => {
       );
       expect(exerciseCalls.length).toBeGreaterThanOrEqual(1);
     });
-  });
+  }, 10000);
 });

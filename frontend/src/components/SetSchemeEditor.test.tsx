@@ -3,6 +3,8 @@ import userEvent from '@testing-library/user-event';
 import React from 'react';
 
 import { SetSchemeEditor } from './SetSchemeEditor';
+import { updateProgrammedExercise } from '../api/programmedExercise';
+import { updateSetScheme } from '../api/setScheme';
 import type { ProgrammedExerciseWithSetSchemes } from '../api/types';
 
 // Mock the updateProgrammedExercise and updateSetScheme functions
@@ -215,8 +217,6 @@ describe('SetSchemeEditor', () => {
 
   it('submits form with valid data', async () => {
     const user = userEvent.setup();
-    const { updateProgrammedExercise } = jest.requireActual('../api/programmedExercise');
-    const { updateSetScheme } = jest.requireActual('../api/setScheme');
 
     updateProgrammedExercise.mockResolvedValue({ success: true });
     updateSetScheme.mockResolvedValue({ success: true });
@@ -249,7 +249,6 @@ describe('SetSchemeEditor', () => {
 
   it('handles form submission errors gracefully', async () => {
     const user = userEvent.setup();
-    const { updateSetScheme } = jest.requireActual('../api/setScheme');
 
     updateSetScheme.mockRejectedValue(new Error('API Error'));
 
@@ -278,8 +277,6 @@ describe('SetSchemeEditor', () => {
 
   it('updates all set schemes with same values when total sets changes', async () => {
     const user = userEvent.setup();
-    const { updateProgrammedExercise } = jest.requireActual('../api/programmedExercise');
-    const { updateSetScheme } = jest.requireActual('../api/setScheme');
 
     updateProgrammedExercise.mockResolvedValue({ success: true });
     updateSetScheme.mockResolvedValue({ success: true });
