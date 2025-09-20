@@ -206,22 +206,26 @@ export const SunburstChart: React.FC<SunburstChartProps> = ({
         });
         muscleGroups.set('Other', defaultGroup);
       } else {
-        // For exercises that belong to multiple muscle groups, add the full volume
-        // to each muscle group (don't create unique names)
+        // For exercises that belong to multiple muscle groups, divide the volume
+        // by the number of muscles to avoid artificial inflation
+        const volumePerMuscle = exercise.totalVolume / individualMuscles.length;
+        
         individualMuscles.forEach(muscle => {
           const existing = muscleGroups.get(muscle);
+          // Create unique exercise name with muscle in parentheses
+          const uniqueExerciseName = `${exercise.name} (${muscle})`;
 
           if (existing) {
             // Check if this exercise already exists in this muscle group
             const existingExercise = existing.children.find(
-              child => child.name === exercise.name
+              child => child.name === uniqueExerciseName
             );
             if (existingExercise) {
-              existingExercise.loc += exercise.totalVolume;
+              existingExercise.loc += volumePerMuscle;
             } else {
               existing.children.push({
-                name: exercise.name,
-                loc: exercise.totalVolume,
+                name: uniqueExerciseName,
+                loc: volumePerMuscle,
               });
             }
           } else {
@@ -229,8 +233,8 @@ export const SunburstChart: React.FC<SunburstChartProps> = ({
               name: muscle,
               children: [
                 {
-                  name: exercise.name,
-                  loc: exercise.totalVolume,
+                  name: uniqueExerciseName,
+                  loc: volumePerMuscle,
                 },
               ],
             });
