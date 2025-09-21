@@ -187,6 +187,7 @@ class GdprComplianceServiceTest {
                 age = null,
                 weight = null,
                 height = null,
+                gender = null,
                 createdAt = Instant.now(),
                 updatedAt = Instant.now()
             )

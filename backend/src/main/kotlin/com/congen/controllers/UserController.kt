@@ -197,9 +197,10 @@ class UserController(
         @RequestParam("name") name: String,
         @RequestParam("age", required = false) age: Int?,
         @RequestParam("weight", required = false) weight: Int?,
-        @RequestParam("height", required = false) height: Int?
+        @RequestParam("height", required = false) height: Int?,
+        @RequestParam("gender", required = false) gender: String?
     ): Mono<ResponseEntity<User>> {
-        return userService.updateUser(name, age, weight, height)
+        return userService.updateUser(name, age, weight, height, gender)
             .map { ResponseEntity.ok(it) }
     }
 }

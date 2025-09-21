@@ -204,6 +204,7 @@ class GdprComplianceService(
                                                 age = user.age,
                                                 weight = user.weight,
                                                 height = user.height,
+                                                gender = user.gender,
                                                 createdAt = user.createdAt,
                                                 updatedAt = user.updatedAt,
                                                 dataProcessingConsent = consent.dataProcessingConsent,

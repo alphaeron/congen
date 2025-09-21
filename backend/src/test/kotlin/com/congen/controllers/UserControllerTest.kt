@@ -54,6 +54,7 @@ class UserControllerTest {
                 age = null,
                 weight = null,
                 height = null,
+                gender = null,
                 createdAt = now,
                 updatedAt = now
             )
@@ -103,6 +104,7 @@ class UserControllerTest {
                 age = null,
                 weight = null,
                 height = null,
+                gender = null,
                 createdAt = now,
                 updatedAt = now
             )
@@ -158,18 +160,19 @@ class UserControllerTest {
                 age = null,
                 weight = null,
                 height = null,
+                gender = null,
                 createdAt = Instant.now(),
                 updatedAt = Instant.now()
             )
 
-        whenever(userService.updateUser(newName, null, null, null)).thenReturn(Mono.just(updatedUser))
+        whenever(userService.updateUser(newName, null, null, null, null)).thenReturn(Mono.just(updatedUser))
 
-        val result = userController.updateCurrentUser(newName, null, null, null)
+        val result = userController.updateCurrentUser(newName, null, null, null, null)
 
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(updatedUser))
             .verifyComplete()
-        verify(userService).updateUser(newName, null, null, null)
+        verify(userService).updateUser(newName, null, null, null, null)
     }
 
     @Test
@@ -179,12 +182,12 @@ class UserControllerTest {
 
         whenever(userService.updateUser(newName, null, null, null)).thenReturn(Mono.error(error))
 
-        val result = userController.updateCurrentUser(newName, null, null, null)
+        val result = userController.updateCurrentUser(newName, null, null, null, null)
 
         StepVerifier.create(result)
             .expectError(ValidationException::class.java)
             .verify()
-        verify(userService).updateUser(newName, null, null, null)
+        verify(userService).updateUser(newName, null, null, null, null)
     }
 
     @Test
@@ -194,11 +197,40 @@ class UserControllerTest {
 
         whenever(userService.updateUser(newName, null, null, null)).thenReturn(Mono.error(error))
 
-        val result = userController.updateCurrentUser(newName, null, null, null)
+        val result = userController.updateCurrentUser(newName, null, null, null, null)
 
         StepVerifier.create(result)
             .expectError(RuntimeException::class.java)
             .verify()
-        verify(userService).updateUser(newName, null, null, null)
+        verify(userService).updateUser(newName, null, null, null, null)
+    }
+
+    @Test
+    fun `updateCurrentUser should update user with gender successfully`() {
+        val newName = "Updated User Name"
+        val age = 30
+        val weight = 180
+        val height = 72
+        val gender = "female"
+        val updatedUser = User(
+            keycloakId = "test-keycloak-id",
+            name = newName,
+            age = age,
+            weight = weight,
+            height = height,
+            gender = gender,
+            createdAt = Instant.now(),
+            updatedAt = Instant.now()
+        )
+
+        whenever(userService.updateUser(newName, age, weight, height, gender)).thenReturn(Mono.just(updatedUser))
+
+        val result = userController.updateCurrentUser(newName, age, weight, height, gender)
+
+        StepVerifier.create(result)
+            .expectNext(ResponseEntity.ok(updatedUser))
+            .verifyComplete()
+
+        verify(userService).updateUser(newName, age, weight, height, gender)
     }
 }

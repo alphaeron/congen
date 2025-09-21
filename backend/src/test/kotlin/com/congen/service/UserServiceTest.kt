@@ -40,6 +40,7 @@ class UserServiceTest {
             age = null,
             weight = null,
             height = null,
+            gender = null,
             createdAt = now,
             updatedAt = now
         )
@@ -60,7 +61,7 @@ class UserServiceTest {
         val name = "Test User"
         whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(keycloakId))
         whenever(keycloakUtil.getCurrentUserName()).thenReturn(Mono.just(name))
-        whenever(userDAL.insertUser(eq(keycloakId), eq(name), isNull(), isNull(), isNull())).thenReturn(Mono.just(testUser))
+        whenever(userDAL.insertUser(eq(keycloakId), eq(name), isNull(), isNull(), isNull(), isNull())).thenReturn(Mono.just(testUser))
         whenever(gdprComplianceService.updateUserConsent(eq(keycloakId), eq(true))).thenReturn(
             Mono.just(
                 UserConsent(
@@ -80,7 +81,7 @@ class UserServiceTest {
             .verifyComplete()
         verify(keycloakUtil).getCurrentUserId()
         verify(keycloakUtil).getCurrentUserName()
-        verify(userDAL).insertUser(eq(keycloakId), eq(name), isNull(), isNull(), isNull())
+        verify(userDAL).insertUser(eq(keycloakId), eq(name), isNull(), isNull(), isNull(), isNull())
         verify(gdprComplianceService).updateUserConsent(keycloakId, true)
     }
 
@@ -133,12 +134,13 @@ class UserServiceTest {
                 age = null,
                 weight = null,
                 height = null,
+                gender = null,
                 createdAt = Instant.now(),
                 updatedAt = Instant.now()
             )
 
         whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just("test-keycloak-id"))
-        whenever(userDAL.updateUser(eq("test-keycloak-id"), eq(newName), isNull(), isNull(), isNull())).thenReturn(Mono.just(updatedUser))
+        whenever(userDAL.updateUser(eq("test-keycloak-id"), eq(newName), isNull(), isNull(), isNull(), isNull())).thenReturn(Mono.just(updatedUser))
 
         val result = userService.updateUser(newName)
 
@@ -147,7 +149,7 @@ class UserServiceTest {
             .verifyComplete()
 
         verify(keycloakUtil).getCurrentUserId()
-        verify(userDAL).updateUser(eq("test-keycloak-id"), eq(newName), isNull(), isNull(), isNull())
+        verify(userDAL).updateUser(eq("test-keycloak-id"), eq(newName), isNull(), isNull(), isNull(), isNull())
     }
 
     @Test
@@ -164,7 +166,7 @@ class UserServiceTest {
             .verify()
 
         verify(keycloakUtil).getCurrentUserId()
-        verify(userDAL, never()).updateUser(any(), any(), any(), any(), any())
+        verify(userDAL, never()).updateUser(any(), any(), any(), any(), any(), any())
     }
 
     @Test
@@ -173,7 +175,7 @@ class UserServiceTest {
         val error = ValidationException("Invalid name")
 
         whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just("test-keycloak-id"))
-        whenever(userDAL.updateUser(eq("test-keycloak-id"), eq(newName), isNull(), isNull(), isNull())).thenReturn(Mono.error(error))
+        whenever(userDAL.updateUser(eq("test-keycloak-id"), eq(newName), isNull(), isNull(), isNull(), isNull())).thenReturn(Mono.error(error))
 
         val result = userService.updateUser(newName)
 
@@ -182,7 +184,7 @@ class UserServiceTest {
             .verify()
 
         verify(keycloakUtil).getCurrentUserId()
-        verify(userDAL).updateUser(eq("test-keycloak-id"), eq(newName), isNull(), isNull(), isNull())
+        verify(userDAL).updateUser(eq("test-keycloak-id"), eq(newName), isNull(), isNull(), isNull(), isNull())
     }
 
 
@@ -199,12 +201,13 @@ class UserServiceTest {
                 age = age,
                 weight = weight,
                 height = height,
+                gender = null,
                 createdAt = Instant.now(),
                 updatedAt = Instant.now()
             )
 
         whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just("test-keycloak-id"))
-        whenever(userDAL.updateUser(eq("test-keycloak-id"), eq(newName), eq(age), eq(weight), eq(height))).thenReturn(Mono.just(updatedUser))
+        whenever(userDAL.updateUser(eq("test-keycloak-id"), eq(newName), eq(age), eq(weight), eq(height), isNull())).thenReturn(Mono.just(updatedUser))
 
         val result = userService.updateUser(newName, age, weight, height)
 
@@ -213,6 +216,37 @@ class UserServiceTest {
             .verifyComplete()
 
         verify(keycloakUtil).getCurrentUserId()
-        verify(userDAL).updateUser("test-keycloak-id", newName, age, weight, height)
+        verify(userDAL).updateUser("test-keycloak-id", newName, age, weight, height, null)
+    }
+
+    @Test
+    fun `updateUser should update user with gender successfully`() {
+        val newName = "Updated User Name"
+        val age = 30
+        val weight = 180
+        val height = 72
+        val gender = "male"
+        val updatedUser = User(
+            keycloakId = "test-keycloak-id",
+            name = newName,
+            age = age,
+            weight = weight,
+            height = height,
+            gender = gender,
+            createdAt = Instant.now(),
+            updatedAt = Instant.now()
+        )
+
+        whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just("test-keycloak-id"))
+        whenever(userDAL.updateUser(eq("test-keycloak-id"), eq(newName), eq(age), eq(weight), eq(height), eq(gender))).thenReturn(Mono.just(updatedUser))
+
+        val result = userService.updateUser(newName, age, weight, height, gender)
+
+        StepVerifier.create(result)
+            .expectNext(updatedUser)
+            .verifyComplete()
+
+        verify(keycloakUtil).getCurrentUserId()
+        verify(userDAL).updateUser("test-keycloak-id", newName, age, weight, height, gender)
     }
 }

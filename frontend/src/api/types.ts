@@ -56,6 +56,10 @@ export interface Muscle {
 export interface User {
   keycloak_id: string;
   name: string;
+  age?: number;
+  weight?: number;
+  height?: number;
+  gender?: string;
   created_at: Date;
   updated_at: Date;
   roles?: string[];
@@ -78,6 +82,10 @@ export interface UserConsent {
 export interface UserDataExport {
   keycloak_id: string;
   name: string;
+  age?: number;
+  weight?: number;
+  height?: number;
+  gender?: string;
   created_at: Date;
   updated_at: Date;
   data_processing_consent: boolean;

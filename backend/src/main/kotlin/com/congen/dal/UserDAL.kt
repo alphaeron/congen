@@ -136,6 +136,7 @@ class UserDAL(
      * @param age The user's age in years (optional, will be encrypted)
      * @param weight The user's weight in pounds (optional, will be encrypted)
      * @param height The user's height in inches (optional, will be encrypted)
+     * @param gender The user's gender (optional, will be encrypted)
      * @return Mono containing the inserted user with decrypted data
      * @throws ValidationException if user data fails validation
      */
@@ -148,7 +149,8 @@ class UserDAL(
         name: String,
         age: Int? = null,
         weight: Int? = null,
-        height: Int? = null
+        height: Int? = null,
+        gender: String? = null
     ): Mono<User> {
         logger.debug("Inserting user: {} with Keycloak ID: {}", name, keycloakId)
 
@@ -157,21 +159,23 @@ class UserDAL(
         val encryptedAge = age?.let { encryptionUtil.encrypt(it.toString()) }
         val encryptedWeight = weight?.let { encryptionUtil.encrypt(it.toString()) }
         val encryptedHeight = height?.let { encryptionUtil.encrypt(it.toString()) }
+        val encryptedGender = gender?.let { encryptionUtil.encrypt(it) }
 
         // Use transaction to ensure user creation and audit logging are atomic
         return postgresClient.withTransaction {
             postgresClient.update<Map<String, Any>>(
                 """
                 INSERT INTO "user"
-                    (keycloak_id, name, age, weight, height)
+                    (keycloak_id, name, age, weight, height, gender)
                 VALUES
-                    ($1, $2, $3, $4, $5)
+                    ($1, $2, $3, $4, $5, $6)
                 """.trimIndent(),
                 keycloakId,
                 encryptedName,
                 encryptedAge,
                 encryptedWeight,
-                encryptedHeight
+                encryptedHeight,
+                encryptedGender
             ).flatMap { insertedRow ->
                 // Log the data creation for GDPR audit
                 auditService.logDataOperation(
@@ -187,6 +191,7 @@ class UserDAL(
                             age = age,
                             weight = weight,
                             height = height,
+                            gender = gender,
                             createdAt = parseTimestamp(insertedRow["created_at"]),
                             updatedAt = parseTimestamp(insertedRow["updated_at"])
                         )
@@ -230,7 +235,7 @@ class UserDAL(
                     postgresClient.update<Map<String, Any>>(
                         "DELETE FROM \"user\" WHERE keycloak_id=$1",
                         keycloakId,
-                    ).map { deletedRow ->
+                    ).map {
                         // Return the deleted user with decrypted data
                         User(
                             keycloakId = keycloakId,
@@ -238,6 +243,7 @@ class UserDAL(
                             age = decryptField(userRow["age"])?.toIntOrNull(),
                             weight = decryptField(userRow["weight"])?.toIntOrNull(),
                             height = decryptField(userRow["height"])?.toIntOrNull(),
+                            gender = decryptField(userRow["gender"]),
                             createdAt = parseTimestamp(userRow["created_at"]),
                             updatedAt = parseTimestamp(userRow["updated_at"])
                         )
@@ -259,6 +265,7 @@ class UserDAL(
      * @param age The new age for the user (optional)
      * @param weight The new weight for the user (optional)
      * @param height The new height for the user (optional)
+     * @param gender The new gender for the user (optional)
      * @return Mono containing the updated user
      * @throws NoResultsFoundException if no user exists with the given Keycloak ID
      */
@@ -271,7 +278,8 @@ class UserDAL(
         name: String,
         age: Int? = null,
         weight: Int? = null,
-        height: Int? = null
+        height: Int? = null,
+        gender: String? = null
     ): Mono<User> {
         logger.debug("Updating user: {} with Keycloak ID: {}", name, keycloakId)
 
@@ -280,20 +288,22 @@ class UserDAL(
         val encryptedAge = age?.let { encryptionUtil.encrypt(it.toString()) }
         val encryptedWeight = weight?.let { encryptionUtil.encrypt(it.toString()) }
         val encryptedHeight = height?.let { encryptionUtil.encrypt(it.toString()) }
+        val encryptedGender = gender?.let { encryptionUtil.encrypt(it) }
 
         // Use transaction to ensure user update and audit logging are atomic
         return postgresClient.withTransaction {
             postgresClient.update<Map<String, Any>>(
                 """
                 UPDATE "user"
-                SET name=$2, age=$3, weight=$4, height=$5, updated_at=NOW()
+                SET name=$2, age=$3, weight=$4, height=$5, gender=$6, updated_at=NOW()
                 WHERE keycloak_id=$1
                 """.trimIndent(),
                 keycloakId,
                 encryptedName,
                 encryptedAge,
                 encryptedWeight,
-                encryptedHeight
+                encryptedHeight,
+                encryptedGender
             ).flatMap { updatedRow ->
                 // Log the data update for GDPR audit
                 auditService.logDataOperation(
@@ -309,6 +319,7 @@ class UserDAL(
                             age = age,
                             weight = weight,
                             height = height,
+                            gender = gender,
                             createdAt = parseTimestamp(updatedRow["created_at"]),
                             updatedAt = parseTimestamp(updatedRow["updated_at"])
                         )
@@ -332,6 +343,7 @@ class UserDAL(
         val age = decryptField(row["age"])?.toIntOrNull()
         val weight = decryptField(row["weight"])?.toIntOrNull()
         val height = decryptField(row["height"])?.toIntOrNull()
+        val gender = decryptField(row["gender"])
 
         // Handle timestamp conversion from database format
         val createdAt = parseTimestamp(row["created_at"])
@@ -343,6 +355,7 @@ class UserDAL(
             age = age,
             weight = weight,
             height = height,
+            gender = gender,
             createdAt = createdAt,
             updatedAt = updatedAt,
         )

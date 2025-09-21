@@ -56,6 +56,7 @@ fun mockUser(
     age: Int? = null,
     weight: Int? = null,
     height: Int? = null,
+    gender: String? = null,
     createdAt: Instant = sampleInstant(),
     updatedAt: Instant = sampleInstant()
 ): User =
@@ -65,6 +66,7 @@ fun mockUser(
         age = age,
         weight = weight,
         height = height,
+        gender = gender,
         createdAt = createdAt,
         updatedAt = updatedAt
     )

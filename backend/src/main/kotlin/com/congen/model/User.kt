@@ -29,10 +29,11 @@ import java.time.Instant
  * - **Age**: Optional integer greater than zero
  * - **Weight**: Optional integer greater than zero (in pounds)
  * - **Height**: Optional integer greater than zero (in inches)
+ * - **Gender**: Optional string ("male" or "female")
  *
  * ## GDPR Compliance
  *
- * All personal data (name, age, weight, height) is encrypted at rest using AES-256-GCM
+ * All personal data (name, age, weight, height, gender) is encrypted at rest using AES-256-GCM
  * encryption for GDPR compliance and data protection.
  *
  * ## Keycloak Integration
@@ -47,6 +48,7 @@ import java.time.Instant
  * @property age User's age in years (optional)
  * @property weight User's weight in pounds (optional)
  * @property height User's height in inches (optional)
+ * @property gender User's gender (optional, "male" or "female")
  * @property createdAt Timestamp when the user was created
  * @property updatedAt Timestamp when the user was last updated
  *
@@ -58,7 +60,7 @@ import java.time.Instant
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Schema(
     description = "A user profile in the workout generation system",
-    example = "User(keycloakId=\"123e4567-e89b-12d3-a456-426614174000\", name=\"John Doe\", age=30, weight=180, height=72)",
+    example = "User(keycloakId=\"123e4567-e89b-12d3-a456-426614174000\", name=\"John Doe\", age=30, weight=180, height=72, gender=\"male\")",
 )
 data class User(
     /** Unique Keycloak identifier for the user (primary key). */
@@ -97,6 +99,13 @@ data class User(
         minimum = "1",
     )
     @param:JsonProperty("height") val height: Int?,
+    /** User's gender (optional). */
+    @Schema(
+        description = "User's gender",
+        example = "male",
+        allowableValues = ["male", "female"],
+    )
+    @param:JsonProperty("gender") val gender: String?,
     /** Timestamp when the user was created. */
     @Schema(
         description = "Timestamp when the user was created",

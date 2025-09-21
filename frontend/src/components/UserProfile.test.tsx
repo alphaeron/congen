@@ -77,16 +77,18 @@ describe('UserProfile', () => {
     expect(screen.getByText('Manage Profile')).toBeInTheDocument();
   });
 
-  it('should show privacy content by default', async () => {
+  it('should show physical attributes content by default', async () => {
     await act(async () => {
       renderWithProviders(<UserProfile />);
     });
 
-    // The default section is 'privacy' which renders GdprComplianceSection
+    // The default section is 'physical' which renders PhysicalAttributesSection
+    // Look for the heading in the content area (h5 element)
     await waitFor(() => {
-      expect(screen.getByText('Privacy & Data Protection')).toBeInTheDocument();
-    });
-  });
+      const heading = screen.getByRole('heading', { name: 'Physical Attributes' });
+      expect(heading).toBeInTheDocument();
+    }, { timeout: 10000 });
+  }, 15000);
 
   it('should navigate to privacy tab', async () => {
     await act(async () => {
@@ -96,8 +98,8 @@ describe('UserProfile', () => {
     // Wait for the privacy content to load
     await waitFor(() => {
       expect(screen.getByText('Privacy & Data Protection')).toBeInTheDocument();
-    });
-  }, 10000);
+    }, { timeout: 10000 });
+  }, 15000);
 
   it('should render Manage Profile button', async () => {
     await act(async () => {

@@ -19,6 +19,7 @@ import java.time.Instant
  * @property age User's age in years (encrypted at rest)
  * @property weight User's weight in pounds (encrypted at rest)
  * @property height User's height in inches (encrypted at rest)
+ * @property gender User's gender (encrypted at rest)
  * @property createdAt When the user account was created
  * @property updatedAt When the user account was last updated
  * @property dataProcessingConsent Current consent status for data processing
@@ -75,6 +76,13 @@ data class UserDataExport(
         example = "72"
     )
     @param:JsonProperty("height") val height: Int?,
+    /** User's gender. */
+    @Schema(
+        description = "User's gender",
+        example = "male",
+        allowableValues = ["male", "female"]
+    )
+    @param:JsonProperty("gender") val gender: String?,
     /** When the user account was created. */
     @Schema(
         description = "Timestamp when the user account was created",

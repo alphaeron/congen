@@ -39,7 +39,13 @@ export const getCurrentUser = (): Promise<User> =>
  * @param profileData The profile data to update
  * @return The updated user profile
  */
-export const updateUserProfile = (profileData: { name: string }): Promise<User> =>
+export const updateUserProfile = (profileData: { 
+  name: string; 
+  age?: number; 
+  weight?: number; 
+  height?: number; 
+  gender?: string; 
+}): Promise<User> =>
   REQUEST({
     method: 'PATCH',
     url: '/user/me',

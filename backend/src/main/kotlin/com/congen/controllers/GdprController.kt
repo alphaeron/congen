@@ -308,7 +308,7 @@ class GdprController(
                         dataTypes =
                             listOf(
                                 "Personal identifiers (name)",
-                                "Physical attributes (age, weight, height) - encrypted at rest",
+                                "Physical attributes (age, weight, height, gender) - encrypted at rest",
                                 "Fitness preferences and exercise data",
                                 "Equipment preferences",
                                 "Consent records and audit logs"

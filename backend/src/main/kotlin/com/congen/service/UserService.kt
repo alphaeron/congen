@@ -80,11 +80,12 @@ class UserService(
         name: String,
         age: Int? = null,
         weight: Int? = null,
-        height: Int? = null
+        height: Int? = null,
+        gender: String? = null
     ): Mono<User> {
         return keycloakUtil.getCurrentUserId()
             .flatMap { keycloakUserId ->
-                userDAL.updateUser(keycloakUserId, name, age, weight, height)
+                userDAL.updateUser(keycloakUserId, name, age, weight, height, gender)
             }
     }
 

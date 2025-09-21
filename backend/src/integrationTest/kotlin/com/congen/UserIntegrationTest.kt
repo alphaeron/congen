@@ -38,7 +38,7 @@ class UserIntegrationTest : BaseIntegrationTest() {
         val height = 72
 
         webTestClient.patch()
-            .uri("/api/v1/user/me?name=$newName&age=$age&weight=$weight&height=$height")
+            .uri("/api/v1/user/me?name=$newName&age=$age&weight=$weight&height=$height&gender=male")
             .header("Authorization", "Bearer $userToken")
             .exchange()
             .expectStatus().isOk()
@@ -48,6 +48,7 @@ class UserIntegrationTest : BaseIntegrationTest() {
             .jsonPath(".age").isEqualTo(age)
             .jsonPath(".weight").isEqualTo(weight)
             .jsonPath(".height").isEqualTo(height)
+            .jsonPath(".gender").isEqualTo("male")
     }
 
     @Test
@@ -56,7 +57,7 @@ class UserIntegrationTest : BaseIntegrationTest() {
         val age = 25
 
         webTestClient.patch()
-            .uri("/api/v1/user/me?name=$newName&age=$age")
+            .uri("/api/v1/user/me?name=$newName&age=$age&gender=female")
             .header("Authorization", "Bearer $userToken")
             .exchange()
             .expectStatus().isOk()
@@ -64,6 +65,7 @@ class UserIntegrationTest : BaseIntegrationTest() {
             .jsonPath(".keycloak_id").isEqualTo(userId)
             .jsonPath(".name").isEqualTo(newName)
             .jsonPath(".age").isEqualTo(age)
+            .jsonPath(".gender").isEqualTo("female")
             .jsonPath(".weight").doesNotExist()
             .jsonPath(".height").doesNotExist()
     }

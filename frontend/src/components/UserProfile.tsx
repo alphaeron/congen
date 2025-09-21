@@ -1,4 +1,4 @@
-import { Person as PersonIcon, PrivacyTip as PrivacyIcon } from '@mui/icons-material';
+import { Person as PersonIcon, PrivacyTip as PrivacyIcon, FitnessCenter as FitnessIcon } from '@mui/icons-material';
 import {
   Box,
   Drawer,
@@ -14,6 +14,7 @@ import React from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 
 import { GdprComplianceSection } from './GdprComplianceSection';
+import { PhysicalAttributesSection } from './PhysicalAttributesSection';
 
 interface UserProfileProps {
   initialSection?: string;
@@ -31,12 +32,18 @@ interface UserProfileProps {
  * @param initialSection The initial section to display (from URL)
  * @returns UserProfile component
  */
-export const UserProfile: React.FC<UserProfileProps> = ({ initialSection = 'privacy' }) => {
+export const UserProfile: React.FC<UserProfileProps> = ({ initialSection = 'physical' }) => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const activeSection = searchParams.get('section') || initialSection;
 
   const menuItems = [
+    {
+      id: 'physical',
+      label: 'Physical Attributes',
+      icon: <FitnessIcon />,
+      component: <PhysicalAttributesSection />,
+    },
     {
       id: 'privacy',
       label: 'Privacy & Data',

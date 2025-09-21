@@ -13,6 +13,7 @@ import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.doAnswer
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
+import kotlin.reflect.KClass
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import reactor.core.publisher.Mono
@@ -86,13 +87,14 @@ class UserDALTest {
             postgresClient.update(
                 """
                 INSERT INTO "user"
-                    (keycloak_id, name, age, weight, height)
+                    (keycloak_id, name, age, weight, height, gender)
                 VALUES
-                    ($1, $2, $3, $4, $5)
+                    ($1, $2, $3, $4, $5, $6)
                 """.trimIndent(),
                 Map::class,
                 insertUser.keycloakId,
                 "encrypted_name",
+                null,
                 null,
                 null,
                 null
@@ -128,6 +130,7 @@ class UserDALTest {
             "age" to null,
             "weight" to null,
             "height" to null,
+            "gender" to null,
             "created_at" to Instant.parse("2024-01-01T00:00:00Z"),
             "updated_at" to Instant.parse("2024-01-01T00:00:00Z")
         )
@@ -190,6 +193,7 @@ class UserDALTest {
             "age" to null,
             "weight" to null,
             "height" to null,
+            "gender" to null,
             "created_at" to Instant.parse("2024-01-01T00:00:00Z"),
             "updated_at" to Instant.parse("2024-01-01T00:00:00Z")
         )
@@ -197,12 +201,13 @@ class UserDALTest {
             postgresClient.update(
                 """
                 UPDATE "user"
-                SET name=$2, age=$3, weight=$4, height=$5, updated_at=NOW()
+                SET name=$2, age=$3, weight=$4, height=$5, gender=$6, updated_at=NOW()
                 WHERE keycloak_id=$1
                 """.trimIndent(),
                 Map::class,
                 keycloakId,
                 "encrypted-name",
+                null,
                 null,
                 null,
                 null
@@ -222,12 +227,13 @@ class UserDALTest {
         verify(postgresClient).update(
             """
             UPDATE "user"
-            SET name=$2, age=$3, weight=$4, height=$5, updated_at=NOW()
+            SET name=$2, age=$3, weight=$4, height=$5, gender=$6, updated_at=NOW()
             WHERE keycloak_id=$1
             """.trimIndent(),
             Map::class,
             keycloakId,
             "encrypted-name",
+            null,
             null,
             null,
             null
@@ -243,17 +249,19 @@ class UserDALTest {
 
     @Test
     fun `insertUser should return inserted user with physical attributes`() {
-        val insertUser = mockUser(keycloakId = "0", name = "Test User", age = 30, weight = 180, height = 72)
+        val insertUser = mockUser(keycloakId = "0", name = "Test User", age = 30, weight = 180, height = 72, gender = "male")
         whenever(encryptionUtil.encrypt(insertUser.name)).thenReturn("encrypted_name")
         whenever(encryptionUtil.encrypt("30")).thenReturn("encrypted_age")
         whenever(encryptionUtil.encrypt("180")).thenReturn("encrypted_weight")
         whenever(encryptionUtil.encrypt("72")).thenReturn("encrypted_height")
+        whenever(encryptionUtil.encrypt("male")).thenReturn("encrypted_gender")
         val mockInsertedRowWithAttributes = mapOf(
             "keycloak_id" to insertUser.keycloakId,
             "name" to "encrypted_name",
             "age" to "encrypted_age",
             "weight" to "encrypted_weight",
             "height" to "encrypted_height",
+            "gender" to "encrypted_gender",
             "created_at" to Instant.parse("2024-01-01T00:00:00Z"),
             "updated_at" to Instant.parse("2024-01-01T00:00:00Z")
         )
@@ -261,16 +269,17 @@ class UserDALTest {
             postgresClient.update(
                 """
                 INSERT INTO "user"
-                    (keycloak_id, name, age, weight, height)
+                    (keycloak_id, name, age, weight, height, gender)
                 VALUES
-                    ($1, $2, $3, $4, $5)
+                    ($1, $2, $3, $4, $5, $6)
                 """.trimIndent(),
                 Map::class,
                 insertUser.keycloakId,
                 "encrypted_name",
                 "encrypted_age",
                 "encrypted_weight",
-                "encrypted_height"
+                "encrypted_height",
+                "encrypted_gender"
             )
         ).thenReturn(Mono.just(mockInsertedRowWithAttributes))
         whenever(
@@ -283,7 +292,7 @@ class UserDALTest {
             )
         ).thenReturn(Mono.just(Unit))
 
-        val result = userDAL.insertUser(insertUser.keycloakId, insertUser.name, insertUser.age, insertUser.weight, insertUser.height)
+        val result = userDAL.insertUser(insertUser.keycloakId, insertUser.name, insertUser.age, insertUser.weight, insertUser.height, insertUser.gender)
 
         StepVerifier.create(result)
             .assertNext { returnedUser ->
@@ -292,6 +301,7 @@ class UserDALTest {
                 assertEquals(insertUser.age, returnedUser.age)
                 assertEquals(insertUser.weight, returnedUser.weight)
                 assertEquals(insertUser.height, returnedUser.height)
+                assertEquals(insertUser.gender, returnedUser.gender)
             }
             .verifyComplete()
     }
@@ -316,6 +326,7 @@ class UserDALTest {
             "age" to "encrypted-value",
             "weight" to "encrypted-value",
             "height" to "encrypted-value",
+            "gender" to null,
             "created_at" to Instant.parse("2024-01-01T00:00:00Z"),
             "updated_at" to Instant.parse("2024-01-01T00:00:00Z")
         )
@@ -323,7 +334,7 @@ class UserDALTest {
             postgresClient.update(
                 """
                 UPDATE "user"
-                SET name=$2, age=$3, weight=$4, height=$5, updated_at=NOW()
+                SET name=$2, age=$3, weight=$4, height=$5, gender=$6, updated_at=NOW()
                 WHERE keycloak_id=$1
                 """.trimIndent(),
                 Map::class,
@@ -331,13 +342,14 @@ class UserDALTest {
                 "encrypted-value",
                 "encrypted-value",
                 "encrypted-value",
-                "encrypted-value"
+                "encrypted-value",
+                null
             )
         ).thenReturn(Mono.just(mockUpdatedRowWithAttributes))
         whenever(auditService.logDataOperation(any(), any(), any(), anyOrNull(), anyOrNull()))
             .thenReturn(Mono.just(Unit))
 
-        val result = userDAL.updateUser(keycloakId, newName, age, weight, height)
+        val result = userDAL.updateUser(keycloakId, newName, age, weight, height, null)
 
         StepVerifier.create(result)
             .expectNextMatches { user ->
@@ -348,11 +360,87 @@ class UserDALTest {
         verify(postgresClient).update(
             """
             UPDATE "user"
-            SET name=$2, age=$3, weight=$4, height=$5, updated_at=NOW()
+            SET name=$2, age=$3, weight=$4, height=$5, gender=$6, updated_at=NOW()
             WHERE keycloak_id=$1
             """.trimIndent(),
             Map::class,
             keycloakId,
+            "encrypted-value",
+            "encrypted-value",
+            "encrypted-value",
+            "encrypted-value",
+            null
+        )
+        verify(auditService).logDataOperation(
+            eq(keycloakId),
+            eq("DATA_UPDATE"),
+            eq("USER_PROFILE"),
+            anyOrNull(),
+            anyOrNull()
+        )
+    }
+
+    @Test
+    fun `updateUser should update user with gender successfully`() {
+        val keycloakId = "test-keycloak-id"
+        val newName = "Updated User"
+        val age = 30
+        val weight = 180
+        val height = 72
+        val gender = "female"
+
+        whenever(encryptionUtil.encrypt(newName)).thenReturn("encrypted-value")
+        whenever(encryptionUtil.encrypt(age.toString())).thenReturn("encrypted-value")
+        whenever(encryptionUtil.encrypt(weight.toString())).thenReturn("encrypted-value")
+        whenever(encryptionUtil.encrypt(height.toString())).thenReturn("encrypted-value")
+        whenever(encryptionUtil.encrypt(gender)).thenReturn("encrypted-value")
+        whenever(encryptionUtil.decrypt("encrypted-value")).thenReturn("decrypted-value")
+        val mockUpdatedRowWithGender = mapOf(
+            "keycloak_id" to keycloakId,
+            "name" to "encrypted-value",
+            "age" to "encrypted-value",
+            "weight" to "encrypted-value",
+            "height" to "encrypted-value",
+            "gender" to "encrypted-value",
+            "created_at" to Instant.parse("2024-01-01T00:00:00Z"),
+            "updated_at" to Instant.parse("2024-01-01T00:00:00Z")
+        )
+        whenever(
+            postgresClient.update(
+                """
+                UPDATE "user"
+                SET name=$2, age=$3, weight=$4, height=$5, gender=$6, updated_at=NOW()
+                WHERE keycloak_id=$1
+                """.trimIndent(),
+                Map::class,
+                keycloakId,
+                "encrypted-value",
+                "encrypted-value",
+                "encrypted-value",
+                "encrypted-value",
+                "encrypted-value"
+            )
+        ).thenReturn(Mono.just(mockUpdatedRowWithGender))
+        whenever(auditService.logDataOperation(any(), any(), any(), anyOrNull(), anyOrNull()))
+            .thenReturn(Mono.just(Unit))
+
+        val result = userDAL.updateUser(keycloakId, newName, age, weight, height, gender)
+
+        StepVerifier.create(result)
+            .expectNextMatches { user ->
+                user.keycloakId == keycloakId && user.name == newName && user.age == age && user.weight == weight && user.height == height && user.gender == gender
+            }
+            .verifyComplete()
+
+        verify(postgresClient).update(
+            """
+            UPDATE "user"
+            SET name=$2, age=$3, weight=$4, height=$5, gender=$6, updated_at=NOW()
+            WHERE keycloak_id=$1
+            """.trimIndent(),
+            Map::class,
+            keycloakId,
+            "encrypted-value",
             "encrypted-value",
             "encrypted-value",
             "encrypted-value",
