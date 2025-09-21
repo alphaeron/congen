@@ -189,7 +189,9 @@ describe('user API', () => {
       const updateData = { name: 'Updated User' };
       mockAdapter.onPatch('/user/me').timeout();
 
-      await expect(updateUserProfile(updateData)).rejects.toEqual({ error: 'timeout of 10000ms exceeded' });
+      await expect(updateUserProfile(updateData)).rejects.toEqual({
+        error: 'timeout of 10000ms exceeded',
+      });
     });
   });
 });

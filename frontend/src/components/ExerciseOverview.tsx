@@ -16,9 +16,9 @@ import { EmptyState } from './EmptyState';
 import { ExerciseCard } from './ExerciseCard';
 import { FormField } from './FormField';
 import { LoadingSpinner } from './LoadingSpinner';
-import { useData } from '../contexts/DataContext';
 import type { Equipment, Exercise, Muscle } from '../api/types';
 import { capitalizeEachWord } from '../common/utils';
+import { useData } from '../contexts/DataContext';
 
 import '../styles/Form.css';
 
@@ -45,14 +45,13 @@ export function ExerciseOverview(): React.ReactElement {
   const itemsPerRow = 4; // Number of items per row in the grid
   const rowHeight = 300; // Approximate height of each exercise card row
 
-  const { 
-    loadAllExercises, 
-    loadAllEquipment, 
-    loadAllMuscles, 
+  const {
+    loadAllExercises,
+    loadAllEquipment,
+    loadAllMuscles,
     exerciseMuscleData,
     exerciseEquipmentData,
-    isLoading: isDataLoading, 
-    error: dataError 
+    error: dataError,
   } = useData();
   const [exercises, setExercises] = React.useState<Exercise[]>([]);
   const [equipment, setEquipment] = React.useState<Equipment[]>([]);
@@ -116,7 +115,9 @@ export function ExerciseOverview(): React.ReactElement {
     return mapping;
   };
 
-  const [exerciseEquipmentMap, setExerciseEquipmentMap] = React.useState<Map<string, Set<string>>>(new Map());
+  const [exerciseEquipmentMap, setExerciseEquipmentMap] = React.useState<Map<string, Set<string>>>(
+    new Map()
+  );
   const [isExerciseEquipmentLoading, setIsExerciseEquipmentLoading] = React.useState(true);
   const [isExerciseEquipmentError, setIsExerciseEquipmentError] = React.useState(false);
 
@@ -129,7 +130,9 @@ export function ExerciseOverview(): React.ReactElement {
     return mapping;
   };
 
-  const [exerciseMuscleMap, setExerciseMuscleMap] = React.useState<Map<string, Set<string>>>(new Map());
+  const [exerciseMuscleMap, setExerciseMuscleMap] = React.useState<Map<string, Set<string>>>(
+    new Map()
+  );
   const [isExerciseMuscleLoading, setIsExerciseMuscleLoading] = React.useState(true);
   const [isExerciseMuscleError, setIsExerciseMuscleError] = React.useState(false);
 

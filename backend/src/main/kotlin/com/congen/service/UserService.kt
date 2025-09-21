@@ -72,6 +72,7 @@ class UserService(
      * @param age The new age for the user (optional)
      * @param weight The new weight for the user (optional)
      * @param height The new height for the user (optional)
+     * @param gender The new gender for the user (optional)
      * @return The updated user
      * @throws ValidationException if user data fails validation
      * @throws NoResultsFoundException if user profile does not exist

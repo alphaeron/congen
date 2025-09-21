@@ -1,8 +1,8 @@
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
+import AxiosMockAdapter from 'axios-mock-adapter';
 import { SnackbarProvider } from 'notistack';
 import React from 'react';
 import { MemoryRouter } from 'react-router';
-import AxiosMockAdapter from 'axios-mock-adapter';
 
 import { PhysicalAttributesSection } from './PhysicalAttributesSection';
 import { ENDPOINT } from '../api/endpoint';
@@ -29,9 +29,7 @@ jest.mock('../contexts/AuthContext', () => ({
 const renderWithProviders = (component: React.ReactElement) => {
   return render(
     <MemoryRouter>
-      <SnackbarProvider>
-        {component}
-      </SnackbarProvider>
+      <SnackbarProvider>{component}</SnackbarProvider>
     </MemoryRouter>
   );
 };
@@ -52,7 +50,9 @@ describe('PhysicalAttributesSection', () => {
     renderWithProviders(<PhysicalAttributesSection />);
 
     expect(screen.getByText('Physical Attributes')).toBeInTheDocument();
-    expect(screen.getByText(/Manage your physical attributes for personalized workout recommendations/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Manage your physical attributes for personalized workout recommendations/)
+    ).toBeInTheDocument();
   });
 
   it('should render form fields with user data', () => {
@@ -76,7 +76,7 @@ describe('PhysicalAttributesSection', () => {
     renderWithProviders(<PhysicalAttributesSection />);
 
     const ageInput = screen.getByDisplayValue('30');
-    
+
     await act(async () => {
       fireEvent.change(ageInput, { target: { value: '31' } });
     });
@@ -93,13 +93,13 @@ describe('PhysicalAttributesSection', () => {
     renderWithProviders(<PhysicalAttributesSection />);
 
     const ageInput = screen.getByDisplayValue('30');
-    
+
     await act(async () => {
       fireEvent.change(ageInput, { target: { value: '31' } });
     });
 
     const saveButton = screen.getByRole('button', { name: /save changes/i });
-    
+
     await act(async () => {
       fireEvent.click(saveButton);
     });
@@ -116,7 +116,7 @@ describe('PhysicalAttributesSection', () => {
       height: 72,
       gender: 'male',
     });
-    
+
     // Verify that getCurrentUser was called to refresh the data
     expect(mockAdapter.history.get[0].url).toBe('/user/me');
   });
@@ -127,13 +127,13 @@ describe('PhysicalAttributesSection', () => {
     renderWithProviders(<PhysicalAttributesSection />);
 
     const ageInput = screen.getByDisplayValue('30');
-    
+
     await act(async () => {
       fireEvent.change(ageInput, { target: { value: '31' } });
     });
 
     const saveButton = screen.getByRole('button', { name: /save changes/i });
-    
+
     await act(async () => {
       fireEvent.click(saveButton);
     });
@@ -151,13 +151,13 @@ describe('PhysicalAttributesSection', () => {
     renderWithProviders(<PhysicalAttributesSection />);
 
     const ageInput = screen.getByDisplayValue('30');
-    
+
     await act(async () => {
       fireEvent.change(ageInput, { target: { value: '31' } });
     });
 
     const saveButton = screen.getByRole('button', { name: /save changes/i });
-    
+
     await act(async () => {
       fireEvent.click(saveButton);
     });
@@ -176,14 +176,14 @@ describe('PhysicalAttributesSection', () => {
 
     const ageInput = screen.getByDisplayValue('30');
     const weightInput = screen.getByDisplayValue('180');
-    
+
     await act(async () => {
       fireEvent.change(ageInput, { target: { value: '' } });
       fireEvent.change(weightInput, { target: { value: '' } });
     });
 
     const saveButton = screen.getByRole('button', { name: /save changes/i });
-    
+
     await act(async () => {
       fireEvent.click(saveButton);
     });

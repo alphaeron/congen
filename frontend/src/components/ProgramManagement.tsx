@@ -17,7 +17,7 @@ import { LoadingSpinner } from './LoadingSpinner';
 import { StatusChip } from './StatusChip';
 import { createProgram, updateProgram, deleteProgram } from '../api/program';
 import { updateProgramPreferences } from '../api/programPreferences';
-import type { User, Program, ProgrammedWorkout, ProgramPreferences } from '../api/types';
+import type { User, Program, ProgramPreferences } from '../api/types';
 import { formatDate } from '../common/utils';
 import { useData } from '../contexts/DataContext';
 
@@ -92,7 +92,9 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
       }
       setProgramPreferences(preferencesMap);
     } catch {
-      enqueueSnackbar('Failed to load program preferences. Please try again.', { variant: 'error' });
+      enqueueSnackbar('Failed to load program preferences. Please try again.', {
+        variant: 'error',
+      });
     } finally {
       setIsLoadingPreferences(false);
     }
@@ -148,7 +150,7 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
     if (!selectedProgram) return;
 
     try {
-      const updatedProgram = await updateProgram(
+      await updateProgram(
         selectedProgram.id,
         selectedProgram.name,
         selectedProgram.current_week_number,
@@ -271,86 +273,89 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
       {/* Programs Cards */}
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
         {userData?.training_programs
-          ?.sort((a, b) => new Date(b.program.created_at).getTime() - new Date(a.program.created_at).getTime())
+          ?.sort(
+            (a, b) =>
+              new Date(b.program.created_at).getTime() - new Date(a.program.created_at).getTime()
+          )
           ?.map(programData => {
-          const program = programData.program;
-          const programWorkouts = getWorkoutsForProgram(program.id);
-          const preferences = programPreferences.get(program.id);
-          const sessionDuration = preferences?.session_time_length_in_minutes || 60;
+            const program = programData.program;
+            const programWorkouts = getWorkoutsForProgram(program.id);
+            const preferences = programPreferences.get(program.id);
+            const sessionDuration = preferences?.session_time_length_in_minutes || 60;
 
-          return (
-            <ActionCard
-              key={program.id}
-              title={program.name}
-              actions={
-                <React.Fragment>
-                  {program.is_active ? (
-                    <React.Fragment>
-                      <Tooltip title="Change Session Duration">
-                        <IconButton size="small" onClick={() => openEditDialog(program)}>
-                          <EditIcon />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title="Stop Program">
+            return (
+              <ActionCard
+                key={program.id}
+                title={program.name}
+                actions={
+                  <React.Fragment>
+                    {program.is_active ? (
+                      <React.Fragment>
+                        <Tooltip title="Change Session Duration">
+                          <IconButton size="small" onClick={() => openEditDialog(program)}>
+                            <EditIcon />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Stop Program">
+                          <IconButton
+                            size="small"
+                            color="primary"
+                            onClick={() => openStopDialog(program)}
+                          >
+                            <PauseIcon />
+                          </IconButton>
+                        </Tooltip>
+                      </React.Fragment>
+                    ) : (
+                      <Tooltip title="Resume Program">
                         <IconButton
                           size="small"
                           color="primary"
-                          onClick={() => openStopDialog(program)}
+                          onClick={() => openResumeDialog(program)}
                         >
-                          <PauseIcon />
+                          <PlayArrowIcon />
                         </IconButton>
                       </Tooltip>
-                    </React.Fragment>
-                  ) : (
-                    <Tooltip title="Resume Program">
+                    )}
+                    <Tooltip title="Delete Program">
                       <IconButton
                         size="small"
-                        color="primary"
-                        onClick={() => openResumeDialog(program)}
+                        color="error"
+                        onClick={() => openDeleteDialog(program)}
                       >
-                        <PlayArrowIcon />
+                        <DeleteIcon />
                       </IconButton>
                     </Tooltip>
-                  )}
-                  <Tooltip title="Delete Program">
-                    <IconButton
-                      size="small"
-                      color="error"
-                      onClick={() => openDeleteDialog(program)}
-                    >
-                      <DeleteIcon />
-                    </IconButton>
-                  </Tooltip>
-                </React.Fragment>
-              }
-            >
-              <Box display="flex" gap={1} flexWrap="wrap" sx={{ mb: 2 }}>
-                <StatusChip
-                  label={program.is_active ? 'Active' : 'Inactive'}
-                  status={program.is_active ? 'active' : 'inactive'}
-                />
-                <StatusChip
-                  label={`Week ${Math.max(program.current_week_number, 1)}`}
-                  status="info"
-                />
-                <StatusChip
-                  label={`${programWorkouts.length} workouts`}
-                  status="default"
-                  variant="outlined"
-                />
-                <StatusChip
-                  label={`Session Duration: ${sessionDuration} min`}
-                  status="default"
-                  variant="outlined"
-                />
-              </Box>
+                  </React.Fragment>
+                }
+              >
+                <Box display="flex" gap={1} flexWrap="wrap" sx={{ mb: 2 }}>
+                  <StatusChip
+                    label={program.is_active ? 'Active' : 'Inactive'}
+                    status={program.is_active ? 'active' : 'inactive'}
+                  />
+                  <StatusChip
+                    label={`Week ${Math.max(program.current_week_number, 1)}`}
+                    status="info"
+                  />
+                  <StatusChip
+                    label={`${programWorkouts.length} workouts`}
+                    status="default"
+                    variant="outlined"
+                  />
+                  <StatusChip
+                    label={`Session Duration: ${sessionDuration} min`}
+                    status="default"
+                    variant="outlined"
+                  />
+                </Box>
 
-              <Typography variant="body2" color="text.secondary">
-                Created: {formatDate(program.created_at)}
-              </Typography>
-            </ActionCard>
-          );
-        })}
+                <Typography variant="body2" color="text.secondary">
+                  Created: {formatDate(program.created_at)}
+                </Typography>
+              </ActionCard>
+            );
+          })}
       </Box>
 
       {/* No Programs State */}

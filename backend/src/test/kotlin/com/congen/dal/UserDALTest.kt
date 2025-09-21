@@ -13,7 +13,6 @@ import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.doAnswer
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
-import kotlin.reflect.KClass
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import reactor.core.publisher.Mono
@@ -74,15 +73,16 @@ class UserDALTest {
     fun `insertUser should return inserted user`() {
         val insertUser = mockUser(keycloakId = "0", name = "Test User")
         whenever(encryptionUtil.encrypt(insertUser.name)).thenReturn("encrypted_name")
-        val mockInsertedRow = mapOf(
-            "keycloak_id" to insertUser.keycloakId,
-            "name" to "encrypted_name",
-            "age" to null,
-            "weight" to null,
-            "height" to null,
-            "created_at" to Instant.parse("2024-01-01T00:00:00Z"),
-            "updated_at" to Instant.parse("2024-01-01T00:00:00Z")
-        )
+        val mockInsertedRow =
+            mapOf(
+                "keycloak_id" to insertUser.keycloakId,
+                "name" to "encrypted_name",
+                "age" to null,
+                "weight" to null,
+                "height" to null,
+                "created_at" to Instant.parse("2024-01-01T00:00:00Z"),
+                "updated_at" to Instant.parse("2024-01-01T00:00:00Z")
+            )
         whenever(
             postgresClient.update(
                 """
@@ -124,16 +124,17 @@ class UserDALTest {
     fun `deleteUserByKeycloakId should delete user and return deleted user data`() {
         val keycloakId = "test-keycloak-id"
 
-        val mockUserRow = mapOf(
-            "keycloak_id" to keycloakId,
-            "name" to "encrypted_name",
-            "age" to null,
-            "weight" to null,
-            "height" to null,
-            "gender" to null,
-            "created_at" to Instant.parse("2024-01-01T00:00:00Z"),
-            "updated_at" to Instant.parse("2024-01-01T00:00:00Z")
-        )
+        val mockUserRow =
+            mapOf(
+                "keycloak_id" to keycloakId,
+                "name" to "encrypted_name",
+                "age" to null,
+                "weight" to null,
+                "height" to null,
+                "gender" to null,
+                "created_at" to Instant.parse("2024-01-01T00:00:00Z"),
+                "updated_at" to Instant.parse("2024-01-01T00:00:00Z")
+            )
         whenever(
             postgresClient.selectIndividual(
                 "SELECT * FROM \"user\" WHERE keycloak_id=$1",
@@ -183,20 +184,20 @@ class UserDALTest {
     fun `updateUser should update user successfully`() {
         val keycloakId = "test-keycloak-id"
         val newName = "Updated User"
-        val updatedUser = mockUser(keycloakId = keycloakId, name = newName)
 
         whenever(encryptionUtil.encrypt(any())).thenReturn("encrypted-name")
         whenever(encryptionUtil.decrypt("encrypted-name")).thenReturn(newName)
-        val mockUpdatedRow = mapOf(
-            "keycloak_id" to keycloakId,
-            "name" to "encrypted-name",
-            "age" to null,
-            "weight" to null,
-            "height" to null,
-            "gender" to null,
-            "created_at" to Instant.parse("2024-01-01T00:00:00Z"),
-            "updated_at" to Instant.parse("2024-01-01T00:00:00Z")
-        )
+        val mockUpdatedRow =
+            mapOf(
+                "keycloak_id" to keycloakId,
+                "name" to "encrypted-name",
+                "age" to null,
+                "weight" to null,
+                "height" to null,
+                "gender" to null,
+                "created_at" to Instant.parse("2024-01-01T00:00:00Z"),
+                "updated_at" to Instant.parse("2024-01-01T00:00:00Z")
+            )
         whenever(
             postgresClient.update(
                 """
@@ -255,16 +256,17 @@ class UserDALTest {
         whenever(encryptionUtil.encrypt("180")).thenReturn("encrypted_weight")
         whenever(encryptionUtil.encrypt("72")).thenReturn("encrypted_height")
         whenever(encryptionUtil.encrypt("male")).thenReturn("encrypted_gender")
-        val mockInsertedRowWithAttributes = mapOf(
-            "keycloak_id" to insertUser.keycloakId,
-            "name" to "encrypted_name",
-            "age" to "encrypted_age",
-            "weight" to "encrypted_weight",
-            "height" to "encrypted_height",
-            "gender" to "encrypted_gender",
-            "created_at" to Instant.parse("2024-01-01T00:00:00Z"),
-            "updated_at" to Instant.parse("2024-01-01T00:00:00Z")
-        )
+        val mockInsertedRowWithAttributes =
+            mapOf(
+                "keycloak_id" to insertUser.keycloakId,
+                "name" to "encrypted_name",
+                "age" to "encrypted_age",
+                "weight" to "encrypted_weight",
+                "height" to "encrypted_height",
+                "gender" to "encrypted_gender",
+                "created_at" to Instant.parse("2024-01-01T00:00:00Z"),
+                "updated_at" to Instant.parse("2024-01-01T00:00:00Z")
+            )
         whenever(
             postgresClient.update(
                 """
@@ -292,7 +294,15 @@ class UserDALTest {
             )
         ).thenReturn(Mono.just(Unit))
 
-        val result = userDAL.insertUser(insertUser.keycloakId, insertUser.name, insertUser.age, insertUser.weight, insertUser.height, insertUser.gender)
+        val result =
+            userDAL.insertUser(
+                insertUser.keycloakId,
+                insertUser.name,
+                insertUser.age,
+                insertUser.weight,
+                insertUser.height,
+                insertUser.gender
+            )
 
         StepVerifier.create(result)
             .assertNext { returnedUser ->
@@ -313,23 +323,23 @@ class UserDALTest {
         val age = 31
         val weight = 185
         val height = 73
-        val updatedUser = mockUser(keycloakId = keycloakId, name = newName, age = age, weight = weight, height = height)
 
         whenever(encryptionUtil.encrypt(newName)).thenReturn("encrypted-value")
         whenever(encryptionUtil.encrypt(age.toString())).thenReturn("encrypted-value")
         whenever(encryptionUtil.encrypt(weight.toString())).thenReturn("encrypted-value")
         whenever(encryptionUtil.encrypt(height.toString())).thenReturn("encrypted-value")
         whenever(encryptionUtil.decrypt("encrypted-value")).thenReturn("decrypted-value")
-        val mockUpdatedRowWithAttributes = mapOf(
-            "keycloak_id" to keycloakId,
-            "name" to "encrypted-value",
-            "age" to "encrypted-value",
-            "weight" to "encrypted-value",
-            "height" to "encrypted-value",
-            "gender" to null,
-            "created_at" to Instant.parse("2024-01-01T00:00:00Z"),
-            "updated_at" to Instant.parse("2024-01-01T00:00:00Z")
-        )
+        val mockUpdatedRowWithAttributes =
+            mapOf(
+                "keycloak_id" to keycloakId,
+                "name" to "encrypted-value",
+                "age" to "encrypted-value",
+                "weight" to "encrypted-value",
+                "height" to "encrypted-value",
+                "gender" to null,
+                "created_at" to Instant.parse("2024-01-01T00:00:00Z"),
+                "updated_at" to Instant.parse("2024-01-01T00:00:00Z")
+            )
         whenever(
             postgresClient.update(
                 """
@@ -395,16 +405,17 @@ class UserDALTest {
         whenever(encryptionUtil.encrypt(height.toString())).thenReturn("encrypted-value")
         whenever(encryptionUtil.encrypt(gender)).thenReturn("encrypted-value")
         whenever(encryptionUtil.decrypt("encrypted-value")).thenReturn("decrypted-value")
-        val mockUpdatedRowWithGender = mapOf(
-            "keycloak_id" to keycloakId,
-            "name" to "encrypted-value",
-            "age" to "encrypted-value",
-            "weight" to "encrypted-value",
-            "height" to "encrypted-value",
-            "gender" to "encrypted-value",
-            "created_at" to Instant.parse("2024-01-01T00:00:00Z"),
-            "updated_at" to Instant.parse("2024-01-01T00:00:00Z")
-        )
+        val mockUpdatedRowWithGender =
+            mapOf(
+                "keycloak_id" to keycloakId,
+                "name" to "encrypted-value",
+                "age" to "encrypted-value",
+                "weight" to "encrypted-value",
+                "height" to "encrypted-value",
+                "gender" to "encrypted-value",
+                "created_at" to Instant.parse("2024-01-01T00:00:00Z"),
+                "updated_at" to Instant.parse("2024-01-01T00:00:00Z")
+            )
         whenever(
             postgresClient.update(
                 """
@@ -428,7 +439,12 @@ class UserDALTest {
 
         StepVerifier.create(result)
             .expectNextMatches { user ->
-                user.keycloakId == keycloakId && user.name == newName && user.age == age && user.weight == weight && user.height == height && user.gender == gender
+                user.keycloakId == keycloakId &&
+                    user.name == newName &&
+                    user.age == age &&
+                    user.weight == weight &&
+                    user.height == height &&
+                    user.gender == gender
             }
             .verifyComplete()
 

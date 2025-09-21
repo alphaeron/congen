@@ -20,13 +20,13 @@ import React, { useEffect, useState } from 'react';
 
 import { OneRepMaxInputStep } from './OneRepMaxInputStep';
 import { WizardStep } from '../api/types';
-import { useData } from '../contexts/DataContext';
 import type {
   Program,
   UserExercisePoolResponse,
   WorkoutGenerationWizardData,
   Exercise,
 } from '../api/types';
+import { useData } from '../contexts/DataContext';
 
 interface WorkoutGenerationWizardProps {
   open: boolean;
@@ -52,7 +52,8 @@ export const WorkoutGenerationWizard: React.FC<WorkoutGenerationWizardProps> = (
   program,
 }) => {
   const { enqueueSnackbar } = useSnackbar();
-  const { refreshData, generateWorkout, updateWorkoutWithOneRepMax, loadUserExercisePool } = useData();
+  const { refreshData, generateWorkout, updateWorkoutWithOneRepMax, loadUserExercisePool } =
+    useData();
   const [currentStep, setCurrentStep] = useState<WizardStep>(WizardStep.WORKOUT_GENERATION);
   const [generatedWorkout, setGeneratedWorkout] = useState<Program | null>(null);
   const [exercisePool, setExercisePool] = useState<UserExercisePoolResponse | null>(null);
@@ -105,7 +106,7 @@ export const WorkoutGenerationWizard: React.FC<WorkoutGenerationWizardProps> = (
   useEffect(() => {
     if (open) {
       let isMounted = true;
-      
+
       const loadExercisePool = async () => {
         try {
           const pool = await loadUserExercisePool();
@@ -118,12 +119,12 @@ export const WorkoutGenerationWizard: React.FC<WorkoutGenerationWizardProps> = (
           }
         }
       };
-      
+
       // Use setTimeout to ensure the async operation happens in the next tick
       const timeoutId = setTimeout(() => {
         loadExercisePool();
       }, 0);
-      
+
       return () => {
         isMounted = false;
         clearTimeout(timeoutId);

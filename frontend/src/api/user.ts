@@ -39,12 +39,12 @@ export const getCurrentUser = (): Promise<User> =>
  * @param profileData The profile data to update
  * @return The updated user profile
  */
-export const updateUserProfile = (profileData: { 
-  name: string; 
-  age?: number; 
-  weight?: number; 
-  height?: number; 
-  gender?: string; 
+export const updateUserProfile = (profileData: {
+  name: string;
+  age?: number;
+  weight?: number;
+  height?: number;
+  gender?: string;
 }): Promise<User> =>
   REQUEST({
     method: 'PATCH',

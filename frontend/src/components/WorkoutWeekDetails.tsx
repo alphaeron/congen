@@ -25,22 +25,17 @@ import { ProgressBar } from './ProgressBar';
 import { RadarChart } from './RadarChart';
 import { SunburstChart } from './SunburstChart';
 import type {
-  ProgrammedWorkout,
-  User,
   ProgramWithPreferences,
   Exercise,
-  ProgramWithWorkouts,
   ProgrammedWorkoutWithStages,
   WorkoutStageWithExercises,
-  ProgrammedExerciseWithSetSchemes,
 } from '../api/types';
-import { useData } from '../contexts/DataContext';
 import { replaceUnderscoresWithSpaces } from '../common/utils';
+import { useData } from '../contexts/DataContext';
 import { exportWeekToPDF } from '../utils/exportUtils';
 import { calculateWeekProgress, calculateWorkoutProgress } from '../utils/progressUtils';
 
 interface WorkoutWeekDetailsProps {
-  user: User;
   selectedWorkout?: string | null;
   weekNumber: number;
   showBackButton?: boolean;
@@ -49,7 +44,6 @@ interface WorkoutWeekDetailsProps {
 }
 
 export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
-  user,
   weekNumber,
   showBackButton = true,
   onBack,
@@ -58,7 +52,14 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { enqueueSnackbar } = useSnackbar();
-  const { userData, exerciseMuscleData, weightUnitPreferences, isLoading: isDataLoading, getExercise, loadProgramPreferences } = useData();
+  const {
+    userData,
+    exerciseMuscleData,
+    weightUnitPreferences,
+    isLoading: isDataLoading,
+    getExercise,
+    loadProgramPreferences,
+  } = useData();
 
   const [programsWithPreferences, setProgramsWithPreferences] = useState<
     Array<ProgramWithPreferences>
@@ -98,9 +99,10 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
           }
         }
         setExerciseData(exerciseMap);
-
       } catch {
-        enqueueSnackbar('Failed to load additional week data. Please try again.', { variant: 'error' });
+        enqueueSnackbar('Failed to load additional week data. Please try again.', {
+          variant: 'error',
+        });
       } finally {
         setIsLoading(false);
       }

@@ -5,7 +5,6 @@ import { MemoryRouter } from 'react-router';
 
 import { ExerciseName } from './ExerciseName';
 import { ENDPOINT } from '../api/endpoint';
-import { getExerciseMuscles } from '../api/exercise';
 import type { Exercise, ExerciseMuscle, Muscle } from '../api/types';
 
 // Mock DataContext
@@ -20,7 +19,7 @@ describe('ExerciseName', () => {
 
   beforeEach(() => {
     mockAdapter = new AxiosMockAdapter(ENDPOINT);
-    
+
     // Set up default mock data for DataContext
     const defaultMockDataContext = {
       userData: null,
@@ -48,7 +47,7 @@ describe('ExerciseName', () => {
       loadAllMuscles: jest.fn(),
       loadAllEquipment: jest.fn(),
     };
-    
+
     mockUseData.mockReturnValue(defaultMockDataContext);
   });
 
@@ -97,7 +96,6 @@ describe('ExerciseName', () => {
       getExerciseMuscles: jest.fn().mockResolvedValue(mockExerciseMuscles),
     };
     mockUseData.mockReturnValue(mockDataContext);
-    
 
     await act(async () => {
       render(
@@ -163,16 +161,11 @@ describe('ExerciseName', () => {
       getExerciseMuscles: jest.fn().mockResolvedValue(mockExerciseMuscles),
     };
     mockUseData.mockReturnValue(mockDataContext);
-    
 
     await act(async () => {
       render(
         <MemoryRouter>
-          <ExerciseName 
-            exerciseName="Bench Press" 
-            variant="h6"
-            sx={{ color: 'red' }}
-          />
+          <ExerciseName exerciseName="Bench Press" variant="h6" sx={{ color: 'red' }} />
         </MemoryRouter>
       );
     });
@@ -191,14 +184,11 @@ describe('ExerciseName', () => {
       getExerciseMuscles: jest.fn().mockResolvedValue(mockExerciseMuscles),
     };
     mockUseData.mockReturnValue(mockDataContext);
-    
 
     await act(async () => {
       render(
         <MemoryRouter>
-          <ExerciseName exerciseName="Bench Press">
-            Custom Exercise Name
-          </ExerciseName>
+          <ExerciseName exerciseName="Bench Press">Custom Exercise Name</ExerciseName>
         </MemoryRouter>
       );
     });
@@ -240,7 +230,6 @@ describe('ExerciseName', () => {
       getExerciseMuscles: jest.fn().mockResolvedValue(mockExerciseMuscles),
     };
     mockUseData.mockReturnValue(mockDataContext);
-    
 
     await act(async () => {
       render(
@@ -265,7 +254,6 @@ describe('ExerciseName', () => {
       getExerciseMuscles: jest.fn().mockResolvedValue(mockExerciseMuscles),
     };
     mockUseData.mockReturnValue(mockDataContext);
-    
 
     await act(async () => {
       render(

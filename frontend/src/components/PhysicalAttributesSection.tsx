@@ -1,12 +1,4 @@
-import {
-  Box,
-  Button,
-  Card,
-  CardContent,
-  CircularProgress,
-  Grid,
-  Typography,
-} from '@mui/material';
+import { Box, Button, Card, CardContent, CircularProgress, Grid, Typography } from '@mui/material';
 import { useForm } from '@tanstack/react-form';
 import { useSnackbar } from 'notistack';
 import React from 'react';
@@ -44,19 +36,19 @@ export function PhysicalAttributesSection(): React.ReactElement {
     validators: {
       onChange: ({ value }: { value: PhysicalAttributesFormData }) => {
         const errors: Record<string, string> = {};
-        
+
         if (value.age && (value.age < 1 || value.age > 120)) {
           errors.age = 'Age must be between 1 and 120 years';
         }
-        
+
         if (value.weight && (value.weight < 1 || value.weight > 1000)) {
           errors.weight = 'Weight must be between 1 and 1000 pounds';
         }
-        
+
         if (value.height && (value.height < 1 || value.height > 120)) {
           errors.height = 'Height must be between 1 and 120 inches';
         }
-        
+
         return Object.keys(errors).length > 0 ? errors : undefined;
       },
     },
@@ -96,14 +88,14 @@ export function PhysicalAttributesSection(): React.ReactElement {
         Physical Attributes
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-        Manage your physical attributes for personalized workout recommendations. 
-        All data is encrypted at rest for your privacy and GDPR compliance.
+        Manage your physical attributes for personalized workout recommendations. All data is
+        encrypted at rest for your privacy and GDPR compliance.
       </Typography>
 
       <Card>
         <CardContent>
           <form
-            onSubmit={(e) => {
+            onSubmit={e => {
               e.preventDefault();
               e.stopPropagation();
               form.handleSubmit();

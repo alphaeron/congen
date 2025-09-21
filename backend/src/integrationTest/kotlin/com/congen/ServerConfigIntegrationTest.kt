@@ -1,6 +1,5 @@
 package com.congen
 
-import com.congen.BaseIntegrationTest
 import com.congen.config.ServerConfig
 import org.junit.jupiter.api.Test
 import reactor.netty.http.server.HttpServer

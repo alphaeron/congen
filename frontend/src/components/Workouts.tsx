@@ -25,10 +25,9 @@ import type {
   User,
   ProgramWithPreferences,
   Exercise,
-  UserWeightUnitPreference,
 } from '../api/types';
-import { useData } from '../contexts/DataContext';
 import { replaceUnderscoresWithSpaces } from '../common/utils';
+import { useData } from '../contexts/DataContext';
 import { exportProgramToPDF } from '../utils/exportUtils';
 import { calculateProgramProgress } from '../utils/progressUtils';
 
@@ -55,7 +54,14 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user }) => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { enqueueSnackbar } = useSnackbar();
-  const { userData, weightUnitPreferences, refreshData, isLoading: isDataLoading, loadProgramPreferences, getExercise } = useData();
+  const {
+    userData,
+    weightUnitPreferences,
+    refreshData,
+    isLoading: isDataLoading,
+    loadProgramPreferences,
+    getExercise,
+  } = useData();
 
   const [programsWithPreferences, setProgramsWithPreferences] = useState<
     Array<ProgramWithPreferences>
@@ -70,7 +76,7 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user }) => {
   useEffect(() => {
     const loadAdditionalData = async () => {
       if (!userData) return;
-      
+
       setIsLoading(true);
       try {
         const programsData = await loadProgramPreferences();
@@ -105,7 +111,9 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user }) => {
 
         setExerciseData(exerciseMap);
       } catch {
-        enqueueSnackbar('Failed to load additional workout data. Please try again.', { variant: 'error' });
+        enqueueSnackbar('Failed to load additional workout data. Please try again.', {
+          variant: 'error',
+        });
       } finally {
         setIsLoading(false);
       }
@@ -131,7 +139,13 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user }) => {
 
   // Group workouts by week
   const weeks = useMemo(() => {
-    if (!activeProgramData || !activeProgramPreferences || activeProgramData.workouts.length === 0) return [];
+    if (
+      !activeProgramData ||
+      !activeProgramPreferences ||
+      activeProgramData.workouts.length === 0
+    ) {
+      return [];
+    }
 
     // Use program preferences
     const workoutsPerWeek = activeProgramPreferences.program_preferences.program_days_per_week;
@@ -191,7 +205,8 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user }) => {
   const getProgressMetrics = () => {
     if (!activeProgramData || !activeProgramPreferences) return null;
 
-    const workoutsPerWeek = activeProgramPreferences.program_preferences?.program_days_per_week || 3;
+    const workoutsPerWeek =
+      activeProgramPreferences.program_preferences?.program_days_per_week || 3;
     const programProgress = calculateProgramProgress(activeProgramData.workouts, workoutsPerWeek);
     const currentWeek = Math.max(activeProgramData.program.current_week_number, 1);
 

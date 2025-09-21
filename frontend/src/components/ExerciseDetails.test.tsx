@@ -1,10 +1,9 @@
-import { render, screen, waitFor, act } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { render, screen, act } from '@testing-library/react';
 import AxiosMockAdapter from 'axios-mock-adapter';
 import React from 'react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 import { ExerciseDetails } from './ExerciseDetails';
-import { getExerciseMuscles } from '../api/exercise';
 import {
   EQUIPMENT,
   EXERCISE,
@@ -74,9 +73,9 @@ describe('ExerciseDetails component', () => {
       loadAllMuscles: jest.fn(),
       loadAllEquipment: jest.fn(),
     };
-    
+
     mockUseData.mockReturnValue(defaultMockDataContext);
-    
+
     // Set up mock auth context
     mockUseAuth.mockReturnValue({
       user: { id: 'test-user-id' },
@@ -163,7 +162,9 @@ describe('ExerciseDetails component', () => {
       );
     });
 
-    expect(screen.getByText(EXERCISE.is_unilateral ? 'Unilateral' : 'Bilateral')).toBeInTheDocument();
+    expect(
+      screen.getByText(EXERCISE.is_unilateral ? 'Unilateral' : 'Bilateral')
+    ).toBeInTheDocument();
   });
 
   it('Renders the exercise isUpper', async () => {
@@ -187,7 +188,8 @@ describe('ExerciseDetails component', () => {
       );
     });
 
-    expect(screen.getByText(EXERCISE.is_accessory ? 'Accessory' : 'Primary Movement')).toBeInTheDocument();
+    expect(
+      screen.getByText(EXERCISE.is_accessory ? 'Accessory' : 'Primary Movement')
+    ).toBeInTheDocument();
   });
 });
-

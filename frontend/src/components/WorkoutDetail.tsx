@@ -109,7 +109,16 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
   const { enqueueSnackbar } = useSnackbar();
 
   // Use shared data context instead of local state
-  const { userData, exerciseMuscleData, weightUnitPreferences, isLoading, refreshData, loadAllExercises, createProgrammedExercise, updateProgrammedExercise } = useData();
+  const {
+    userData,
+    exerciseMuscleData,
+    weightUnitPreferences,
+    isLoading,
+    refreshData,
+    loadAllExercises,
+    createProgrammedExercise,
+    updateProgrammedExercise,
+  } = useData();
 
   const [collapsedStages, setCollapsedStages] = useState<Set<number>>(new Set());
   // Remove local exerciseData state - we'll use the data from context directly

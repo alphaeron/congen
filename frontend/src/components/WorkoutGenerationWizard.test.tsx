@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import MockAdapter from 'axios-mock-adapter';
 import React from 'react';
 import { MemoryRouter } from 'react-router';
@@ -55,7 +55,7 @@ const renderWithProviders = (component: React.ReactElement) => {
 describe('WorkoutGenerationWizard', () => {
   beforeEach(() => {
     mock.reset();
-    
+
     // Set up default mock data for DataContext
     const defaultMockDataContext = {
       userData: null,
@@ -79,7 +79,7 @@ describe('WorkoutGenerationWizard', () => {
       updateWorkoutWithOneRepMax: jest.fn().mockResolvedValue(mockProgram),
       loadUserExercisePool: jest.fn().mockResolvedValue(mockUserExercisePool),
     };
-    
+
     mockUseData.mockReturnValue(defaultMockDataContext);
   });
 
@@ -156,7 +156,7 @@ describe('WorkoutGenerationWizard', () => {
     // Mock the DataContext functions to resolve immediately
     const mockGenerateWorkout = jest.fn().mockResolvedValue(updatedProgram);
     const mockLoadUserExercisePool = jest.fn().mockResolvedValue(mockUserExercisePool);
-    
+
     const testMockDataContext = {
       userData: null,
       exerciseMuscleData: new Map(),
@@ -179,7 +179,7 @@ describe('WorkoutGenerationWizard', () => {
       updateWorkoutWithOneRepMax: jest.fn().mockResolvedValue(mockProgram),
       loadUserExercisePool: mockLoadUserExercisePool,
     };
-    
+
     mockUseData.mockReturnValue(testMockDataContext);
 
     renderWithProviders(
@@ -202,7 +202,7 @@ describe('WorkoutGenerationWizard', () => {
     });
 
     const generateButton = screen.getByRole('button', { name: 'Generate Workouts' });
-    
+
     fireEvent.click(generateButton);
 
     // Check that the DataContext function was called
@@ -258,7 +258,7 @@ describe('WorkoutGenerationWizard', () => {
     });
 
     const generateButton = screen.getByRole('button', { name: 'Generate Workouts' });
-    
+
     fireEvent.click(generateButton);
 
     // Check that the DataContext function was called and failed

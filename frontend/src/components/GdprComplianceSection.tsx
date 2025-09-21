@@ -29,7 +29,6 @@ import { Link } from 'react-router';
 import { ConfirmationDialog } from './ConfirmationDialog';
 import { FormDialog } from './FormDialog';
 import { LoadingSpinner } from './LoadingSpinner';
-import type { UserConsent } from '../api/types';
 import { formatDate } from '../common/utils';
 import { useData } from '../contexts/DataContext';
 
@@ -55,7 +54,14 @@ import type { AxiosError } from 'axios';
  */
 export function GdprComplianceSection(): React.ReactElement {
   const { enqueueSnackbar } = useSnackbar();
-  const { userConsent, loadUserConsent, updateUserConsent, exportUserData, deleteAllPersonalData, isLoading } = useData();
+  const {
+    userConsent,
+    loadUserConsent,
+    updateUserConsent,
+    exportUserData,
+    deleteAllPersonalData,
+    isLoading,
+  } = useData();
   const [operationLoading, setOperationLoading] = React.useState<string | null>(null);
 
   // Dialog states

@@ -21,7 +21,7 @@ jest.mock('../contexts/AuthContext', () => ({
 
 // Mock DataContext
 const mockLoadUserExercisePool = jest.fn();
-let mockUserExercisePool: any = null;
+let mockUserExercisePool: unknown = null;
 
 jest.mock('../contexts/DataContext', () => ({
   useData: () => ({
@@ -158,13 +158,13 @@ describe('ExerciseRotationVisualization', () => {
       { id: 1, name: 'Bench Press' },
       { id: 2, name: 'Squat' },
     ]);
-    
+
     // Mock the getExerciseMuscles API calls that ExerciseName components make
     mock.onGet('/exercise/Bench Press/muscle').reply(200, []);
     mock.onGet('/exercise/Squat/muscle').reply(200, []);
     mock.onGet('/exercise/Bicep Curls/muscle').reply(200, []);
     mock.onGet('/exercise/Deadlift/muscle').reply(200, []);
-    
+
     // Add catch-all mock for any exercise muscle API calls
     mock.onGet(/\/exercise\/.*\/muscle/).reply(200, []);
 

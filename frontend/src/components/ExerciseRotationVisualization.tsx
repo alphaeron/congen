@@ -40,7 +40,7 @@ import { useData } from '../contexts/DataContext';
 export const ExerciseRotationVisualization: React.FC = () => {
   const { user } = useAuth();
   const { enqueueSnackbar } = useSnackbar();
-  const { userExercisePool, loadUserExercisePool, isLoading: isDataLoading } = useData();
+  const { userExercisePool, loadUserExercisePool } = useData();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [isLoading, setIsLoading] = useState(true);

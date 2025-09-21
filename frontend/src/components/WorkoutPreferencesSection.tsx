@@ -11,7 +11,6 @@ import { PreferenceSection } from './PreferenceSection';
 import {
   WeightUnit,
   type Exercise,
-  type UserWeightUnitPreference,
   type Muscle,
   type Equipment,
   type UserEquipment,
@@ -68,7 +67,7 @@ function TabPanel(props: TabPanelProps) {
 export function WorkoutPreferencesSection(): React.ReactElement {
   const { user } = useAuth();
   const { enqueueSnackbar } = useSnackbar();
-  const { 
+  const {
     weightUnitPreferences,
     loadAllExercises,
     loadAllMuscles,
@@ -76,7 +75,7 @@ export function WorkoutPreferencesSection(): React.ReactElement {
     loadUserEquipment,
     loadUserWeakMuscles,
     loadUserExercisePreferences,
-    refreshData
+    refreshData,
   } = useData();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -116,7 +115,15 @@ export function WorkoutPreferencesSection(): React.ReactElement {
     if (user?.keycloak_id) {
       loadData();
     }
-  }, [user?.keycloak_id, loadAllExercises, loadAllMuscles, loadAllEquipment, loadUserEquipment, loadUserWeakMuscles, loadUserExercisePreferences]);
+  }, [
+    user?.keycloak_id,
+    loadAllExercises,
+    loadAllMuscles,
+    loadAllEquipment,
+    loadUserEquipment,
+    loadUserWeakMuscles,
+    loadUserExercisePreferences,
+  ]);
 
   const loadData = async () => {
     setLoading(true);

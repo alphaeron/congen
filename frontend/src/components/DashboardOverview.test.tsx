@@ -324,22 +324,22 @@ describe('DashboardOverview', () => {
     });
   });
 
-          it('should calculate and display correct statistics', async () => {
-            // Use default mock data (already set up in beforeEach)
-            // Mock the additional API calls that the component still makes
-            mock.onGet('/exercise/Bench Press').reply(200, mockExercise);
+  it('should calculate and display correct statistics', async () => {
+    // Use default mock data (already set up in beforeEach)
+    // Mock the additional API calls that the component still makes
+    mock.onGet('/exercise/Bench Press').reply(200, mockExercise);
 
-            await act(async () => {
-              renderWithProviders(<DashboardOverview user={mockUser} />);
-            });
+    await act(async () => {
+      renderWithProviders(<DashboardOverview user={mockUser} />);
+    });
 
-            await waitFor(() => {
-              expect(screen.getByText('Total Workouts')).toBeInTheDocument();
-              expect(screen.getByText('1RM Records')).toBeInTheDocument();
-              expect(screen.getByText('Total Volume (lbs)')).toBeInTheDocument();
-              expect(screen.getByText('Latest Volume (lbs)')).toBeInTheDocument();
-            });
-          }, 10000);
+    await waitFor(() => {
+      expect(screen.getByText('Total Workouts')).toBeInTheDocument();
+      expect(screen.getByText('1RM Records')).toBeInTheDocument();
+      expect(screen.getByText('Total Volume (lbs)')).toBeInTheDocument();
+      expect(screen.getByText('Latest Volume (lbs)')).toBeInTheDocument();
+    });
+  }, 10000);
 
   it('should calculate and display correct statistics with complex data', async () => {
     const multipleOneRepMaxes = [
@@ -463,7 +463,9 @@ describe('DashboardOverview', () => {
     const complexDataContext = {
       userData: {
         user_id: 'test-user-id',
-        user_profile: { /* minimal profile data */ },
+        user_profile: {
+          /* minimal profile data */
+        },
         user_one_rep_max: multipleOneRepMaxes,
         user_weight_unit_preferences: [],
         training_programs: multipleWorkoutsDataExport.training_programs,

@@ -44,7 +44,7 @@ describe('WorkoutWeekDetails', () => {
   // Create a new mock adapter for each test to prevent interference
   let mock: MockAdapter;
   const theme = createTheme();
-  let defaultMockDataContext: any;
+  let defaultMockDataContext: unknown;
 
   const mockUser = {
     keycloak_id: 'test-user-id',
@@ -422,7 +422,9 @@ describe('WorkoutWeekDetails', () => {
   it('shows error message when API calls fail', async () => {
     const errorDataContext = {
       ...defaultMockDataContext,
-      loadProgramPreferences: jest.fn().mockRejectedValue(new Error('Failed to load program preferences')),
+      loadProgramPreferences: jest
+        .fn()
+        .mockRejectedValue(new Error('Failed to load program preferences')),
     };
 
     mockUseData.mockReturnValue(errorDataContext);
@@ -436,18 +438,20 @@ describe('WorkoutWeekDetails', () => {
 
     await waitFor(
       () => {
-        expect(screen.getByText('Failed to load additional week data. Please try again.')).toBeInTheDocument();
+        expect(
+          screen.getByText('Failed to load additional week data. Please try again.')
+        ).toBeInTheDocument();
       },
       { timeout: 15000 }
     );
   }, 20000);
 
   it('displays multiple workouts for the week', async () => {
-    const workout1 = { 
-      workout: { 
-        id: 1, 
-        program_id: 1, 
-        day_number: 1, 
+    const workout1 = {
+      workout: {
+        id: 1,
+        program_id: 1,
+        day_number: 1,
         name: 'Push Day',
         created_at: new Date('2024-01-01T00:00:00.000Z'),
         updated_at: new Date('2024-01-01T00:00:00.000Z'),
@@ -455,11 +459,11 @@ describe('WorkoutWeekDetails', () => {
       },
       stages: [],
     };
-    const workout2 = { 
-      workout: { 
-        id: 2, 
-        program_id: 1, 
-        day_number: 2, 
+    const workout2 = {
+      workout: {
+        id: 2,
+        program_id: 1,
+        day_number: 2,
         name: 'Pull Day',
         created_at: new Date('2024-01-01T00:00:00.000Z'),
         updated_at: new Date('2024-01-01T00:00:00.000Z'),
@@ -467,11 +471,11 @@ describe('WorkoutWeekDetails', () => {
       },
       stages: [],
     };
-    const workout3 = { 
-      workout: { 
-        id: 3, 
-        program_id: 1, 
-        day_number: 3, 
+    const workout3 = {
+      workout: {
+        id: 3,
+        program_id: 1,
+        day_number: 3,
         name: 'Leg Day',
         created_at: new Date('2024-01-01T00:00:00.000Z'),
         updated_at: new Date('2024-01-01T00:00:00.000Z'),

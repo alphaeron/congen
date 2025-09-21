@@ -3,8 +3,8 @@ import React from 'react';
 import { MemoryRouter } from 'react-router';
 
 import { MuscleName } from './MuscleName';
-import { DataContext } from '../contexts/DataContext';
 import type { Muscle } from '../api/types';
+import { DataContext } from '../contexts/DataContext';
 
 // Mock the DataContext
 const mockGetMuscle = jest.fn();
@@ -76,9 +76,7 @@ const defaultMockDataContext = {
 const renderWithProviders = (component: React.ReactElement) => {
   return render(
     <MemoryRouter>
-      <DataContext.Provider value={defaultMockDataContext}>
-        {component}
-      </DataContext.Provider>
+      <DataContext.Provider value={defaultMockDataContext}>{component}</DataContext.Provider>
     </MemoryRouter>
   );
 };

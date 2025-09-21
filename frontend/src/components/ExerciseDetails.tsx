@@ -34,10 +34,9 @@ interface ExerciseDetailsProps {
 export function ExerciseDetails(
   props: ExerciseDetailsProps
 ): React.ReactElement<ExerciseDetailsProps> {
-  const { getExercise, getExerciseEquipmentData, getMuscle, getEquipment, getExerciseMuscles } = useData();
+  const { getExercise, getExerciseEquipmentData, getMuscle, getEquipment, getExerciseMuscles } =
+    useData();
   const [exercise, setExercise] = React.useState<Exercise | null>(null);
-  const [exerciseLoading, setExerciseLoading] = React.useState(true);
-  const [exerciseError, setExerciseError] = React.useState<Error | null>(null);
 
   const [exerciseMuscles, setExerciseMuscles] = React.useState<ExerciseMuscle[]>([]);
   const [muscles, setMuscles] = React.useState<Muscle[]>([]);
@@ -50,10 +49,10 @@ export function ExerciseDetails(
   React.useEffect(() => {
     const loadExerciseData = async () => {
       if (!props.exerciseName) return;
-      
+
       setIsLoading(true);
       setError(null);
-      
+
       try {
         // Load exercise data from DataContext
         const exerciseData = await getExercise(props.exerciseName);
@@ -76,7 +75,7 @@ export function ExerciseDetails(
         const equipmentData = await getExerciseEquipmentData(props.exerciseName);
         if (equipmentData) {
           setExerciseEquipment(equipmentData);
-          
+
           // Load individual equipment details using DataContext
           const equipmentDetails = await Promise.all(
             equipmentData.map(eq => getEquipment(eq.equipment_name))
@@ -91,7 +90,14 @@ export function ExerciseDetails(
     };
 
     loadExerciseData();
-  }, [props.exerciseName, getExercise, getExerciseEquipmentData, getMuscle, getEquipment, getExerciseMuscles]);
+  }, [
+    props.exerciseName,
+    getExercise,
+    getExerciseEquipmentData,
+    getMuscle,
+    getEquipment,
+    getExerciseMuscles,
+  ]);
 
   const editor = React.useMemo(() => withReact(createEditor()), []);
 

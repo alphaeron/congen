@@ -28,7 +28,7 @@ interface ExerciseCategoryDetailsProps {
 export const ExerciseCategoryDetails: React.FC<ExerciseCategoryDetailsProps> = ({ category }) => {
   const { enqueueSnackbar } = useSnackbar();
   const { user } = useAuth();
-  const { userExercisePool, loadUserExercisePool, isLoading: isDataLoading } = useData();
+  const { userExercisePool, loadUserExercisePool } = useData();
 
   const [exercisePoolData, setExercisePoolData] = useState<UserExercisePoolResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -37,7 +37,7 @@ export const ExerciseCategoryDetails: React.FC<ExerciseCategoryDetailsProps> = (
   useEffect(() => {
     const loadData = async () => {
       if (!user?.keycloak_id) return;
-      
+
       try {
         setIsLoading(true);
         // Load user exercise pool if not already loaded
@@ -46,7 +46,9 @@ export const ExerciseCategoryDetails: React.FC<ExerciseCategoryDetailsProps> = (
         }
         setExercisePoolData(userExercisePool);
       } catch {
-        enqueueSnackbar('Failed to load exercise pool data. Please try again.', { variant: 'error' });
+        enqueueSnackbar('Failed to load exercise pool data. Please try again.', {
+          variant: 'error',
+        });
       } finally {
         setIsLoading(false);
       }

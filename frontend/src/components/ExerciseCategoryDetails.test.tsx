@@ -7,7 +7,6 @@ import { MemoryRouter } from 'react-router';
 import { ExerciseCategoryDetails } from './ExerciseCategoryDetails';
 import { ENDPOINT } from '../api/endpoint';
 import type { UserExercisePoolResponse } from '../api/types';
-import { DataProvider } from '../contexts/DataContext';
 
 // Mock auth context
 jest.mock('../contexts/AuthContext', () => ({
@@ -20,7 +19,7 @@ jest.mock('../contexts/AuthContext', () => ({
 }));
 
 // Mock DataContext
-let mockUserExercisePool: any = null;
+let mockUserExercisePool: UserExercisePoolResponse | null = null;
 const mockLoadUserExercisePool = jest.fn();
 
 jest.mock('../contexts/DataContext', () => ({
@@ -74,9 +73,7 @@ describe('ExerciseCategoryDetails', () => {
   const renderWithProviders = (component: React.ReactElement) => {
     return render(
       <MemoryRouter>
-        <SnackbarProvider>
-          {component}
-        </SnackbarProvider>
+        <SnackbarProvider>{component}</SnackbarProvider>
       </MemoryRouter>
     );
   };
@@ -84,7 +81,7 @@ describe('ExerciseCategoryDetails', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mock = new MockAdapter(ENDPOINT);
-    
+
     // Reset mock data
     mockUserExercisePool = null;
     mockLoadUserExercisePool.mockResolvedValue(mockExercisePoolData);

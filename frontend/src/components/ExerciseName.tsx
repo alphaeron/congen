@@ -2,7 +2,7 @@ import { Tooltip, Typography } from '@mui/material';
 import React from 'react';
 import { Link } from 'react-router';
 
-import type { Exercise, ExerciseMuscle, Muscle } from '../api/types';
+import type { Exercise, Muscle } from '../api/types';
 import { capitalizeEachWord } from '../common/utils';
 import { useData } from '../contexts/DataContext';
 
@@ -40,10 +40,10 @@ export function ExerciseName({
   React.useEffect(() => {
     const loadExerciseData = async () => {
       if (!exerciseName) return;
-      
+
       setIsLoading(true);
       setHasError(false);
-      
+
       try {
         // Load exercise data from DataContext
         const exerciseData = await getExercise(exerciseName);
@@ -54,7 +54,7 @@ export function ExerciseName({
 
         // Load exercise muscles using DataContext
         const exerciseMuscles = await getExerciseMuscles(exerciseName);
-        
+
         // Load individual muscle details using DataContext
         const muscleDetails = await Promise.all(
           exerciseMuscles.map(muscle => getMuscle(muscle.muscle_name))

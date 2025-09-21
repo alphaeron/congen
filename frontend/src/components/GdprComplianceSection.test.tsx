@@ -88,7 +88,10 @@ describe('GdprComplianceSection', () => {
     syncWithServer: jest.fn(),
   };
 
-  const renderWithProviders = (component: React.ReactElement, mockDataContext = defaultMockDataContext) => {
+  const renderWithProviders = (
+    component: React.ReactElement,
+    mockDataContext = defaultMockDataContext
+  ) => {
     return render(
       <DataContext.Provider value={mockDataContext}>
         <SnackbarProvider>
@@ -219,7 +222,6 @@ describe('GdprComplianceSection', () => {
   });
 
   it('should validate delete confirmation text', async () => {
-
     const user = userEvent.setup();
 
     await act(async () => {
@@ -242,7 +244,6 @@ describe('GdprComplianceSection', () => {
   });
 
   it('should have privacy policy link', async () => {
-
     await act(async () => {
       renderWithProviders(<GdprComplianceSection />);
     });

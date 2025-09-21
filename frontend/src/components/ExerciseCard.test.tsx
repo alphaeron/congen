@@ -39,7 +39,7 @@ describe('ExerciseCard component', () => {
 
   it('Renders the equipment', async () => {
     renderExerciseCard();
-    
+
     await waitFor(() => {
       const equipmentRegex = new RegExp(`^${EXERCISE_EQUIPMENT.equipment_name}$`, 'i');
       expect(screen.getByText(equipmentRegex)).toBeInTheDocument();
@@ -48,7 +48,7 @@ describe('ExerciseCard component', () => {
 
   it('Renders the muscle', async () => {
     renderExerciseCard();
-    
+
     await waitFor(() => {
       const muscleRegex = new RegExp(`^${EXERCISE_MUSCLE.muscle_name}$`, 'i');
       expect(screen.getByText(muscleRegex)).toBeInTheDocument();
@@ -57,7 +57,7 @@ describe('ExerciseCard component', () => {
 
   it('Renders the exercise name', async () => {
     renderExerciseCard();
-    
+
     await waitFor(() => {
       const regex = new RegExp(`^${EXERCISE.name}$`, 'i');
       expect(screen.getByText(regex)).toBeInTheDocument();
@@ -66,7 +66,7 @@ describe('ExerciseCard component', () => {
 
   it('Renders the exercise movementType', async () => {
     renderExerciseCard();
-    
+
     await waitFor(() => {
       const regex = new RegExp(`${EXERCISE.movement_type}`, 'i');
       expect(screen.getByText(regex)).toBeInTheDocument();
@@ -75,7 +75,7 @@ describe('ExerciseCard component', () => {
 
   it('Renders the exercise isUnilateral', async () => {
     renderExerciseCard();
-    
+
     await waitFor(() => {
       const text = EXERCISE.is_unilateral ? 'Unilateral' : 'Bilateral';
       const regex = new RegExp(`${text}`, 'i');
@@ -85,7 +85,7 @@ describe('ExerciseCard component', () => {
 
   it('Renders the exercise isUpper', async () => {
     renderExerciseCard();
-    
+
     await waitFor(() => {
       const text = EXERCISE.is_upper ? 'Upper Body' : 'Lower Body';
       const regex = new RegExp(`${text}`, 'i');
@@ -95,7 +95,7 @@ describe('ExerciseCard component', () => {
 
   it('Renders the exercise isAccessory', async () => {
     renderExerciseCard();
-    
+
     await waitFor(() => {
       const text = EXERCISE.is_accessory ? 'Accessory' : 'Primary';
       const regex = new RegExp(`${text}`, 'i');

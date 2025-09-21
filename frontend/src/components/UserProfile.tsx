@@ -1,4 +1,8 @@
-import { Person as PersonIcon, PrivacyTip as PrivacyIcon, FitnessCenter as FitnessIcon } from '@mui/icons-material';
+import {
+  Person as PersonIcon,
+  PrivacyTip as PrivacyIcon,
+  FitnessCenter as FitnessIcon,
+} from '@mui/icons-material';
 import {
   Box,
   Drawer,

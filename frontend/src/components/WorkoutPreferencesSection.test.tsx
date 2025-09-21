@@ -40,7 +40,7 @@ describe('WorkoutPreferencesSection', () => {
   beforeEach(() => {
     // Create a fresh mock adapter for each test
     mock = new MockAdapter(ENDPOINT);
-    
+
     // Set up default mock data for DataContext
     const defaultMockDataContext = {
       userData: null,
@@ -169,24 +169,24 @@ describe('WorkoutPreferencesSection', () => {
 
   it('should handle loading state', async () => {
     // Mock slow DataContext functions to ensure loading state is visible
-    const slowLoadAllExercises = jest.fn().mockImplementation(() => 
-      new Promise(resolve => setTimeout(() => resolve([]), 100))
-    );
-    const slowLoadAllMuscles = jest.fn().mockImplementation(() => 
-      new Promise(resolve => setTimeout(() => resolve([]), 100))
-    );
-    const slowLoadAllEquipment = jest.fn().mockImplementation(() => 
-      new Promise(resolve => setTimeout(() => resolve([]), 100))
-    );
-    const slowLoadUserEquipment = jest.fn().mockImplementation(() => 
-      new Promise(resolve => setTimeout(() => resolve([]), 100))
-    );
-    const slowLoadUserWeakMuscles = jest.fn().mockImplementation(() => 
-      new Promise(resolve => setTimeout(() => resolve([]), 100))
-    );
-    const slowLoadUserExercisePreferences = jest.fn().mockImplementation(() => 
-      new Promise(resolve => setTimeout(() => resolve([]), 100))
-    );
+    const slowLoadAllExercises = jest
+      .fn()
+      .mockImplementation(() => new Promise(resolve => setTimeout(() => resolve([]), 100)));
+    const slowLoadAllMuscles = jest
+      .fn()
+      .mockImplementation(() => new Promise(resolve => setTimeout(() => resolve([]), 100)));
+    const slowLoadAllEquipment = jest
+      .fn()
+      .mockImplementation(() => new Promise(resolve => setTimeout(() => resolve([]), 100)));
+    const slowLoadUserEquipment = jest
+      .fn()
+      .mockImplementation(() => new Promise(resolve => setTimeout(() => resolve([]), 100)));
+    const slowLoadUserWeakMuscles = jest
+      .fn()
+      .mockImplementation(() => new Promise(resolve => setTimeout(() => resolve([]), 100)));
+    const slowLoadUserExercisePreferences = jest
+      .fn()
+      .mockImplementation(() => new Promise(resolve => setTimeout(() => resolve([]), 100)));
 
     mockUseData.mockReturnValue({
       userData: null,

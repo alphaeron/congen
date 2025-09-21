@@ -154,6 +154,7 @@ class UserController(
      * @param age The new age for the user (optional)
      * @param weight The new weight for the user in pounds (optional)
      * @param height The new height for the user in inches (optional)
+     * @param gender The new gender for the user (optional)
      * @return The updated user profile
      *
      * @throws ValidationException if the provided data fails validation

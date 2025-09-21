@@ -232,7 +232,7 @@ describe('ConjugateProgression', () => {
 
   beforeEach(() => {
     mock = new MockAdapter(ENDPOINT);
-    
+
     // Set up default mock data for DataContext
     const defaultMockDataContext = {
       userData: mockUserDataExport,
@@ -255,10 +255,10 @@ describe('ConjugateProgression', () => {
     };
 
     mockUseData.mockReturnValue(defaultMockDataContext);
-    
+
     // Mock the getExerciseMuscles API call
     mockGetExerciseMuscles.mockResolvedValue([]);
-    
+
     // Mock the exercise API calls that ExerciseName component makes
     mock.onGet('/exercise/').reply(200, [
       { id: 1, name: 'Bench Press' },

@@ -67,9 +67,11 @@ export function ExercisePreferenceControls(
         if (userExercisePreferences.length === 0) {
           await loadUserExercisePreferences();
         }
-        
+
         // Find current preference from DataContext data
-        const currentPreference = userExercisePreferences.find(p => p.exercise_name === exerciseName);
+        const currentPreference = userExercisePreferences.find(
+          p => p.exercise_name === exerciseName
+        );
         setPreference(currentPreference || null);
       } catch {
         enqueueSnackbar('Failed to load exercise preference:', { variant: 'error' });
@@ -79,7 +81,13 @@ export function ExercisePreferenceControls(
     };
 
     loadPreference();
-  }, [user?.keycloak_id, exerciseName, userExercisePreferences, loadUserExercisePreferences, enqueueSnackbar]);
+  }, [
+    user?.keycloak_id,
+    exerciseName,
+    userExercisePreferences,
+    loadUserExercisePreferences,
+    enqueueSnackbar,
+  ]);
 
   const getCurrentPreferenceState = (): ExercisePreferenceState => {
     if (!preference) return 'neutral';
@@ -114,7 +122,7 @@ export function ExercisePreferenceControls(
           variant: 'success',
         });
       }
-      
+
       // Refresh DataContext to ensure all components have the latest data
       await refreshData();
     } catch {

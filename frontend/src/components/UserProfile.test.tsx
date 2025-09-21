@@ -107,7 +107,10 @@ const defaultMockDataContext = {
   syncWithServer: jest.fn(),
 };
 
-const renderWithProviders = (component: React.ReactElement, mockDataContext = defaultMockDataContext) => {
+const renderWithProviders = (
+  component: React.ReactElement,
+  mockDataContext = defaultMockDataContext
+) => {
   return render(
     <DataContext.Provider value={mockDataContext}>
       <MemoryRouter>{component}</MemoryRouter>
@@ -169,10 +172,13 @@ describe('UserProfile', () => {
 
     // The default section is 'physical' which renders PhysicalAttributesSection
     // Look for the heading in the content area (h5 element)
-    await waitFor(() => {
-      const heading = screen.getByRole('heading', { name: 'Physical Attributes' });
-      expect(heading).toBeInTheDocument();
-    }, { timeout: 10000 });
+    await waitFor(
+      () => {
+        const heading = screen.getByRole('heading', { name: 'Physical Attributes' });
+        expect(heading).toBeInTheDocument();
+      },
+      { timeout: 10000 }
+    );
   }, 15000);
 
   it('should navigate to privacy tab', async () => {
@@ -181,9 +187,12 @@ describe('UserProfile', () => {
     });
 
     // Wait for the privacy content to load
-    await waitFor(() => {
-      expect(screen.getByText('Privacy & Data Protection')).toBeInTheDocument();
-    }, { timeout: 10000 });
+    await waitFor(
+      () => {
+        expect(screen.getByText('Privacy & Data Protection')).toBeInTheDocument();
+      },
+      { timeout: 10000 }
+    );
   }, 15000);
 
   it('should render Manage Profile button', async () => {

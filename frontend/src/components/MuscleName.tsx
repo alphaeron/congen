@@ -1,9 +1,9 @@
 import { Tooltip, Typography } from '@mui/material';
 import React, { useEffect, useState } from 'react';
 
-import { useData } from '../contexts/DataContext';
 import type { Muscle } from '../api/types';
 import { capitalizeEachWord } from '../common/utils';
+import { useData } from '../contexts/DataContext';
 
 import type { TypographyProps } from '@mui/material';
 
@@ -37,14 +37,14 @@ export function MuscleName({
   useEffect(() => {
     const loadMuscle = async () => {
       if (!muscleName) return;
-      
+
       setIsLoading(true);
       setHasError(false);
-      
+
       try {
         const muscleData = await getMuscle(muscleName);
         setMuscle(muscleData);
-      } catch (error) {
+      } catch {
         setHasError(true);
         // Error is handled by setting hasError state
       } finally {

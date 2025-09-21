@@ -9,7 +9,6 @@ import { StatusChip } from './StatusChip';
 import { UserStatusSystem } from './UserStatusSystem';
 import type {
   User,
-  Program,
   UserOneRepMax,
   Exercise,
   ProgramWithWorkouts,
@@ -18,12 +17,12 @@ import type {
   ProgrammedExerciseWithSetSchemes,
   SetScheme,
 } from '../api/types';
-import { useData } from '../contexts/DataContext';
 import {
   formatDate,
   categorizeExerciseVolume,
   replaceUnderscoresWithSpaces,
 } from '../common/utils';
+import { useData } from '../contexts/DataContext';
 
 interface DashboardOverviewProps {
   user: User;
@@ -41,8 +40,8 @@ interface DashboardOverviewProps {
 export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ user }) => {
   const navigate = useNavigate();
   const { enqueueSnackbar } = useSnackbar();
-  const { userData, exerciseMuscleData, weightUnitPreferences, isLoading: isDataLoading, getExercise } = useData();
-  
+  const { userData, isLoading: isDataLoading, getExercise } = useData();
+
   const [oneRepMaxes, setOneRepMaxes] = useState<UserOneRepMax[]>([]);
   const [exerciseData, setExerciseData] = useState<Map<string, Exercise>>(new Map());
   const [isLoading, setIsLoading] = useState(true);
@@ -57,7 +56,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ user }) =>
   useEffect(() => {
     const loadAdditionalData = async () => {
       if (!userData) return;
-      
+
       setIsLoading(true);
       try {
         // Extract one rep maxes from userData
@@ -91,7 +90,9 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ user }) =>
 
         setExerciseData(exerciseMap);
       } catch {
-        enqueueSnackbar('Failed to load additional dashboard data. Please try again.', { variant: 'error' });
+        enqueueSnackbar('Failed to load additional dashboard data. Please try again.', {
+          variant: 'error',
+        });
       } finally {
         setIsLoading(false);
       }

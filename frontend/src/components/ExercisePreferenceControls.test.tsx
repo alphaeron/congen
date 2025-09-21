@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { useSnackbar } from 'notistack';
 import React from 'react';
 import { MemoryRouter } from 'react-router';
@@ -10,7 +10,6 @@ import {
   removeUserExercisePreference,
 } from '../api/userExercisePreference';
 import { useAuth } from '../contexts/AuthContext';
-import { DataProvider } from '../contexts/DataContext';
 
 // Mock the dependencies
 jest.mock('../contexts/AuthContext');
@@ -18,7 +17,7 @@ jest.mock('notistack');
 jest.mock('../api/userExercisePreference');
 
 // Mock DataContext
-let mockUserExercisePreferences: any[] = [];
+let mockUserExercisePreferences: unknown[] = [];
 const mockLoadUserExercisePreferences = jest.fn();
 const mockRefreshData = jest.fn();
 
@@ -56,11 +55,7 @@ describe('ExercisePreferenceControls', () => {
   const mockEnqueueSnackbar = jest.fn();
 
   const renderWithProviders = (component: React.ReactElement) => {
-    return render(
-      <MemoryRouter>
-        {component}
-      </MemoryRouter>
-    );
+    return render(<MemoryRouter>{component}</MemoryRouter>);
   };
 
   beforeEach(() => {
@@ -132,11 +127,11 @@ describe('ExercisePreferenceControls', () => {
       created_at: new Date(),
       updated_at: new Date(),
     };
-    
+
     mockUserExercisePreferences = [preferredExercise];
     mockGetUserExercisePreferences.mockResolvedValue([preferredExercise]);
 
-    renderWithProviders(<ExercisePreferenceControls exerciseName="Bench Press"       />);
+    renderWithProviders(<ExercisePreferenceControls exerciseName="Bench Press" />);
 
     await waitFor(() => {
       const preferButton = screen.getByRole('button', { name: /prefer exercise/i });
@@ -152,11 +147,11 @@ describe('ExercisePreferenceControls', () => {
       created_at: new Date(),
       updated_at: new Date(),
     };
-    
+
     mockUserExercisePreferences = [ignoredExercise];
     mockGetUserExercisePreferences.mockResolvedValue([ignoredExercise]);
 
-    renderWithProviders(<ExercisePreferenceControls exerciseName="Bench Press"       />);
+    renderWithProviders(<ExercisePreferenceControls exerciseName="Bench Press" />);
 
     await waitFor(() => {
       const ignoreButton = screen.getByRole('button', { name: /ignore exercise/i });
@@ -165,7 +160,7 @@ describe('ExercisePreferenceControls', () => {
   });
 
   it('allows direct selection of prefer option', async () => {
-    renderWithProviders(<ExercisePreferenceControls exerciseName="Bench Press"       />);
+    renderWithProviders(<ExercisePreferenceControls exerciseName="Bench Press" />);
 
     await waitFor(() => {
       expect(screen.getByText('Prefer')).toBeInTheDocument();
@@ -186,7 +181,7 @@ describe('ExercisePreferenceControls', () => {
   });
 
   it('allows direct selection of ignore option', async () => {
-    renderWithProviders(<ExercisePreferenceControls exerciseName="Bench Press"       />);
+    renderWithProviders(<ExercisePreferenceControls exerciseName="Bench Press" />);
 
     await waitFor(() => {
       expect(screen.getByText('Ignore')).toBeInTheDocument();
@@ -214,11 +209,11 @@ describe('ExercisePreferenceControls', () => {
       created_at: new Date(),
       updated_at: new Date(),
     };
-    
+
     mockUserExercisePreferences = [preferredExercise];
     mockGetUserExercisePreferences.mockResolvedValue([preferredExercise]);
 
-    renderWithProviders(<ExercisePreferenceControls exerciseName="Bench Press"       />);
+    renderWithProviders(<ExercisePreferenceControls exerciseName="Bench Press" />);
 
     await waitFor(
       () => {
@@ -246,7 +241,7 @@ describe('ExercisePreferenceControls', () => {
   }, 15000);
 
   it('shows neutral state when no preference exists', async () => {
-    renderWithProviders(<ExercisePreferenceControls exerciseName="Bench Press"       />);
+    renderWithProviders(<ExercisePreferenceControls exerciseName="Bench Press" />);
 
     await waitFor(() => {
       const neutralButton = screen.getByRole('button', { name: /neutral preference/i });

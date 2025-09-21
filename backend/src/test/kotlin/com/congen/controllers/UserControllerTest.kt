@@ -212,16 +212,17 @@ class UserControllerTest {
         val weight = 180
         val height = 72
         val gender = "female"
-        val updatedUser = User(
-            keycloakId = "test-keycloak-id",
-            name = newName,
-            age = age,
-            weight = weight,
-            height = height,
-            gender = gender,
-            createdAt = Instant.now(),
-            updatedAt = Instant.now()
-        )
+        val updatedUser =
+            User(
+                keycloakId = "test-keycloak-id",
+                name = newName,
+                age = age,
+                weight = weight,
+                height = height,
+                gender = gender,
+                createdAt = Instant.now(),
+                updatedAt = Instant.now()
+            )
 
         whenever(userService.updateUser(newName, age, weight, height, gender)).thenReturn(Mono.just(updatedUser))
 

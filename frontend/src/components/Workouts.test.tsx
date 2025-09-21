@@ -73,7 +73,7 @@ describe('Workouts', () => {
   // Create a new mock adapter for each test to prevent interference
   let mock: MockAdapter;
   const theme = createTheme();
-  let defaultMockDataContext: any;
+  let defaultMockDataContext: unknown;
 
   const renderWithProviders = (component: React.ReactElement, initialEntries: string[] = ['/']) => {
     return render(

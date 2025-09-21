@@ -494,6 +494,15 @@ class CacheWarmupServiceTest {
     }
 
     private fun createMockUser(keycloakId: String): User {
-        return User(keycloakId = keycloakId, name = "Test User $keycloakId", age = null, weight = null, height = null, gender = null, createdAt = Instant.now(), updatedAt = Instant.now())
+        return User(
+            keycloakId = keycloakId,
+            name = "Test User $keycloakId",
+            age = null,
+            weight = null,
+            height = null,
+            gender = null,
+            createdAt = Instant.now(),
+            updatedAt = Instant.now()
+        )
     }
 }

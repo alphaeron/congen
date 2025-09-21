@@ -1,12 +1,10 @@
 package com.congen
 
-import com.congen.BaseIntegrationTest
 import com.congen.config.PostgresConfig
 import com.congen.config.PostgresProperties
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.springframework.beans.factory.annotation.Autowired
 
 /**
  * Integration tests for [PostgresConfig].

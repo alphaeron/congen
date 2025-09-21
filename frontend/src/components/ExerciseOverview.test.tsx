@@ -3,7 +3,6 @@ import { render, screen, waitFor, act } from '@testing-library/react';
 import AxiosMockAdapter from 'axios-mock-adapter';
 import * as React from 'react';
 import { MemoryRouter } from 'react-router';
-import { DataContext } from '../contexts/DataContext';
 
 // Mock TanStack Virtual to render all items in tests
 jest.mock('@tanstack/react-virtual', () => ({
@@ -45,6 +44,7 @@ import {
   EQUIPMENT,
 } from '../__mocks__/data';
 import { ENDPOINT } from '../api/endpoint';
+import { DataContext } from '../contexts/DataContext';
 
 describe('ExerciseOverview component', () => {
   const queryClient = new QueryClient({
@@ -91,7 +91,7 @@ describe('ExerciseOverview component', () => {
       getEquipment: jest.fn(),
       getProgram: jest.fn(),
     };
-    
+
     mockUseData.mockReturnValue(defaultMockDataContext);
 
     await act(async () => {
@@ -126,4 +126,3 @@ describe('ExerciseOverview component', () => {
     expect(mockAdapter.history.get.length).toBe(0);
   }, 15000);
 });
-

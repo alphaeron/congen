@@ -60,7 +60,9 @@ import java.time.Instant
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Schema(
     description = "A user profile in the workout generation system",
-    example = "User(keycloakId=\"123e4567-e89b-12d3-a456-426614174000\", name=\"John Doe\", age=30, weight=180, height=72, gender=\"male\")",
+    example =
+        "User(keycloakId=\"123e4567-e89b-12d3-a456-426614174000\", " +
+            "name=\"John Doe\", age=30, weight=180, height=72, gender=\"male\")",
 )
 data class User(
     /** Unique Keycloak identifier for the user (primary key). */

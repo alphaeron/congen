@@ -1,29 +1,43 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 
 import { useAuth } from './AuthContext';
-import { getExerciseMuscle } from '../api/exerciseMuscle';
-import { getIndividualExercise, getExerciseMuscles, getExerciseEquipment, getExercises } from '../api/exercise';
+import {
+  getUserExercisePool,
+  generateNextWeek,
+  updateWorkoutWithOneRepMax as updateWorkoutWithOneRepMaxAPI,
+} from '../api/conjugateWorkoutGenerator';
 import { getIndividualEquipment, getEquipment as getEquipmentAPI } from '../api/equipment';
+import {
+  getIndividualExercise,
+  getExerciseMuscles,
+  getExerciseEquipment,
+  getExercises,
+} from '../api/exercise';
+import { getExerciseMuscle } from '../api/exerciseMuscle';
+import { getUserDataExport } from '../api/gdpr';
+import {
+  getConsentStatus,
+  recordConsent,
+  exportUserData as exportUserDataAPI,
+  deleteAllPersonalData as deleteAllPersonalDataAPI,
+} from '../api/gdpr';
 import { getIndividualMuscle, getMuscles as getMusclesAPI } from '../api/muscle';
 import { getProgram as getProgramAPI, getProgramsWithPreferences } from '../api/program';
-import { getUserDataExport } from '../api/gdpr';
-import { getUserEquipment } from '../api/userEquipment';
-import { getUserWeakMuscles } from '../api/userWeakMuscle';
-import { getUserExercisePreferences } from '../api/userExercisePreference';
+import {
+  createProgrammedExercise as createProgrammedExerciseAPI,
+  updateProgrammedExercise as updateProgrammedExerciseAPI,
+  deleteProgrammedExercise as deleteProgrammedExerciseAPI,
+} from '../api/programmedExercise';
 import { getProgrammedWorkouts } from '../api/programmedWorkout';
-import { getUserOneRepMaxes } from '../api/userOneRepMax';
-import { getConsentStatus, recordConsent, exportUserData as exportUserDataAPI, deleteAllPersonalData as deleteAllPersonalDataAPI } from '../api/gdpr';
-import { createProgrammedExercise as createProgrammedExerciseAPI, updateProgrammedExercise as updateProgrammedExerciseAPI, deleteProgrammedExercise as deleteProgrammedExerciseAPI } from '../api/programmedExercise';
-import { getUserExercisePool, generateNextWeek, updateWorkoutWithOneRepMax as updateWorkoutWithOneRepMaxAPI } from '../api/conjugateWorkoutGenerator';
 import { getProgramPreferences } from '../api/programPreferences';
-import type { 
-  UserDataExport, 
-  ExerciseMuscle, 
-  UserWeightUnitPreference, 
-  Exercise, 
-  ExerciseEquipment, 
-  Equipment, 
-  Muscle, 
+import type {
+  UserDataExport,
+  ExerciseMuscle,
+  UserWeightUnitPreference,
+  Exercise,
+  ExerciseEquipment,
+  Equipment,
+  Muscle,
   Program,
   UserEquipment,
   UserWeakMuscle,
@@ -35,8 +49,12 @@ import type {
   UserExercisePoolResponse,
   DashboardStats,
   ProgramPreferences,
-  ProgrammedExercise
+  ProgrammedExercise,
 } from '../api/types';
+import { getUserEquipment } from '../api/userEquipment';
+import { getUserExercisePreferences } from '../api/userExercisePreference';
+import { getUserOneRepMaxes } from '../api/userOneRepMax';
+import { getUserWeakMuscles } from '../api/userWeakMuscle';
 import { getUserWeightUnitPreferences } from '../api/userWeightUnitPreference';
 
 interface DataContextType {
@@ -145,7 +163,9 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
     []
   );
   const [exerciseData, setExerciseData] = useState<Map<string, Exercise>>(new Map());
-  const [exerciseEquipmentData, setExerciseEquipmentData] = useState<Map<string, ExerciseEquipment[]>>(new Map());
+  const [exerciseEquipmentData, setExerciseEquipmentData] = useState<
+    Map<string, ExerciseEquipment[]>
+  >(new Map());
   const [muscleData, setMuscleData] = useState<Map<string, Muscle>>(new Map());
   const [equipmentData, setEquipmentData] = useState<Map<string, Equipment>>(new Map());
   const [programData, setProgramData] = useState<Map<number, Program>>(new Map());
@@ -156,7 +176,9 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
   // User-specific data caches
   const [userEquipment, setUserEquipment] = useState<UserEquipment[]>([]);
   const [userWeakMuscles, setUserWeakMuscles] = useState<UserWeakMuscle[]>([]);
-  const [userExercisePreferences, setUserExercisePreferences] = useState<UserExercisePreference[]>([]);
+  const [userExercisePreferences, setUserExercisePreferences] = useState<UserExercisePreference[]>(
+    []
+  );
   const [programPreferences, setProgramPreferences] = useState<ProgramWithPreferences[]>([]);
   const [programmedWorkouts, setProgrammedWorkouts] = useState<ProgrammedWorkout[]>([]);
   const [userOneRepMaxes, setUserOneRepMaxes] = useState<UserOneRepMax[]>([]);
@@ -179,12 +201,11 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
   // Removed offline support - not implementing
   // Basic caching features
   const [cacheTimestamps, setCacheTimestamps] = useState<Map<string, number>>(new Map());
-  const [cacheSizes, setCacheSizes] = useState<Map<string, number>>(new Map());
 
   // Data is considered stale after 5 minutes
   const DATA_STALE_THRESHOLD = 5 * 60 * 1000;
   const isDataStale = Date.now() - lastFetchTime > DATA_STALE_THRESHOLD;
-  
+
   // Basic caching configuration
   const CACHE_TTL = 10 * 60 * 1000; // 10 minutes TTL
 
@@ -247,127 +268,137 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
   }, [loadData]);
 
   // Exercise data caching functions
-  const getExercise = useCallback(async (exerciseName: string): Promise<Exercise | null> => {
-    // Check if we already have this exercise cached
-    if (exerciseData.has(exerciseName)) {
-      return exerciseData.get(exerciseName) || null;
-    }
+  const getExercise = useCallback(
+    async (exerciseName: string): Promise<Exercise | null> => {
+      // Check if we already have this exercise cached
+      if (exerciseData.has(exerciseName)) {
+        return exerciseData.get(exerciseName) || null;
+      }
 
-    try {
-      const exercise = await getIndividualExercise(exerciseName);
-      setExerciseData(prev => new Map(prev).set(exerciseName, exercise));
-      return exercise;
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to load exercise data';
-      setError(errorMessage);
-      return null;
-    }
-  }, [exerciseData]);
+      try {
+        const exercise = await getIndividualExercise(exerciseName);
+        setExerciseData(prev => new Map(prev).set(exerciseName, exercise));
+        return exercise;
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'Failed to load exercise data';
+        setError(errorMessage);
+        return null;
+      }
+    },
+    [exerciseData]
+  );
 
-  const getExerciseEquipmentData = useCallback(async (exerciseName: string): Promise<ExerciseEquipment[] | null> => {
-    // Check if we already have this exercise equipment cached
-    if (exerciseEquipmentData.has(exerciseName)) {
-      return exerciseEquipmentData.get(exerciseName) || null;
-    }
+  const getExerciseEquipmentData = useCallback(
+    async (exerciseName: string): Promise<ExerciseEquipment[] | null> => {
+      // Check if we already have this exercise equipment cached
+      if (exerciseEquipmentData.has(exerciseName)) {
+        return exerciseEquipmentData.get(exerciseName) || null;
+      }
 
-    try {
-      const equipment = await getExerciseEquipment(exerciseName);
-      setExerciseEquipmentData(prev => new Map(prev).set(exerciseName, equipment));
-      return equipment;
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to load exercise equipment data';
-      setError(errorMessage);
-      return null;
-    }
-  }, [exerciseEquipmentData]);
+      try {
+        const equipment = await getExerciseEquipment(exerciseName);
+        setExerciseEquipmentData(prev => new Map(prev).set(exerciseName, equipment));
+        return equipment;
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : 'Failed to load exercise equipment data';
+        setError(errorMessage);
+        return null;
+      }
+    },
+    [exerciseEquipmentData]
+  );
 
-  const getMuscle = useCallback(async (muscleName: string): Promise<Muscle | null> => {
-    // Check if we already have this muscle cached
-    if (muscleData.has(muscleName)) {
-      return muscleData.get(muscleName) || null;
-    }
+  const getMuscle = useCallback(
+    async (muscleName: string): Promise<Muscle | null> => {
+      // Check if we already have this muscle cached
+      if (muscleData.has(muscleName)) {
+        return muscleData.get(muscleName) || null;
+      }
 
-    try {
-      const muscle = await getIndividualMuscle(muscleName);
-      setMuscleData(prev => new Map(prev).set(muscleName, muscle));
-      return muscle;
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to load muscle data';
-      setError(errorMessage);
-      return null;
-    }
-  }, [muscleData]);
+      try {
+        const muscle = await getIndividualMuscle(muscleName);
+        setMuscleData(prev => new Map(prev).set(muscleName, muscle));
+        return muscle;
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'Failed to load muscle data';
+        setError(errorMessage);
+        return null;
+      }
+    },
+    [muscleData]
+  );
 
-  const getEquipment = useCallback(async (equipmentName: string): Promise<Equipment | null> => {
-    // Check if we already have this equipment cached
-    if (equipmentData.has(equipmentName)) {
-      return equipmentData.get(equipmentName) || null;
-    }
+  const getEquipment = useCallback(
+    async (equipmentName: string): Promise<Equipment | null> => {
+      // Check if we already have this equipment cached
+      if (equipmentData.has(equipmentName)) {
+        return equipmentData.get(equipmentName) || null;
+      }
 
-    try {
-      const equipment = await getIndividualEquipment(equipmentName);
-      setEquipmentData(prev => new Map(prev).set(equipmentName, equipment));
-      return equipment;
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to load equipment data';
-      setError(errorMessage);
-      return null;
-    }
-  }, [equipmentData]);
+      try {
+        const equipment = await getIndividualEquipment(equipmentName);
+        setEquipmentData(prev => new Map(prev).set(equipmentName, equipment));
+        return equipment;
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'Failed to load equipment data';
+        setError(errorMessage);
+        return null;
+      }
+    },
+    [equipmentData]
+  );
 
-  const getProgram = useCallback(async (programId: number): Promise<Program | null> => {
-    // Check if we already have this program cached
-    if (programData.has(programId)) {
-      return programData.get(programId) || null;
-    }
+  const getProgram = useCallback(
+    async (programId: number): Promise<Program | null> => {
+      // Check if we already have this program cached
+      if (programData.has(programId)) {
+        return programData.get(programId) || null;
+      }
 
-    try {
-      const program = await getProgramAPI(programId);
-      setProgramData(prev => new Map(prev).set(programId, program));
-      return program;
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to load program data';
-      setError(errorMessage);
-      return null;
-    }
-  }, [programData]);
+      try {
+        const program = await getProgramAPI(programId);
+        setProgramData(prev => new Map(prev).set(programId, program));
+        return program;
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'Failed to load program data';
+        setError(errorMessage);
+        return null;
+      }
+    },
+    [programData]
+  );
 
   // Exercise muscles caching function
-  const getExerciseMusclesData = useCallback(async (exerciseName: string): Promise<ExerciseMuscle[] | null> => {
-    try {
-      const exerciseMuscles = await getExerciseMuscles(exerciseName);
-      return exerciseMuscles;
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to load exercise muscles data';
-      setError(errorMessage);
-      return null;
-    }
-  }, []);
+  const getExerciseMusclesData = useCallback(
+    async (exerciseName: string): Promise<ExerciseMuscle[] | null> => {
+      try {
+        const exerciseMuscles = await getExerciseMuscles(exerciseName);
+        return exerciseMuscles;
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : 'Failed to load exercise muscles data';
+        setError(errorMessage);
+        return null;
+      }
+    },
+    []
+  );
 
   // Helper function to set loading state for specific data type
   const setLoadingState = useCallback((dataType: string, isLoading: boolean) => {
     setLoadingStates(prev => new Map(prev).set(dataType, isLoading));
   }, []);
 
-  // Helper function to set error state for specific data type
-  const setErrorState = useCallback((dataType: string, errorMessage: string | null) => {
-    setErrorStates(prev => {
-      const newMap = new Map(prev);
-      if (errorMessage) {
-        newMap.set(dataType, errorMessage);
-      } else {
-        newMap.delete(dataType);
-      }
-      return newMap;
-    });
-  }, []);
-
   // Advanced caching utilities
-  const isCacheValid = useCallback((cacheKey: string): boolean => {
-    const timestamp = cacheTimestamps.get(cacheKey);
-    if (!timestamp) return false;
-    return Date.now() - timestamp < CACHE_TTL;
-  }, [cacheTimestamps]);
+  const isCacheValid = useCallback(
+    (cacheKey: string): boolean => {
+      const timestamp = cacheTimestamps.get(cacheKey);
+      if (!timestamp) return false;
+      return Date.now() - timestamp < CACHE_TTL;
+    },
+    [cacheTimestamps]
+  );
 
   // Optimized bulk data loading with batching
   const loadAllExercises = useCallback(async (): Promise<Exercise[]> => {
@@ -433,7 +464,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
   // User-specific data loading functions
   const loadUserEquipment = useCallback(async (): Promise<UserEquipment[]> => {
     if (!user?.keycloak_id) return [];
-    
+
     if (userEquipment.length > 0) {
       return userEquipment;
     }
@@ -443,7 +474,8 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
       setUserEquipment(equipment);
       return equipment;
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to load user equipment data';
+      const errorMessage =
+        err instanceof Error ? err.message : 'Failed to load user equipment data';
       setError(errorMessage);
       return [];
     }
@@ -451,7 +483,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
 
   const loadUserWeakMuscles = useCallback(async (): Promise<UserWeakMuscle[]> => {
     if (!user?.keycloak_id) return [];
-    
+
     if (userWeakMuscles.length > 0) {
       return userWeakMuscles;
     }
@@ -461,7 +493,8 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
       setUserWeakMuscles(weakMuscles);
       return weakMuscles;
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to load user weak muscles data';
+      const errorMessage =
+        err instanceof Error ? err.message : 'Failed to load user weak muscles data';
       setError(errorMessage);
       return [];
     }
@@ -469,7 +502,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
 
   const loadUserExercisePreferences = useCallback(async (): Promise<UserExercisePreference[]> => {
     if (!user?.keycloak_id) return [];
-    
+
     if (userExercisePreferences.length > 0) {
       return userExercisePreferences;
     }
@@ -479,7 +512,8 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
       setUserExercisePreferences(preferences);
       return preferences;
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to load user exercise preferences data';
+      const errorMessage =
+        err instanceof Error ? err.message : 'Failed to load user exercise preferences data';
       setError(errorMessage);
       return [];
     }
@@ -495,7 +529,8 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
       setProgramPreferences(preferences);
       return preferences;
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to load program preferences data';
+      const errorMessage =
+        err instanceof Error ? err.message : 'Failed to load program preferences data';
       setError(errorMessage);
       return [];
     }
@@ -503,7 +538,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
 
   const loadUserOneRepMaxes = useCallback(async (): Promise<UserOneRepMax[]> => {
     if (!user?.keycloak_id) return [];
-    
+
     if (userOneRepMaxes.length > 0) {
       return userOneRepMaxes;
     }
@@ -513,7 +548,8 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
       setUserOneRepMaxes(oneRepMaxes);
       return oneRepMaxes;
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to load user one rep max data';
+      const errorMessage =
+        err instanceof Error ? err.message : 'Failed to load user one rep max data';
       setError(errorMessage);
       return [];
     }
@@ -522,7 +558,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
   // New data loading functions
   const loadUserConsent = useCallback(async (): Promise<UserConsent | null> => {
     if (!user?.keycloak_id) return null;
-    
+
     if (userConsent) {
       return userConsent;
     }
@@ -541,7 +577,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
 
   const loadUserExercisePool = useCallback(async (): Promise<UserExercisePoolResponse | null> => {
     if (!user?.keycloak_id) return null;
-    
+
     if (userExercisePool) {
       return userExercisePool;
     }
@@ -552,7 +588,8 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
       setCacheTimestamps(prev => new Map(prev).set('userExercisePool', Date.now()));
       return pool;
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to load user exercise pool data';
+      const errorMessage =
+        err instanceof Error ? err.message : 'Failed to load user exercise pool data';
       setError(errorMessage);
       return null;
     }
@@ -560,7 +597,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
 
   const loadDashboardStats = useCallback(async (): Promise<DashboardStats | null> => {
     if (!user?.keycloak_id) return null;
-    
+
     if (dashboardStats) {
       return dashboardStats;
     }
@@ -569,7 +606,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
       // Calculate dashboard stats from existing data
       const stats: DashboardStats = {
         total_workouts: programmedWorkouts.length,
-        current_week: Math.max(0, ...programmedWorkouts.map(w => (w as any).week_number || 0)),
+        current_week: Math.max(0, ...programmedWorkouts.map(w => Math.ceil(w.day_number / 7) || 0)),
         recent_one_rep_maxes: userOneRepMaxes.slice(-5), // Last 5 1RM records
       };
       setDashboardStats(stats);
@@ -582,22 +619,25 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
     }
   }, [user?.keycloak_id, dashboardStats, programmedWorkouts, userOneRepMaxes]);
 
-  const updateUserConsent = useCallback(async (consent: boolean): Promise<UserConsent> => {
-    if (!user?.keycloak_id) {
-      throw new Error('User not authenticated');
-    }
+  const updateUserConsent = useCallback(
+    async (consent: boolean): Promise<UserConsent> => {
+      if (!user?.keycloak_id) {
+        throw new Error('User not authenticated');
+      }
 
-    try {
-      const updatedConsent = await recordConsent(consent);
-      setUserConsent(updatedConsent);
-      setCacheTimestamps(prev => new Map(prev).set('userConsent', Date.now()));
-      return updatedConsent;
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to update user consent';
-      setError(errorMessage);
-      throw err;
-    }
-  }, [user?.keycloak_id]);
+      try {
+        const updatedConsent = await recordConsent(consent);
+        setUserConsent(updatedConsent);
+        setCacheTimestamps(prev => new Map(prev).set('userConsent', Date.now()));
+        return updatedConsent;
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'Failed to update user consent';
+        setError(errorMessage);
+        throw err;
+      }
+    },
+    [user?.keycloak_id]
+  );
 
   // GDPR functions
   const exportUserData = useCallback(async (): Promise<UserDataExport> => {
@@ -611,138 +651,164 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
     }
   }, []);
 
-  const deleteAllPersonalData = useCallback(async (confirmationText: string): Promise<void> => {
-    try {
-      await deleteAllPersonalDataAPI(confirmationText);
-      
-      // Refresh data to ensure all components have the latest data
-      await loadData(true);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to delete personal data';
-      setError(errorMessage);
-      throw err;
-    }
-  }, [loadData]);
+  const deleteAllPersonalData = useCallback(
+    async (confirmationText: string): Promise<void> => {
+      try {
+        await deleteAllPersonalDataAPI(confirmationText);
+
+        // Refresh data to ensure all components have the latest data
+        await loadData(true);
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'Failed to delete personal data';
+        setError(errorMessage);
+        throw err;
+      }
+    },
+    [loadData]
+  );
 
   // Programmed exercise functions
-  const createProgrammedExercise = useCallback(async (
-    workoutStageId: number,
-    exerciseName: string,
-    position: number,
-    notes?: string,
-    totalSets?: number,
-    targetWeight?: number,
-    targetReps?: number,
-    restSeconds?: number,
-    performedWeight?: number,
-    performedReps?: number,
-    tempo?: string,
-    isAmrap?: boolean,
-    isEmom?: boolean
-  ): Promise<ProgrammedExercise> => {
-    try {
-      const exercise = await createProgrammedExerciseAPI(
-        workoutStageId,
-        exerciseName,
-        position,
-        notes,
-        totalSets,
-        targetWeight,
-        targetReps,
-        restSeconds,
-        performedWeight,
-        performedReps,
-        tempo,
-        isAmrap,
-        isEmom
-      );
-      
-      // Refresh data to ensure all components have the latest data
-      await loadData(true);
-      return exercise;
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to create programmed exercise';
-      setError(errorMessage);
-      throw err;
-    }
-  }, [loadData]);
+  const createProgrammedExercise = useCallback(
+    async (
+      workoutStageId: number,
+      exerciseName: string,
+      position: number,
+      notes?: string,
+      totalSets?: number,
+      targetWeight?: number,
+      targetReps?: number,
+      restSeconds?: number,
+      performedWeight?: number,
+      performedReps?: number,
+      tempo?: string,
+      isAmrap?: boolean,
+      isEmom?: boolean
+    ): Promise<ProgrammedExercise> => {
+      try {
+        const exercise = await createProgrammedExerciseAPI(
+          workoutStageId,
+          exerciseName,
+          position,
+          notes,
+          totalSets,
+          targetWeight,
+          targetReps,
+          restSeconds,
+          performedWeight,
+          performedReps,
+          tempo,
+          isAmrap,
+          isEmom
+        );
 
-  const updateProgrammedExercise = useCallback(async (
-    id: number,
-    workoutStageId: number,
-    exerciseName: string,
-    position: number,
-    notes?: string
-  ): Promise<ProgrammedExercise> => {
-    try {
-      const exercise = await updateProgrammedExerciseAPI(
-        id,
-        workoutStageId,
-        exerciseName,
-        position,
-        notes
-      );
-      
-      // Refresh data to ensure all components have the latest data
-      await loadData(true);
-      return exercise;
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to update programmed exercise';
-      setError(errorMessage);
-      throw err;
-    }
-  }, [loadData]);
+        // Refresh data to ensure all components have the latest data
+        await loadData(true);
+        return exercise;
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : 'Failed to create programmed exercise';
+        setError(errorMessage);
+        throw err;
+      }
+    },
+    [loadData]
+  );
 
-  const deleteProgrammedExercise = useCallback(async (id: number): Promise<void> => {
-    try {
-      await deleteProgrammedExerciseAPI(id);
-      
-      // Refresh data to ensure all components have the latest data
-      await loadData(true);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to delete programmed exercise';
-      setError(errorMessage);
-      throw err;
-    }
-  }, [loadData]);
+  const updateProgrammedExercise = useCallback(
+    async (
+      id: number,
+      workoutStageId: number,
+      exerciseName: string,
+      position: number,
+      notes?: string
+    ): Promise<ProgrammedExercise> => {
+      try {
+        const exercise = await updateProgrammedExerciseAPI(
+          id,
+          workoutStageId,
+          exerciseName,
+          position,
+          notes
+        );
 
-  const getProgramPreferencesById = useCallback(async (programId: number): Promise<ProgramPreferences | null> => {
-    try {
-      const preferences = await getProgramPreferences(programId);
-      return preferences;
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to load program preferences';
-      setError(errorMessage);
-      return null;
-    }
-  }, []);
+        // Refresh data to ensure all components have the latest data
+        await loadData(true);
+        return exercise;
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : 'Failed to update programmed exercise';
+        setError(errorMessage);
+        throw err;
+      }
+    },
+    [loadData]
+  );
+
+  const deleteProgrammedExercise = useCallback(
+    async (id: number): Promise<void> => {
+      try {
+        await deleteProgrammedExerciseAPI(id);
+
+        // Refresh data to ensure all components have the latest data
+        await loadData(true);
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : 'Failed to delete programmed exercise';
+        setError(errorMessage);
+        throw err;
+      }
+    },
+    [loadData]
+  );
+
+  const getProgramPreferencesById = useCallback(
+    async (programId: number): Promise<ProgramPreferences | null> => {
+      try {
+        const preferences = await getProgramPreferences(programId);
+        return preferences;
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : 'Failed to load program preferences';
+        setError(errorMessage);
+        return null;
+      }
+    },
+    []
+  );
 
   // Workout generation functions
-  const generateWorkout = useCallback(async (programId: number): Promise<Program> => {
-    try {
-      const program = await generateNextWeek(programId);
-      // Refresh data after generating workout to ensure all components have latest data
-      await loadData(true);
-      return program;
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to generate workout';
-      setError(errorMessage);
-      throw err;
-    }
-  }, [loadData]);
+  const generateWorkout = useCallback(
+    async (programId: number): Promise<Program> => {
+      try {
+        const program = await generateNextWeek(programId);
+        // Refresh data after generating workout to ensure all components have latest data
+        await loadData(true);
+        return program;
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'Failed to generate workout';
+        setError(errorMessage);
+        throw err;
+      }
+    },
+    [loadData]
+  );
 
-  const updateWorkoutWithOneRepMax = useCallback(async (programId: number): Promise<Program> => {
-    try {
-      const program = await updateWorkoutWithOneRepMaxAPI(programId);
-      // Refresh data after updating workout to ensure all components have latest data
-      await loadData(true);
-      return program;
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to update workout with 1RM data';
-      setError(errorMessage);
-      throw err;
-    }
-  }, [loadData]);
+  const updateWorkoutWithOneRepMax = useCallback(
+    async (programId: number): Promise<Program> => {
+      try {
+        const program = await updateWorkoutWithOneRepMaxAPI(programId);
+        // Refresh data after updating workout to ensure all components have latest data
+        await loadData(true);
+        return program;
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : 'Failed to update workout with 1RM data';
+        setError(errorMessage);
+        throw err;
+      }
+    },
+    [loadData]
+  );
 
   const loadProgrammedWorkouts = useCallback(async (): Promise<ProgrammedWorkout[]> => {
     if (programmedWorkouts.length > 0) {
@@ -754,7 +820,8 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
       setProgrammedWorkouts(workouts);
       return workouts;
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to load programmed workouts data';
+      const errorMessage =
+        err instanceof Error ? err.message : 'Failed to load programmed workouts data';
       setError(errorMessage);
       return [];
     }
@@ -776,7 +843,8 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
       setAllExercisesMap(exerciseMap);
       return exerciseMap;
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to load exercises for components';
+      const errorMessage =
+        err instanceof Error ? err.message : 'Failed to load exercises for components';
       setError(errorMessage);
       return new Map();
     }
@@ -832,56 +900,77 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
     }
   }, []);
 
-  const refreshSpecificData = useCallback(async (dataType: string) => {
-    try {
-      switch (dataType) {
-        case 'exercises':
-          setAllExercises([]);
-          setAllExercisesMap(new Map());
-          await loadAllExercises();
-          break;
-        case 'muscles':
-          setAllMuscles([]);
-          await loadAllMuscles();
-          break;
-        case 'equipment':
-          setAllEquipment([]);
-          await loadAllEquipment();
-          break;
-        case 'programs':
-          setProgramPreferences([]);
-          setProgrammedWorkouts([]);
-          await loadProgramPreferences();
-          await loadProgrammedWorkouts();
-          break;
-        case 'userData':
-          setUserEquipment([]);
-          setUserWeakMuscles([]);
-          setUserExercisePreferences([]);
-          setUserOneRepMaxes([]);
-          await loadUserEquipment();
-          await loadUserWeakMuscles();
-          await loadUserExercisePreferences();
-          await loadUserOneRepMaxes();
-          break;
-        case 'all':
-          await refreshData();
-          break;
+  const refreshSpecificData = useCallback(
+    async (dataType: string) => {
+      try {
+        switch (dataType) {
+          case 'exercises':
+            setAllExercises([]);
+            setAllExercisesMap(new Map());
+            await loadAllExercises();
+            break;
+          case 'muscles':
+            setAllMuscles([]);
+            await loadAllMuscles();
+            break;
+          case 'equipment':
+            setAllEquipment([]);
+            await loadAllEquipment();
+            break;
+          case 'programs':
+            setProgramPreferences([]);
+            setProgrammedWorkouts([]);
+            await loadProgramPreferences();
+            await loadProgrammedWorkouts();
+            break;
+          case 'userData':
+            setUserEquipment([]);
+            setUserWeakMuscles([]);
+            setUserExercisePreferences([]);
+            setUserOneRepMaxes([]);
+            await loadUserEquipment();
+            await loadUserWeakMuscles();
+            await loadUserExercisePreferences();
+            await loadUserOneRepMaxes();
+            break;
+          case 'all':
+            await refreshData();
+            break;
+        }
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : `Failed to refresh ${dataType} data`;
+        setError(errorMessage);
       }
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : `Failed to refresh ${dataType} data`;
-      setError(errorMessage);
-    }
-  }, [loadAllExercises, loadAllMuscles, loadAllEquipment, loadProgramPreferences, loadProgrammedWorkouts, loadUserEquipment, loadUserWeakMuscles, loadUserExercisePreferences, loadUserOneRepMaxes, refreshData]);
+    },
+    [
+      loadAllExercises,
+      loadAllMuscles,
+      loadAllEquipment,
+      loadProgramPreferences,
+      loadProgrammedWorkouts,
+      loadUserEquipment,
+      loadUserWeakMuscles,
+      loadUserExercisePreferences,
+      loadUserOneRepMaxes,
+      refreshData,
+    ]
+  );
 
   // Loading states and error handling
-  const isLoadingSpecific = useCallback((dataType: string): boolean => {
-    return loadingStates.get(dataType) || false;
-  }, [loadingStates]);
+  const isLoadingSpecific = useCallback(
+    (dataType: string): boolean => {
+      return loadingStates.get(dataType) || false;
+    },
+    [loadingStates]
+  );
 
-  const getErrorForDataType = useCallback((dataType: string): string | null => {
-    return errorStates.get(dataType) || null;
-  }, [errorStates]);
+  const getErrorForDataType = useCallback(
+    (dataType: string): string | null => {
+      return errorStates.get(dataType) || null;
+    },
+    [errorStates]
+  );
 
   const clearError = useCallback(() => {
     setError(null);
@@ -901,123 +990,126 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
   }, [isDataStale, userData, loadData]);
 
   // Memoize the context value to prevent unnecessary re-renders
-  const value: DataContextType = useMemo(() => ({
-    userData,
-    exerciseMuscleData,
-    weightUnitPreferences,
-    exerciseData,
-    exerciseEquipmentData,
-    muscleData,
-    equipmentData,
-    programData,
-    allExercises,
-    allMuscles,
-    allEquipment,
-    userEquipment,
-    userWeakMuscles,
-    userExercisePreferences,
-    programPreferences,
-    programmedWorkouts,
-    userOneRepMaxes,
-    userConsent,
-    userExercisePool,
-    dashboardStats,
-    isLoading,
-    error,
-    refreshData,
-    isDataStale,
-    getExercise,
-    getExerciseMuscles: getExerciseMusclesData,
-    getExerciseEquipmentData,
-    getMuscle,
-    getEquipment,
-    getProgram,
-    loadAllExercises,
-    loadAllMuscles,
-    loadAllEquipment,
-    loadUserEquipment,
-    loadUserWeakMuscles,
-    loadUserExercisePreferences,
-    loadProgramPreferences,
-    loadProgrammedWorkouts,
-    loadUserOneRepMaxes,
-    loadUserConsent,
-    loadUserExercisePool,
-    loadDashboardStats,
-    updateUserConsent,
-    exportUserData,
-    deleteAllPersonalData,
-    createProgrammedExercise,
-    updateProgrammedExercise,
-    deleteProgrammedExercise,
-    getProgramPreferencesById,
-    generateWorkout,
-    updateWorkoutWithOneRepMax,
-    loadAllExercisesForComponents,
-    invalidateCache,
-    refreshSpecificData,
-    isLoadingSpecific,
-    getErrorForDataType,
-    clearError,
-  }), [
-    userData,
-    exerciseMuscleData,
-    weightUnitPreferences,
-    exerciseData,
-    exerciseEquipmentData,
-    muscleData,
-    equipmentData,
-    programData,
-    allExercises,
-    allMuscles,
-    allEquipment,
-    userEquipment,
-    userWeakMuscles,
-    userExercisePreferences,
-    programPreferences,
-    programmedWorkouts,
-    userOneRepMaxes,
-    userConsent,
-    userExercisePool,
-    dashboardStats,
-    isLoading,
-    error,
-    refreshData,
-    isDataStale,
-    getExercise,
-    getExerciseMusclesData,
-    getExerciseEquipmentData,
-    getMuscle,
-    getEquipment,
-    getProgram,
-    loadAllExercises,
-    loadAllMuscles,
-    loadAllEquipment,
-    loadUserEquipment,
-    loadUserWeakMuscles,
-    loadUserExercisePreferences,
-    loadProgramPreferences,
-    loadProgrammedWorkouts,
-    loadUserOneRepMaxes,
-    loadUserConsent,
-    loadUserExercisePool,
-    loadDashboardStats,
-    updateUserConsent,
-    exportUserData,
-    deleteAllPersonalData,
-    createProgrammedExercise,
-    updateProgrammedExercise,
-    deleteProgrammedExercise,
-    getProgramPreferencesById,
-    generateWorkout,
-    updateWorkoutWithOneRepMax,
-    loadAllExercisesForComponents,
-    invalidateCache,
-    refreshSpecificData,
-    isLoadingSpecific,
-    getErrorForDataType,
-    clearError,
-  ]);
+  const value: DataContextType = useMemo(
+    () => ({
+      userData,
+      exerciseMuscleData,
+      weightUnitPreferences,
+      exerciseData,
+      exerciseEquipmentData,
+      muscleData,
+      equipmentData,
+      programData,
+      allExercises,
+      allMuscles,
+      allEquipment,
+      userEquipment,
+      userWeakMuscles,
+      userExercisePreferences,
+      programPreferences,
+      programmedWorkouts,
+      userOneRepMaxes,
+      userConsent,
+      userExercisePool,
+      dashboardStats,
+      isLoading,
+      error,
+      refreshData,
+      isDataStale,
+      getExercise,
+      getExerciseMuscles: getExerciseMusclesData,
+      getExerciseEquipmentData,
+      getMuscle,
+      getEquipment,
+      getProgram,
+      loadAllExercises,
+      loadAllMuscles,
+      loadAllEquipment,
+      loadUserEquipment,
+      loadUserWeakMuscles,
+      loadUserExercisePreferences,
+      loadProgramPreferences,
+      loadProgrammedWorkouts,
+      loadUserOneRepMaxes,
+      loadUserConsent,
+      loadUserExercisePool,
+      loadDashboardStats,
+      updateUserConsent,
+      exportUserData,
+      deleteAllPersonalData,
+      createProgrammedExercise,
+      updateProgrammedExercise,
+      deleteProgrammedExercise,
+      getProgramPreferencesById,
+      generateWorkout,
+      updateWorkoutWithOneRepMax,
+      loadAllExercisesForComponents,
+      invalidateCache,
+      refreshSpecificData,
+      isLoadingSpecific,
+      getErrorForDataType,
+      clearError,
+    }),
+    [
+      userData,
+      exerciseMuscleData,
+      weightUnitPreferences,
+      exerciseData,
+      exerciseEquipmentData,
+      muscleData,
+      equipmentData,
+      programData,
+      allExercises,
+      allMuscles,
+      allEquipment,
+      userEquipment,
+      userWeakMuscles,
+      userExercisePreferences,
+      programPreferences,
+      programmedWorkouts,
+      userOneRepMaxes,
+      userConsent,
+      userExercisePool,
+      dashboardStats,
+      isLoading,
+      error,
+      refreshData,
+      isDataStale,
+      getExercise,
+      getExerciseMusclesData,
+      getExerciseEquipmentData,
+      getMuscle,
+      getEquipment,
+      getProgram,
+      loadAllExercises,
+      loadAllMuscles,
+      loadAllEquipment,
+      loadUserEquipment,
+      loadUserWeakMuscles,
+      loadUserExercisePreferences,
+      loadProgramPreferences,
+      loadProgrammedWorkouts,
+      loadUserOneRepMaxes,
+      loadUserConsent,
+      loadUserExercisePool,
+      loadDashboardStats,
+      updateUserConsent,
+      exportUserData,
+      deleteAllPersonalData,
+      createProgrammedExercise,
+      updateProgrammedExercise,
+      deleteProgrammedExercise,
+      getProgramPreferencesById,
+      generateWorkout,
+      updateWorkoutWithOneRepMax,
+      loadAllExercisesForComponents,
+      invalidateCache,
+      refreshSpecificData,
+      isLoadingSpecific,
+      getErrorForDataType,
+      clearError,
+    ]
+  );
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>;
 };

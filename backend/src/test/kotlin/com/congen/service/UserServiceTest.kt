@@ -140,7 +140,9 @@ class UserServiceTest {
             )
 
         whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just("test-keycloak-id"))
-        whenever(userDAL.updateUser(eq("test-keycloak-id"), eq(newName), isNull(), isNull(), isNull(), isNull())).thenReturn(Mono.just(updatedUser))
+        whenever(
+            userDAL.updateUser(eq("test-keycloak-id"), eq(newName), isNull(), isNull(), isNull(), isNull())
+        ).thenReturn(Mono.just(updatedUser))
 
         val result = userService.updateUser(newName)
 
@@ -175,7 +177,9 @@ class UserServiceTest {
         val error = ValidationException("Invalid name")
 
         whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just("test-keycloak-id"))
-        whenever(userDAL.updateUser(eq("test-keycloak-id"), eq(newName), isNull(), isNull(), isNull(), isNull())).thenReturn(Mono.error(error))
+        whenever(
+            userDAL.updateUser(eq("test-keycloak-id"), eq(newName), isNull(), isNull(), isNull(), isNull())
+        ).thenReturn(Mono.error(error))
 
         val result = userService.updateUser(newName)
 
@@ -186,7 +190,6 @@ class UserServiceTest {
         verify(keycloakUtil).getCurrentUserId()
         verify(userDAL).updateUser(eq("test-keycloak-id"), eq(newName), isNull(), isNull(), isNull(), isNull())
     }
-
 
     @Test
     fun `updateUser should update user with physical attributes successfully`() {
@@ -207,7 +210,9 @@ class UserServiceTest {
             )
 
         whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just("test-keycloak-id"))
-        whenever(userDAL.updateUser(eq("test-keycloak-id"), eq(newName), eq(age), eq(weight), eq(height), isNull())).thenReturn(Mono.just(updatedUser))
+        whenever(
+            userDAL.updateUser(eq("test-keycloak-id"), eq(newName), eq(age), eq(weight), eq(height), isNull())
+        ).thenReturn(Mono.just(updatedUser))
 
         val result = userService.updateUser(newName, age, weight, height)
 
@@ -226,19 +231,22 @@ class UserServiceTest {
         val weight = 180
         val height = 72
         val gender = "male"
-        val updatedUser = User(
-            keycloakId = "test-keycloak-id",
-            name = newName,
-            age = age,
-            weight = weight,
-            height = height,
-            gender = gender,
-            createdAt = Instant.now(),
-            updatedAt = Instant.now()
-        )
+        val updatedUser =
+            User(
+                keycloakId = "test-keycloak-id",
+                name = newName,
+                age = age,
+                weight = weight,
+                height = height,
+                gender = gender,
+                createdAt = Instant.now(),
+                updatedAt = Instant.now()
+            )
 
         whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just("test-keycloak-id"))
-        whenever(userDAL.updateUser(eq("test-keycloak-id"), eq(newName), eq(age), eq(weight), eq(height), eq(gender))).thenReturn(Mono.just(updatedUser))
+        whenever(
+            userDAL.updateUser(eq("test-keycloak-id"), eq(newName), eq(age), eq(weight), eq(height), eq(gender))
+        ).thenReturn(Mono.just(updatedUser))
 
         val result = userService.updateUser(newName, age, weight, height, gender)
 

@@ -14,20 +14,11 @@ import { ExerciseName } from './ExerciseName';
 import { LineChart } from './LineChart';
 import { LoadingSpinner } from './LoadingSpinner';
 import { PieChart } from './PieChart';
-import type {
-  User,
-  Exercise,
-  UserOneRepMax,
-  ProgramWithWorkouts,
-  ProgrammedWorkoutWithStages,
-  ProgrammedExerciseWithSetSchemes,
-  WorkoutStageWithExercises,
-} from '../api/types';
+import type { Exercise, UserOneRepMax } from '../api/types';
 import { useData } from '../contexts/DataContext';
 
-interface ConjugateProgressionProps {
-  user: User;
-}
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+interface ConjugateProgressionProps {}
 
 /**
  * Enhanced Conjugate Progression component displaying actual user statistics and progress.
@@ -41,9 +32,9 @@ interface ConjugateProgressionProps {
  * @param user The user data
  * @return Enhanced conjugate progression component
  */
-export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({ user }) => {
+export const ConjugateProgression: React.FC<ConjugateProgressionProps> = () => {
   const { userData, weightUnitPreferences, isLoading: isDataLoading, getExercise } = useData();
-  
+
   // State for loaded data
   const [exerciseData, setExerciseData] = useState<Map<string, Exercise>>(new Map());
   const [oneRepMaxes, setOneRepMaxes] = useState<UserOneRepMax[]>([]);
@@ -58,7 +49,7 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({ user
   useEffect(() => {
     const loadAdditionalData = async () => {
       if (!userData) return;
-      
+
       setIsLoading(true);
       setError(null);
       try {
