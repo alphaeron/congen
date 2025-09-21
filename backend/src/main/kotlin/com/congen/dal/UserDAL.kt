@@ -133,6 +133,9 @@ class UserDAL(
      *
      * @param keycloakId The Keycloak identifier for the user
      * @param name The user's full name (will be encrypted)
+     * @param age The user's age in years (optional, will be encrypted)
+     * @param weight The user's weight in pounds (optional, will be encrypted)
+     * @param height The user's height in inches (optional, will be encrypted)
      * @return Mono containing the inserted user with decrypted data
      * @throws ValidationException if user data fails validation
      */
@@ -142,25 +145,34 @@ class UserDAL(
     )
     fun insertUser(
         keycloakId: String,
-        name: String
+        name: String,
+        age: Int? = null,
+        weight: Int? = null,
+        height: Int? = null
     ): Mono<User> {
         logger.debug("Inserting user: {} with Keycloak ID: {}", name, keycloakId)
 
         // Encrypt sensitive data
         val encryptedName = encryptionUtil.encrypt(name)
+        val encryptedAge = age?.let { encryptionUtil.encrypt(it.toString()) }
+        val encryptedWeight = weight?.let { encryptionUtil.encrypt(it.toString()) }
+        val encryptedHeight = height?.let { encryptionUtil.encrypt(it.toString()) }
 
         // Use transaction to ensure user creation and audit logging are atomic
         return postgresClient.withTransaction {
-            postgresClient.update<User>(
+            postgresClient.update<Map<String, Any>>(
                 """
                 INSERT INTO "user"
-                    (keycloak_id, name)
+                    (keycloak_id, name, age, weight, height)
                 VALUES
-                    ($1, $2)
+                    ($1, $2, $3, $4, $5)
                 """.trimIndent(),
                 keycloakId,
-                encryptedName
-            ).flatMap { insertedUser ->
+                encryptedName,
+                encryptedAge,
+                encryptedWeight,
+                encryptedHeight
+            ).flatMap { insertedRow ->
                 // Log the data creation for GDPR audit
                 auditService.logDataOperation(
                     keycloakId = keycloakId,
@@ -170,10 +182,13 @@ class UserDAL(
                     // Return the user with decrypted data
                     Mono.fromCallable {
                         User(
-                            keycloakId = insertedUser.keycloakId,
+                            keycloakId = keycloakId,
                             name = name,
-                            createdAt = insertedUser.createdAt,
-                            updatedAt = insertedUser.updatedAt
+                            age = age,
+                            weight = weight,
+                            height = height,
+                            createdAt = parseTimestamp(insertedRow["created_at"]),
+                            updatedAt = parseTimestamp(insertedRow["updated_at"])
                         )
                     }
                 )
@@ -199,10 +214,10 @@ class UserDAL(
     fun deleteUserByKeycloakId(keycloakId: String): Mono<User> {
         logger.debug("Deleting user with Keycloak ID: {}", keycloakId)
 
-        return postgresClient.selectIndividual<User>(
+        return postgresClient.selectIndividual<Map<String, Any>>(
             "SELECT * FROM \"user\" WHERE keycloak_id=$1",
             keycloakId,
-        ).flatMap {
+        ).flatMap { userRow ->
             // Use transaction to ensure audit logging and user deletion are atomic
             postgresClient.withTransaction {
                 // Log the data deletion for GDPR audit
@@ -212,16 +227,19 @@ class UserDAL(
                     dataType = "USER_PROFILE"
                 ).flatMap {
                     // Delete the user - use the generic update method which automatically appends RETURNING *
-                    postgresClient.update<User>(
+                    postgresClient.update<Map<String, Any>>(
                         "DELETE FROM \"user\" WHERE keycloak_id=$1",
                         keycloakId,
-                    ).map { deletedUser ->
+                    ).map { deletedRow ->
                         // Return the deleted user with decrypted data
                         User(
-                            keycloakId = deletedUser.keycloakId,
-                            name = decryptField(deletedUser.name) ?: "",
-                            createdAt = deletedUser.createdAt,
-                            updatedAt = deletedUser.updatedAt
+                            keycloakId = keycloakId,
+                            name = decryptField(userRow["name"]) ?: "",
+                            age = decryptField(userRow["age"])?.toIntOrNull(),
+                            weight = decryptField(userRow["weight"])?.toIntOrNull(),
+                            height = decryptField(userRow["height"])?.toIntOrNull(),
+                            createdAt = parseTimestamp(userRow["created_at"]),
+                            updatedAt = parseTimestamp(userRow["updated_at"])
                         )
                     }
                 }
@@ -233,11 +251,14 @@ class UserDAL(
      * Updates a user's profile information.
      *
      * This method updates the user record with the specified Keycloak ID.
-     * The name field is encrypted before storage and the updated_at timestamp
+     * All personal data fields are encrypted before storage and the updated_at timestamp
      * is automatically updated.
      *
      * @param keycloakId The Keycloak identifier of the user to update
      * @param name The new name for the user
+     * @param age The new age for the user (optional)
+     * @param weight The new weight for the user (optional)
+     * @param height The new height for the user (optional)
      * @return Mono containing the updated user
      * @throws NoResultsFoundException if no user exists with the given Keycloak ID
      */
@@ -247,24 +268,33 @@ class UserDAL(
     )
     fun updateUser(
         keycloakId: String,
-        name: String
+        name: String,
+        age: Int? = null,
+        weight: Int? = null,
+        height: Int? = null
     ): Mono<User> {
         logger.debug("Updating user: {} with Keycloak ID: {}", name, keycloakId)
 
         // Encrypt sensitive data
         val encryptedName = encryptionUtil.encrypt(name)
+        val encryptedAge = age?.let { encryptionUtil.encrypt(it.toString()) }
+        val encryptedWeight = weight?.let { encryptionUtil.encrypt(it.toString()) }
+        val encryptedHeight = height?.let { encryptionUtil.encrypt(it.toString()) }
 
         // Use transaction to ensure user update and audit logging are atomic
         return postgresClient.withTransaction {
-            postgresClient.update<User>(
+            postgresClient.update<Map<String, Any>>(
                 """
                 UPDATE "user"
-                SET name=$2, updated_at=NOW()
+                SET name=$2, age=$3, weight=$4, height=$5, updated_at=NOW()
                 WHERE keycloak_id=$1
                 """.trimIndent(),
                 keycloakId,
-                encryptedName
-            ).flatMap { updatedUser ->
+                encryptedName,
+                encryptedAge,
+                encryptedWeight,
+                encryptedHeight
+            ).flatMap { updatedRow ->
                 // Log the data update for GDPR audit
                 auditService.logDataOperation(
                     keycloakId = keycloakId,
@@ -274,10 +304,13 @@ class UserDAL(
                     // Return the updated user with decrypted data
                     Mono.fromCallable {
                         User(
-                            keycloakId = updatedUser.keycloakId,
+                            keycloakId = keycloakId,
                             name = name,
-                            createdAt = updatedUser.createdAt,
-                            updatedAt = updatedUser.updatedAt
+                            age = age,
+                            weight = weight,
+                            height = height,
+                            createdAt = parseTimestamp(updatedRow["created_at"]),
+                            updatedAt = parseTimestamp(updatedRow["updated_at"])
                         )
                     }
                 )
@@ -296,6 +329,9 @@ class UserDAL(
 
         // Handle both encrypted and unencrypted data for backward compatibility
         val name = decryptField(row["name"])
+        val age = decryptField(row["age"])?.toIntOrNull()
+        val weight = decryptField(row["weight"])?.toIntOrNull()
+        val height = decryptField(row["height"])?.toIntOrNull()
 
         // Handle timestamp conversion from database format
         val createdAt = parseTimestamp(row["created_at"])
@@ -304,6 +340,9 @@ class UserDAL(
         return User(
             keycloakId = keycloakId,
             name = name ?: "",
+            age = age,
+            weight = weight,
+            height = height,
             createdAt = createdAt,
             updatedAt = updatedAt,
         )

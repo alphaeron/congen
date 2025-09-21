@@ -1,23 +1,17 @@
-package com.congen.config
+package com.congen
 
+import com.congen.BaseIntegrationTest
+import com.congen.config.ServerConfig
 import org.junit.jupiter.api.Test
-import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.test.context.TestPropertySource
 import reactor.netty.http.server.HttpServer
 import kotlin.test.assertNotNull
 
 /**
- * Unit tests for [ServerConfig].
+ * Integration tests for [ServerConfig].
  *
  * Tests Netty server customization for DDoS protection.
  */
-@SpringBootTest(classes = [ServerConfig::class])
-@TestPropertySource(
-    properties = [
-        "spring.profiles.active=test"
-    ]
-)
-class ServerConfigTest {
+class ServerConfigIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `should create netty server customizer`() {
         val serverConfig = ServerConfig()

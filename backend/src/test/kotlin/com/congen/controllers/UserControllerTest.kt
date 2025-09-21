@@ -51,6 +51,9 @@ class UserControllerTest {
             User(
                 keycloakId = "test-keycloak-user-id",
                 name = "Test User",
+                age = null,
+                weight = null,
+                height = null,
                 createdAt = now,
                 updatedAt = now
             )
@@ -97,6 +100,9 @@ class UserControllerTest {
             User(
                 keycloakId = KEYCLOAK_USER_ID,
                 name = NAME,
+                age = null,
+                weight = null,
+                height = null,
                 createdAt = now,
                 updatedAt = now
             )
@@ -149,18 +155,21 @@ class UserControllerTest {
             User(
                 keycloakId = keycloakId,
                 name = newName,
+                age = null,
+                weight = null,
+                height = null,
                 createdAt = Instant.now(),
                 updatedAt = Instant.now()
             )
 
-        whenever(userService.updateUser(newName)).thenReturn(Mono.just(updatedUser))
+        whenever(userService.updateUser(newName, null, null, null)).thenReturn(Mono.just(updatedUser))
 
-        val result = userController.updateCurrentUser(newName)
+        val result = userController.updateCurrentUser(newName, null, null, null)
 
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(updatedUser))
             .verifyComplete()
-        verify(userService).updateUser(newName)
+        verify(userService).updateUser(newName, null, null, null)
     }
 
     @Test
@@ -168,14 +177,14 @@ class UserControllerTest {
         val newName = "Updated User Name"
         val error = ValidationException("Invalid name")
 
-        whenever(userService.updateUser(newName)).thenReturn(Mono.error(error))
+        whenever(userService.updateUser(newName, null, null, null)).thenReturn(Mono.error(error))
 
-        val result = userController.updateCurrentUser(newName)
+        val result = userController.updateCurrentUser(newName, null, null, null)
 
         StepVerifier.create(result)
             .expectError(ValidationException::class.java)
             .verify()
-        verify(userService).updateUser(newName)
+        verify(userService).updateUser(newName, null, null, null)
     }
 
     @Test
@@ -183,13 +192,13 @@ class UserControllerTest {
         val newName = "Updated User Name"
         val error = RuntimeException("Keycloak error")
 
-        whenever(userService.updateUser(newName)).thenReturn(Mono.error(error))
+        whenever(userService.updateUser(newName, null, null, null)).thenReturn(Mono.error(error))
 
-        val result = userController.updateCurrentUser(newName)
+        val result = userController.updateCurrentUser(newName, null, null, null)
 
         StepVerifier.create(result)
             .expectError(RuntimeException::class.java)
             .verify()
-        verify(userService).updateUser(newName)
+        verify(userService).updateUser(newName, null, null, null)
     }
 }

@@ -79,7 +79,6 @@ class FourDayWorkoutStageGenerationServiceTest {
                 isWarmup = eq(false),
                 exerciseWorkoutTypeMappings = any(),
                 exerciseMuscleMappings = any(),
-                exerciseEquipmentMappings = any()
             )
         ).thenReturn(Mono.just(primaryExercise))
 
@@ -93,7 +92,6 @@ class FourDayWorkoutStageGenerationServiceTest {
                 exerciseMuscleMappings = any(),
                 movementBalanceState = any(),
                 exerciseWorkoutTypeMappings = any(),
-                exerciseEquipmentMappings = any()
             )
         ).thenReturn(Mono.just(secondaryExercise))
 
@@ -109,7 +107,6 @@ class FourDayWorkoutStageGenerationServiceTest {
                 isWarmup = eq(false),
                 exerciseWorkoutTypeMappings = any(),
                 exerciseMuscleMappings = any(),
-                exerciseEquipmentMappings = any()
             )
         ).thenReturn(Mono.just(secondaryExercise))
 
@@ -257,7 +254,6 @@ class FourDayWorkoutStageGenerationServiceTest {
                 isWarmup = eq(false),
                 exerciseWorkoutTypeMappings = any(),
                 exerciseMuscleMappings = any(),
-                exerciseEquipmentMappings = any()
             )
         ).thenReturn(Mono.just(primaryExercise))
 
@@ -273,7 +269,6 @@ class FourDayWorkoutStageGenerationServiceTest {
                 isWarmup = eq(false),
                 exerciseWorkoutTypeMappings = any(),
                 exerciseMuscleMappings = any(),
-                exerciseEquipmentMappings = any()
             )
         ).thenReturn(Mono.just(secondaryExercise))
 
@@ -409,7 +404,6 @@ class FourDayWorkoutStageGenerationServiceTest {
                 isWarmup = eq(false),
                 exerciseWorkoutTypeMappings = any(),
                 exerciseMuscleMappings = any(),
-                exerciseEquipmentMappings = any()
             )
         ).thenReturn(Mono.just(primaryExercise))
 
@@ -425,7 +419,6 @@ class FourDayWorkoutStageGenerationServiceTest {
                 isWarmup = eq(false),
                 exerciseWorkoutTypeMappings = any(),
                 exerciseMuscleMappings = any(),
-                exerciseEquipmentMappings = any()
             )
         ).thenReturn(Mono.just(secondaryExercise))
 
@@ -561,7 +554,6 @@ class FourDayWorkoutStageGenerationServiceTest {
                 isWarmup = eq(false),
                 exerciseWorkoutTypeMappings = any(),
                 exerciseMuscleMappings = any(),
-                exerciseEquipmentMappings = any()
             )
         ).thenReturn(Mono.just(primaryExercise))
 
@@ -575,7 +567,6 @@ class FourDayWorkoutStageGenerationServiceTest {
                 exerciseMuscleMappings = any(),
                 movementBalanceState = any(),
                 exerciseWorkoutTypeMappings = any(),
-                exerciseEquipmentMappings = any()
             )
         ).thenReturn(Mono.just(secondaryExercise))
 
@@ -591,7 +582,6 @@ class FourDayWorkoutStageGenerationServiceTest {
                 isWarmup = eq(false),
                 exerciseWorkoutTypeMappings = any(),
                 exerciseMuscleMappings = any(),
-                exerciseEquipmentMappings = any()
             )
         ).thenReturn(Mono.just(secondaryExercise))
 
@@ -736,7 +726,6 @@ class FourDayWorkoutStageGenerationServiceTest {
                 isWarmup = eq(false),
                 exerciseWorkoutTypeMappings = any(),
                 exerciseMuscleMappings = any(),
-                exerciseEquipmentMappings = any()
             )
         ).thenReturn(Mono.empty())
 

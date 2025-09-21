@@ -86,7 +86,6 @@ class WorkoutStageGenerationServiceTest {
                 isWarmup = eq(false),
                 exerciseWorkoutTypeMappings = any(),
                 exerciseMuscleMappings = any(),
-                exerciseEquipmentMappings = any()
             )
         ).thenReturn(Mono.just(primaryExercise))
 
@@ -102,7 +101,6 @@ class WorkoutStageGenerationServiceTest {
                 isWarmup = eq(false),
                 exerciseWorkoutTypeMappings = any(),
                 exerciseMuscleMappings = any(),
-                exerciseEquipmentMappings = any()
             )
         ).thenReturn(Mono.just(secondaryExercise))
 
@@ -221,7 +219,6 @@ class WorkoutStageGenerationServiceTest {
                 isWarmup = any(),
                 exerciseWorkoutTypeMappings = any(),
                 exerciseMuscleMappings = any(),
-                exerciseEquipmentMappings = any()
             )
         ).thenReturn(Mono.empty())
 

@@ -69,14 +69,22 @@ class UserService(
      * The user must be authenticated and can only update their own profile.
      *
      * @param name The new name for the user
+     * @param age The new age for the user (optional)
+     * @param weight The new weight for the user (optional)
+     * @param height The new height for the user (optional)
      * @return The updated user
      * @throws ValidationException if user data fails validation
      * @throws NoResultsFoundException if user profile does not exist
      */
-    fun updateUser(name: String): Mono<User> {
+    fun updateUser(
+        name: String,
+        age: Int? = null,
+        weight: Int? = null,
+        height: Int? = null
+    ): Mono<User> {
         return keycloakUtil.getCurrentUserId()
             .flatMap { keycloakUserId ->
-                userDAL.updateUser(keycloakUserId, name)
+                userDAL.updateUser(keycloakUserId, name, age, weight, height)
             }
     }
 

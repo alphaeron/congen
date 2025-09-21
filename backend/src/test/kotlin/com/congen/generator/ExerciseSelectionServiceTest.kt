@@ -71,7 +71,6 @@ class ExerciseSelectionServiceTest {
                 dayType = dayType,
                 exerciseWorkoutTypeMappings = preparedData.exerciseWorkoutTypeMappings,
                 exerciseMuscleMappings = preparedData.exerciseMuscleMappings,
-                exerciseEquipmentMappings = preparedData.exerciseEquipmentMappings
             )
 
         StepVerifier.create(result)
@@ -99,7 +98,6 @@ class ExerciseSelectionServiceTest {
                 dayType = dayType,
                 exerciseWorkoutTypeMappings = preparedData.exerciseWorkoutTypeMappings,
                 exerciseMuscleMappings = preparedData.exerciseMuscleMappings,
-                exerciseEquipmentMappings = preparedData.exerciseEquipmentMappings
             )
 
         StepVerifier.create(result)
@@ -139,7 +137,6 @@ class ExerciseSelectionServiceTest {
                 dayType = "ME_Upper",
                 exerciseMuscleMappings = preparedData.exerciseMuscleMappings,
                 exerciseWorkoutTypeMappings = exerciseWorkoutTypeMappings,
-                exerciseEquipmentMappings = preparedData.exerciseEquipmentMappings
             )
 
         StepVerifier.create(result)
@@ -280,8 +277,7 @@ class ExerciseSelectionServiceTest {
                 workoutType = "maximal_effort",
                 dayType = "ME_Upper",
                 exerciseMuscleMappings = createSampleExerciseMuscleMappings(),
-                exerciseWorkoutTypeMappings = exerciseWorkoutTypeMappings,
-                exerciseEquipmentMappings = createSampleExerciseEquipmentMappings()
+                exerciseWorkoutTypeMappings = exerciseWorkoutTypeMappings
             )
 
         StepVerifier.create(result)

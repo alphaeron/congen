@@ -138,6 +138,9 @@ class GdprControllerTest {
             UserDataExport(
                 keycloakId = keycloakId,
                 name = "Test User",
+                age = null,
+                weight = null,
+                height = null,
                 createdAt = Instant.now(),
                 updatedAt = Instant.now(),
                 dataProcessingConsent = true,
@@ -177,6 +180,9 @@ class GdprControllerTest {
             UserDataExport(
                 keycloakId = exportedUserId,
                 name = "Test User",
+                age = null,
+                weight = null,
+                height = null,
                 createdAt = Instant.now(),
                 updatedAt = Instant.now(),
                 dataProcessingConsent = true,
@@ -257,8 +263,8 @@ class GdprControllerTest {
                 assert(body.userRights.erasure == "You can request deletion of your personal data (right to be forgotten)")
 
                 // Verify metadata
-                assert(body.lastUpdated == "2025-08-25T00:00:00Z")
-                assert(body.version == "1.0.0")
+                assert(body.lastUpdated == "2025-09-20T00:00:00Z")
+                assert(body.version == "1.1.0")
             }
             .verifyComplete()
     }

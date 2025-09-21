@@ -92,7 +92,6 @@ class ThreeDayWorkoutStageGenerationServiceTest {
                 isWarmup = eq(false),
                 exerciseWorkoutTypeMappings = any(),
                 exerciseMuscleMappings = any(),
-                exerciseEquipmentMappings = any()
             )
         ).thenReturn(Mono.just(primaryExercise))
 
@@ -108,7 +107,6 @@ class ThreeDayWorkoutStageGenerationServiceTest {
                 isWarmup = eq(false),
                 exerciseWorkoutTypeMappings = any(),
                 exerciseMuscleMappings = any(),
-                exerciseEquipmentMappings = any()
             )
         ).thenReturn(Mono.just(secondaryExercise))
 
@@ -231,7 +229,6 @@ class ThreeDayWorkoutStageGenerationServiceTest {
                 isWarmup = eq(false),
                 exerciseWorkoutTypeMappings = any(),
                 exerciseMuscleMappings = any(),
-                exerciseEquipmentMappings = any()
             )
         ).thenReturn(Mono.just(primaryExercise))
 
@@ -247,7 +244,6 @@ class ThreeDayWorkoutStageGenerationServiceTest {
                 isWarmup = eq(false),
                 exerciseWorkoutTypeMappings = any(),
                 exerciseMuscleMappings = any(),
-                exerciseEquipmentMappings = any()
             )
         ).thenReturn(Mono.just(secondaryExercise))
 
@@ -370,7 +366,6 @@ class ThreeDayWorkoutStageGenerationServiceTest {
                 isWarmup = eq(false),
                 exerciseWorkoutTypeMappings = any(),
                 exerciseMuscleMappings = any(),
-                exerciseEquipmentMappings = any()
             )
         ).thenReturn(Mono.just(primaryExercise))
 
@@ -386,7 +381,6 @@ class ThreeDayWorkoutStageGenerationServiceTest {
                 isWarmup = eq(false),
                 exerciseWorkoutTypeMappings = any(),
                 exerciseMuscleMappings = any(),
-                exerciseEquipmentMappings = any()
             )
         ).thenReturn(Mono.just(conditioningExercise))
 

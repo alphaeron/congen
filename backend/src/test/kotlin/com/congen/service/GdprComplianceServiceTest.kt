@@ -184,6 +184,9 @@ class GdprComplianceServiceTest {
             User(
                 keycloakId = keycloakId,
                 name = "Test User",
+                age = null,
+                weight = null,
+                height = null,
                 createdAt = Instant.now(),
                 updatedAt = Instant.now()
             )

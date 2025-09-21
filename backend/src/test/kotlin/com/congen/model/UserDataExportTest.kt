@@ -22,6 +22,9 @@ class UserDataExportTest {
             UserDataExport(
                 keycloakId = "test-user-id",
                 name = "Test User",
+                age = null,
+                weight = null,
+                height = null,
                 createdAt = now,
                 updatedAt = now,
                 dataProcessingConsent = true,
@@ -52,6 +55,9 @@ class UserDataExportTest {
             UserDataExport(
                 keycloakId = "test-user-id",
                 name = "Test User",
+                age = null,
+                weight = null,
+                height = null,
                 createdAt = now,
                 updatedAt = now,
                 dataProcessingConsent = false,
@@ -76,6 +82,9 @@ class UserDataExportTest {
             UserDataExport(
                 keycloakId = "test-user-id",
                 name = "Test User",
+                age = null,
+                weight = null,
+                height = null,
                 createdAt = now,
                 updatedAt = now,
                 dataProcessingConsent = false,
@@ -124,6 +133,9 @@ class UserDataExportTest {
             UserDataExport(
                 keycloakId = "test-user-id",
                 name = "Test User",
+                age = null,
+                weight = null,
+                height = null,
                 createdAt = now,
                 updatedAt = now,
                 dataProcessingConsent = true,
@@ -245,6 +257,9 @@ class UserDataExportTest {
             UserDataExport(
                 keycloakId = "test-user-id",
                 name = "Test User",
+                age = null,
+                weight = null,
+                height = null,
                 createdAt = now,
                 updatedAt = now,
                 dataProcessingConsent = true,

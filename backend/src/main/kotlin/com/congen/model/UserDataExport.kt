@@ -16,6 +16,9 @@ import java.time.Instant
  *
  * @property keycloakId Unique identifier from Keycloak
  * @property name User's full name (encrypted at rest)
+ * @property age User's age in years (encrypted at rest)
+ * @property weight User's weight in pounds (encrypted at rest)
+ * @property height User's height in inches (encrypted at rest)
  * @property createdAt When the user account was created
  * @property updatedAt When the user account was last updated
  * @property dataProcessingConsent Current consent status for data processing
@@ -54,6 +57,24 @@ data class UserDataExport(
         example = "John Doe"
     )
     @param:JsonProperty("name") val name: String,
+    /** User's age in years. */
+    @Schema(
+        description = "User's age in years",
+        example = "30"
+    )
+    @param:JsonProperty("age") val age: Int?,
+    /** User's weight in pounds. */
+    @Schema(
+        description = "User's weight in pounds",
+        example = "180"
+    )
+    @param:JsonProperty("weight") val weight: Int?,
+    /** User's height in inches. */
+    @Schema(
+        description = "User's height in inches",
+        example = "72"
+    )
+    @param:JsonProperty("height") val height: Int?,
     /** When the user account was created. */
     @Schema(
         description = "Timestamp when the user account was created",

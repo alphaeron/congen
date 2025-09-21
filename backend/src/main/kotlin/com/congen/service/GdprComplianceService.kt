@@ -123,7 +123,7 @@ class GdprComplianceService(
      * for audit purposes.
      *
      * ## Data Exported
-     * - User profile information (name, timestamps)
+     * - User profile information (name, age, weight, height, timestamps)
      * - Consent status and history
      * - Equipment preferences
      * - Exercise preferences (avoid/include)
@@ -201,6 +201,9 @@ class GdprComplianceService(
                                             UserDataExport(
                                                 keycloakId = user.keycloakId,
                                                 name = user.name,
+                                                age = user.age,
+                                                weight = user.weight,
+                                                height = user.height,
                                                 createdAt = user.createdAt,
                                                 updatedAt = user.updatedAt,
                                                 dataProcessingConsent = consent.dataProcessingConsent,

@@ -296,7 +296,8 @@ class GdprController(
                                 "Account creation and user authentication",
                                 "Personalized workout generation",
                                 "Fitness tracking and progress monitoring",
-                                "Exercise preference management"
+                                "Exercise preference management",
+                                "Physical attributes tracking for personalized recommendations"
                             ),
                         legalBasis =
                             listOf(
@@ -307,6 +308,7 @@ class GdprController(
                         dataTypes =
                             listOf(
                                 "Personal identifiers (name)",
+                                "Physical attributes (age, weight, height) - encrypted at rest",
                                 "Fitness preferences and exercise data",
                                 "Equipment preferences",
                                 "Consent records and audit logs"
@@ -314,6 +316,7 @@ class GdprController(
                         retentionPeriods =
                             mapOf(
                                 "user_profile" to "7 years after account closure",
+                                "physical_attributes" to "7 years after account closure",
                                 "exercise_data" to "3 years after last activity",
                                 "audit_logs" to "7 years for compliance",
                                 "consent_records" to "7 years after withdrawal"
@@ -328,8 +331,8 @@ class GdprController(
                         objection = "You can object to the processing of your personal data",
                         complaint = "You can file a complaint with your local data protection authority"
                     ),
-                lastUpdated = "2025-08-25T00:00:00Z",
-                version = "1.0.0"
+                lastUpdated = "2025-09-20T00:00:00Z",
+                version = "1.1.0"
             )
 
         return Mono.just(ResponseEntity.ok(privacyInfo))

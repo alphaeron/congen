@@ -29,4 +29,42 @@ class UserIntegrationTest : BaseIntegrationTest() {
             .expectBody()
             .jsonPath(".keycloak_id").isEqualTo(userId)
     }
+
+    @Test
+    fun `should update user with physical attributes`() {
+        val newName = "Updated User Name"
+        val age = 30
+        val weight = 180
+        val height = 72
+
+        webTestClient.patch()
+            .uri("/api/v1/user/me?name=$newName&age=$age&weight=$weight&height=$height")
+            .header("Authorization", "Bearer $userToken")
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody()
+            .jsonPath(".keycloak_id").isEqualTo(userId)
+            .jsonPath(".name").isEqualTo(newName)
+            .jsonPath(".age").isEqualTo(age)
+            .jsonPath(".weight").isEqualTo(weight)
+            .jsonPath(".height").isEqualTo(height)
+    }
+
+    @Test
+    fun `should update user with partial physical attributes`() {
+        val newName = "Updated User Name"
+        val age = 25
+
+        webTestClient.patch()
+            .uri("/api/v1/user/me?name=$newName&age=$age")
+            .header("Authorization", "Bearer $userToken")
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody()
+            .jsonPath(".keycloak_id").isEqualTo(userId)
+            .jsonPath(".name").isEqualTo(newName)
+            .jsonPath(".age").isEqualTo(age)
+            .jsonPath(".weight").doesNotExist()
+            .jsonPath(".height").doesNotExist()
+    }
 }

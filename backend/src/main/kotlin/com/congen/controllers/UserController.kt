@@ -151,9 +151,12 @@ class UserController(
      * The user must be authenticated and can only update their own profile.
      *
      * @param name The new name for the user
+     * @param age The new age for the user (optional)
+     * @param weight The new weight for the user in pounds (optional)
+     * @param height The new height for the user in inches (optional)
      * @return The updated user profile
      *
-     * @throws ValidationException if the provided name fails validation
+     * @throws ValidationException if the provided data fails validation
      * @throws NoResultsFoundException if user profile does not exist
      */
     @PatchMapping("/me")
@@ -162,7 +165,8 @@ class UserController(
         summary = "Update current user profile",
         description =
             "Updates the current authenticated user's profile. " +
-                "The user must be authenticated and can only update their own profile."
+                "The user must be authenticated and can only update their own profile. " +
+                "All personal data is encrypted at rest for GDPR compliance."
     )
     @ApiResponses(
         value = [
@@ -190,9 +194,12 @@ class UserController(
         ]
     )
     fun updateCurrentUser(
-        @RequestParam("name") name: String
+        @RequestParam("name") name: String,
+        @RequestParam("age", required = false) age: Int?,
+        @RequestParam("weight", required = false) weight: Int?,
+        @RequestParam("height", required = false) height: Int?
     ): Mono<ResponseEntity<User>> {
-        return userService.updateUser(name)
+        return userService.updateUser(name, age, weight, height)
             .map { ResponseEntity.ok(it) }
     }
 }
