@@ -145,9 +145,8 @@ export function WorkoutPreferencesSection(): React.ReactElement {
       setUserEquipment(userEquipmentData);
       setUserWeakMuscles(userWeakMusclesData);
       setUserExercisePreferences(userExercisePreferencesData);
-    } catch (error) {
+    } catch {
       enqueueSnackbar('Failed to load preferences data. Please try again.', { variant: 'error' });
-      console.error('Failed to load preferences data:', error);
     } finally {
       setLoading(false);
     }

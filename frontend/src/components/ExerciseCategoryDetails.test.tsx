@@ -7,6 +7,7 @@ import { MemoryRouter } from 'react-router';
 import { ExerciseCategoryDetails } from './ExerciseCategoryDetails';
 import { ENDPOINT } from '../api/endpoint';
 import type { UserExercisePoolResponse } from '../api/types';
+import { DataProvider } from '../contexts/DataContext';
 
 // Mock auth context
 jest.mock('../contexts/AuthContext', () => ({
@@ -15,6 +16,18 @@ jest.mock('../contexts/AuthContext', () => ({
       keycloak_id: 'test-user-id',
       name: 'Test User',
     },
+  }),
+}));
+
+// Mock DataContext
+let mockUserExercisePool: any = null;
+const mockLoadUserExercisePool = jest.fn();
+
+jest.mock('../contexts/DataContext', () => ({
+  useData: () => ({
+    userExercisePool: mockUserExercisePool,
+    loadUserExercisePool: mockLoadUserExercisePool,
+    isLoading: false,
   }),
 }));
 
@@ -58,9 +71,23 @@ const mockExercisePoolData: UserExercisePoolResponse = {
 describe('ExerciseCategoryDetails', () => {
   let mock: MockAdapter;
 
+  const renderWithProviders = (component: React.ReactElement) => {
+    return render(
+      <MemoryRouter>
+        <SnackbarProvider>
+          {component}
+        </SnackbarProvider>
+      </MemoryRouter>
+    );
+  };
+
   beforeEach(() => {
     jest.clearAllMocks();
     mock = new MockAdapter(ENDPOINT);
+    
+    // Reset mock data
+    mockUserExercisePool = null;
+    mockLoadUserExercisePool.mockResolvedValue(mockExercisePoolData);
   });
 
   afterEach(() => {
@@ -70,14 +97,11 @@ describe('ExerciseCategoryDetails', () => {
   it('should display primary exercises when category is primary', async () => {
     mock.onGet('/conjugate_workout_generator/exercise_pool').reply(200, mockExercisePoolData);
 
+    // Set the mock data
+    mockUserExercisePool = mockExercisePoolData;
+
     await act(async () => {
-      render(
-        <MemoryRouter>
-          <SnackbarProvider>
-            <ExerciseCategoryDetails category="primary" />
-          </SnackbarProvider>
-        </MemoryRouter>
-      );
+      renderWithProviders(<ExerciseCategoryDetails category="primary" />);
     });
 
     // Wait for loading to complete
@@ -104,14 +128,11 @@ describe('ExerciseCategoryDetails', () => {
   it('should display accessory exercises when category is accessory', async () => {
     mock.onGet('/conjugate_workout_generator/exercise_pool').reply(200, mockExercisePoolData);
 
+    // Set the mock data
+    mockUserExercisePool = mockExercisePoolData;
+
     await act(async () => {
-      render(
-        <MemoryRouter>
-          <SnackbarProvider>
-            <ExerciseCategoryDetails category="accessory" />
-          </SnackbarProvider>
-        </MemoryRouter>
-      );
+      renderWithProviders(<ExerciseCategoryDetails category="accessory" />);
     });
 
     // Wait for loading to complete
@@ -135,14 +156,11 @@ describe('ExerciseCategoryDetails', () => {
   it('should display recent exercises when category is recent', async () => {
     mock.onGet('/conjugate_workout_generator/exercise_pool').reply(200, mockExercisePoolData);
 
+    // Set the mock data
+    mockUserExercisePool = mockExercisePoolData;
+
     await act(async () => {
-      render(
-        <MemoryRouter>
-          <SnackbarProvider>
-            <ExerciseCategoryDetails category="recent" />
-          </SnackbarProvider>
-        </MemoryRouter>
-      );
+      renderWithProviders(<ExerciseCategoryDetails category="recent" />);
     });
 
     // Wait for loading to complete
@@ -179,13 +197,7 @@ describe('ExerciseCategoryDetails', () => {
 
     mock.onGet('/conjugate_workout_generator/exercise_pool').reply(200, emptyExercisePoolData);
 
-    render(
-      <MemoryRouter>
-        <SnackbarProvider>
-          <ExerciseCategoryDetails category="primary" />
-        </SnackbarProvider>
-      </MemoryRouter>
-    );
+    renderWithProviders(<ExerciseCategoryDetails category="primary" />);
 
     await waitFor(
       () => {
@@ -200,13 +212,7 @@ describe('ExerciseCategoryDetails', () => {
   it('should show error for invalid category', async () => {
     mock.onGet('/conjugate_workout_generator/exercise_pool').reply(200, mockExercisePoolData);
 
-    render(
-      <MemoryRouter>
-        <SnackbarProvider>
-          <ExerciseCategoryDetails category="invalid" />
-        </SnackbarProvider>
-      </MemoryRouter>
-    );
+    renderWithProviders(<ExerciseCategoryDetails category="invalid" />);
 
     await waitFor(() => {
       expect(
@@ -238,14 +244,11 @@ describe('ExerciseCategoryDetails', () => {
 
     mock.onGet('/conjugate_workout_generator/exercise_pool').reply(200, singleExerciseData);
 
+    // Set the mock data
+    mockUserExercisePool = singleExerciseData;
+
     await act(async () => {
-      render(
-        <MemoryRouter>
-          <SnackbarProvider>
-            <ExerciseCategoryDetails category="primary" />
-          </SnackbarProvider>
-        </MemoryRouter>
-      );
+      renderWithProviders(<ExerciseCategoryDetails category="primary" />);
     });
 
     // Wait for loading to complete
@@ -267,14 +270,11 @@ describe('ExerciseCategoryDetails', () => {
   it('should create proper exercise cards for recent exercises', async () => {
     mock.onGet('/conjugate_workout_generator/exercise_pool').reply(200, mockExercisePoolData);
 
+    // Set the mock data
+    mockUserExercisePool = mockExercisePoolData;
+
     await act(async () => {
-      render(
-        <MemoryRouter>
-          <SnackbarProvider>
-            <ExerciseCategoryDetails category="recent" />
-          </SnackbarProvider>
-        </MemoryRouter>
-      );
+      renderWithProviders(<ExerciseCategoryDetails category="recent" />);
     });
 
     await waitFor(() => {

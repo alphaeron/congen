@@ -72,8 +72,6 @@ export function ExerciseOverview(): React.ReactElement {
         setExercises(exercisesData);
         setEquipment(equipmentData);
         setMuscles(musclesData);
-      } catch (error) {
-        console.error('Failed to load exercise overview data:', error);
       } finally {
         setIsLocalLoading(false);
       }

@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import * as React from 'react';
 import { MemoryRouter } from 'react-router';
 
@@ -15,9 +15,18 @@ jest.mock('../contexts/AuthContext', () => ({
   }),
 }));
 
+// Mock DataContext
+jest.mock('../contexts/DataContext', () => ({
+  useData: () => ({
+    userExercisePreferences: [],
+    loadUserExercisePreferences: jest.fn().mockResolvedValue([]),
+    refreshData: jest.fn(),
+  }),
+}));
+
 describe('ExerciseCard component', () => {
-  beforeEach(() => {
-    render(
+  const renderExerciseCard = () => {
+    return render(
       <MemoryRouter>
         <ExerciseCard
           exercise={EXERCISE}
@@ -26,43 +35,71 @@ describe('ExerciseCard component', () => {
         />
       </MemoryRouter>
     );
+  };
+
+  it('Renders the equipment', async () => {
+    renderExerciseCard();
+    
+    await waitFor(() => {
+      const equipmentRegex = new RegExp(`^${EXERCISE_EQUIPMENT.equipment_name}$`, 'i');
+      expect(screen.getByText(equipmentRegex)).toBeInTheDocument();
+    });
   });
 
-  it('Renders the equipment', () => {
-    const equipmentRegex = new RegExp(`^${EXERCISE_EQUIPMENT.equipment_name}$`, 'i');
-    expect(screen.getByText(equipmentRegex)).toBeInTheDocument();
+  it('Renders the muscle', async () => {
+    renderExerciseCard();
+    
+    await waitFor(() => {
+      const muscleRegex = new RegExp(`^${EXERCISE_MUSCLE.muscle_name}$`, 'i');
+      expect(screen.getByText(muscleRegex)).toBeInTheDocument();
+    });
   });
 
-  it('Renders the muscle', () => {
-    const muscleRegex = new RegExp(`^${EXERCISE_MUSCLE.muscle_name}$`, 'i');
-    expect(screen.getByText(muscleRegex)).toBeInTheDocument();
+  it('Renders the exercise name', async () => {
+    renderExerciseCard();
+    
+    await waitFor(() => {
+      const regex = new RegExp(`^${EXERCISE.name}$`, 'i');
+      expect(screen.getByText(regex)).toBeInTheDocument();
+    });
   });
 
-  it('Renders the exercise name', () => {
-    const regex = new RegExp(`^${EXERCISE.name}$`, 'i');
-    expect(screen.getByText(regex)).toBeInTheDocument();
+  it('Renders the exercise movementType', async () => {
+    renderExerciseCard();
+    
+    await waitFor(() => {
+      const regex = new RegExp(`${EXERCISE.movement_type}`, 'i');
+      expect(screen.getByText(regex)).toBeInTheDocument();
+    });
   });
 
-  it('Renders the exercise movementType', () => {
-    const regex = new RegExp(`${EXERCISE.movement_type}`, 'i');
-    expect(screen.getByText(regex)).toBeInTheDocument();
+  it('Renders the exercise isUnilateral', async () => {
+    renderExerciseCard();
+    
+    await waitFor(() => {
+      const text = EXERCISE.is_unilateral ? 'Unilateral' : 'Bilateral';
+      const regex = new RegExp(`${text}`, 'i');
+      expect(screen.getByText(regex)).toBeInTheDocument();
+    });
   });
 
-  it('Renders the exercise isUnilateral', () => {
-    const text = EXERCISE.is_unilateral ? 'Unilateral' : 'Bilateral';
-    const regex = new RegExp(`${text}`, 'i');
-    expect(screen.getByText(regex)).toBeInTheDocument();
+  it('Renders the exercise isUpper', async () => {
+    renderExerciseCard();
+    
+    await waitFor(() => {
+      const text = EXERCISE.is_upper ? 'Upper Body' : 'Lower Body';
+      const regex = new RegExp(`${text}`, 'i');
+      expect(screen.getByText(regex)).toBeInTheDocument();
+    });
   });
 
-  it('Renders the exercise isUpper', () => {
-    const text = EXERCISE.is_upper ? 'Upper Body' : 'Lower Body';
-    const regex = new RegExp(`${text}`, 'i');
-    expect(screen.getByText(regex)).toBeInTheDocument();
-  });
-
-  it('Renders the exercise isAccessory', () => {
-    const text = EXERCISE.is_accessory ? 'Accessory' : 'Primary';
-    const regex = new RegExp(`${text}`, 'i');
-    expect(screen.getByText(regex)).toBeInTheDocument();
+  it('Renders the exercise isAccessory', async () => {
+    renderExerciseCard();
+    
+    await waitFor(() => {
+      const text = EXERCISE.is_accessory ? 'Accessory' : 'Primary';
+      const regex = new RegExp(`${text}`, 'i');
+      expect(screen.getByText(regex)).toBeInTheDocument();
+    });
   });
 });

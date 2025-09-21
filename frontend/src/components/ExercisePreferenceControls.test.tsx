@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import { useSnackbar } from 'notistack';
 import React from 'react';
 import { MemoryRouter } from 'react-router';
@@ -10,11 +10,25 @@ import {
   removeUserExercisePreference,
 } from '../api/userExercisePreference';
 import { useAuth } from '../contexts/AuthContext';
+import { DataProvider } from '../contexts/DataContext';
 
 // Mock the dependencies
 jest.mock('../contexts/AuthContext');
 jest.mock('notistack');
 jest.mock('../api/userExercisePreference');
+
+// Mock DataContext
+let mockUserExercisePreferences: any[] = [];
+const mockLoadUserExercisePreferences = jest.fn();
+const mockRefreshData = jest.fn();
+
+jest.mock('../contexts/DataContext', () => ({
+  useData: () => ({
+    userExercisePreferences: mockUserExercisePreferences,
+    loadUserExercisePreferences: mockLoadUserExercisePreferences,
+    refreshData: mockRefreshData,
+  }),
+}));
 
 const mockUseAuth = useAuth as jest.MockedFunction<typeof useAuth>;
 const mockUseSnackbar = useSnackbar as jest.MockedFunction<typeof useSnackbar>;
@@ -41,7 +55,20 @@ describe('ExercisePreferenceControls', () => {
 
   const mockEnqueueSnackbar = jest.fn();
 
+  const renderWithProviders = (component: React.ReactElement) => {
+    return render(
+      <MemoryRouter>
+        {component}
+      </MemoryRouter>
+    );
+  };
+
   beforeEach(() => {
+    // Reset mock data
+    mockUserExercisePreferences = [];
+    mockLoadUserExercisePreferences.mockResolvedValue([]);
+    mockRefreshData.mockResolvedValue(undefined);
+
     mockUseAuth.mockReturnValue({
       user: mockUser,
       login: jest.fn(),
@@ -72,11 +99,7 @@ describe('ExercisePreferenceControls', () => {
   });
 
   it('renders segmented variant by default', async () => {
-    render(
-      <MemoryRouter>
-        <ExercisePreferenceControls exerciseName="Bench Press" />
-      </MemoryRouter>
-    );
+    renderWithProviders(<ExercisePreferenceControls exerciseName="Bench Press" />);
 
     await waitFor(() => {
       expect(screen.getByText('Prefer')).toBeInTheDocument();
@@ -86,11 +109,7 @@ describe('ExercisePreferenceControls', () => {
   });
 
   it('renders chip variant when specified', async () => {
-    render(
-      <MemoryRouter>
-        <ExercisePreferenceControls exerciseName="Bench Press" variant="chip" />
-      </MemoryRouter>
-    );
+    renderWithProviders(<ExercisePreferenceControls exerciseName="Bench Press" variant="chip" />);
 
     await waitFor(() => {
       expect(screen.getByText('Neutral')).toBeInTheDocument();
@@ -98,11 +117,7 @@ describe('ExercisePreferenceControls', () => {
   });
 
   it('renders icon variant when specified', async () => {
-    render(
-      <MemoryRouter>
-        <ExercisePreferenceControls exerciseName="Bench Press" variant="icon" />
-      </MemoryRouter>
-    );
+    renderWithProviders(<ExercisePreferenceControls exerciseName="Bench Press" variant="icon" />);
 
     await waitFor(() => {
       expect(screen.getByRole('button')).toBeInTheDocument();
@@ -110,21 +125,18 @@ describe('ExercisePreferenceControls', () => {
   });
 
   it('shows preferred state when exercise is preferred', async () => {
-    mockGetUserExercisePreferences.mockResolvedValue([
-      {
-        user_id: 'test-user-id',
-        exercise_name: 'Bench Press',
-        should_avoid: false,
-        created_at: new Date(),
-        updated_at: new Date(),
-      },
-    ]);
+    const preferredExercise = {
+      user_id: 'test-user-id',
+      exercise_name: 'Bench Press',
+      should_avoid: false,
+      created_at: new Date(),
+      updated_at: new Date(),
+    };
+    
+    mockUserExercisePreferences = [preferredExercise];
+    mockGetUserExercisePreferences.mockResolvedValue([preferredExercise]);
 
-    render(
-      <MemoryRouter>
-        <ExercisePreferenceControls exerciseName="Bench Press" />
-      </MemoryRouter>
-    );
+    renderWithProviders(<ExercisePreferenceControls exerciseName="Bench Press"       />);
 
     await waitFor(() => {
       const preferButton = screen.getByRole('button', { name: /prefer exercise/i });
@@ -133,21 +145,18 @@ describe('ExercisePreferenceControls', () => {
   });
 
   it('shows ignored state when exercise is ignored', async () => {
-    mockGetUserExercisePreferences.mockResolvedValue([
-      {
-        user_id: 'test-user-id',
-        exercise_name: 'Bench Press',
-        should_avoid: true,
-        created_at: new Date(),
-        updated_at: new Date(),
-      },
-    ]);
+    const ignoredExercise = {
+      user_id: 'test-user-id',
+      exercise_name: 'Bench Press',
+      should_avoid: true,
+      created_at: new Date(),
+      updated_at: new Date(),
+    };
+    
+    mockUserExercisePreferences = [ignoredExercise];
+    mockGetUserExercisePreferences.mockResolvedValue([ignoredExercise]);
 
-    render(
-      <MemoryRouter>
-        <ExercisePreferenceControls exerciseName="Bench Press" />
-      </MemoryRouter>
-    );
+    renderWithProviders(<ExercisePreferenceControls exerciseName="Bench Press"       />);
 
     await waitFor(() => {
       const ignoreButton = screen.getByRole('button', { name: /ignore exercise/i });
@@ -156,11 +165,7 @@ describe('ExercisePreferenceControls', () => {
   });
 
   it('allows direct selection of prefer option', async () => {
-    render(
-      <MemoryRouter>
-        <ExercisePreferenceControls exerciseName="Bench Press" />
-      </MemoryRouter>
-    );
+    renderWithProviders(<ExercisePreferenceControls exerciseName="Bench Press"       />);
 
     await waitFor(() => {
       expect(screen.getByText('Prefer')).toBeInTheDocument();
@@ -181,11 +186,7 @@ describe('ExercisePreferenceControls', () => {
   });
 
   it('allows direct selection of ignore option', async () => {
-    render(
-      <MemoryRouter>
-        <ExercisePreferenceControls exerciseName="Bench Press" />
-      </MemoryRouter>
-    );
+    renderWithProviders(<ExercisePreferenceControls exerciseName="Bench Press"       />);
 
     await waitFor(() => {
       expect(screen.getByText('Ignore')).toBeInTheDocument();
@@ -206,21 +207,18 @@ describe('ExercisePreferenceControls', () => {
   });
 
   it('allows selection of neutral option to remove preference', async () => {
-    mockGetUserExercisePreferences.mockResolvedValue([
-      {
-        user_id: 'test-user-id',
-        exercise_name: 'Bench Press',
-        should_avoid: false,
-        created_at: new Date(),
-        updated_at: new Date(),
-      },
-    ]);
+    const preferredExercise = {
+      user_id: 'test-user-id',
+      exercise_name: 'Bench Press',
+      should_avoid: false,
+      created_at: new Date(),
+      updated_at: new Date(),
+    };
+    
+    mockUserExercisePreferences = [preferredExercise];
+    mockGetUserExercisePreferences.mockResolvedValue([preferredExercise]);
 
-    render(
-      <MemoryRouter>
-        <ExercisePreferenceControls exerciseName="Bench Press" />
-      </MemoryRouter>
-    );
+    renderWithProviders(<ExercisePreferenceControls exerciseName="Bench Press"       />);
 
     await waitFor(
       () => {
@@ -229,7 +227,9 @@ describe('ExercisePreferenceControls', () => {
       { timeout: 10000 }
     );
 
-    fireEvent.click(screen.getByText('Neutral'));
+    // Click on the Neutral button to remove the preference
+    const neutralButton = screen.getByRole('button', { name: /neutral preference/i });
+    fireEvent.click(neutralButton);
 
     await waitFor(
       () => {
@@ -246,11 +246,7 @@ describe('ExercisePreferenceControls', () => {
   }, 15000);
 
   it('shows neutral state when no preference exists', async () => {
-    render(
-      <MemoryRouter>
-        <ExercisePreferenceControls exerciseName="Bench Press" />
-      </MemoryRouter>
-    );
+    renderWithProviders(<ExercisePreferenceControls exerciseName="Bench Press"       />);
 
     await waitFor(() => {
       const neutralButton = screen.getByRole('button', { name: /neutral preference/i });

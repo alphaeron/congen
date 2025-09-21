@@ -155,10 +155,7 @@ describe('WorkoutGenerationWizard', () => {
 
     // Mock the DataContext functions to resolve immediately
     const mockGenerateWorkout = jest.fn().mockResolvedValue(updatedProgram);
-    const mockLoadUserExercisePool = jest.fn().mockImplementation(() => {
-      // Return a resolved promise immediately to avoid async timing issues
-      return Promise.resolve(mockUserExercisePool);
-    });
+    const mockLoadUserExercisePool = jest.fn().mockResolvedValue(mockUserExercisePool);
     
     const testMockDataContext = {
       userData: null,
@@ -185,36 +182,28 @@ describe('WorkoutGenerationWizard', () => {
     
     mockUseData.mockReturnValue(testMockDataContext);
 
-    await act(async () => {
-      renderWithProviders(
-        <WorkoutGenerationWizard
-          open={true}
-          onClose={jest.fn()}
-          onComplete={onComplete}
-          program={mockProgram}
-        />
-      );
-    });
+    renderWithProviders(
+      <WorkoutGenerationWizard
+        open={true}
+        onClose={jest.fn()}
+        onComplete={onComplete}
+        program={mockProgram}
+      />
+    );
 
     // Wait for the exercise pool to be loaded
-    await act(async () => {
-      await waitFor(() => {
-        expect(mockLoadUserExercisePool).toHaveBeenCalled();
-      });
+    await waitFor(() => {
+      expect(mockLoadUserExercisePool).toHaveBeenCalled();
     });
 
     // Wait for the component to be ready
-    await act(async () => {
-      await waitFor(() => {
-        expect(screen.getByRole('button', { name: 'Generate Workouts' })).toBeInTheDocument();
-      });
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Generate Workouts' })).toBeInTheDocument();
     });
 
     const generateButton = screen.getByRole('button', { name: 'Generate Workouts' });
     
-    await act(async () => {
-      fireEvent.click(generateButton);
-    });
+    fireEvent.click(generateButton);
 
     // Check that the DataContext function was called
     await waitFor(() => {
@@ -244,43 +233,33 @@ describe('WorkoutGenerationWizard', () => {
       getProgram: jest.fn(),
       generateWorkout: jest.fn().mockRejectedValue(new Error('Generation failed')),
       updateWorkoutWithOneRepMax: jest.fn().mockResolvedValue(mockProgram),
-      loadUserExercisePool: jest.fn().mockImplementation(() => {
-        return Promise.resolve(mockUserExercisePool);
-      }),
+      loadUserExercisePool: jest.fn().mockResolvedValue(mockUserExercisePool),
     };
 
     mockUseData.mockReturnValue(errorMockDataContext);
 
-    await act(async () => {
-      renderWithProviders(
-        <WorkoutGenerationWizard
-          open={true}
-          onClose={onClose}
-          onComplete={jest.fn()}
-          program={mockProgram}
-        />
-      );
-    });
+    renderWithProviders(
+      <WorkoutGenerationWizard
+        open={true}
+        onClose={onClose}
+        onComplete={jest.fn()}
+        program={mockProgram}
+      />
+    );
 
     // Wait for the exercise pool to be loaded
-    await act(async () => {
-      await waitFor(() => {
-        expect(errorMockDataContext.loadUserExercisePool).toHaveBeenCalled();
-      });
+    await waitFor(() => {
+      expect(errorMockDataContext.loadUserExercisePool).toHaveBeenCalled();
     });
 
     // Wait for the component to be ready
-    await act(async () => {
-      await waitFor(() => {
-        expect(screen.getByRole('button', { name: 'Generate Workouts' })).toBeInTheDocument();
-      });
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Generate Workouts' })).toBeInTheDocument();
     });
 
     const generateButton = screen.getByRole('button', { name: 'Generate Workouts' });
     
-    await act(async () => {
-      fireEvent.click(generateButton);
-    });
+    fireEvent.click(generateButton);
 
     // Check that the DataContext function was called and failed
     await waitFor(() => {

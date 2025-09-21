@@ -20,6 +20,9 @@ jest.mock('../contexts/AuthContext', () => ({
 }));
 
 // Mock DataContext
+const mockLoadUserExercisePool = jest.fn();
+let mockUserExercisePool: any = null;
+
 jest.mock('../contexts/DataContext', () => ({
   useData: () => ({
     userData: null,
@@ -30,10 +33,16 @@ jest.mock('../contexts/DataContext', () => ({
     muscleData: new Map(),
     equipmentData: new Map(),
     programData: new Map(),
+    userExercisePool: mockUserExercisePool,
+    userExercisePreferences: [],
+    userEquipment: [],
+    userWeakMuscles: [],
     isLoading: false,
     error: null,
     refreshData: jest.fn(),
     isDataStale: false,
+    loadUserExercisePool: mockLoadUserExercisePool,
+    loadUserExercisePreferences: jest.fn(),
     getExercise: jest.fn().mockResolvedValue({
       name: 'Test Exercise',
       description: 'Test Description',
@@ -140,6 +149,10 @@ describe('ExerciseRotationVisualization', () => {
     jest.clearAllMocks();
     mock = new MockAdapter(ENDPOINT);
 
+    // Reset mock data
+    mockUserExercisePool = null;
+    mockLoadUserExercisePool.mockResolvedValue(mockExercisePoolData);
+
     // Mock the exercise API calls that ExerciseName component makes
     mock.onGet('/exercise/').reply(200, [
       { id: 1, name: 'Bench Press' },
@@ -167,6 +180,9 @@ describe('ExerciseRotationVisualization', () => {
     mock.onGet('/program/').reply(200, mockPrograms);
     mock.onGet('/conjugate_workout_generator/exercise_pool').reply(200, mockExercisePoolData);
 
+    // Set the mock data
+    mockUserExercisePool = mockExercisePoolData;
+
     renderWithProviders(<ExerciseRotationVisualization />);
 
     await waitFor(
@@ -187,6 +203,9 @@ describe('ExerciseRotationVisualization', () => {
     mock.onGet('/program/').reply(200, mockPrograms);
     mock.onGet('/conjugate_workout_generator/exercise_pool').reply(200, mockExercisePoolData);
 
+    // Set the mock data
+    mockUserExercisePool = mockExercisePoolData;
+
     renderWithProviders(<ExerciseRotationVisualization />);
 
     await waitFor(
@@ -200,6 +219,9 @@ describe('ExerciseRotationVisualization', () => {
   it('should display exercise pool statistics', async () => {
     mock.onGet('/program/').reply(200, mockPrograms);
     mock.onGet('/conjugate_workout_generator/exercise_pool').reply(200, mockExercisePoolData);
+
+    // Set the mock data
+    mockUserExercisePool = mockExercisePoolData;
 
     renderWithProviders(<ExerciseRotationVisualization />);
 
@@ -217,6 +239,9 @@ describe('ExerciseRotationVisualization', () => {
   it('should handle empty programs data', async () => {
     mock.onGet('/program/').reply(200, []);
     mock.onGet('/conjugate_workout_generator/exercise_pool').reply(200, mockExercisePoolData);
+
+    // Set the mock data
+    mockUserExercisePool = mockExercisePoolData;
 
     renderWithProviders(<ExerciseRotationVisualization />);
 
@@ -243,6 +268,9 @@ describe('ExerciseRotationVisualization', () => {
     mock.onGet('/program/').reply(200, mockPrograms);
     mock.onGet('/conjugate_workout_generator/exercise_pool').reply(200, emptyExercisePoolData);
 
+    // Set the mock data
+    mockUserExercisePool = emptyExercisePoolData;
+
     renderWithProviders(<ExerciseRotationVisualization />);
 
     await waitFor(
@@ -259,6 +287,9 @@ describe('ExerciseRotationVisualization', () => {
     mock.onGet('/program/').reply(200, mockPrograms);
     mock.onGet('/conjugate_workout_generator/exercise_pool').reply(200, mockExercisePoolData);
 
+    // Set the mock data
+    mockUserExercisePool = mockExercisePoolData;
+
     renderWithProviders(<ExerciseRotationVisualization />);
 
     await waitFor(
@@ -271,6 +302,9 @@ describe('ExerciseRotationVisualization', () => {
 
   it('navigates to category details when category card is clicked', async () => {
     mock.onGet('/conjugate_workout_generator/exercise_pool').reply(200, mockExercisePoolData);
+
+    // Set the mock data
+    mockUserExercisePool = mockExercisePoolData;
 
     renderWithProviders(<ExerciseRotationVisualization />);
 
@@ -289,6 +323,9 @@ describe('ExerciseRotationVisualization', () => {
 
   it('navigates to workout preferences when preferences card is clicked', async () => {
     mock.onGet('/conjugate_workout_generator/exercise_pool').reply(200, mockExercisePoolData);
+
+    // Set the mock data
+    mockUserExercisePool = mockExercisePoolData;
 
     renderWithProviders(<ExerciseRotationVisualization />);
 
@@ -309,6 +346,9 @@ describe('ExerciseRotationVisualization', () => {
     // Set up URL params to show a selected category
     mockSearchParams.set('category', 'primary');
     mock.onGet('/conjugate_workout_generator/exercise_pool').reply(200, mockExercisePoolData);
+
+    // Set the mock data
+    mockUserExercisePool = mockExercisePoolData;
 
     renderWithProviders(<ExerciseRotationVisualization />);
 
