@@ -59,16 +59,16 @@ export const Dashboard: React.FC<DashboardProps> = ({
       component: <DashboardOverview user={user} />,
     },
     {
-      id: 'workouts',
-      label: 'Workouts',
-      icon: <FitnessCenterIcon />,
-      component: <WorkoutsOverview user={user} selectedWorkout={selectedWorkout} />,
-    },
-    {
       id: 'programs',
       label: 'Programs',
       icon: <SettingsIcon />,
       component: <ProgramManagement user={user} />,
+    },
+    {
+      id: 'workouts',
+      label: 'Workouts',
+      icon: <FitnessCenterIcon />,
+      component: <WorkoutsOverview user={user} selectedWorkout={selectedWorkout} />,
     },
   ];
 

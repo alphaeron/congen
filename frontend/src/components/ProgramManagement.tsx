@@ -15,11 +15,11 @@ import { FormField } from './FormField';
 import { LoadingBackdrop } from './LoadingBackdrop';
 import { LoadingSpinner } from './LoadingSpinner';
 import { StatusChip } from './StatusChip';
-import { getPrograms, createProgram, updateProgram, deleteProgram } from '../api/program';
-import { getProgrammedWorkouts } from '../api/programmedWorkout';
+import { createProgram, updateProgram, deleteProgram } from '../api/program';
 import { getProgramPreferences, updateProgramPreferences } from '../api/programPreferences';
 import type { User, Program, ProgrammedWorkout, ProgramPreferences } from '../api/types';
 import { formatDate } from '../common/utils';
+import { useData } from '../contexts/DataContext';
 
 interface ProgramManagementProps {
   user: User;
@@ -36,12 +36,11 @@ interface ProgramManagementProps {
  */
 export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) => {
   const { enqueueSnackbar } = useSnackbar();
-  const [programs, setPrograms] = useState<Program[]>([]);
+  const { userData, refreshData, isLoading } = useData();
   const [programPreferences, setProgramPreferences] = useState<Map<number, ProgramPreferences>>(
     new Map()
   );
-  const [workouts, setWorkouts] = useState<ProgrammedWorkout[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingPreferences, setIsLoadingPreferences] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -50,53 +49,50 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
   const [resumeDialogOpen, setResumeDialogOpen] = useState(false);
   const [selectedProgram, setSelectedProgram] = useState<Program | null>(null);
   // Form data types for TanStack Form
-  interface CreateProgramFormData {
+  interface CreateProgramFormData extends Record<string, unknown> {
     name: string;
     numDaysPerWeek: number;
   }
 
-  interface EditSessionDurationFormData {
+  interface EditSessionDurationFormData extends Record<string, unknown> {
     sessionTimeLengthInMinutes: number;
   }
 
   useEffect(() => {
-    loadPrograms();
-  }, []);
+    loadProgramPreferences();
+  }, [userData]);
 
-  const loadPrograms = async () => {
+  const loadProgramPreferences = async () => {
+    if (!userData?.training_programs?.length) {
+      setIsLoadingPreferences(false);
+      return;
+    }
+
     try {
-      setIsLoading(true);
-
-      const [programsData, workoutsData] = await Promise.all([
-        getPrograms(),
-        getProgrammedWorkouts(),
-      ]);
-
-      setPrograms(programsData);
-      setWorkouts(workoutsData);
+      setIsLoadingPreferences(true);
 
       // Load program preferences for each program
       const preferencesMap = new Map<number, ProgramPreferences>();
-      for (const program of programsData) {
+      for (const programData of userData.training_programs) {
         try {
-          const preferences = await getProgramPreferences(program.id);
-          preferencesMap.set(program.id, preferences);
+          const preferences = await getProgramPreferences(programData.program.id);
+          preferencesMap.set(programData.program.id, preferences);
         } catch {
           // Use default preferences if loading fails
-          preferencesMap.set(program.id, {
-            program_id: program.id,
+          preferencesMap.set(programData.program.id, {
+            program_id: programData.program.id,
             program_days_per_week: 4,
             session_time_length_in_minutes: 60,
-            created_at: program.created_at,
-            updated_at: program.updated_at,
+            created_at: programData.program.created_at,
+            updated_at: programData.program.updated_at,
           });
         }
       }
       setProgramPreferences(preferencesMap);
     } catch {
-      enqueueSnackbar('Failed to load programs. Please try again.', { variant: 'error' });
+      enqueueSnackbar('Failed to load program preferences. Please try again.', { variant: 'error' });
     } finally {
-      setIsLoading(false);
+      setIsLoadingPreferences(false);
     }
   };
 
@@ -107,8 +103,9 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
 
     try {
       await createProgram(data.name, data.numDaysPerWeek, user.keycloak_id);
-      // Reload programs to get the updated data with preferences
-      loadPrograms();
+      // Refresh all data from server to get the updated programs
+      await refreshData();
+      enqueueSnackbar('Program created successfully!', { variant: 'success' });
     } catch {
       enqueueSnackbar('Failed to create program. Please try again.', { variant: 'error' });
     } finally {
@@ -155,7 +152,8 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
         selectedProgram.current_week_number,
         false // Set to inactive
       );
-      setPrograms(prev => prev.map(p => (p.id === selectedProgram.id ? updatedProgram : p)));
+      // Refresh all data from server to get the updated programs
+      await refreshData();
       setStopDialogOpen(false);
       setSelectedProgram(null);
       enqueueSnackbar('Program stopped successfully.', { variant: 'success' });
@@ -175,8 +173,8 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
         true // Set to active
       );
 
-      // Reload programs to get the updated data
-      loadPrograms();
+      // Refresh all data from server to get the updated programs
+      await refreshData();
 
       setResumeDialogOpen(false);
       setSelectedProgram(null);
@@ -191,7 +189,8 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
 
     try {
       await deleteProgram(selectedProgram.id);
-      setPrograms(prev => prev.filter(p => p.id !== selectedProgram.id));
+      // Refresh all data from server to get the updated programs
+      await refreshData();
       setProgramPreferences(prev => {
         const newMap = new Map(prev);
         newMap.delete(selectedProgram.id);
@@ -243,10 +242,12 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
   };
 
   const getWorkoutsForProgram = (programId: number) => {
-    return workouts.filter(workout => workout.program_id === programId);
+    if (!userData?.training_programs) return [];
+    const programData = userData.training_programs.find(p => p.program.id === programId);
+    return programData?.workouts || [];
   };
 
-  if (isLoading) {
+  if (isLoading || isLoadingPreferences) {
     return <LoadingSpinner message="Loading programs..." fullHeight={false} />;
   }
 
@@ -265,7 +266,10 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
 
       {/* Programs Cards */}
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-        {programs.map(program => {
+        {userData?.training_programs
+          ?.sort((a, b) => new Date(b.program.created_at).getTime() - new Date(a.program.created_at).getTime())
+          ?.map(programData => {
+          const program = programData.program;
           const programWorkouts = getWorkoutsForProgram(program.id);
           const preferences = programPreferences.get(program.id);
           const sessionDuration = preferences?.session_time_length_in_minutes || 60;
@@ -346,7 +350,7 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
       </Box>
 
       {/* No Programs State */}
-      {programs.length === 0 && (
+      {(!userData?.training_programs || userData.training_programs.length === 0) && (
         <EmptyState
           title="No Programs Yet"
           message="Create your first program to get started with structured workouts."
