@@ -19,12 +19,8 @@ import { useSnackbar } from 'notistack';
 import React, { useEffect, useState } from 'react';
 
 import { OneRepMaxInputStep } from './OneRepMaxInputStep';
-import {
-  generateNextWeek,
-  getUserExercisePool,
-  updateWorkoutWithOneRepMax,
-} from '../api/conjugateWorkoutGenerator';
 import { WizardStep } from '../api/types';
+import { useData } from '../contexts/DataContext';
 import type {
   Program,
   UserExercisePoolResponse,
@@ -56,6 +52,7 @@ export const WorkoutGenerationWizard: React.FC<WorkoutGenerationWizardProps> = (
   program,
 }) => {
   const { enqueueSnackbar } = useSnackbar();
+  const { refreshData, generateWorkout, updateWorkoutWithOneRepMax, loadUserExercisePool } = useData();
   const [currentStep, setCurrentStep] = useState<WizardStep>(WizardStep.WORKOUT_GENERATION);
   const [generatedWorkout, setGeneratedWorkout] = useState<Program | null>(null);
   const [exercisePool, setExercisePool] = useState<UserExercisePoolResponse | null>(null);
@@ -107,9 +104,32 @@ export const WorkoutGenerationWizard: React.FC<WorkoutGenerationWizardProps> = (
   // Load exercise pool when wizard opens
   useEffect(() => {
     if (open) {
-      loadExercisePool();
+      let isMounted = true;
+      
+      const loadExercisePool = async () => {
+        try {
+          const pool = await loadUserExercisePool();
+          if (isMounted) {
+            setExercisePool(pool);
+          }
+        } catch {
+          if (isMounted) {
+            enqueueSnackbar('Failed to load exercise pool', { variant: 'error' });
+          }
+        }
+      };
+      
+      // Use setTimeout to ensure the async operation happens in the next tick
+      const timeoutId = setTimeout(() => {
+        loadExercisePool();
+      }, 0);
+      
+      return () => {
+        isMounted = false;
+        clearTimeout(timeoutId);
+      };
     }
-  }, [open]);
+  }, [open, loadUserExercisePool, enqueueSnackbar]);
 
   // Handle workout update when reaching UPDATING_WORKOUT_WITH_1RM stage
   useEffect(() => {
@@ -118,21 +138,12 @@ export const WorkoutGenerationWizard: React.FC<WorkoutGenerationWizardProps> = (
     }
   }, [currentStep, isUpdatingWorkout]);
 
-  const loadExercisePool = async () => {
-    try {
-      const pool = await getUserExercisePool();
-      setExercisePool(pool);
-    } catch {
-      enqueueSnackbar('Failed to load exercise pool', { variant: 'error' });
-    }
-  };
-
   const handleWorkoutGeneration = async () => {
     setIsGenerating(true);
     setCurrentStep(WizardStep.GENERATION_LOADING);
 
     try {
-      const workout = await generateNextWeek(program.id);
+      const workout = await generateWorkout(program.id);
       setGeneratedWorkout(workout);
 
       // Check if there are exercises that need 1RM input
@@ -142,6 +153,8 @@ export const WorkoutGenerationWizard: React.FC<WorkoutGenerationWizardProps> = (
         setCurrentStep(WizardStep.ONE_REP_MAX_INPUT);
       } else {
         setCurrentStep(WizardStep.UPDATING_WORKOUT_WITH_1RM);
+        // Refresh DataContext to ensure all components have the latest data
+        await refreshData();
         onComplete(workout);
       }
     } catch {
@@ -163,6 +176,9 @@ export const WorkoutGenerationWizard: React.FC<WorkoutGenerationWizardProps> = (
     try {
       // Make API call to update workout with 1RM data (backend will fetch from database)
       const updatedWorkout = await updateWorkoutWithOneRepMax(program.id);
+
+      // Refresh DataContext to ensure all components have the latest data
+      await refreshData();
 
       // Show success message and close
       enqueueSnackbar('Workout updated successfully!', { variant: 'success' });

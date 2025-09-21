@@ -22,6 +22,13 @@ jest.mock('../contexts/AuthContext', () => ({
   }),
 }));
 
+// Mock DataContext
+const mockUseData = jest.fn();
+jest.mock('../contexts/DataContext', () => ({
+  useData: () => mockUseData(),
+  DataProvider: ({ children }: { children: React.ReactNode }) => children,
+}));
+
 const renderWithProviders = (component: React.ReactElement) => {
   return render(<MemoryRouter>{component}</MemoryRouter>);
 };
@@ -33,6 +40,25 @@ describe('WorkoutPreferencesSection', () => {
   beforeEach(() => {
     // Create a fresh mock adapter for each test
     mock = new MockAdapter(ENDPOINT);
+    
+    // Set up default mock data for DataContext
+    const defaultMockDataContext = {
+      userData: null,
+      exerciseMuscleData: new Map(),
+      weightUnitPreferences: [],
+      isLoading: false,
+      error: null,
+      refreshData: jest.fn(),
+      isDataStale: false,
+      loadAllExercises: jest.fn().mockResolvedValue([]),
+      loadAllMuscles: jest.fn().mockResolvedValue([]),
+      loadAllEquipment: jest.fn().mockResolvedValue([]),
+      loadUserEquipment: jest.fn().mockResolvedValue([]),
+      loadUserWeakMuscles: jest.fn().mockResolvedValue([]),
+      loadUserExercisePreferences: jest.fn().mockResolvedValue([]),
+    };
+
+    mockUseData.mockReturnValue(defaultMockDataContext);
   });
 
   afterEach(() => {
@@ -142,11 +168,41 @@ describe('WorkoutPreferencesSection', () => {
   });
 
   it('should handle loading state', async () => {
-    // Mock slow API response to ensure loading state is visible
-    mock
-      .onGet('/exercise/')
-      .reply(() => new Promise(resolve => setTimeout(() => resolve([200, []]), 100)));
-    mock.onGet('/user_weight_unit_preference/test-user-id').reply(404);
+    // Mock slow DataContext functions to ensure loading state is visible
+    const slowLoadAllExercises = jest.fn().mockImplementation(() => 
+      new Promise(resolve => setTimeout(() => resolve([]), 100))
+    );
+    const slowLoadAllMuscles = jest.fn().mockImplementation(() => 
+      new Promise(resolve => setTimeout(() => resolve([]), 100))
+    );
+    const slowLoadAllEquipment = jest.fn().mockImplementation(() => 
+      new Promise(resolve => setTimeout(() => resolve([]), 100))
+    );
+    const slowLoadUserEquipment = jest.fn().mockImplementation(() => 
+      new Promise(resolve => setTimeout(() => resolve([]), 100))
+    );
+    const slowLoadUserWeakMuscles = jest.fn().mockImplementation(() => 
+      new Promise(resolve => setTimeout(() => resolve([]), 100))
+    );
+    const slowLoadUserExercisePreferences = jest.fn().mockImplementation(() => 
+      new Promise(resolve => setTimeout(() => resolve([]), 100))
+    );
+
+    mockUseData.mockReturnValue({
+      userData: null,
+      exerciseMuscleData: new Map(),
+      weightUnitPreferences: [],
+      isLoading: false,
+      error: null,
+      refreshData: jest.fn(),
+      isDataStale: false,
+      loadAllExercises: slowLoadAllExercises,
+      loadAllMuscles: slowLoadAllMuscles,
+      loadAllEquipment: slowLoadAllEquipment,
+      loadUserEquipment: slowLoadUserEquipment,
+      loadUserWeakMuscles: slowLoadUserWeakMuscles,
+      loadUserExercisePreferences: slowLoadUserExercisePreferences,
+    });
 
     await act(async () => {
       renderWithProviders(<WorkoutPreferencesSection />);

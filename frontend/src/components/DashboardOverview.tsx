@@ -7,10 +7,6 @@ import { ActionCard } from './ActionCard';
 import { LoadingSpinner } from './LoadingSpinner';
 import { StatusChip } from './StatusChip';
 import { UserStatusSystem } from './UserStatusSystem';
-import { getIndividualExercise } from '../api/exercise';
-import { getUserDataExport } from '../api/gdpr';
-import { getPrograms } from '../api/program';
-import { getProgrammedWorkouts } from '../api/programmedWorkout';
 import type {
   User,
   Program,
@@ -21,9 +17,8 @@ import type {
   WorkoutStageWithExercises,
   ProgrammedExerciseWithSetSchemes,
   SetScheme,
-  UserDataExport,
 } from '../api/types';
-import { getUserOneRepMaxes } from '../api/userOneRepMax';
+import { useData } from '../contexts/DataContext';
 import {
   formatDate,
   categorizeExerciseVolume,
@@ -46,9 +41,9 @@ interface DashboardOverviewProps {
 export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ user }) => {
   const navigate = useNavigate();
   const { enqueueSnackbar } = useSnackbar();
-  const [programs, setPrograms] = useState<Program[]>([]);
+  const { userData, exerciseMuscleData, weightUnitPreferences, isLoading: isDataLoading, getExercise } = useData();
+  
   const [oneRepMaxes, setOneRepMaxes] = useState<UserOneRepMax[]>([]);
-  const [userData, setUserData] = useState<UserDataExport | null>(null);
   const [exerciseData, setExerciseData] = useState<Map<string, Exercise>>(new Map());
   const [isLoading, setIsLoading] = useState(true);
 
@@ -58,57 +53,52 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ user }) =>
     }
   };
 
-  const loadDashboardData = async () => {
-    try {
+  // Load additional data that's not in DataContext
+  useEffect(() => {
+    const loadAdditionalData = async () => {
+      if (!userData) return;
+      
       setIsLoading(true);
+      try {
+        // Extract one rep maxes from userData
+        setOneRepMaxes((userData.user_one_rep_max as unknown as UserOneRepMax[]) || []);
 
-      // Load all dashboard data in parallel
-      const [programsData, , oneRepMaxesData, dataExport] = await Promise.all([
-        getPrograms(),
-        getProgrammedWorkouts(),
-        getUserOneRepMaxes(user.keycloak_id),
-        getUserDataExport(),
-      ]);
-
-      setPrograms(programsData);
-      setOneRepMaxes(oneRepMaxesData);
-      setUserData(dataExport);
-
-      // Fetch exercise data for all unique exercises
-      const uniqueExercises = new Set<string>();
-      dataExport.training_programs?.forEach((program: ProgramWithWorkouts) => {
-        program.workouts.forEach(workout => {
-          workout.stages.forEach(stage => {
-            stage.exercises.forEach(exercise => {
-              uniqueExercises.add(exercise.exercise.exercise_name);
+        // Fetch exercise data for all unique exercises using DataContext
+        const uniqueExercises = new Set<string>();
+        userData.training_programs?.forEach((program: ProgramWithWorkouts) => {
+          program.workouts.forEach(workout => {
+            workout.stages.forEach(stage => {
+              stage.exercises.forEach(exercise => {
+                uniqueExercises.add(exercise.exercise.exercise_name);
+              });
             });
           });
         });
-      });
 
-      const exerciseMap = new Map<string, Exercise>();
-      for (const exerciseName of Array.from(uniqueExercises)) {
-        try {
-          const exercise = await getIndividualExercise(exerciseName);
-          exerciseMap.set(exerciseName, exercise);
-        } catch {
-          enqueueSnackbar(`Error fetching exercise data for ${exerciseName}`, {
-            variant: 'error',
-          });
+        const exerciseMap = new Map<string, Exercise>();
+        for (const exerciseName of Array.from(uniqueExercises)) {
+          try {
+            const exercise = await getExercise(exerciseName);
+            if (exercise) {
+              exerciseMap.set(exerciseName, exercise);
+            }
+          } catch {
+            enqueueSnackbar(`Error fetching exercise data for ${exerciseName}`, {
+              variant: 'error',
+            });
+          }
         }
+
+        setExerciseData(exerciseMap);
+      } catch {
+        enqueueSnackbar('Failed to load additional dashboard data. Please try again.', { variant: 'error' });
+      } finally {
+        setIsLoading(false);
       }
+    };
 
-      setExerciseData(exerciseMap);
-    } catch {
-      enqueueSnackbar('Failed to load dashboard data. Please try again.', { variant: 'error' });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadDashboardData();
-  }, [user.keycloak_id]);
+    loadAdditionalData();
+  }, [userData, enqueueSnackbar, getExercise]);
 
   // Calculate volume data for accurate metrics
   const volumeData = useMemo(() => {
@@ -167,11 +157,16 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ user }) =>
       .slice(-10); // Last 10 workouts
   }, [userData, exerciseData]);
 
-  if (isLoading) {
+  // Find active program from userData
+  const activeProgram = useMemo(() => {
+    if (!userData?.training_programs) return null;
+    const activeProgramData = userData.training_programs.find(p => p.program.is_active);
+    return activeProgramData?.program || null;
+  }, [userData]);
+
+  if (isDataLoading || isLoading) {
     return <LoadingSpinner message="Loading dashboard..." fullHeight={false} />;
   }
-
-  const activeProgram = programs.find(program => program.is_active);
 
   // Calculate actual total workouts across all programs
   const totalWorkouts =

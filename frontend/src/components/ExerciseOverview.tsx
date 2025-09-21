@@ -16,12 +16,7 @@ import { EmptyState } from './EmptyState';
 import { ExerciseCard } from './ExerciseCard';
 import { FormField } from './FormField';
 import { LoadingSpinner } from './LoadingSpinner';
-import { getEquipment } from '../api/equipment';
-import { getExercises } from '../api/exercise';
-import { getExerciseEquipment } from '../api/exerciseEquipment';
-import { getExerciseMuscle } from '../api/exerciseMuscle';
-import { useApiGet } from '../api/hooks';
-import { getMuscles } from '../api/muscle';
+import { useData } from '../contexts/DataContext';
 import type { Equipment, Exercise, Muscle } from '../api/types';
 import { capitalizeEachWord } from '../common/utils';
 
@@ -50,81 +45,95 @@ export function ExerciseOverview(): React.ReactElement {
   const itemsPerRow = 4; // Number of items per row in the grid
   const rowHeight = 300; // Approximate height of each exercise card row
 
-  const {
-    data: exercises,
-    isLoading: isExercisesLoading,
-    isError: isExercisesError,
-  } = useApiGet<Exercise[]>(['exercises'], getExercises, {
-    enabled: true,
-    refetchOnWindowFocus: true,
-    retry: 1,
-  });
+  const { 
+    loadAllExercises, 
+    loadAllEquipment, 
+    loadAllMuscles, 
+    exerciseMuscleData,
+    exerciseEquipmentData,
+    isLoading: isDataLoading, 
+    error: dataError 
+  } = useData();
+  const [exercises, setExercises] = React.useState<Exercise[]>([]);
+  const [equipment, setEquipment] = React.useState<Equipment[]>([]);
+  const [muscles, setMuscles] = React.useState<Muscle[]>([]);
+  const [isLocalLoading, setIsLocalLoading] = React.useState(true);
 
-  const {
-    data: equipment,
-    isLoading: isEquipmentLoading,
-    isError: isEquipmentError,
-  } = useApiGet<Equipment[]>(['equipment'], getEquipment, {
-    enabled: true,
-    refetchOnWindowFocus: true,
-    retry: 1,
-  });
+  // Load data on mount
+  React.useEffect(() => {
+    const loadData = async () => {
+      setIsLocalLoading(true);
+      try {
+        const [exercisesData, equipmentData, musclesData] = await Promise.all([
+          loadAllExercises(),
+          loadAllEquipment(),
+          loadAllMuscles(),
+        ]);
+        setExercises(exercisesData);
+        setEquipment(equipmentData);
+        setMuscles(musclesData);
+      } catch (error) {
+        console.error('Failed to load exercise overview data:', error);
+      } finally {
+        setIsLocalLoading(false);
+      }
+    };
 
-  const {
-    data: muscles,
-    isLoading: isMusclesLoading,
-    isError: isMusclesError,
-  } = useApiGet<Muscle[]>(['muscles'], getMuscles, {
-    enabled: true,
-    refetchOnWindowFocus: true,
-    retry: 1,
-  });
+    loadData();
+  }, [loadAllExercises, loadAllEquipment, loadAllMuscles]);
 
-  const getExerciseEquipmentMap = async (): Promise<Map<string, Set<string>>> => {
-    const res = await getExerciseEquipment();
+  // Load exercise equipment map from DataContext
+  React.useEffect(() => {
+    if (exerciseEquipmentData.size > 0) {
+      const map = getExerciseEquipmentMap();
+      setExerciseEquipmentMap(map);
+      setIsExerciseEquipmentLoading(false);
+      setIsExerciseEquipmentError(false);
+    }
+  }, [exerciseEquipmentData]);
+
+  // Load exercise muscle map from DataContext
+  React.useEffect(() => {
+    if (exerciseMuscleData.size > 0) {
+      const map = getExerciseMuscleMap();
+      setExerciseMuscleMap(map);
+      setIsExerciseMuscleLoading(false);
+      setIsExerciseMuscleError(false);
+    }
+  }, [exerciseMuscleData]);
+
+  const isExercisesLoading = isLocalLoading;
+  const isEquipmentLoading = isLocalLoading;
+  const isMusclesLoading = isLocalLoading;
+  const isExercisesError = !!dataError;
+  const isEquipmentError = !!dataError;
+  const isMusclesError = !!dataError;
+
+  const getExerciseEquipmentMap = (): Map<string, Set<string>> => {
     const mapping = new Map<string, Set<string>>();
-    const exerciseNames = Array.from(new Set(res.map(e => e.exercise_name)));
-    for (const exerciseName of exerciseNames) {
-      mapping.set(
-        exerciseName,
-        new Set(res.filter(e => e.exercise_name === exerciseName).map(e => e.equipment_name))
-      );
+    // Convert DataContext exerciseEquipmentData to the expected format
+    for (const [exerciseName, equipmentList] of exerciseEquipmentData.entries()) {
+      mapping.set(exerciseName, new Set(equipmentList.map(eq => eq.equipment_name)));
     }
     return mapping;
   };
 
-  const {
-    data: exerciseEquipmentMap,
-    isLoading: isExerciseEquipmentLoading,
-    isError: isExerciseEquipmentError,
-  } = useApiGet<Map<string, Set<string>>>(['exerciseEquipmentMap'], getExerciseEquipmentMap, {
-    enabled: true,
-    refetchOnWindowFocus: true,
-    retry: 1,
-  });
+  const [exerciseEquipmentMap, setExerciseEquipmentMap] = React.useState<Map<string, Set<string>>>(new Map());
+  const [isExerciseEquipmentLoading, setIsExerciseEquipmentLoading] = React.useState(true);
+  const [isExerciseEquipmentError, setIsExerciseEquipmentError] = React.useState(false);
 
-  const getExerciseMuscleMap = async (): Promise<Map<string, Set<string>>> => {
-    const res = await getExerciseMuscle();
+  const getExerciseMuscleMap = (): Map<string, Set<string>> => {
     const mapping = new Map<string, Set<string>>();
-    const exerciseNames = Array.from(new Set(res.map(e => e.exercise_name)));
-    for (const exerciseName of exerciseNames) {
-      mapping.set(
-        exerciseName,
-        new Set(res.filter(e => e.exercise_name === exerciseName).map(e => e.muscle_name))
-      );
+    // Convert DataContext exerciseMuscleData to the expected format
+    for (const [exerciseName, muscleList] of exerciseMuscleData.entries()) {
+      mapping.set(exerciseName, new Set(muscleList));
     }
     return mapping;
   };
 
-  const {
-    data: exerciseMuscleMap,
-    isLoading: isExerciseMuscleLoading,
-    isError: isExerciseMuscleError,
-  } = useApiGet<Map<string, Set<string>>>(['exerciseMuscleMap'], getExerciseMuscleMap, {
-    enabled: true,
-    refetchOnWindowFocus: true,
-    retry: 1,
-  });
+  const [exerciseMuscleMap, setExerciseMuscleMap] = React.useState<Map<string, Set<string>>>(new Map());
+  const [isExerciseMuscleLoading, setIsExerciseMuscleLoading] = React.useState(true);
+  const [isExerciseMuscleError, setIsExerciseMuscleError] = React.useState(false);
 
   React.useEffect(() => {
     if (exercises) {

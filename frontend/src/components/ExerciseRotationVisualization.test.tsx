@@ -19,6 +19,37 @@ jest.mock('../contexts/AuthContext', () => ({
   }),
 }));
 
+// Mock DataContext
+jest.mock('../contexts/DataContext', () => ({
+  useData: () => ({
+    userData: null,
+    exerciseMuscleData: new Map(),
+    weightUnitPreferences: [],
+    exerciseData: new Map(),
+    exerciseEquipmentData: new Map(),
+    muscleData: new Map(),
+    equipmentData: new Map(),
+    programData: new Map(),
+    isLoading: false,
+    error: null,
+    refreshData: jest.fn(),
+    isDataStale: false,
+    getExercise: jest.fn().mockResolvedValue({
+      name: 'Test Exercise',
+      description: 'Test Description',
+      movement_type: 'strength',
+      is_unilateral: false,
+      is_upper: true,
+      is_accessory: false,
+    }),
+    getExerciseEquipmentData: jest.fn(),
+    getMuscle: jest.fn(),
+    getEquipment: jest.fn(),
+    getProgram: jest.fn(),
+  }),
+  DataProvider: ({ children }: { children: React.ReactNode }) => children,
+}));
+
 // Mock react-router
 const mockNavigate = jest.fn();
 const mockSearchParams = new URLSearchParams();
@@ -114,6 +145,15 @@ describe('ExerciseRotationVisualization', () => {
       { id: 1, name: 'Bench Press' },
       { id: 2, name: 'Squat' },
     ]);
+    
+    // Mock the getExerciseMuscles API calls that ExerciseName components make
+    mock.onGet('/exercise/Bench Press/muscle').reply(200, []);
+    mock.onGet('/exercise/Squat/muscle').reply(200, []);
+    mock.onGet('/exercise/Bicep Curls/muscle').reply(200, []);
+    mock.onGet('/exercise/Deadlift/muscle').reply(200, []);
+    
+    // Add catch-all mock for any exercise muscle API calls
+    mock.onGet(/\/exercise\/.*\/muscle/).reply(200, []);
 
     // Reset search params
     mockSearchParams.delete('category');

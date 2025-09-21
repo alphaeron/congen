@@ -24,24 +24,17 @@ import { LoadingSpinner } from './LoadingSpinner';
 import { ProgressBar } from './ProgressBar';
 import { RadarChart } from './RadarChart';
 import { SunburstChart } from './SunburstChart';
-import { getIndividualExercise } from '../api/exercise';
-import { getExerciseMuscle } from '../api/exerciseMuscle';
-import { getUserDataExport } from '../api/gdpr';
-import { getProgramsWithPreferences } from '../api/program';
-import { getProgrammedWorkouts } from '../api/programmedWorkout';
 import type {
   ProgrammedWorkout,
   User,
   ProgramWithPreferences,
   Exercise,
-  UserDataExport,
-  UserWeightUnitPreference,
   ProgramWithWorkouts,
   ProgrammedWorkoutWithStages,
   WorkoutStageWithExercises,
   ProgrammedExerciseWithSetSchemes,
 } from '../api/types';
-import { getUserWeightUnitPreferences } from '../api/userWeightUnitPreference';
+import { useData } from '../contexts/DataContext';
 import { replaceUnderscoresWithSpaces } from '../common/utils';
 import { exportWeekToPDF } from '../utils/exportUtils';
 import { calculateWeekProgress, calculateWorkoutProgress } from '../utils/progressUtils';
@@ -65,90 +58,63 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { enqueueSnackbar } = useSnackbar();
+  const { userData, exerciseMuscleData, weightUnitPreferences, isLoading: isDataLoading, getExercise, loadProgramPreferences } = useData();
 
   const [programsWithPreferences, setProgramsWithPreferences] = useState<
     Array<ProgramWithPreferences>
   >([]);
-  const [workouts, setWorkouts] = useState<ProgrammedWorkout[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [exerciseData, setExerciseData] = useState<Map<string, Exercise>>(new Map());
-  const [exerciseMuscleData, setExerciseMuscleData] = useState<Map<string, string[]>>(new Map());
-  const [userDataExport, setUserDataExport] = useState<UserDataExport | null>(null);
-  const [weightUnitPreferences, setWeightUnitPreferences] = useState<UserWeightUnitPreference[]>(
-    []
-  );
 
   useEffect(() => {
-    const loadWeekData = async () => {
+    const loadAdditionalData = async () => {
       setIsLoading(true);
       try {
-        const [programsData, workoutsData, userData, exerciseMuscleDataResponse, weightUnitData] =
-          await Promise.all([
-            getProgramsWithPreferences(),
-            getProgrammedWorkouts(),
-            getUserDataExport(),
-            getExerciseMuscle(),
-            getUserWeightUnitPreferences(user.keycloak_id),
-          ]);
-
+        // Load program preferences using DataContext
+        const programsData = await loadProgramPreferences();
         setProgramsWithPreferences(programsData);
-        setWorkouts(workoutsData);
-        setUserDataExport(userData);
-        setWeightUnitPreferences(weightUnitData || []);
 
+        // Extract unique exercises from userData and fetch exercise details
         const uniqueExercises = new Set<string>();
-        (userData.training_programs as ProgramWithWorkouts[])?.forEach(program => {
-          program.workouts.forEach((workoutWithStages: ProgrammedWorkoutWithStages) => {
-            workoutWithStages.stages.forEach((stageWithExercises: WorkoutStageWithExercises) => {
-              stageWithExercises.exercises.forEach(
-                (exerciseWithSetSchemes: ProgrammedExerciseWithSetSchemes) => {
-                  uniqueExercises.add(exerciseWithSetSchemes.exercise.exercise_name);
-                }
-              );
+        userData?.training_programs?.forEach(program => {
+          program.workouts.forEach(workoutWithStages => {
+            workoutWithStages.stages.forEach(stageWithExercises => {
+              stageWithExercises.exercises.forEach(exerciseWithSetSchemes => {
+                uniqueExercises.add(exerciseWithSetSchemes.exercise.exercise_name);
+              });
             });
           });
         });
 
-        const exerciseDetailsPromises = Array.from(uniqueExercises).map(name =>
-          getIndividualExercise(name)
-        );
-        const exerciseDetails = await Promise.all(exerciseDetailsPromises);
         const exerciseMap = new Map<string, Exercise>();
-        exerciseDetails.forEach(ex => {
-          if (ex && ex.name) exerciseMap.set(ex.name, ex);
-        });
+        for (const exerciseName of Array.from(uniqueExercises)) {
+          try {
+            const exercise = await getExercise(exerciseName);
+            if (exercise) {
+              exerciseMap.set(exerciseName, exercise);
+            }
+          } catch {
+            // There was an error fetching the exercise, don't add it to the map.
+          }
+        }
         setExerciseData(exerciseMap);
 
-        // Convert exercise muscle data to Map<string, string[]> format (same as useData hook)
-        const exerciseMuscleMap = new Map<string, string[]>();
-        if (exerciseMuscleDataResponse && Array.isArray(exerciseMuscleDataResponse)) {
-          exerciseMuscleDataResponse.forEach(
-            (em: { exercise_name: string; muscle_name: string }) => {
-              const existing = exerciseMuscleMap.get(em.exercise_name) || [];
-              if (!existing.includes(em.muscle_name)) {
-                existing.push(em.muscle_name);
-              }
-              exerciseMuscleMap.set(em.exercise_name, existing);
-            }
-          );
-        }
-        setExerciseMuscleData(exerciseMuscleMap);
       } catch {
-        enqueueSnackbar('Failed to load week data.', { variant: 'error' });
+        enqueueSnackbar('Failed to load additional week data. Please try again.', { variant: 'error' });
       } finally {
         setIsLoading(false);
       }
     };
 
-    loadWeekData();
-  }, [user.keycloak_id, enqueueSnackbar]);
+    loadAdditionalData();
+  }, [userData, enqueueSnackbar, getExercise, loadProgramPreferences]);
 
-  const activeProgram = programsWithPreferences.find(program => program.program.is_active);
+  const activeProgram = programsWithPreferences?.find(program => program.program.is_active);
 
   const weekWorkouts = useMemo(() => {
-    if (!activeProgram || !workouts.length || !userDataExport?.training_programs?.length) return [];
+    if (!activeProgram || !userData?.training_programs?.length) return [];
 
-    const activeProgramData = userDataExport.training_programs.find(
+    const activeProgramData = userData.training_programs.find(
       p => p.program.id === activeProgram.program.id
     );
 
@@ -158,7 +124,7 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
     const weekStartDay = (weekNumber - 1) * workoutsPerWeek + 1;
     const weekEndDay = weekNumber * workoutsPerWeek;
 
-    // Use userDataExport.training_programs directly instead of programWorkouts
+    // Use userData.training_programs directly instead of programWorkouts
     // This ensures we get all the workout data with stages and exercises
     const allWorkouts = activeProgramData.workouts;
     const filteredWorkouts = allWorkouts
@@ -177,7 +143,7 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
     }[];
 
     return filteredWorkouts;
-  }, [activeProgram, weekNumber, userDataExport]);
+  }, [activeProgram, weekNumber, userData]);
 
   // Aggregate workout data for charts - combine at stage and exercise level
   const aggregatedWorkoutData = useMemo((): ProgrammedWorkoutWithStages | null => {
@@ -262,7 +228,7 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
   const progressMetrics = getWeekProgressMetrics();
 
   const handleExportPDF = async () => {
-    if (!activeProgram || !userDataExport) {
+    if (!activeProgram || !userData) {
       enqueueSnackbar('No active program or user data for export.', { variant: 'warning' });
       return;
     }
@@ -276,7 +242,7 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
   };
 
   // Show loading state while data is being fetched
-  if (isLoading) {
+  if (isDataLoading || isLoading) {
     return <LoadingSpinner message="Loading week details..." fullHeight={false} />;
   }
 

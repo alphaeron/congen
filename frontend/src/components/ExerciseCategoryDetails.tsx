@@ -4,9 +4,9 @@ import React, { useState, useEffect, useMemo } from 'react';
 
 import { ExerciseCard } from './ExerciseCard';
 import { LoadingSpinner } from './LoadingSpinner';
-import { getUserExercisePool } from '../api/conjugateWorkoutGenerator';
 import type { UserExercisePoolResponse } from '../api/types';
 import { useAuth } from '../contexts/AuthContext';
+import { useData } from '../contexts/DataContext';
 
 interface ExerciseCategoryDetailsProps {
   category: string;
@@ -28,28 +28,32 @@ interface ExerciseCategoryDetailsProps {
 export const ExerciseCategoryDetails: React.FC<ExerciseCategoryDetailsProps> = ({ category }) => {
   const { enqueueSnackbar } = useSnackbar();
   const { user } = useAuth();
+  const { userExercisePool, loadUserExercisePool, isLoading: isDataLoading } = useData();
 
   const [exercisePoolData, setExercisePoolData] = useState<UserExercisePoolResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Load exercise pool data
+  // Load exercise pool data from DataContext
   useEffect(() => {
-    if (user?.keycloak_id) {
-      loadData();
-    }
-  }, [user?.keycloak_id]);
+    const loadData = async () => {
+      if (!user?.keycloak_id) return;
+      
+      try {
+        setIsLoading(true);
+        // Load user exercise pool if not already loaded
+        if (!userExercisePool) {
+          await loadUserExercisePool();
+        }
+        setExercisePoolData(userExercisePool);
+      } catch {
+        enqueueSnackbar('Failed to load exercise pool data. Please try again.', { variant: 'error' });
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  const loadData = async () => {
-    try {
-      setIsLoading(true);
-      const exercisePoolData = await getUserExercisePool();
-      setExercisePoolData(exercisePoolData);
-    } catch {
-      enqueueSnackbar('Failed to load exercise pool data. Please try again.', { variant: 'error' });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    loadData();
+  }, [user?.keycloak_id, userExercisePool, loadUserExercisePool, enqueueSnackbar]);
 
   // Get category data based on the selected category
   const categoryData = useMemo(() => {

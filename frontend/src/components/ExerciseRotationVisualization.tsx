@@ -23,9 +23,9 @@ import { ExercisePoolPieChart } from './ExercisePoolPieChart';
 import { ExercisePoolSunburstChart } from './ExercisePoolSunburstChart';
 import { LoadingSpinner } from './LoadingSpinner';
 import { RadialBarChart } from './RadialBarChart';
-import { getUserExercisePool } from '../api/conjugateWorkoutGenerator';
 import type { UserExercisePoolResponse } from '../api/types';
 import { useAuth } from '../contexts/AuthContext';
+import { useData } from '../contexts/DataContext';
 
 /**
  * Exercise Rotation Visualization component.
@@ -40,6 +40,7 @@ import { useAuth } from '../contexts/AuthContext';
 export const ExerciseRotationVisualization: React.FC = () => {
   const { user } = useAuth();
   const { enqueueSnackbar } = useSnackbar();
+  const { userExercisePool, loadUserExercisePool, isLoading: isDataLoading } = useData();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [isLoading, setIsLoading] = useState(true);
@@ -64,8 +65,11 @@ export const ExerciseRotationVisualization: React.FC = () => {
     try {
       setIsLoading(true);
 
-      const poolData = await getUserExercisePool();
-      setExercisePoolData(poolData);
+      // Load user exercise pool if not already loaded
+      if (!userExercisePool) {
+        await loadUserExercisePool();
+      }
+      setExercisePoolData(userExercisePool);
     } catch {
       enqueueSnackbar('Failed to load exercise pool data. Please try again.', { variant: 'error' });
     } finally {

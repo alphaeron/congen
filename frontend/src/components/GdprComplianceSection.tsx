@@ -29,14 +29,9 @@ import { Link } from 'react-router';
 import { ConfirmationDialog } from './ConfirmationDialog';
 import { FormDialog } from './FormDialog';
 import { LoadingSpinner } from './LoadingSpinner';
-import {
-  recordConsent,
-  getConsentStatus,
-  exportUserData,
-  deleteAllPersonalData,
-} from '../api/gdpr';
 import type { UserConsent } from '../api/types';
 import { formatDate } from '../common/utils';
+import { useData } from '../contexts/DataContext';
 
 import type { AxiosError } from 'axios';
 
@@ -60,8 +55,7 @@ import type { AxiosError } from 'axios';
  */
 export function GdprComplianceSection(): React.ReactElement {
   const { enqueueSnackbar } = useSnackbar();
-  const [consentStatus, setConsentStatus] = React.useState<UserConsent | null>(null);
-  const [loading, setLoading] = React.useState(true);
+  const { userConsent, loadUserConsent, updateUserConsent, exportUserData, deleteAllPersonalData, isLoading } = useData();
   const [operationLoading, setOperationLoading] = React.useState<string | null>(null);
 
   // Dialog states
@@ -76,29 +70,13 @@ export function GdprComplianceSection(): React.ReactElement {
 
   // Load initial consent status
   React.useEffect(() => {
-    loadConsentStatus();
-  }, []);
-
-  const loadConsentStatus = async () => {
-    try {
-      setLoading(true);
-      const response = await getConsentStatus();
-      setConsentStatus(response);
-    } catch (err: unknown) {
-      const axiosError = err as AxiosError<{ message?: string }>;
-      enqueueSnackbar(axiosError.response?.data?.message || 'Failed to load consent status', {
-        variant: 'error',
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+    loadUserConsent();
+  }, [loadUserConsent]);
 
   const handleConsentChange = async (data: ConsentFormData) => {
     try {
       setOperationLoading('consent');
-      await recordConsent(data.consentValue);
-      await loadConsentStatus(); // Refresh status
+      await updateUserConsent(data.consentValue);
       setConsentDialogOpen(false);
       enqueueSnackbar(
         data.consentValue ? 'Consent given successfully' : 'Consent withdrawn successfully',
@@ -173,7 +151,7 @@ export function GdprComplianceSection(): React.ReactElement {
     }
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <Card>
         <CardContent>
@@ -208,7 +186,7 @@ export function GdprComplianceSection(): React.ReactElement {
               Data Processing Consent
             </Typography>
             <Box display="flex" alignItems="center" gap={2} mb={2}>
-              {consentStatus?.data_processing_consent ? (
+              {userConsent?.data_processing_consent ? (
                 <Chip
                   icon={<CheckCircleIcon />}
                   label="Consent Given"
@@ -218,10 +196,10 @@ export function GdprComplianceSection(): React.ReactElement {
               ) : (
                 <Chip icon={<CancelIcon />} label="Consent Withdrawn" color="error" size="small" />
               )}
-              {consentStatus?.consent_timestamp && (
+              {userConsent?.consent_timestamp && (
                 <Typography variant="caption" color="text.secondary">
                   Last updated:{' '}
-                  {formatDate(consentStatus.consent_timestamp, {
+                  {formatDate(userConsent.consent_timestamp, {
                     year: 'numeric',
                     month: 'short',
                     day: 'numeric',
@@ -232,7 +210,7 @@ export function GdprComplianceSection(): React.ReactElement {
               )}
             </Box>
             <Button variant="outlined" size="small" onClick={() => setConsentDialogOpen(true)}>
-              {consentStatus?.data_processing_consent ? 'Withdraw Consent' : 'Give Consent'}
+              {userConsent?.data_processing_consent ? 'Withdraw Consent' : 'Give Consent'}
             </Button>
           </Box>
 
@@ -331,9 +309,9 @@ export function GdprComplianceSection(): React.ReactElement {
         open={consentDialogOpen}
         onClose={() => setConsentDialogOpen(false)}
         onSubmit={handleConsentChange}
-        title={consentStatus?.data_processing_consent ? 'Withdraw Consent' : 'Give Consent'}
+        title={userConsent?.data_processing_consent ? 'Withdraw Consent' : 'Give Consent'}
         description={
-          consentStatus?.data_processing_consent
+          userConsent?.data_processing_consent
             ? 'By withdrawing consent, you revoke permission for us to process your personal data. Some features may become unavailable.'
             : 'By giving consent, you allow us to process your personal data for the purposes outlined in our privacy policy.'
         }
@@ -342,7 +320,7 @@ export function GdprComplianceSection(): React.ReactElement {
         loading={operationLoading === 'consent'}
         useTanStackForm={true}
         defaultValues={{
-          consentValue: !consentStatus?.data_processing_consent, // Opposite of current state
+          consentValue: !userConsent?.data_processing_consent, // Opposite of current state
         }}
         validate={values => {
           const errors: Record<string, string> = {};

@@ -16,7 +16,7 @@ import { LoadingBackdrop } from './LoadingBackdrop';
 import { LoadingSpinner } from './LoadingSpinner';
 import { StatusChip } from './StatusChip';
 import { createProgram, updateProgram, deleteProgram } from '../api/program';
-import { getProgramPreferences, updateProgramPreferences } from '../api/programPreferences';
+import { updateProgramPreferences } from '../api/programPreferences';
 import type { User, Program, ProgrammedWorkout, ProgramPreferences } from '../api/types';
 import { formatDate } from '../common/utils';
 import { useData } from '../contexts/DataContext';
@@ -36,7 +36,7 @@ interface ProgramManagementProps {
  */
 export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) => {
   const { enqueueSnackbar } = useSnackbar();
-  const { userData, refreshData, isLoading } = useData();
+  const { userData, refreshData, isLoading, getProgramPreferencesById } = useData();
   const [programPreferences, setProgramPreferences] = useState<Map<number, ProgramPreferences>>(
     new Map()
   );
@@ -75,8 +75,10 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
       const preferencesMap = new Map<number, ProgramPreferences>();
       for (const programData of userData.training_programs) {
         try {
-          const preferences = await getProgramPreferences(programData.program.id);
-          preferencesMap.set(programData.program.id, preferences);
+          const preferences = await getProgramPreferencesById(programData.program.id);
+          if (preferences) {
+            preferencesMap.set(programData.program.id, preferences);
+          }
         } catch {
           // Use default preferences if loading fails
           preferencesMap.set(programData.program.id, {
@@ -212,10 +214,12 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
 
     try {
       // Load program preferences to get session time
-      const preferences = await getProgramPreferences(program.id);
-      setEditFormData({
-        sessionTimeLengthInMinutes: preferences.session_time_length_in_minutes,
-      });
+      const preferences = await getProgramPreferencesById(program.id);
+      if (preferences) {
+        setEditFormData({
+          sessionTimeLengthInMinutes: preferences.session_time_length_in_minutes,
+        });
+      }
     } catch {
       // Fallback to default values if preferences can't be loaded
       setEditFormData({

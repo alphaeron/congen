@@ -6,6 +6,7 @@ import { MemoryRouter } from 'react-router';
 import { UserProfile } from './UserProfile';
 import { ENDPOINT } from '../api/endpoint';
 import { deleteAllPersonalData } from '../api/gdpr';
+import { DataContext } from '../contexts/DataContext';
 
 // Mock react-router
 const mockNavigate = jest.fn();
@@ -26,8 +27,92 @@ jest.mock('../contexts/AuthContext', () => ({
   }),
 }));
 
-const renderWithProviders = (component: React.ReactElement) => {
-  return render(<MemoryRouter>{component}</MemoryRouter>);
+const defaultMockDataContext = {
+  userConsent: {
+    keycloak_id: 'test-user-id',
+    data_processing_consent: true,
+    consent_timestamp: new Date('2023-08-09T10:15:30Z'),
+    updated_at: new Date('2023-08-09T10:15:30Z'),
+  },
+  loadUserConsent: jest.fn().mockResolvedValue({
+    keycloak_id: 'test-user-id',
+    data_processing_consent: true,
+    consent_timestamp: new Date('2023-08-09T10:15:30Z'),
+    updated_at: new Date('2023-08-09T10:15:30Z'),
+  }),
+  updateUserConsent: jest.fn().mockResolvedValue({
+    keycloak_id: 'test-user-id',
+    data_processing_consent: true,
+    consent_timestamp: new Date('2023-08-09T10:15:30Z'),
+    updated_at: new Date('2023-08-09T10:15:30Z'),
+  }),
+  isLoading: false,
+  userData: null,
+  exerciseMuscleData: new Map(),
+  weightUnitPreferences: [],
+  exerciseData: new Map(),
+  exerciseEquipmentData: new Map(),
+  muscleData: new Map(),
+  equipmentData: new Map(),
+  programData: new Map(),
+  allExercises: [],
+  allMuscles: [],
+  allEquipment: [],
+  userEquipment: [],
+  userWeakMuscles: [],
+  userExercisePreferences: [],
+  programPreferences: [],
+  programmedWorkouts: [],
+  userOneRepMaxes: [],
+  userExercisePool: null,
+  dashboardStats: null,
+  error: null,
+  refreshData: jest.fn(),
+  isDataStale: false,
+  getExercise: jest.fn(),
+  getExerciseMuscles: jest.fn(),
+  getExerciseEquipmentData: jest.fn(),
+  getMuscle: jest.fn(),
+  getEquipment: jest.fn(),
+  getProgram: jest.fn(),
+  loadAllExercises: jest.fn(),
+  loadAllMuscles: jest.fn(),
+  loadAllEquipment: jest.fn(),
+  loadUserEquipment: jest.fn(),
+  loadUserWeakMuscles: jest.fn(),
+  loadUserExercisePreferences: jest.fn(),
+  loadProgramPreferences: jest.fn(),
+  loadProgrammedWorkouts: jest.fn(),
+  loadUserOneRepMaxes: jest.fn(),
+  loadUserExercisePool: jest.fn(),
+  loadDashboardStats: jest.fn(),
+  getProgramPreferencesById: jest.fn(),
+  loadAllExercisesForComponents: jest.fn(),
+  invalidateCache: jest.fn(),
+  refreshSpecificData: jest.fn(),
+  isLoadingSpecific: jest.fn(),
+  getErrorForDataType: jest.fn(),
+  clearError: jest.fn(),
+  prefetchData: jest.fn(),
+  prefetchRelatedData: jest.fn(),
+  isOnline: true,
+  syncPendingChanges: jest.fn(),
+  getOfflineData: jest.fn(),
+  getRelatedData: jest.fn(),
+  updateDataRelationships: jest.fn(),
+  predictivePrefetch: jest.fn(),
+  compressData: jest.fn(),
+  decompressData: jest.fn(),
+  resolveDataConflicts: jest.fn(),
+  syncWithServer: jest.fn(),
+};
+
+const renderWithProviders = (component: React.ReactElement, mockDataContext = defaultMockDataContext) => {
+  return render(
+    <DataContext.Provider value={mockDataContext}>
+      <MemoryRouter>{component}</MemoryRouter>
+    </DataContext.Provider>
+  );
 };
 
 describe('UserProfile', () => {

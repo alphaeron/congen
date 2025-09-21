@@ -17,11 +17,11 @@ import React, { useState, useEffect } from 'react';
 import { LoadingSpinner } from './LoadingSpinner';
 import type { UserExercisePreference } from '../api/types';
 import {
-  getUserExercisePreferences,
   upsertUserExercisePreference,
   removeUserExercisePreference,
 } from '../api/userExercisePreference';
 import { useAuth } from '../contexts/AuthContext';
+import { useData } from '../contexts/DataContext';
 
 /**
  * Exercise preference state type.
@@ -50,20 +50,26 @@ export function ExercisePreferenceControls(
   const { exerciseName, variant = 'segmented', size = 'small', onPreferenceChange } = props;
   const { user } = useAuth();
   const { enqueueSnackbar } = useSnackbar();
+  const { userExercisePreferences, loadUserExercisePreferences, refreshData } = useData();
 
   const [preference, setPreference] = useState<UserExercisePreference | null>(null);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  // Load current preference
+  // Load current preference from DataContext
   useEffect(() => {
     const loadPreference = async () => {
       if (!user?.keycloak_id) return;
 
       setLoading(true);
       try {
-        const preferences = await getUserExercisePreferences(user.keycloak_id);
-        const currentPreference = preferences.find(p => p.exercise_name === exerciseName);
+        // Load user exercise preferences if not already loaded
+        if (userExercisePreferences.length === 0) {
+          await loadUserExercisePreferences();
+        }
+        
+        // Find current preference from DataContext data
+        const currentPreference = userExercisePreferences.find(p => p.exercise_name === exerciseName);
         setPreference(currentPreference || null);
       } catch {
         enqueueSnackbar('Failed to load exercise preference:', { variant: 'error' });
@@ -73,7 +79,7 @@ export function ExercisePreferenceControls(
     };
 
     loadPreference();
-  }, [user?.keycloak_id, exerciseName]);
+  }, [user?.keycloak_id, exerciseName, userExercisePreferences, loadUserExercisePreferences, enqueueSnackbar]);
 
   const getCurrentPreferenceState = (): ExercisePreferenceState => {
     if (!preference) return 'neutral';
@@ -108,6 +114,9 @@ export function ExercisePreferenceControls(
           variant: 'success',
         });
       }
+      
+      // Refresh DataContext to ensure all components have the latest data
+      await refreshData();
     } catch {
       enqueueSnackbar('Failed to update exercise preference', { variant: 'error' });
     } finally {

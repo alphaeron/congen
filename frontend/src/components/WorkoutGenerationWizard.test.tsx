@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import MockAdapter from 'axios-mock-adapter';
 import React from 'react';
 import { MemoryRouter } from 'react-router';
@@ -6,6 +6,13 @@ import { MemoryRouter } from 'react-router';
 import { WorkoutGenerationWizard } from './WorkoutGenerationWizard';
 import { ENDPOINT } from '../api/endpoint';
 import type { Program } from '../api/types';
+
+// Mock DataContext
+const mockUseData = jest.fn();
+jest.mock('../contexts/DataContext', () => ({
+  useData: () => mockUseData(),
+  DataProvider: ({ children }: { children: React.ReactNode }) => children,
+}));
 
 const mock = new MockAdapter(ENDPOINT);
 
@@ -48,6 +55,32 @@ const renderWithProviders = (component: React.ReactElement) => {
 describe('WorkoutGenerationWizard', () => {
   beforeEach(() => {
     mock.reset();
+    
+    // Set up default mock data for DataContext
+    const defaultMockDataContext = {
+      userData: null,
+      exerciseMuscleData: new Map(),
+      weightUnitPreferences: [],
+      exerciseData: new Map(),
+      exerciseEquipmentData: new Map(),
+      muscleData: new Map(),
+      equipmentData: new Map(),
+      programData: new Map(),
+      isLoading: false,
+      error: null,
+      refreshData: jest.fn(),
+      isDataStale: false,
+      getExercise: jest.fn(),
+      getExerciseEquipmentData: jest.fn(),
+      getMuscle: jest.fn(),
+      getEquipment: jest.fn(),
+      getProgram: jest.fn(),
+      generateWorkout: jest.fn().mockResolvedValue(mockProgram),
+      updateWorkoutWithOneRepMax: jest.fn().mockResolvedValue(mockProgram),
+      loadUserExercisePool: jest.fn().mockResolvedValue(mockUserExercisePool),
+    };
+    
+    mockUseData.mockReturnValue(defaultMockDataContext);
   });
 
   afterAll(() => {
@@ -120,50 +153,138 @@ describe('WorkoutGenerationWizard', () => {
     const onComplete = jest.fn();
     const updatedProgram = { ...mockProgram, current_week_number: 3 };
 
-    mock.onPost('/conjugate_workout_generator/1').reply(200, updatedProgram);
-    mock.onGet('/conjugate_workout_generator/exercise_pool').reply(200, mockUserExercisePool);
+    // Mock the DataContext functions to resolve immediately
+    const mockGenerateWorkout = jest.fn().mockResolvedValue(updatedProgram);
+    const mockLoadUserExercisePool = jest.fn().mockImplementation(() => {
+      // Return a resolved promise immediately to avoid async timing issues
+      return Promise.resolve(mockUserExercisePool);
+    });
+    
+    const testMockDataContext = {
+      userData: null,
+      exerciseMuscleData: new Map(),
+      weightUnitPreferences: [],
+      exerciseData: new Map(),
+      exerciseEquipmentData: new Map(),
+      muscleData: new Map(),
+      equipmentData: new Map(),
+      programData: new Map(),
+      isLoading: false,
+      error: null,
+      refreshData: jest.fn(),
+      isDataStale: false,
+      getExercise: jest.fn(),
+      getExerciseEquipmentData: jest.fn(),
+      getMuscle: jest.fn(),
+      getEquipment: jest.fn(),
+      getProgram: jest.fn(),
+      generateWorkout: mockGenerateWorkout,
+      updateWorkoutWithOneRepMax: jest.fn().mockResolvedValue(mockProgram),
+      loadUserExercisePool: mockLoadUserExercisePool,
+    };
+    
+    mockUseData.mockReturnValue(testMockDataContext);
 
-    renderWithProviders(
-      <WorkoutGenerationWizard
-        open={true}
-        onClose={jest.fn()}
-        onComplete={onComplete}
-        program={mockProgram}
-      />
-    );
+    await act(async () => {
+      renderWithProviders(
+        <WorkoutGenerationWizard
+          open={true}
+          onClose={jest.fn()}
+          onComplete={onComplete}
+          program={mockProgram}
+        />
+      );
+    });
+
+    // Wait for the exercise pool to be loaded
+    await act(async () => {
+      await waitFor(() => {
+        expect(mockLoadUserExercisePool).toHaveBeenCalled();
+      });
+    });
+
+    // Wait for the component to be ready
+    await act(async () => {
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: 'Generate Workouts' })).toBeInTheDocument();
+      });
+    });
 
     const generateButton = screen.getByRole('button', { name: 'Generate Workouts' });
-    fireEvent.click(generateButton);
-
-    // Check that the API call was made
-    await waitFor(() => {
-      expect(mock.history.post).toHaveLength(1);
-      expect(mock.history.post[0].url).toBe('/conjugate_workout_generator/1');
+    
+    await act(async () => {
+      fireEvent.click(generateButton);
     });
-  });
+
+    // Check that the DataContext function was called
+    await waitFor(() => {
+      expect(mockGenerateWorkout).toHaveBeenCalledWith(1);
+    });
+  }, 10000);
 
   it('handles generation errors gracefully', async () => {
     const onClose = jest.fn();
+    const errorMockDataContext = {
+      userData: null,
+      exerciseMuscleData: new Map(),
+      weightUnitPreferences: [],
+      exerciseData: new Map(),
+      exerciseEquipmentData: new Map(),
+      muscleData: new Map(),
+      equipmentData: new Map(),
+      programData: new Map(),
+      isLoading: false,
+      error: null,
+      refreshData: jest.fn(),
+      isDataStale: false,
+      getExercise: jest.fn(),
+      getExerciseEquipmentData: jest.fn(),
+      getMuscle: jest.fn(),
+      getEquipment: jest.fn(),
+      getProgram: jest.fn(),
+      generateWorkout: jest.fn().mockRejectedValue(new Error('Generation failed')),
+      updateWorkoutWithOneRepMax: jest.fn().mockResolvedValue(mockProgram),
+      loadUserExercisePool: jest.fn().mockImplementation(() => {
+        return Promise.resolve(mockUserExercisePool);
+      }),
+    };
 
-    mock.onPost('/conjugate_workout_generator/1').reply(500, { error: 'Generation failed' });
-    mock.onGet('/conjugate_workout_generator/exercise_pool').reply(200, mockUserExercisePool);
+    mockUseData.mockReturnValue(errorMockDataContext);
 
-    renderWithProviders(
-      <WorkoutGenerationWizard
-        open={true}
-        onClose={onClose}
-        onComplete={jest.fn()}
-        program={mockProgram}
-      />
-    );
+    await act(async () => {
+      renderWithProviders(
+        <WorkoutGenerationWizard
+          open={true}
+          onClose={onClose}
+          onComplete={jest.fn()}
+          program={mockProgram}
+        />
+      );
+    });
+
+    // Wait for the exercise pool to be loaded
+    await act(async () => {
+      await waitFor(() => {
+        expect(errorMockDataContext.loadUserExercisePool).toHaveBeenCalled();
+      });
+    });
+
+    // Wait for the component to be ready
+    await act(async () => {
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: 'Generate Workouts' })).toBeInTheDocument();
+      });
+    });
 
     const generateButton = screen.getByRole('button', { name: 'Generate Workouts' });
-    fireEvent.click(generateButton);
+    
+    await act(async () => {
+      fireEvent.click(generateButton);
+    });
 
-    // Check that the API call was made and failed
+    // Check that the DataContext function was called and failed
     await waitFor(() => {
-      expect(mock.history.post).toHaveLength(1);
-      expect(mock.history.post[0].url).toBe('/conjugate_workout_generator/1');
+      expect(errorMockDataContext.generateWorkout).toHaveBeenCalledWith(1);
     });
   });
 });

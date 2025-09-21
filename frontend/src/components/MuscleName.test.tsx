@@ -1,29 +1,90 @@
-import { render, screen } from '@testing-library/react';
-import AxiosMockAdapter from 'axios-mock-adapter';
+import { render, screen, act, waitFor } from '@testing-library/react';
 import React from 'react';
 import { MemoryRouter } from 'react-router';
 
 import { MuscleName } from './MuscleName';
-import { ENDPOINT } from '../api/endpoint';
-import { useApiGet } from '../api/hooks';
+import { DataContext } from '../contexts/DataContext';
 import type { Muscle } from '../api/types';
 
-// Mock the useApiGet hook
-jest.mock('../api/hooks', () => ({
-  useApiGet: jest.fn(),
-}));
+// Mock the DataContext
+const mockGetMuscle = jest.fn();
+const defaultMockDataContext = {
+  getMuscle: mockGetMuscle,
+  userData: null,
+  exerciseMuscleData: new Map(),
+  weightUnitPreferences: [],
+  exerciseData: new Map(),
+  exerciseEquipmentData: new Map(),
+  muscleData: new Map(),
+  equipmentData: new Map(),
+  programData: new Map(),
+  allExercises: [],
+  allMuscles: [],
+  allEquipment: [],
+  userEquipment: [],
+  userWeakMuscles: [],
+  userExercisePreferences: [],
+  programPreferences: [],
+  programmedWorkouts: [],
+  userOneRepMaxes: [],
+  userConsent: null,
+  userExercisePool: null,
+  dashboardStats: null,
+  isLoading: false,
+  error: null,
+  refreshData: jest.fn(),
+  isDataStale: false,
+  getExercise: jest.fn(),
+  getExerciseMuscles: jest.fn(),
+  getExerciseEquipmentData: jest.fn(),
+  getEquipment: jest.fn(),
+  getProgram: jest.fn(),
+  loadAllExercises: jest.fn(),
+  loadAllMuscles: jest.fn(),
+  loadAllEquipment: jest.fn(),
+  loadUserEquipment: jest.fn(),
+  loadUserWeakMuscles: jest.fn(),
+  loadUserExercisePreferences: jest.fn(),
+  loadProgramPreferences: jest.fn(),
+  loadProgrammedWorkouts: jest.fn(),
+  loadUserOneRepMaxes: jest.fn(),
+  loadUserConsent: jest.fn(),
+  loadUserExercisePool: jest.fn(),
+  loadDashboardStats: jest.fn(),
+  updateUserConsent: jest.fn(),
+  getProgramPreferencesById: jest.fn(),
+  loadAllExercisesForComponents: jest.fn(),
+  invalidateCache: jest.fn(),
+  refreshSpecificData: jest.fn(),
+  isLoadingSpecific: jest.fn(),
+  getErrorForDataType: jest.fn(),
+  clearError: jest.fn(),
+  prefetchData: jest.fn(),
+  prefetchRelatedData: jest.fn(),
+  isOnline: true,
+  syncPendingChanges: jest.fn(),
+  getOfflineData: jest.fn(),
+  getRelatedData: jest.fn(),
+  updateDataRelationships: jest.fn(),
+  predictivePrefetch: jest.fn(),
+  compressData: jest.fn(),
+  decompressData: jest.fn(),
+  resolveDataConflicts: jest.fn(),
+  syncWithServer: jest.fn(),
+};
 
-const mockUseApiGet = useApiGet as jest.MockedFunction<typeof useApiGet>;
+const renderWithProviders = (component: React.ReactElement) => {
+  return render(
+    <MemoryRouter>
+      <DataContext.Provider value={defaultMockDataContext}>
+        {component}
+      </DataContext.Provider>
+    </MemoryRouter>
+  );
+};
 
 describe('MuscleName', () => {
-  let mockAdapter: AxiosMockAdapter;
-
   beforeEach(() => {
-    mockAdapter = new AxiosMockAdapter(ENDPOINT);
-  });
-
-  afterEach(() => {
-    mockAdapter.restore();
     jest.clearAllMocks();
   });
 
@@ -34,19 +95,15 @@ describe('MuscleName', () => {
   };
 
   it('should render muscle name with tooltip when data is loaded', async () => {
-    mockUseApiGet.mockReturnValueOnce({
-      data: mockMuscle,
-      isLoading: false,
-      error: null,
+    mockGetMuscle.mockResolvedValue(mockMuscle);
+
+    await act(async () => {
+      renderWithProviders(<MuscleName muscleName="Pectoralis Major" />);
     });
 
-    render(
-      <MemoryRouter>
-        <MuscleName muscleName="Pectoralis Major" />
-      </MemoryRouter>
-    );
-
-    expect(screen.getByText('Pectoralis Major')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText('Pectoralis Major')).toBeInTheDocument();
+    });
 
     // Check that the element has cursor help style
     const muscleNameElement = screen.getByText('Pectoralis Major');
@@ -54,85 +111,68 @@ describe('MuscleName', () => {
   });
 
   it('should show loading tooltip when data is loading', async () => {
-    mockUseApiGet.mockReturnValueOnce({
-      data: null,
-      isLoading: true,
-      error: null,
-    });
+    // Mock a slow response
+    mockGetMuscle.mockImplementation(() => new Promise(() => {}));
 
-    render(
-      <MemoryRouter>
-        <MuscleName muscleName="Pectoralis Major" />
-      </MemoryRouter>
-    );
+    await act(async () => {
+      renderWithProviders(<MuscleName muscleName="Pectoralis Major" />);
+    });
 
     expect(screen.getByText('Pectoralis Major')).toBeInTheDocument();
   });
 
   it('should show error tooltip when data fails to load', async () => {
-    mockUseApiGet.mockReturnValueOnce({
-      data: null,
-      isLoading: false,
-      error: new Error('Failed to load'),
+    mockGetMuscle.mockRejectedValue(new Error('Failed to load'));
+
+    await act(async () => {
+      renderWithProviders(<MuscleName muscleName="Pectoralis Major" />);
     });
 
-    render(
-      <MemoryRouter>
-        <MuscleName muscleName="Pectoralis Major" />
-      </MemoryRouter>
-    );
-
-    expect(screen.getByText('Pectoralis Major')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText('Pectoralis Major')).toBeInTheDocument();
+    });
   });
 
   it('should render with custom variant and sx props', async () => {
-    mockUseApiGet.mockReturnValueOnce({
-      data: mockMuscle,
-      isLoading: false,
-      error: null,
+    mockGetMuscle.mockResolvedValue(mockMuscle);
+
+    await act(async () => {
+      renderWithProviders(
+        <MuscleName muscleName="Pectoralis Major" variant="h6" sx={{ fontWeight: 'bold' }} />
+      );
     });
 
-    render(
-      <MemoryRouter>
-        <MuscleName muscleName="Pectoralis Major" variant="h6" sx={{ fontWeight: 'bold' }} />
-      </MemoryRouter>
-    );
-
-    const muscleNameElement = screen.getByText('Pectoralis Major');
-    expect(muscleNameElement).toHaveStyle('font-weight: 700');
+    await waitFor(() => {
+      const muscleNameElement = screen.getByText('Pectoralis Major');
+      expect(muscleNameElement).toHaveStyle('font-weight: 700');
+    });
   });
 
   it('should render custom children when provided', async () => {
-    mockUseApiGet.mockReturnValueOnce({
-      data: mockMuscle,
-      isLoading: false,
-      error: null,
+    mockGetMuscle.mockResolvedValue(mockMuscle);
+
+    await act(async () => {
+      renderWithProviders(
+        <MuscleName muscleName="Pectoralis Major">Custom Muscle Name</MuscleName>
+      );
     });
 
-    render(
-      <MemoryRouter>
-        <MuscleName muscleName="Pectoralis Major">Custom Muscle Name</MuscleName>
-      </MemoryRouter>
-    );
-
-    expect(screen.getByText('Custom Muscle Name')).toBeInTheDocument();
-    expect(screen.queryByText('Pectoralis Major')).not.toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText('Custom Muscle Name')).toBeInTheDocument();
+      expect(screen.queryByText('Pectoralis Major')).not.toBeInTheDocument();
+    });
   });
 
   it('should capitalize muscle name when no custom children provided', async () => {
-    mockUseApiGet.mockReturnValueOnce({
-      data: mockMuscle,
-      isLoading: false,
-      error: null,
+    mockGetMuscle.mockResolvedValue(mockMuscle);
+
+    await act(async () => {
+      renderWithProviders(<MuscleName muscleName="pectoralis major" />);
     });
 
-    render(
-      <MemoryRouter>
-        <MuscleName muscleName="pectoralis major" />
-      </MemoryRouter>
-    );
-
-    expect(screen.getByText('Pectoralis Major')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText('Pectoralis Major')).toBeInTheDocument();
+    });
   });
 
   it('should handle muscle without description', async () => {
@@ -141,18 +181,14 @@ describe('MuscleName', () => {
       description: '',
     };
 
-    mockUseApiGet.mockReturnValueOnce({
-      data: muscleWithoutDescription,
-      isLoading: false,
-      error: null,
+    mockGetMuscle.mockResolvedValue(muscleWithoutDescription);
+
+    await act(async () => {
+      renderWithProviders(<MuscleName muscleName="Pectoralis Major" />);
     });
 
-    render(
-      <MemoryRouter>
-        <MuscleName muscleName="Pectoralis Major" />
-      </MemoryRouter>
-    );
-
-    expect(screen.getByText('Pectoralis Major')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText('Pectoralis Major')).toBeInTheDocument();
+    });
   });
 });

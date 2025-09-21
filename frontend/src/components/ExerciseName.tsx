@@ -2,11 +2,9 @@ import { Tooltip, Typography } from '@mui/material';
 import React from 'react';
 import { Link } from 'react-router';
 
-import { getIndividualExercise, getExerciseMuscles } from '../api/exercise';
-import { useApiGet } from '../api/hooks';
-import { getIndividualMuscle } from '../api/muscle';
 import type { Exercise, ExerciseMuscle, Muscle } from '../api/types';
 import { capitalizeEachWord } from '../common/utils';
+import { useData } from '../contexts/DataContext';
 
 import type { TypographyProps } from '@mui/material';
 
@@ -32,45 +30,45 @@ export function ExerciseName({
   sx,
   children,
 }: ExerciseNameProps): React.ReactElement {
-  const {
-    data: exercise,
-    isLoading: isExerciseLoading,
-    error: exerciseError,
-  } = useApiGet<Exercise>(
-    [`individualExercise${exerciseName}`],
-    getIndividualExercise,
-    {
-      enabled: true,
-      refetchOnWindowFocus: false,
-      retry: 1,
-    },
-    [exerciseName]
-  );
+  const { getExercise, getMuscle, getExerciseMuscles } = useData();
+  const [exercise, setExercise] = React.useState<Exercise | null>(null);
+  const [muscles, setMuscles] = React.useState<Muscle[]>([]);
+  const [isLoading, setIsLoading] = React.useState(true);
+  const [hasError, setHasError] = React.useState(false);
 
-  const { data: exerciseMuscles, isLoading: isExerciseMuscleLoading } = useApiGet<ExerciseMuscle[]>(
-    [`exerciseMuscle${exerciseName}`],
-    getExerciseMuscles,
-    {
-      enabled: true,
-      refetchOnWindowFocus: false,
-      retry: 1,
-    },
-    [exerciseName]
-  );
+  // Load exercise data using DataContext
+  React.useEffect(() => {
+    const loadExerciseData = async () => {
+      if (!exerciseName) return;
+      
+      setIsLoading(true);
+      setHasError(false);
+      
+      try {
+        // Load exercise data from DataContext
+        const exerciseData = await getExercise(exerciseName);
+        if (!exerciseData) {
+          throw new Error('Exercise not found');
+        }
+        setExercise(exerciseData);
 
-  const { data: muscles, isLoading: isMusclesLoading } = useApiGet<Muscle[]>(
-    [`muscles${exerciseName}`, exerciseMuscles],
-    async (): Promise<Muscle[]> =>
-      Promise.all(exerciseMuscles.map(element => getIndividualMuscle(element.muscle_name))),
-    {
-      refetchOnWindowFocus: false,
-      retry: 1,
-      enabled: exerciseMuscles && exerciseMuscles.length > 0,
-    }
-  );
+        // Load exercise muscles using DataContext
+        const exerciseMuscles = await getExerciseMuscles(exerciseName);
+        
+        // Load individual muscle details using DataContext
+        const muscleDetails = await Promise.all(
+          exerciseMuscles.map(muscle => getMuscle(muscle.muscle_name))
+        );
+        setMuscles(muscleDetails.filter(Boolean) as Muscle[]);
+      } catch {
+        setHasError(true);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  const isLoading = isExerciseLoading || isExerciseMuscleLoading || isMusclesLoading;
-  const hasError = exerciseError;
+    loadExerciseData();
+  }, [exerciseName, getExercise, getMuscle, getExerciseMuscles]);
 
   const tooltipContent = React.useMemo(() => {
     if (isLoading) {

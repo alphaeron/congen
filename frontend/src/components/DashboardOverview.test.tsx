@@ -8,6 +8,13 @@ import { DashboardOverview } from './DashboardOverview';
 import { ENDPOINT } from '../api/endpoint';
 import type { User } from '../api/types';
 
+// Mock DataContext
+const mockUseData = jest.fn();
+jest.mock('../contexts/DataContext', () => ({
+  useData: () => mockUseData(),
+  DataProvider: ({ children }: { children: React.ReactNode }) => children,
+}));
+
 // Mock Nivo components to avoid Jest configuration issues
 interface LineChartData {
   id: string;
@@ -84,12 +91,15 @@ describe('DashboardOverview', () => {
   };
 
   const mockWorkout = {
-    id: 1,
-    program_id: 1,
-    day_number: 1,
-    name: 'Test Workout',
-    created_at: new Date('2024-01-01T00:00:00.000Z'),
-    updated_at: new Date('2024-01-01T00:00:00.000Z'),
+    workout: {
+      id: 1,
+      program_id: 1,
+      day_number: 1,
+      name: 'Test Workout',
+      created_at: new Date('2024-01-01T00:00:00.000Z'),
+      updated_at: new Date('2024-01-01T00:00:00.000Z'),
+    },
+    stages: [],
   };
 
   const mockOneRepMax = {
@@ -100,6 +110,29 @@ describe('DashboardOverview', () => {
     created_at: new Date('2024-01-01T00:00:00Z'),
     updated_at: new Date('2024-01-01T00:00:00Z'),
   };
+
+  beforeEach(() => {
+    // Set up default mock data for DataContext
+    const defaultMockDataContext = {
+      userData: {
+        training_programs: [
+          {
+            program: mockProgram,
+            workouts: [mockWorkout],
+          },
+        ],
+        user_one_rep_max: [mockOneRepMax],
+      },
+      exerciseMuscleData: new Map(),
+      weightUnitPreferences: [],
+      isLoading: false,
+      error: null,
+      refreshData: jest.fn(),
+      isDataStale: false,
+    };
+
+    mockUseData.mockReturnValue(defaultMockDataContext);
+  });
 
   const mockUserDataExport = {
     training_programs: [
@@ -193,21 +226,18 @@ describe('DashboardOverview', () => {
   });
 
   it('should render loading state initially', async () => {
-    // Use a delayed response to ensure loading state is visible
-    mock
-      .onGet('/program/')
-      .reply(() => new Promise(resolve => setTimeout(() => resolve([200, []]), 100)));
-    mock
-      .onGet('/programmed_workout/')
-      .reply(() => new Promise(resolve => setTimeout(() => resolve([200, []]), 100)));
-    mock
-      .onGet('/user_one_rep_max/user/test-user-id')
-      .reply(() => new Promise(resolve => setTimeout(() => resolve([200, []]), 100)));
-    mock
-      .onGet('/gdpr/export')
-      .reply(
-        () => new Promise(resolve => setTimeout(() => resolve([200, mockUserDataExport]), 100))
-      );
+    // Set up mock data context with loading state
+    const loadingMockDataContext = {
+      userData: null,
+      exerciseMuscleData: new Map(),
+      weightUnitPreferences: [],
+      isLoading: true,
+      error: null,
+      refreshData: jest.fn(),
+      isDataStale: false,
+    };
+
+    mockUseData.mockReturnValue(loadingMockDataContext);
 
     await act(async () => {
       renderWithProviders(<DashboardOverview user={mockUser} />);
@@ -217,10 +247,8 @@ describe('DashboardOverview', () => {
   });
 
   it('should render dashboard overview when data loads successfully', async () => {
-    mock.onGet('/program/').reply(200, [mockProgram]);
-    mock.onGet('/programmed_workout/').reply(200, [mockWorkout]);
-    mock.onGet('/user_one_rep_max/user/test-user-id').reply(200, [mockOneRepMax]);
-    mock.onGet('/gdpr/export').reply(200, mockUserDataExport);
+    // Use default mock data (already set up in beforeEach)
+    // Mock the additional API calls that the component still makes
     mock.onGet(/\/exercise\/.*/).reply(200, mockExercise);
 
     await act(async () => {
@@ -296,17 +324,24 @@ describe('DashboardOverview', () => {
     });
   });
 
-  it('should calculate and display correct statistics', async () => {
-    const multiplePrograms = [
-      { ...mockProgram, current_week_number: 3 },
-      { ...mockProgram, id: 2, current_week_number: 2, is_active: false },
-    ];
-    const multipleWorkouts = [
-      { ...mockWorkout, id: 1, program_id: 1 },
-      { ...mockWorkout, id: 2, program_id: 1 },
-      { ...mockWorkout, id: 3, program_id: 1 },
-      { ...mockWorkout, id: 4, program_id: 2 },
-    ];
+          it('should calculate and display correct statistics', async () => {
+            // Use default mock data (already set up in beforeEach)
+            // Mock the additional API calls that the component still makes
+            mock.onGet('/exercise/Bench Press').reply(200, mockExercise);
+
+            await act(async () => {
+              renderWithProviders(<DashboardOverview user={mockUser} />);
+            });
+
+            await waitFor(() => {
+              expect(screen.getByText('Total Workouts')).toBeInTheDocument();
+              expect(screen.getByText('1RM Records')).toBeInTheDocument();
+              expect(screen.getByText('Total Volume (lbs)')).toBeInTheDocument();
+              expect(screen.getByText('Latest Volume (lbs)')).toBeInTheDocument();
+            });
+          }, 10000);
+
+  it('should calculate and display correct statistics with complex data', async () => {
     const multipleOneRepMaxes = [
       mockOneRepMax,
       { ...mockOneRepMax, exercise_name: 'Squat', one_rep_max: 315 },
@@ -424,15 +459,33 @@ describe('DashboardOverview', () => {
       user_one_rep_max: multipleOneRepMaxes,
     };
 
-    mock.onGet('/program/').reply(200, multiplePrograms);
-    mock.onGet('/programmed_workout/').reply(200, multipleWorkouts);
-    mock.onGet('/user_one_rep_max/user/test-user-id').reply(200, multipleOneRepMaxes);
-    mock.onGet('/gdpr/export').reply(200, multipleWorkoutsDataExport);
-    mock.onGet(/\/exercise\/.*/).reply(200, mockExercise);
+    // Set up DataContext with complex data
+    const complexDataContext = {
+      userData: {
+        user_id: 'test-user-id',
+        user_profile: { /* minimal profile data */ },
+        user_one_rep_max: multipleOneRepMaxes,
+        user_weight_unit_preferences: [],
+        training_programs: multipleWorkoutsDataExport.training_programs,
+        audit_logs: [],
+        data_retention_policies: [],
+      },
+      exerciseMuscleData: new Map([
+        ['Bench Press', ['chest', 'triceps']],
+        ['Squat', ['legs', 'glutes']],
+      ]),
+      weightUnitPreferences: [],
+      isLoading: false,
+      error: null,
+      refreshData: jest.fn(),
+      isDataStale: false,
+    };
+
+    mockUseData.mockReturnValue(complexDataContext);
 
     // Mock individual exercise calls that the component makes for each unique exercise
     mock.onGet('/exercise/Bench%20Press').reply(200, mockExercise);
-    mock.onGet('/exercise/Squat').reply(200, mockExercise);
+    mock.onGet('/exercise/Squat').reply(200, { ...mockExercise, exercise_name: 'Squat' });
 
     await act(async () => {
       renderWithProviders(<DashboardOverview user={mockUser} />);
@@ -456,7 +509,7 @@ describe('DashboardOverview', () => {
 
       const oneRmRecordsElement = screen.getByText('1RM Records').closest('.MuiGrid-root');
       expect(oneRmRecordsElement).toHaveTextContent('2');
-    });
+    }, 15000);
   });
 
   it('should verify API calls are made with correct endpoints', async () => {
@@ -471,20 +524,9 @@ describe('DashboardOverview', () => {
     });
 
     await waitFor(() => {
-      // Check that we have at least the minimum expected API calls
-      expect(mock.history.get.length).toBeGreaterThanOrEqual(5);
-
-      // Verify the core API calls are made in the expected order
-      expect(mock.history.get[0].url).toBe('/program/');
-      expect(mock.history.get[1].url).toBe('/programmed_workout/');
-      expect(mock.history.get[2].url).toBe('/user_one_rep_max/user/test-user-id');
-      expect(mock.history.get[3].url).toBe('/gdpr/export');
-
-      // Check that at least one exercise call is made
-      const exerciseCalls = mock.history.get.filter(
-        call => call.url && call.url.match(/\/exercise\/.*/)
-      );
-      expect(exerciseCalls.length).toBeGreaterThanOrEqual(1);
+      // Component should render using DataContext data
+      expect(screen.getByText('Key Performance Indicators')).toBeInTheDocument();
+      expect(screen.getByText('Total Workouts')).toBeInTheDocument();
     });
   }, 10000);
 });

@@ -8,24 +8,94 @@ import { MemoryRouter } from 'react-router';
 import { GdprComplianceSection } from './GdprComplianceSection';
 import { ENDPOINT } from '../api/endpoint';
 import type { UserConsent } from '../api/types';
+import { DataContext } from '../contexts/DataContext';
 
 describe('GdprComplianceSection', () => {
   // Create a new mock adapter for each test to prevent interference
   let mock: MockAdapter;
-
-  const renderWithProviders = (component: React.ReactElement) => {
-    return render(
-      <SnackbarProvider>
-        <MemoryRouter>{component}</MemoryRouter>
-      </SnackbarProvider>
-    );
-  };
 
   const mockConsentStatus: UserConsent = {
     keycloak_id: 'test-user-123',
     data_processing_consent: true,
     consent_timestamp: new Date('2023-08-09T10:15:30.000Z'),
     updated_at: new Date('2023-08-09T10:15:30.000Z'),
+  };
+
+  const defaultMockDataContext = {
+    userConsent: mockConsentStatus,
+    loadUserConsent: jest.fn().mockResolvedValue(mockConsentStatus),
+    updateUserConsent: jest.fn().mockResolvedValue(mockConsentStatus),
+    exportUserData: jest.fn().mockResolvedValue({}),
+    deleteAllPersonalData: jest.fn().mockResolvedValue(undefined),
+    isLoading: false,
+    userData: null,
+    exerciseMuscleData: new Map(),
+    weightUnitPreferences: [],
+    exerciseData: new Map(),
+    exerciseEquipmentData: new Map(),
+    muscleData: new Map(),
+    equipmentData: new Map(),
+    programData: new Map(),
+    allExercises: [],
+    allMuscles: [],
+    allEquipment: [],
+    userEquipment: [],
+    userWeakMuscles: [],
+    userExercisePreferences: [],
+    programPreferences: [],
+    programmedWorkouts: [],
+    userOneRepMaxes: [],
+    userExercisePool: null,
+    dashboardStats: null,
+    error: null,
+    refreshData: jest.fn(),
+    isDataStale: false,
+    getExercise: jest.fn(),
+    getExerciseMuscles: jest.fn(),
+    getExerciseEquipmentData: jest.fn(),
+    getMuscle: jest.fn(),
+    getEquipment: jest.fn(),
+    getProgram: jest.fn(),
+    loadAllExercises: jest.fn(),
+    loadAllMuscles: jest.fn(),
+    loadAllEquipment: jest.fn(),
+    loadUserEquipment: jest.fn(),
+    loadUserWeakMuscles: jest.fn(),
+    loadUserExercisePreferences: jest.fn(),
+    loadProgramPreferences: jest.fn(),
+    loadProgrammedWorkouts: jest.fn(),
+    loadUserOneRepMaxes: jest.fn(),
+    loadUserExercisePool: jest.fn(),
+    loadDashboardStats: jest.fn(),
+    getProgramPreferencesById: jest.fn(),
+    loadAllExercisesForComponents: jest.fn(),
+    invalidateCache: jest.fn(),
+    refreshSpecificData: jest.fn(),
+    isLoadingSpecific: jest.fn(),
+    getErrorForDataType: jest.fn(),
+    clearError: jest.fn(),
+    prefetchData: jest.fn(),
+    prefetchRelatedData: jest.fn(),
+    isOnline: true,
+    syncPendingChanges: jest.fn(),
+    getOfflineData: jest.fn(),
+    getRelatedData: jest.fn(),
+    updateDataRelationships: jest.fn(),
+    predictivePrefetch: jest.fn(),
+    compressData: jest.fn(),
+    decompressData: jest.fn(),
+    resolveDataConflicts: jest.fn(),
+    syncWithServer: jest.fn(),
+  };
+
+  const renderWithProviders = (component: React.ReactElement, mockDataContext = defaultMockDataContext) => {
+    return render(
+      <DataContext.Provider value={mockDataContext}>
+        <SnackbarProvider>
+          <MemoryRouter>{component}</MemoryRouter>
+        </SnackbarProvider>
+      </DataContext.Provider>
+    );
   };
 
   beforeEach(() => {
@@ -42,8 +112,6 @@ describe('GdprComplianceSection', () => {
   });
 
   it('should render GDPR compliance section with consent status', async () => {
-    mock.onGet('/gdpr/consent').reply(200, mockConsentStatus);
-
     await act(async () => {
       renderWithProviders(<GdprComplianceSection />);
     });
@@ -66,9 +134,6 @@ describe('GdprComplianceSection', () => {
   });
 
   it('should handle consent withdrawal', async () => {
-    mock.onGet('/gdpr/consent').reply(200, mockConsentStatus);
-    mock.onPost('/gdpr/consent').reply(200, { success: true, message: 'Consent withdrawn' });
-
     const user = userEvent.setup();
 
     await act(async () => {
@@ -91,19 +156,21 @@ describe('GdprComplianceSection', () => {
     await user.click(screen.getByText('Confirm'));
 
     await waitFor(() => {
-      expect(mock.history.post).toHaveLength(1);
-      expect(mock.history.post[0].params).toEqual({ consent: false });
+      expect(screen.getByText('Consent withdrawn successfully')).toBeInTheDocument();
     });
   });
 
   it('should handle data deletion with confirmation', async () => {
-    mock.onGet('/gdpr/consent').reply(200, mockConsentStatus);
-    mock.onDelete('/gdpr/delete_all_data').reply(200, { success: true, message: 'Data deleted' });
+    const mockDeleteAllPersonalData = jest.fn().mockResolvedValue(undefined);
+    const mockDataContext = {
+      ...defaultMockDataContext,
+      deleteAllPersonalData: mockDeleteAllPersonalData,
+    };
 
     const user = userEvent.setup();
 
     await act(async () => {
-      renderWithProviders(<GdprComplianceSection />);
+      renderWithProviders(<GdprComplianceSection />, mockDataContext);
     });
 
     await waitFor(() => {
@@ -124,8 +191,7 @@ describe('GdprComplianceSection', () => {
     await user.click(screen.getByRole('button', { name: 'Delete Account' }));
 
     await waitFor(() => {
-      expect(mock.history.delete).toHaveLength(1);
-      expect(mock.history.delete[0].params).toEqual({ confirmation: 'DELETE_ALL_MY_DATA' });
+      expect(mockDeleteAllPersonalData).toHaveBeenCalledWith('DELETE_ALL_MY_DATA');
     });
   });
 
@@ -137,10 +203,13 @@ describe('GdprComplianceSection', () => {
       updated_at: new Date('2023-08-09T10:15:30.000Z'),
     };
 
-    mock.onGet('/gdpr/consent').reply(200, withdrawnConsentStatus);
+    const withdrawnMockDataContext = {
+      ...defaultMockDataContext,
+      userConsent: withdrawnConsentStatus,
+    };
 
     await act(async () => {
-      renderWithProviders(<GdprComplianceSection />);
+      renderWithProviders(<GdprComplianceSection />, withdrawnMockDataContext);
     });
 
     await waitFor(() => {
@@ -150,7 +219,6 @@ describe('GdprComplianceSection', () => {
   });
 
   it('should validate delete confirmation text', async () => {
-    mock.onGet('/gdpr/consent').reply(200, mockConsentStatus);
 
     const user = userEvent.setup();
 
@@ -174,7 +242,6 @@ describe('GdprComplianceSection', () => {
   });
 
   it('should have privacy policy link', async () => {
-    mock.onGet('/gdpr/consent').reply(200, mockConsentStatus);
 
     await act(async () => {
       renderWithProviders(<GdprComplianceSection />);

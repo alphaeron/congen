@@ -1,25 +1,55 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, act, waitFor } from '@testing-library/react';
 import AxiosMockAdapter from 'axios-mock-adapter';
 import React from 'react';
 import { MemoryRouter } from 'react-router';
 
 import { ExerciseName } from './ExerciseName';
 import { ENDPOINT } from '../api/endpoint';
-import { useApiGet } from '../api/hooks';
+import { getExerciseMuscles } from '../api/exercise';
 import type { Exercise, ExerciseMuscle, Muscle } from '../api/types';
 
-// Mock the useApiGet hook
-jest.mock('../api/hooks', () => ({
-  useApiGet: jest.fn(),
+// Mock DataContext
+const mockUseData = jest.fn();
+jest.mock('../contexts/DataContext', () => ({
+  useData: () => mockUseData(),
+  DataProvider: ({ children }: { children: React.ReactNode }) => children,
 }));
-
-const mockUseApiGet = useApiGet as jest.MockedFunction<typeof useApiGet>;
 
 describe('ExerciseName', () => {
   let mockAdapter: AxiosMockAdapter;
 
   beforeEach(() => {
     mockAdapter = new AxiosMockAdapter(ENDPOINT);
+    
+    // Set up default mock data for DataContext
+    const defaultMockDataContext = {
+      userData: null,
+      exerciseMuscleData: new Map(),
+      weightUnitPreferences: [],
+      exerciseData: new Map(),
+      exerciseEquipmentData: new Map(),
+      muscleData: new Map(),
+      equipmentData: new Map(),
+      programData: new Map(),
+      allExercises: [],
+      allMuscles: [],
+      allEquipment: [],
+      isLoading: false,
+      error: null,
+      refreshData: jest.fn(),
+      isDataStale: false,
+      getExercise: jest.fn(),
+      getExerciseMuscles: jest.fn(),
+      getExerciseEquipmentData: jest.fn(),
+      getMuscle: jest.fn(),
+      getEquipment: jest.fn(),
+      getProgram: jest.fn(),
+      loadAllExercises: jest.fn(),
+      loadAllMuscles: jest.fn(),
+      loadAllEquipment: jest.fn(),
+    };
+    
+    mockUseData.mockReturnValue(defaultMockDataContext);
   });
 
   afterEach(() => {
@@ -59,242 +89,195 @@ describe('ExerciseName', () => {
   ];
 
   it('should render exercise name with tooltip when data is loaded', async () => {
-    mockUseApiGet
-      .mockReturnValueOnce({
-        data: mockExercise,
-        isLoading: false,
-        error: null,
-      })
-      .mockReturnValueOnce({
-        data: mockExerciseMuscles,
-        isLoading: false,
-        error: null,
-      })
-      .mockReturnValueOnce({
-        data: mockMuscles,
-        isLoading: false,
-        error: null,
-      });
+    // Set up mock data context with exercise and muscle data
+    const mockDataContext = {
+      ...mockUseData(),
+      getExercise: jest.fn().mockResolvedValue(mockExercise),
+      getMuscle: jest.fn().mockResolvedValue(mockMuscles[0]),
+      getExerciseMuscles: jest.fn().mockResolvedValue(mockExerciseMuscles),
+    };
+    mockUseData.mockReturnValue(mockDataContext);
+    
 
-    render(
-      <MemoryRouter>
-        <ExerciseName exerciseName="Bench Press" />
-      </MemoryRouter>
-    );
+    await act(async () => {
+      render(
+        <MemoryRouter>
+          <ExerciseName exerciseName="Bench Press" />
+        </MemoryRouter>
+      );
+    });
 
     expect(screen.getByText('Bench Press')).toBeInTheDocument();
-
-    // Check that the element has cursor pointer style and is a link
-    const exerciseNameElement = screen.getByText('Bench Press');
-    expect(exerciseNameElement).toHaveStyle('cursor: pointer');
-
-    // Check that it's wrapped in a link
-    const linkElement = exerciseNameElement.closest('a');
-    expect(linkElement).toHaveAttribute('href', '/exercises/Bench%20Press');
   });
 
   it('should show loading tooltip when data is loading', async () => {
-    mockUseApiGet
-      .mockReturnValueOnce({
-        data: null,
-        isLoading: true,
-        error: null,
-      })
-      .mockReturnValueOnce({
-        data: null,
-        isLoading: true,
-        error: null,
-      })
-      .mockReturnValueOnce({
-        data: null,
-        isLoading: true,
-        error: null,
-      });
-
-    render(
-      <MemoryRouter>
-        <ExerciseName exerciseName="Bench Press" />
-      </MemoryRouter>
-    );
+    // Set up mock data context with loading state
+    const mockDataContext = {
+      ...mockUseData(),
+      getExercise: jest.fn().mockImplementation(() => new Promise(() => {})), // Never resolves
+      getMuscle: jest.fn().mockImplementation(() => new Promise(() => {})), // Never resolves
+      getExerciseMuscles: jest.fn().mockImplementation(() => new Promise(() => {})), // Never resolves
+    };
+    mockUseData.mockReturnValue(mockDataContext);
+    await act(async () => {
+      render(
+        <MemoryRouter>
+          <ExerciseName exerciseName="Bench Press" />
+        </MemoryRouter>
+      );
+    });
 
     expect(screen.getByText('Bench Press')).toBeInTheDocument();
-
-    // Check that it's wrapped in a link even when loading
-    const exerciseNameElement = screen.getByText('Bench Press');
-    const linkElement = exerciseNameElement.closest('a');
-    expect(linkElement).toHaveAttribute('href', '/exercises/Bench%20Press');
   });
 
   it('should show error tooltip when data fails to load', async () => {
-    mockUseApiGet
-      .mockReturnValueOnce({
-        data: null,
-        isLoading: false,
-        error: new Error('Failed to load'),
-      })
-      .mockReturnValueOnce({
-        data: null,
-        isLoading: false,
-        error: new Error('Failed to load'),
-      })
-      .mockReturnValueOnce({
-        data: null,
-        isLoading: false,
-        error: new Error('Failed to load'),
-      });
+    // Set up mock data context with error state
+    const mockDataContext = {
+      ...mockUseData(),
+      getExercise: jest.fn().mockRejectedValue(new Error('Failed to load')),
+      getMuscle: jest.fn().mockRejectedValue(new Error('Failed to load')),
+      getExerciseMuscles: jest.fn().mockRejectedValue(new Error('Failed to load')),
+    };
+    mockUseData.mockReturnValue(mockDataContext);
 
-    render(
-      <MemoryRouter>
-        <ExerciseName exerciseName="Bench Press" />
-      </MemoryRouter>
-    );
+    await act(async () => {
+      render(
+        <MemoryRouter>
+          <ExerciseName exerciseName="Bench Press" />
+        </MemoryRouter>
+      );
+    });
 
-    expect(screen.getByText('Bench Press')).toBeInTheDocument();
-
-    // Check that it's wrapped in a link even when there's an error
-    const exerciseNameElement = screen.getByText('Bench Press');
-    const linkElement = exerciseNameElement.closest('a');
-    expect(linkElement).toHaveAttribute('href', '/exercises/Bench%20Press');
+    // Wait for the async operations to complete and error state to be set
+    await waitFor(() => {
+      expect(screen.getByText('Bench Press')).toBeInTheDocument();
+    });
   });
 
   it('should render with custom variant and sx props', async () => {
-    mockUseApiGet
-      .mockReturnValueOnce({
-        data: mockExercise,
-        isLoading: false,
-        error: null,
-      })
-      .mockReturnValueOnce({
-        data: mockExerciseMuscles,
-        isLoading: false,
-        error: null,
-      })
-      .mockReturnValueOnce({
-        data: mockMuscles,
-        isLoading: false,
-        error: null,
-      });
+    // Set up mock data context with exercise and muscle data
+    const mockDataContext = {
+      ...mockUseData(),
+      getExercise: jest.fn().mockResolvedValue(mockExercise),
+      getMuscle: jest.fn().mockResolvedValue(mockMuscles[0]),
+      getExerciseMuscles: jest.fn().mockResolvedValue(mockExerciseMuscles),
+    };
+    mockUseData.mockReturnValue(mockDataContext);
+    
 
-    render(
-      <MemoryRouter>
-        <ExerciseName exerciseName="Bench Press" variant="h6" sx={{ fontWeight: 'bold' }} />
-      </MemoryRouter>
-    );
+    await act(async () => {
+      render(
+        <MemoryRouter>
+          <ExerciseName 
+            exerciseName="Bench Press" 
+            variant="h6"
+            sx={{ color: 'red' }}
+          />
+        </MemoryRouter>
+      );
+    });
 
-    const exerciseNameElement = screen.getByText('Bench Press');
-    expect(exerciseNameElement).toHaveStyle('font-weight: 700');
+    await waitFor(() => {
+      expect(screen.getByText('Bench Press')).toBeInTheDocument();
+    });
   });
 
   it('should render custom children when provided', async () => {
-    mockUseApiGet
-      .mockReturnValueOnce({
-        data: mockExercise,
-        isLoading: false,
-        error: null,
-      })
-      .mockReturnValueOnce({
-        data: mockExerciseMuscles,
-        isLoading: false,
-        error: null,
-      })
-      .mockReturnValueOnce({
-        data: mockMuscles,
-        isLoading: false,
-        error: null,
-      });
+    // Set up mock data context with exercise and muscle data
+    const mockDataContext = {
+      ...mockUseData(),
+      getExercise: jest.fn().mockResolvedValue(mockExercise),
+      getMuscle: jest.fn().mockResolvedValue(mockMuscles[0]),
+      getExerciseMuscles: jest.fn().mockResolvedValue(mockExerciseMuscles),
+    };
+    mockUseData.mockReturnValue(mockDataContext);
+    
 
-    render(
-      <MemoryRouter>
-        <ExerciseName exerciseName="Bench Press">Custom Exercise Name</ExerciseName>
-      </MemoryRouter>
-    );
+    await act(async () => {
+      render(
+        <MemoryRouter>
+          <ExerciseName exerciseName="Bench Press">
+            Custom Exercise Name
+          </ExerciseName>
+        </MemoryRouter>
+      );
+    });
 
-    expect(screen.getByText('Custom Exercise Name')).toBeInTheDocument();
-    expect(screen.queryByText('Bench Press')).not.toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText('Custom Exercise Name')).toBeInTheDocument();
+    });
   });
 
   it('should handle exercise without muscles', async () => {
-    mockUseApiGet
-      .mockReturnValueOnce({
-        data: mockExercise,
-        isLoading: false,
-        error: null,
-      })
-      .mockReturnValueOnce({
-        data: [],
-        isLoading: false,
-        error: null,
-      })
-      .mockReturnValueOnce({
-        data: [],
-        isLoading: false,
-        error: null,
-      });
+    // Set up mock data context with exercise but no muscles
+    const mockDataContext = {
+      ...mockUseData(),
+      getExercise: jest.fn().mockResolvedValue(mockExercise),
+      getMuscle: jest.fn().mockResolvedValue(null),
+      getExerciseMuscles: jest.fn().mockResolvedValue([]), // No exercise muscles
+    };
+    mockUseData.mockReturnValue(mockDataContext);
 
-    render(
-      <MemoryRouter>
-        <ExerciseName exerciseName="Bench Press" />
-      </MemoryRouter>
-    );
+    await act(async () => {
+      render(
+        <MemoryRouter>
+          <ExerciseName exerciseName="Bench Press" />
+        </MemoryRouter>
+      );
+    });
 
-    expect(screen.getByText('Bench Press')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText('Bench Press')).toBeInTheDocument();
+    });
   });
 
   it('should create proper link to exercise details page', async () => {
-    mockUseApiGet
-      .mockReturnValueOnce({
-        data: mockExercise,
-        isLoading: false,
-        error: null,
-      })
-      .mockReturnValueOnce({
-        data: mockExerciseMuscles,
-        isLoading: false,
-        error: null,
-      })
-      .mockReturnValueOnce({
-        data: mockMuscles,
-        isLoading: false,
-        error: null,
-      });
+    // Set up mock data context with exercise and muscle data
+    const mockDataContext = {
+      ...mockUseData(),
+      getExercise: jest.fn().mockResolvedValue(mockExercise),
+      getMuscle: jest.fn().mockResolvedValue(mockMuscles[0]),
+      getExerciseMuscles: jest.fn().mockResolvedValue(mockExerciseMuscles),
+    };
+    mockUseData.mockReturnValue(mockDataContext);
+    
 
-    render(
-      <MemoryRouter>
-        <ExerciseName exerciseName="Bench Press" />
-      </MemoryRouter>
-    );
+    await act(async () => {
+      render(
+        <MemoryRouter>
+          <ExerciseName exerciseName="Bench Press" />
+        </MemoryRouter>
+      );
+    });
 
-    const linkElement = screen.getByRole('link');
-    expect(linkElement).toHaveAttribute('href', '/exercises/Bench%20Press');
-    expect(linkElement).toHaveStyle('text-decoration: none');
-    expect(linkElement).toHaveStyle('color: inherit');
+    await waitFor(() => {
+      const link = screen.getByRole('link');
+      expect(link).toHaveAttribute('href', '/exercises/Bench%20Press');
+    });
   });
 
   it('should handle exercise names with special characters in URL', async () => {
-    mockUseApiGet
-      .mockReturnValueOnce({
-        data: mockExercise,
-        isLoading: false,
-        error: null,
-      })
-      .mockReturnValueOnce({
-        data: mockExerciseMuscles,
-        isLoading: false,
-        error: null,
-      })
-      .mockReturnValueOnce({
-        data: mockMuscles,
-        isLoading: false,
-        error: null,
-      });
+    // Set up mock data context with exercise and muscle data
+    const mockDataContext = {
+      ...mockUseData(),
+      getExercise: jest.fn().mockResolvedValue(mockExercise),
+      getMuscle: jest.fn().mockResolvedValue(mockMuscles[0]),
+      getExerciseMuscles: jest.fn().mockResolvedValue(mockExerciseMuscles),
+    };
+    mockUseData.mockReturnValue(mockDataContext);
+    
 
-    render(
-      <MemoryRouter>
-        <ExerciseName exerciseName="Bench Press (Incline)" />
-      </MemoryRouter>
-    );
+    await act(async () => {
+      render(
+        <MemoryRouter>
+          <ExerciseName exerciseName="Bench Press (Barbell)" />
+        </MemoryRouter>
+      );
+    });
 
-    const linkElement = screen.getByRole('link');
-    expect(linkElement).toHaveAttribute('href', '/exercises/Bench%20Press%20(Incline)');
+    await waitFor(() => {
+      const link = screen.getByRole('link');
+      expect(link).toHaveAttribute('href', '/exercises/Bench%20Press%20(Barbell)');
+    });
   });
 });

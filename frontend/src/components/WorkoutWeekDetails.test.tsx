@@ -20,6 +20,13 @@ jest.mock('./SunburstChart', () => ({
   ),
 }));
 
+// Mock DataContext
+const mockUseData = jest.fn();
+jest.mock('../contexts/DataContext', () => ({
+  useData: () => mockUseData(),
+  DataProvider: ({ children }: { children: React.ReactNode }) => children,
+}));
+
 // Mock the useAuth hook to prevent auth context issues
 jest.mock('../contexts/AuthContext', () => ({
   useAuth: () => ({
@@ -37,6 +44,7 @@ describe('WorkoutWeekDetails', () => {
   // Create a new mock adapter for each test to prevent interference
   let mock: MockAdapter;
   const theme = createTheme();
+  let defaultMockDataContext: any;
 
   const mockUser = {
     keycloak_id: 'test-user-id',
@@ -55,6 +63,83 @@ describe('WorkoutWeekDetails', () => {
       </SnackbarProvider>
     );
   };
+
+  beforeEach(() => {
+    // Set up default mock data for DataContext
+    const defaultMockDataContext = {
+      userData: {
+        training_programs: [
+          {
+            program: { id: 1, name: 'Test Program', is_active: true },
+            workouts: [],
+          },
+        ],
+      },
+      exerciseMuscleData: new Map(),
+      weightUnitPreferences: [],
+      exerciseData: new Map(),
+      exerciseEquipmentData: new Map(),
+      muscleData: new Map(),
+      equipmentData: new Map(),
+      programData: new Map(),
+      allExercises: [],
+      allMuscles: [],
+      allEquipment: [],
+      userEquipment: [],
+      userWeakMuscles: [],
+      userExercisePreferences: [],
+      programPreferences: [],
+      programmedWorkouts: [],
+      userOneRepMaxes: [],
+      userConsent: null,
+      userExercisePool: null,
+      dashboardStats: null,
+      isLoading: false,
+      error: null,
+      refreshData: jest.fn(),
+      isDataStale: false,
+      getExercise: jest.fn(),
+      getExerciseMuscles: jest.fn(),
+      getExerciseEquipmentData: jest.fn(),
+      getMuscle: jest.fn(),
+      getEquipment: jest.fn(),
+      getProgram: jest.fn(),
+      loadAllExercises: jest.fn(),
+      loadAllMuscles: jest.fn(),
+      loadAllEquipment: jest.fn(),
+      loadUserEquipment: jest.fn(),
+      loadUserWeakMuscles: jest.fn(),
+      loadUserExercisePreferences: jest.fn(),
+      loadProgramPreferences: jest.fn(),
+      loadProgrammedWorkouts: jest.fn(),
+      loadUserOneRepMaxes: jest.fn(),
+      loadUserConsent: jest.fn(),
+      loadUserExercisePool: jest.fn(),
+      loadDashboardStats: jest.fn(),
+      updateUserConsent: jest.fn(),
+      getProgramPreferencesById: jest.fn(),
+      loadAllExercisesForComponents: jest.fn(),
+      invalidateCache: jest.fn(),
+      refreshSpecificData: jest.fn(),
+      isLoadingSpecific: jest.fn(),
+      getErrorForDataType: jest.fn(),
+      clearError: jest.fn(),
+      prefetchData: jest.fn(),
+      prefetchRelatedData: jest.fn(),
+      isOnline: true,
+      syncPendingChanges: jest.fn(),
+      getOfflineData: jest.fn(),
+      getRelatedData: jest.fn(),
+      updateDataRelationships: jest.fn(),
+      predictivePrefetch: jest.fn(),
+      compressData: jest.fn(),
+      decompressData: jest.fn(),
+      resolveDataConflicts: jest.fn(),
+      syncWithServer: jest.fn(),
+    };
+
+    mockUseData.mockReturnValue(defaultMockDataContext);
+  });
 
   const mockProgramPreferences: ProgramPreferences = {
     program_id: 1,
@@ -162,6 +247,29 @@ describe('WorkoutWeekDetails', () => {
   });
 
   it('displays week information when active program exists', async () => {
+    // Override the mock to provide active program data
+    const activeProgramMockDataContext = {
+      ...defaultMockDataContext,
+      userData: {
+        training_programs: [
+          {
+            program: mockProgramWithPreferences.program,
+            workouts: [
+              {
+                workout: mockWorkout,
+                stages: [],
+              },
+            ],
+          },
+        ],
+      },
+      programPreferences: [mockProgramWithPreferences],
+      programmedWorkouts: [mockWorkout],
+      loadProgramPreferences: jest.fn().mockResolvedValue([mockProgramWithPreferences]),
+    };
+
+    mockUseData.mockReturnValue(activeProgramMockDataContext);
+
     mock.onGet('/program/with-preferences').reply(200, [mockProgramWithPreferences]);
     mock.onGet('/programmed_workout/').reply(200, [mockWorkout]);
     // Mock WorkoutDetail dependencies
@@ -195,24 +303,50 @@ describe('WorkoutWeekDetails', () => {
   }, 15000);
 
   it('displays week workouts when workouts exist for the week', async () => {
-    mock.onGet('/program/with-preferences').reply(200, [mockProgramWithPreferences]);
-    mock.onGet('/programmed_workout/').reply(200, [mockWorkout]);
-    // Mock WorkoutDetail dependencies
-    mock.onGet('/gdpr/export').reply(200, {
-      training_programs: [
-        {
-          program: mockProgramWithPreferences.program,
-          program_preferences: mockProgramWithPreferences.program_preferences,
-          workouts: [
-            {
-              workout: mockWorkout,
-              stages: [],
-            },
-          ],
+    const workoutWithStages = {
+      workout: {
+        id: 1,
+        program_id: 1,
+        day_number: 1,
+        name: 'Test Workout',
+        created_at: new Date('2024-01-01T00:00:00.000Z'),
+        updated_at: new Date('2024-01-01T00:00:00.000Z'),
+        is_completed: false,
+      },
+      stages: [],
+    };
+
+    const workoutDataContext = {
+      ...mockUseData(),
+      userData: {
+        user_id: 'test-user-id',
+        user_profile: {
+          user_id: 'test-user-id',
+          name: 'Test User',
+          age: 30,
+          weight: 180,
+          height: 72,
+          gender: 'male',
+          created_at: new Date('2024-01-01T00:00:00Z'),
+          updated_at: new Date('2024-01-01T00:00:00Z'),
         },
-      ],
-      data_retention_policies: [],
-    });
+        user_one_rep_max: [],
+        user_weight_unit_preferences: [],
+        training_programs: [
+          {
+            program: mockProgramWithPreferences.program,
+            workouts: [workoutWithStages],
+          },
+        ],
+        audit_logs: [],
+        data_retention_policies: [],
+      },
+      loadProgramPreferences: jest.fn().mockResolvedValue([mockProgramWithPreferences]),
+    };
+    mockUseData.mockReturnValue(workoutDataContext);
+
+    // Mock the API call that the component still makes
+    mock.onGet('/program/with-preferences').reply(200, [mockProgramWithPreferences]);
 
     await act(async () => {
       renderWithProviders(<WorkoutWeekDetails user={mockUser} weekNumber={1} />);
@@ -222,13 +356,43 @@ describe('WorkoutWeekDetails', () => {
       () => {
         expect(screen.getByText(/Week 1 of 2/)).toBeInTheDocument();
         expect(screen.getByText('Day 1')).toBeInTheDocument();
-        expect(screen.getByText('Push Day')).toBeInTheDocument();
+        expect(screen.getByText('Test Workout')).toBeInTheDocument();
       },
       { timeout: 10000 }
     );
   }, 15000);
 
   it('shows no workouts message when no workouts exist for the week', async () => {
+    const noWorkoutsDataContext = {
+      ...defaultMockDataContext,
+      userData: {
+        user_id: 'test-user-id',
+        user_profile: {
+          user_id: 'test-user-id',
+          name: 'Test User',
+          age: 30,
+          weight: 180,
+          height: 72,
+          gender: 'male',
+          created_at: new Date('2024-01-01T00:00:00Z'),
+          updated_at: new Date('2024-01-01T00:00:00Z'),
+        },
+        user_one_rep_max: [],
+        user_weight_unit_preferences: [],
+        training_programs: [
+          {
+            program: mockProgramWithPreferences.program,
+            workouts: [],
+          },
+        ],
+        audit_logs: [],
+        data_retention_policies: [],
+      },
+      loadProgramPreferences: jest.fn().mockResolvedValue([mockProgramWithPreferences]),
+    };
+
+    mockUseData.mockReturnValue(noWorkoutsDataContext);
+
     mock.onGet('/program/with-preferences').reply(200, [mockProgramWithPreferences]);
     mock.onGet('/programmed_workout/').reply(200, []);
     // Mock WorkoutDetail dependencies
@@ -256,6 +420,13 @@ describe('WorkoutWeekDetails', () => {
   });
 
   it('shows error message when API calls fail', async () => {
+    const errorDataContext = {
+      ...defaultMockDataContext,
+      loadProgramPreferences: jest.fn().mockRejectedValue(new Error('Failed to load program preferences')),
+    };
+
+    mockUseData.mockReturnValue(errorDataContext);
+
     mock.onGet('/program/with-preferences').reply(500, { error: 'Internal server error' });
     mock.onGet('/programmed_workout/').reply(200, []);
 
@@ -265,35 +436,82 @@ describe('WorkoutWeekDetails', () => {
 
     await waitFor(
       () => {
-        expect(screen.getByText('Failed to load week data.')).toBeInTheDocument();
+        expect(screen.getByText('Failed to load additional week data. Please try again.')).toBeInTheDocument();
       },
       { timeout: 15000 }
     );
   }, 20000);
 
   it('displays multiple workouts for the week', async () => {
-    const workout1 = { ...mockWorkout, id: 1, day_number: 1, name: 'Push Day' };
-    const workout2 = { ...mockWorkout, id: 2, day_number: 2, name: 'Pull Day' };
-    const workout3 = { ...mockWorkout, id: 3, day_number: 3, name: 'Leg Day' };
+    const workout1 = { 
+      workout: { 
+        id: 1, 
+        program_id: 1, 
+        day_number: 1, 
+        name: 'Push Day',
+        created_at: new Date('2024-01-01T00:00:00.000Z'),
+        updated_at: new Date('2024-01-01T00:00:00.000Z'),
+        is_completed: false,
+      },
+      stages: [],
+    };
+    const workout2 = { 
+      workout: { 
+        id: 2, 
+        program_id: 1, 
+        day_number: 2, 
+        name: 'Pull Day',
+        created_at: new Date('2024-01-01T00:00:00.000Z'),
+        updated_at: new Date('2024-01-01T00:00:00.000Z'),
+        is_completed: false,
+      },
+      stages: [],
+    };
+    const workout3 = { 
+      workout: { 
+        id: 3, 
+        program_id: 1, 
+        day_number: 3, 
+        name: 'Leg Day',
+        created_at: new Date('2024-01-01T00:00:00.000Z'),
+        updated_at: new Date('2024-01-01T00:00:00.000Z'),
+        is_completed: false,
+      },
+      stages: [],
+    };
     // Note: With current_week_number: 2, workouts with day_number 1-2 go to week 1, day_number 3+ go to week 2
 
-    mock.onGet('/program/with-preferences').reply(200, [mockProgramWithPreferences]);
-    mock.onGet('/programmed_workout/').reply(200, [workout1, workout2, workout3]);
-    // Mock WorkoutDetail dependencies
-    mock.onGet('/gdpr/export').reply(200, {
-      training_programs: [
-        {
-          program: mockProgramWithPreferences.program,
-          program_preferences: mockProgramWithPreferences.program_preferences,
-          workouts: [
-            { workout: workout1, stages: [] },
-            { workout: workout2, stages: [] },
-            { workout: workout3, stages: [] },
-          ],
+    const multipleWorkoutsDataContext = {
+      ...mockUseData(),
+      userData: {
+        user_id: 'test-user-id',
+        user_profile: {
+          user_id: 'test-user-id',
+          name: 'Test User',
+          age: 30,
+          weight: 180,
+          height: 72,
+          gender: 'male',
+          created_at: new Date('2024-01-01T00:00:00Z'),
+          updated_at: new Date('2024-01-01T00:00:00Z'),
         },
-      ],
-      data_retention_policies: [],
-    });
+        user_one_rep_max: [],
+        user_weight_unit_preferences: [],
+        training_programs: [
+          {
+            program: mockProgramWithPreferences.program,
+            workouts: [workout1, workout2, workout3],
+          },
+        ],
+        audit_logs: [],
+        data_retention_policies: [],
+      },
+      loadProgramPreferences: jest.fn().mockResolvedValue([mockProgramWithPreferences]),
+    };
+    mockUseData.mockReturnValue(multipleWorkoutsDataContext);
+
+    // Mock the API call that the component still makes
+    mock.onGet('/program/with-preferences').reply(200, [mockProgramWithPreferences]);
 
     await act(async () => {
       renderWithProviders(<WorkoutWeekDetails user={mockUser} weekNumber={1} />);
@@ -309,14 +527,10 @@ describe('WorkoutWeekDetails', () => {
       },
       { timeout: 10000 }
     );
-  });
+  }, 20000);
 
-  it('verifies API calls are made with correct endpoints', async () => {
-    mock.onGet('/program/with-preferences').reply(200, []);
-    mock.onGet('/programmed_workout/').reply(200, []);
-    // Mock WorkoutDetail dependencies
-    mock.onGet('/gdpr/export').reply(200, { training_programs: [], data_retention_policies: [] });
-
+  it('verifies component uses DataContext instead of direct API calls', async () => {
+    // Component now uses DataContext, so no direct API calls should be made
     await act(async () => {
       renderWithProviders(<WorkoutWeekDetails user={mockUser} weekNumber={1} />);
     });
@@ -328,13 +542,7 @@ describe('WorkoutWeekDetails', () => {
       { timeout: 15000 }
     );
 
-    // Verify API calls were made
-    expect(mock.history.get).toHaveLength(5); // program/with-preferences, programmed_workout, gdpr/export, exercise_muscle, user_weight_unit_preference
-    const urls = mock.history.get.map(req => req.url);
-    expect(urls).toContain('/program/with-preferences');
-    expect(urls).toContain('/programmed_workout/');
-    expect(urls).toContain('/gdpr/export');
-    expect(urls).toContain('/exercise_muscle/');
-    expect(urls).toContain('/user_weight_unit_preference/test-user-id');
+    // Verify no direct API calls were made since component uses DataContext
+    expect(mock.history.get).toHaveLength(0);
   }, 20000);
 });

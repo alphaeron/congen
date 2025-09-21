@@ -47,8 +47,6 @@ import { RichTextEditor } from './RichTextEditor';
 import { SetSchemeEditor } from './SetSchemeEditor';
 import { SetSchemeForm } from './SetSchemeForm';
 import { SunburstChart } from './SunburstChart';
-import { getExercises } from '../api/exercise';
-import { updateProgrammedExercise, createProgrammedExercise } from '../api/programmedExercise';
 import type {
   Exercise,
   ProgramWithWorkouts,
@@ -111,7 +109,7 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
   const { enqueueSnackbar } = useSnackbar();
 
   // Use shared data context instead of local state
-  const { userData, exerciseMuscleData, weightUnitPreferences, isLoading, refreshData } = useData();
+  const { userData, exerciseMuscleData, weightUnitPreferences, isLoading, refreshData, loadAllExercises, createProgrammedExercise, updateProgrammedExercise } = useData();
 
   const [collapsedStages, setCollapsedStages] = useState<Set<number>>(new Set());
   // Remove local exerciseData state - we'll use the data from context directly
@@ -209,7 +207,7 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
   const loadAvailableExercises = useCallback(async () => {
     setLoadingExercises(true);
     try {
-      const exercises = await getExercises();
+      const exercises = await loadAllExercises();
       setAvailableExercises(exercises);
     } catch {
       enqueueSnackbar('Failed to load exercises', { variant: 'error' });

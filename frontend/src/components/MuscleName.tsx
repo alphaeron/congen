@@ -1,8 +1,7 @@
 import { Tooltip, Typography } from '@mui/material';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 
-import { useApiGet } from '../api/hooks';
-import { getIndividualMuscle } from '../api/muscle';
+import { useData } from '../contexts/DataContext';
 import type { Muscle } from '../api/types';
 import { capitalizeEachWord } from '../common/utils';
 
@@ -30,23 +29,31 @@ export function MuscleName({
   sx,
   children,
 }: MuscleNameProps): React.ReactElement {
-  const {
-    data: muscle,
-    isLoading: isMuscleLoading,
-    error: muscleError,
-  } = useApiGet<Muscle>(
-    [`individualMuscle${muscleName}`],
-    getIndividualMuscle,
-    {
-      enabled: true,
-      refetchOnWindowFocus: false,
-      retry: 1,
-    },
-    [muscleName]
-  );
+  const { getMuscle } = useData();
+  const [muscle, setMuscle] = useState<Muscle | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [hasError, setHasError] = useState(false);
 
-  const isLoading = isMuscleLoading;
-  const hasError = muscleError;
+  useEffect(() => {
+    const loadMuscle = async () => {
+      if (!muscleName) return;
+      
+      setIsLoading(true);
+      setHasError(false);
+      
+      try {
+        const muscleData = await getMuscle(muscleName);
+        setMuscle(muscleData);
+      } catch (error) {
+        setHasError(true);
+        // Error is handled by setting hasError state
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadMuscle();
+  }, [muscleName, getMuscle]);
 
   const tooltipContent = React.useMemo(() => {
     if (isLoading) {

@@ -14,6 +14,13 @@ import type {
   ProgramWithPreferences,
 } from '../api/types';
 
+// Mock DataContext
+const mockUseData = jest.fn();
+jest.mock('../contexts/DataContext', () => ({
+  useData: () => mockUseData(),
+  DataProvider: ({ children }: { children: React.ReactNode }) => children,
+}));
+
 // Mock Nivo chart components to prevent rendering issues
 jest.mock('@nivo/stream', () => ({
   ResponsiveStream: (): React.ReactElement => (
@@ -66,6 +73,7 @@ describe('Workouts', () => {
   // Create a new mock adapter for each test to prevent interference
   let mock: MockAdapter;
   const theme = createTheme();
+  let defaultMockDataContext: any;
 
   const renderWithProviders = (component: React.ReactElement, initialEntries: string[] = ['/']) => {
     return render(
@@ -119,6 +127,43 @@ describe('Workouts', () => {
     // Create a fresh mock adapter for each test
     mock = new MockAdapter(ENDPOINT);
     jest.clearAllMocks();
+
+    // Default mock data for useData hook - can be overridden in individual tests
+    const defaultMockUserData = {
+      training_programs: [
+        {
+          program: mockProgramWithPreferences.program,
+          workouts: [
+            {
+              workout: mockWorkout,
+              stages: [],
+            },
+          ],
+        },
+      ],
+    };
+
+    defaultMockDataContext = {
+      userData: defaultMockUserData,
+      exerciseMuscleData: new Map(),
+      weightUnitPreferences: [],
+      isLoading: false,
+      error: null,
+      refreshData: jest.fn(),
+      isDataStale: false,
+      loadProgramPreferences: jest.fn().mockResolvedValue([mockProgramWithPreferences]),
+      getExercise: jest.fn().mockResolvedValue({
+        name: 'Test Exercise',
+        description: 'Test Description',
+        movement_type: 'push',
+        is_unilateral: false,
+        is_upper: true,
+        is_accessory: false,
+      }),
+      generateWorkout: jest.fn().mockResolvedValue(mockProgramWithPreferences.program),
+    };
+
+    mockUseData.mockReturnValue(defaultMockDataContext);
   });
 
   afterEach(() => {
@@ -130,24 +175,22 @@ describe('Workouts', () => {
   });
 
   it('renders component without errors', async () => {
+    // Set up mock data context with no active program
+    const emptyMockDataContext = {
+      userData: { training_programs: [] },
+      exerciseMuscleData: new Map(),
+      weightUnitPreferences: [],
+      isLoading: false,
+      error: null,
+      refreshData: jest.fn(),
+      isDataStale: false,
+    };
+
+    mockUseData.mockReturnValue(emptyMockDataContext);
+
+    // Mock the additional API calls that the component still makes
     mock.onGet('/program/with-preferences').reply(200, []);
-    mock.onGet('/programmed_workout/').reply(200, []);
-    // Mock WorkoutAnalytics dependencies
-    mock.onGet('/gdpr/export').reply(200, {
-      training_programs: [],
-      data_retention_policies: [],
-    });
     mock.onGet('/user_weight_unit_preference/test-user-id').reply(200, []);
-    mock.onGet(/\/exercise\/[^/]+$/).reply(200, {
-      id: 1,
-      exercise_name: 'Test Exercise',
-      category: 'strength',
-      primary_muscle: 'chest',
-      secondary_muscles: ['triceps', 'shoulders'],
-      instructions: 'Test instructions',
-      equipment: 'barbell',
-      difficulty: 'intermediate',
-    });
 
     await act(async () => {
       renderWithProviders(<Workouts user={mockUser} />);
@@ -158,33 +201,34 @@ describe('Workouts', () => {
         // Check that the workout calendar content is rendered
         expect(screen.getByText('No Active Program')).toBeInTheDocument();
       },
-      { timeout: 15000 }
+      { timeout: 5000 }
     );
-  }, 20000);
+  });
 
   it('displays no active program message when no active program exists', async () => {
-    const inactiveProgram = {
-      ...mockProgramWithPreferences,
-      program: { ...mockProgramWithPreferences.program, is_active: false },
+    // Set up mock data context with no active program (all programs inactive)
+    const noActiveProgramMockDataContext = {
+      userData: {
+        training_programs: [
+          {
+            program: { ...mockProgramWithPreferences.program, is_active: false },
+            workouts: [],
+          },
+        ],
+      },
+      exerciseMuscleData: new Map(),
+      weightUnitPreferences: [],
+      isLoading: false,
+      error: null,
+      refreshData: jest.fn(),
+      isDataStale: false,
     };
-    mock.onGet('/program/with-preferences').reply(200, [inactiveProgram]);
-    mock.onGet('/programmed_workout/').reply(200, []);
-    // Mock WorkoutAnalytics dependencies
-    mock.onGet('/gdpr/export').reply(200, {
-      training_programs: [],
-      data_retention_policies: [],
-    });
+
+    mockUseData.mockReturnValue(noActiveProgramMockDataContext);
+
+    // Mock the additional API calls that the component still makes
+    mock.onGet('/program/with-preferences').reply(200, []);
     mock.onGet('/user_weight_unit_preference/test-user-id').reply(200, []);
-    mock.onGet(/\/exercise\/[^/]+$/).reply(200, {
-      id: 1,
-      exercise_name: 'Test Exercise',
-      category: 'strength',
-      primary_muscle: 'chest',
-      secondary_muscles: ['triceps', 'shoulders'],
-      instructions: 'Test instructions',
-      equipment: 'barbell',
-      difficulty: 'intermediate',
-    });
 
     await act(async () => {
       renderWithProviders(<Workouts user={mockUser} />);
@@ -194,40 +238,15 @@ describe('Workouts', () => {
       () => {
         expect(screen.getByText(/No Active Program/)).toBeInTheDocument();
       },
-      { timeout: 10000 }
+      { timeout: 5000 }
     );
   });
 
   it('displays active program information', async () => {
+    // Use default mock data (already set up in beforeEach)
+    // Mock the additional API calls that the component still makes
     mock.onGet('/program/with-preferences').reply(200, [mockProgramWithPreferences]);
-    mock.onGet('/programmed_workout/').reply(200, [mockWorkout]);
-    // Mock WorkoutAnalytics dependencies
-    mock.onGet('/gdpr/export').reply(200, {
-      training_programs: [
-        {
-          program: mockProgramWithPreferences.program,
-          program_preferences: mockProgramWithPreferences.program_preferences,
-          workouts: [
-            {
-              workout: mockWorkout,
-              stages: [],
-            },
-          ],
-        },
-      ],
-      data_retention_policies: [],
-    });
     mock.onGet('/user_weight_unit_preference/test-user-id').reply(200, []);
-    mock.onGet(/\/exercise\/[^/]+$/).reply(200, {
-      id: 1,
-      exercise_name: 'Test Exercise',
-      category: 'strength',
-      primary_muscle: 'chest',
-      secondary_muscles: ['triceps', 'shoulders'],
-      instructions: 'Test instructions',
-      equipment: 'barbell',
-      difficulty: 'intermediate',
-    });
 
     await act(async () => {
       renderWithProviders(<Workouts user={mockUser} />);
@@ -239,17 +258,9 @@ describe('Workouts', () => {
         expect(screen.getByText('Current Week: Week 2')).toBeInTheDocument();
         expect(screen.getByText('Training Weeks')).toBeInTheDocument();
       },
-      { timeout: 10000 }
-    );
-
-    // Check for week information - it should be in the progress section
-    await waitFor(
-      () => {
-        expect(screen.getByText('Current Week: Week 2')).toBeInTheDocument();
-      },
       { timeout: 5000 }
     );
-  }, 15000);
+  });
 
   it('shows generate next week button', async () => {
     mock.onGet('/program/with-preferences').reply(200, [mockProgramWithPreferences]);
@@ -371,11 +382,10 @@ describe('Workouts', () => {
       { timeout: 10000 }
     );
 
-    // Check that the API call was made
+    // Check that the DataContext function was called
     await waitFor(
       () => {
-        expect(mock.history.post).toHaveLength(1);
-        expect(mock.history.post[0].url).toBe('/conjugate_workout_generator/1');
+        expect(defaultMockDataContext.generateWorkout).toHaveBeenCalledWith(1);
       },
       { timeout: 10000 }
     );
@@ -420,23 +430,45 @@ describe('Workouts', () => {
     const workout5 = { ...mockWorkout, id: 5, day_number: 5, name: 'Lower Body' };
     const workout6 = { ...mockWorkout, id: 6, day_number: 6, name: 'Full Body' };
 
+    // Set up mock data context with multiple workouts spanning multiple weeks
+    const multipleWeeksMockDataContext = {
+      userData: {
+        training_programs: [
+          {
+            program: mockProgramWithPreferences.program,
+            workouts: [
+              { workout: workout1, stages: [] },
+              { workout: workout2, stages: [] },
+              { workout: workout3, stages: [] },
+              { workout: workout4, stages: [] },
+              { workout: workout5, stages: [] },
+              { workout: workout6, stages: [] },
+            ],
+          },
+        ],
+      },
+      exerciseMuscleData: new Map(),
+      weightUnitPreferences: [],
+      isLoading: false,
+      error: null,
+      refreshData: jest.fn(),
+      isDataStale: false,
+      loadProgramPreferences: jest.fn().mockResolvedValue([mockProgramWithPreferences]),
+      getExercise: jest.fn().mockResolvedValue({
+        name: 'Test Exercise',
+        description: 'Test Description',
+        movement_type: 'push',
+        is_unilateral: false,
+        is_upper: true,
+        is_accessory: false,
+      }),
+    };
+
+    mockUseData.mockReturnValue(multipleWeeksMockDataContext);
+
+    // Mock the additional API calls that the component still makes
     mock.onGet('/program/with-preferences').reply(200, [mockProgramWithPreferences]);
-    mock
-      .onGet('/programmed_workout/')
-      .reply(200, [workout1, workout2, workout3, workout4, workout5, workout6]);
-    // Mock WorkoutAnalytics dependencies
-    mock.onGet('/gdpr/export').reply(200, { training_programs: [], data_retention_policies: [] });
     mock.onGet('/user_weight_unit_preference/test-user-id').reply(200, []);
-    mock.onGet(/\/exercise\/[^/]+$/).reply(200, {
-      id: 1,
-      exercise_name: 'Test Exercise',
-      category: 'strength',
-      primary_muscle: 'chest',
-      secondary_muscles: ['triceps', 'shoulders'],
-      instructions: 'Test instructions',
-      equipment: 'barbell',
-      difficulty: 'intermediate',
-    });
 
     await act(async () => {
       renderWithProviders(<Workouts user={mockUser} />);
@@ -452,9 +484,24 @@ describe('Workouts', () => {
       },
       { timeout: 10000 }
     );
-  }, 15000);
+  });
 
   it('verifies API calls are made with correct endpoints', async () => {
+    // Override the default mock to show no active program
+    const noActiveProgramMockDataContext = {
+      userData: { training_programs: [] },
+      exerciseMuscleData: new Map(),
+      weightUnitPreferences: [],
+      isLoading: false,
+      error: null,
+      refreshData: jest.fn(),
+      isDataStale: false,
+      loadProgramPreferences: jest.fn().mockResolvedValue([]),
+      getExercise: jest.fn().mockResolvedValue(null),
+    };
+
+    mockUseData.mockReturnValue(noActiveProgramMockDataContext);
+
     mock.onGet('/program/with-preferences').reply(200, []);
     mock.onGet('/programmed_workout/').reply(200, []);
     // Mock WorkoutAnalytics dependencies
@@ -482,10 +529,9 @@ describe('Workouts', () => {
       { timeout: 15000 }
     );
 
-    expect(mock.history.get.length).toBeGreaterThanOrEqual(2); // At least program and programmed_workout
-    const urls = mock.history.get.map(req => req.url);
-    expect(urls).toContain('/program/with-preferences');
-    expect(urls).toContain('/programmed_workout/');
+    // Since the component now uses DataContext, it doesn't make direct API calls
+    // Instead, we should test that the component renders correctly with the mocked data
+    expect(screen.getByText('No Active Program')).toBeInTheDocument();
   }, 20000);
 
   it('navigates to week details when week is clicked', async () => {

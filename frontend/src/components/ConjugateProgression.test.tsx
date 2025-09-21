@@ -15,6 +15,19 @@ jest.mock('@tanstack/react-virtual', () => ({
   }),
 }));
 
+// Mock DataContext
+const mockUseData = jest.fn();
+jest.mock('../contexts/DataContext', () => ({
+  useData: () => mockUseData(),
+  DataProvider: ({ children }: { children: React.ReactNode }) => children,
+}));
+
+// Mock the exercise API
+const mockGetExerciseMuscles = jest.fn();
+jest.mock('../api/exercise', () => ({
+  getExerciseMuscles: (...args: unknown[]) => mockGetExerciseMuscles(...args),
+}));
+
 import { ConjugateProgression } from './ConjugateProgression';
 import { ENDPOINT } from '../api/endpoint';
 import {
@@ -219,6 +232,33 @@ describe('ConjugateProgression', () => {
 
   beforeEach(() => {
     mock = new MockAdapter(ENDPOINT);
+    
+    // Set up default mock data for DataContext
+    const defaultMockDataContext = {
+      userData: mockUserDataExport,
+      exerciseMuscleData: new Map(),
+      weightUnitPreferences: [mockWeightUnitPreference],
+      exerciseData: new Map(),
+      exerciseEquipmentData: new Map(),
+      muscleData: new Map(),
+      equipmentData: new Map(),
+      programData: new Map(),
+      isLoading: false,
+      error: null,
+      refreshData: jest.fn(),
+      isDataStale: false,
+      getExercise: jest.fn().mockResolvedValue(mockExercise),
+      getExerciseEquipmentData: jest.fn().mockResolvedValue([]),
+      getMuscle: jest.fn().mockResolvedValue(null),
+      getEquipment: jest.fn().mockResolvedValue(null),
+      getProgram: jest.fn().mockResolvedValue(null),
+    };
+
+    mockUseData.mockReturnValue(defaultMockDataContext);
+    
+    // Mock the getExerciseMuscles API call
+    mockGetExerciseMuscles.mockResolvedValue([]);
+    
     // Mock the exercise API calls that ExerciseName component makes
     mock.onGet('/exercise/').reply(200, [
       { id: 1, name: 'Bench Press' },
@@ -228,6 +268,7 @@ describe('ConjugateProgression', () => {
 
   afterEach(() => {
     mock.restore();
+    jest.clearAllMocks();
   });
 
   it('should display empty state when no training programs exist', async () => {
@@ -245,13 +286,13 @@ describe('ConjugateProgression', () => {
 
     await waitFor(
       () => {
-        expect(screen.getByText('Conjugate Progress Tracking')).toBeInTheDocument();
+        expect(screen.getByText('Strength & Volume Progress')).toBeInTheDocument();
       },
       { timeout: 10000 }
     );
 
     expect(
-      screen.getByText(/Complete your first workout to see progress statistics and correlations/)
+      screen.getByText('Track your strength progress and personal records • Click to view details')
     ).toBeInTheDocument();
   }, 15000);
 
@@ -334,7 +375,7 @@ describe('ConjugateProgression', () => {
     await waitFor(
       () => {
         // Component should handle minimal data gracefully
-        expect(screen.getByText('Conjugate Progress Tracking')).toBeInTheDocument();
+        expect(screen.getByText('Strength & Volume Progress')).toBeInTheDocument();
       },
       { timeout: 10000 }
     );

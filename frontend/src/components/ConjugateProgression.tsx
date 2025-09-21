@@ -14,19 +14,16 @@ import { ExerciseName } from './ExerciseName';
 import { LineChart } from './LineChart';
 import { LoadingSpinner } from './LoadingSpinner';
 import { PieChart } from './PieChart';
-import { getIndividualExercise } from '../api/exercise';
-import { getUserDataExport } from '../api/gdpr';
 import type {
   User,
   Exercise,
   UserOneRepMax,
-  UserDataExport,
   ProgramWithWorkouts,
   ProgrammedWorkoutWithStages,
   ProgrammedExerciseWithSetSchemes,
   WorkoutStageWithExercises,
 } from '../api/types';
-import { getUserWeightUnitPreferences } from '../api/userWeightUnitPreference';
+import { useData } from '../contexts/DataContext';
 
 interface ConjugateProgressionProps {
   user: User;
@@ -45,13 +42,11 @@ interface ConjugateProgressionProps {
  * @return Enhanced conjugate progression component
  */
 export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({ user }) => {
+  const { userData, weightUnitPreferences, isLoading: isDataLoading, getExercise } = useData();
+  
   // State for loaded data
-  const [userData, setUserData] = useState<UserDataExport | null>(null);
   const [exerciseData, setExerciseData] = useState<Map<string, Exercise>>(new Map());
   const [oneRepMaxes, setOneRepMaxes] = useState<UserOneRepMax[]>([]);
-  const [weightUnitPreferences, setWeightUnitPreferences] = useState<UserWeightUnitPreference[]>(
-    []
-  );
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [globalFilter, setGlobalFilter] = useState('');
@@ -59,38 +54,32 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({ user
   // Virtualization setup
   const tableParentRef = useRef<HTMLDivElement>(null);
 
-  // Load data on component mount
+  // Load additional data that's not in DataContext
   useEffect(() => {
-    const loadData = async () => {
+    const loadAdditionalData = async () => {
+      if (!userData) return;
+      
       setIsLoading(true);
       setError(null);
       try {
-        const [userDataResponse, weightUnitData] = await Promise.all([
-          getUserDataExport(),
-          getUserWeightUnitPreferences(user.keycloak_id),
-        ]);
+        // Extract one rep maxes from userData
+        setOneRepMaxes((userData.user_one_rep_max as unknown as UserOneRepMax[]) || []);
 
-        setUserData(userDataResponse);
-        setWeightUnitPreferences(weightUnitData || []);
-        setOneRepMaxes((userDataResponse.user_one_rep_max as unknown as UserOneRepMax[]) || []);
-
-        // Extract unique exercises from the export data and fetch exercise details
+        // Extract unique exercises from userData and fetch exercise details
         const uniqueExercises = new Set<string>();
-        (userDataResponse.training_programs as ProgramWithWorkouts[])?.forEach(program => {
-          program.workouts.forEach((workoutWithStages: ProgrammedWorkoutWithStages) => {
-            workoutWithStages.stages.forEach((stageWithExercises: WorkoutStageWithExercises) => {
-              stageWithExercises.exercises.forEach(
-                (exerciseWithSetSchemes: ProgrammedExerciseWithSetSchemes) => {
-                  uniqueExercises.add(exerciseWithSetSchemes.exercise.exercise_name);
-                }
-              );
+        userData.training_programs?.forEach(program => {
+          program.workouts.forEach(workoutWithStages => {
+            workoutWithStages.stages.forEach(stageWithExercises => {
+              stageWithExercises.exercises.forEach(exerciseWithSetSchemes => {
+                uniqueExercises.add(exerciseWithSetSchemes.exercise.exercise_name);
+              });
             });
           });
         });
 
-        // Fetch exercise details for all unique exercises
+        // Fetch exercise details for all unique exercises using DataContext
         const exercisePromises = Array.from(uniqueExercises).map(exerciseName =>
-          getIndividualExercise(exerciseName).catch(() => null)
+          getExercise(exerciseName).catch(() => null)
         );
         const exerciseResults = await Promise.all(exercisePromises);
 
@@ -102,14 +91,14 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({ user
         });
         setExerciseData(exerciseMap);
       } catch {
-        setError('Failed to load progression data');
+        setError('Failed to load additional progression data');
       } finally {
         setIsLoading(false);
       }
     };
 
-    loadData();
-  }, [user.keycloak_id]);
+    loadAdditionalData();
+  }, [userData, getExercise]);
 
   // Table configuration
   const columnHelper = createColumnHelper<{
@@ -178,7 +167,7 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({ user
   });
 
   // Show loading state
-  if (isLoading) {
+  if (isDataLoading || isLoading) {
     return <LoadingSpinner message="Loading progression data..." fullHeight={false} />;
   }
 

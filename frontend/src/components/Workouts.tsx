@@ -19,21 +19,15 @@ import { LoadingSpinner } from './LoadingSpinner';
 import { ProgressBar } from './ProgressBar';
 import { StreamChart } from './StreamChart';
 import { WorkoutGenerationWizard } from './WorkoutGenerationWizard';
-import { getIndividualExercise } from '../api/exercise';
-import { getUserDataExport } from '../api/gdpr';
-import { getProgramsWithPreferences } from '../api/program';
-import { getProgrammedWorkouts } from '../api/programmedWorkout';
 import type {
   Program,
   ProgrammedWorkout,
   User,
   ProgramWithPreferences,
   Exercise,
-  UserDataExport,
-  ProgramWithWorkouts,
   UserWeightUnitPreference,
 } from '../api/types';
-import { getUserWeightUnitPreferences } from '../api/userWeightUnitPreference';
+import { useData } from '../contexts/DataContext';
 import { replaceUnderscoresWithSpaces } from '../common/utils';
 import { exportProgramToPDF } from '../utils/exportUtils';
 import { calculateProgramProgress } from '../utils/progressUtils';
@@ -61,41 +55,30 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user }) => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { enqueueSnackbar } = useSnackbar();
+  const { userData, weightUnitPreferences, refreshData, isLoading: isDataLoading, loadProgramPreferences, getExercise } = useData();
 
   const [programsWithPreferences, setProgramsWithPreferences] = useState<
     Array<ProgramWithPreferences>
   >([]);
-  const [workouts, setWorkouts] = useState<ProgrammedWorkout[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [wizardOpen, setWizardOpen] = useState(false);
   const [selectedProgram, setSelectedProgram] = useState<Program | null>(null);
   const [exerciseData, setExerciseData] = useState<Map<string, Exercise>>(new Map());
-  const [weightUnitPreferences, setWeightUnitPreferences] = useState<UserWeightUnitPreference[]>(
-    []
-  );
-  const [userDataExport, setUserDataExport] = useState<UserDataExport | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
 
-  // Load workout data
+  // Load additional data that's not in DataContext
   useEffect(() => {
-    const loadWorkoutData = async () => {
+    const loadAdditionalData = async () => {
+      if (!userData) return;
+      
       setIsLoading(true);
       try {
-        const [programsData, workoutsData, userData, weightUnitData] = await Promise.all([
-          getProgramsWithPreferences(),
-          getProgrammedWorkouts(),
-          getUserDataExport(),
-          getUserWeightUnitPreferences(user.keycloak_id),
-        ]);
-
+        const programsData = await loadProgramPreferences();
         setProgramsWithPreferences(programsData);
-        setWorkouts(workoutsData);
-        setUserDataExport(userData);
-        setWeightUnitPreferences(weightUnitData || []);
 
-        // Extract unique exercises from the export data and fetch exercise details
+        // Extract unique exercises from the userData and fetch exercise details
         const uniqueExercises = new Set<string>();
-        (userData.training_programs as ProgramWithWorkouts[])?.forEach(program => {
+        userData.training_programs?.forEach(program => {
           program.workouts.forEach(workoutWithStages => {
             workoutWithStages.stages.forEach(stageWithExercises => {
               stageWithExercises.exercises.forEach(exerciseWithSetSchemes => {
@@ -105,12 +88,14 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user }) => {
           });
         });
 
-        // Fetch exercise data for all unique exercises
+        // Fetch exercise data for all unique exercises using DataContext
         const exerciseMap = new Map<string, Exercise>();
         for (const exerciseName of Array.from(uniqueExercises)) {
           try {
-            const exercise = await getIndividualExercise(exerciseName);
-            exerciseMap.set(exerciseName, exercise);
+            const exercise = await getExercise(exerciseName);
+            if (exercise) {
+              exerciseMap.set(exerciseName, exercise);
+            }
           } catch {
             enqueueSnackbar(`Error fetching exercise data for ${exerciseName}`, {
               variant: 'error',
@@ -120,38 +105,45 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user }) => {
 
         setExerciseData(exerciseMap);
       } catch {
-        enqueueSnackbar('Failed to load workout data. Please try again.', { variant: 'error' });
+        enqueueSnackbar('Failed to load additional workout data. Please try again.', { variant: 'error' });
       } finally {
         setIsLoading(false);
       }
     };
 
-    loadWorkoutData();
-  }, [user.keycloak_id]); // Reload when user changes
+    loadAdditionalData();
+  }, [userData, user.keycloak_id, enqueueSnackbar, loadProgramPreferences, getExercise]);
 
-  const activeProgram = programsWithPreferences.find(program => program.program.is_active);
+  // Get active program data consistently from userData
+  const activeProgramData = useMemo(() => {
+    if (!userData?.training_programs) return null;
+    return userData.training_programs.find(p => p.program.is_active) || null;
+  }, [userData]);
+
+  // Get active program preferences
+  const activeProgramPreferences = useMemo(() => {
+    if (!activeProgramData) return null;
+    return programsWithPreferences.find(p => p.program.id === activeProgramData.program.id) || null;
+  }, [activeProgramData, programsWithPreferences]);
+
+  // Legacy activeProgram for backward compatibility in render
+  const activeProgram = activeProgramPreferences;
 
   // Group workouts by week
   const weeks = useMemo(() => {
-    if (!activeProgram) return [];
-
-    const programWorkouts = workouts.filter(
-      workout => workout.program_id === activeProgram.program.id
-    );
-
-    if (programWorkouts.length === 0) return [];
+    if (!activeProgramData || !activeProgramPreferences || activeProgramData.workouts.length === 0) return [];
 
     // Use program preferences
-    const workoutsPerWeek = activeProgram.program_preferences.program_days_per_week;
+    const workoutsPerWeek = activeProgramPreferences.program_preferences.program_days_per_week;
 
     const weekMap = new Map<number, ProgrammedWorkout[]>();
 
-    programWorkouts.forEach(workout => {
-      const weekNum = Math.ceil(workout.day_number / workoutsPerWeek);
+    activeProgramData.workouts.forEach(workoutWithStages => {
+      const weekNum = Math.ceil(workoutWithStages.workout.day_number / workoutsPerWeek);
       if (!weekMap.has(weekNum)) {
         weekMap.set(weekNum, []);
       }
-      weekMap.get(weekNum)!.push(workout);
+      weekMap.get(weekNum)!.push(workoutWithStages.workout);
     });
 
     return Array.from(weekMap.entries())
@@ -161,7 +153,7 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user }) => {
         workouts: weekWorkouts.sort((a, b) => a.day_number - b.day_number),
       }))
       .sort((a, b) => a.weekNumber - b.weekNumber);
-  }, [workouts, activeProgram]);
+  }, [activeProgramData, activeProgramPreferences]);
 
   const openWizard = (program: Program) => {
     setSelectedProgram(program);
@@ -178,14 +170,8 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user }) => {
   const handleWizardComplete = async () => {
     setIsGenerating(true);
     try {
-      // Refresh data after generation
-      const [programsData, workoutsData] = await Promise.all([
-        getProgramsWithPreferences(),
-        getProgrammedWorkouts(),
-      ]);
-      setProgramsWithPreferences(programsData);
-      setWorkouts(workoutsData);
-
+      // Refresh all data after generation
+      await refreshData();
       enqueueSnackbar('Workouts generated successfully!', { variant: 'success' });
     } catch {
       enqueueSnackbar('Failed to refresh workout data', { variant: 'error' });
@@ -203,16 +189,11 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user }) => {
 
   // Calculate progress metrics
   const getProgressMetrics = () => {
-    if (!activeProgram || !userDataExport) return null;
+    if (!activeProgramData || !activeProgramPreferences) return null;
 
-    const programData = userDataExport.training_programs.find(
-      p => p.program.id === activeProgram.program.id
-    );
-    if (!programData) return null;
-
-    const workoutsPerWeek = activeProgram.program_preferences?.program_days_per_week || 3;
-    const programProgress = calculateProgramProgress(programData.workouts, workoutsPerWeek);
-    const currentWeek = Math.max(activeProgram.program.current_week_number, 1);
+    const workoutsPerWeek = activeProgramPreferences.program_preferences?.program_days_per_week || 3;
+    const programProgress = calculateProgramProgress(activeProgramData.workouts, workoutsPerWeek);
+    const currentWeek = Math.max(activeProgramData.program.current_week_number, 1);
 
     return {
       ...programProgress,
@@ -225,20 +206,16 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user }) => {
 
   // Export handlers
   const handleExportPDF = async () => {
-    if (!activeProgram || !userDataExport) return;
-    const programData = userDataExport.training_programs.find(
-      p => p.program.id === activeProgram.program.id
-    );
-    if (!programData) return;
+    if (!activeProgramData) return;
 
-    await exportProgramToPDF(programData, weightUnitPreferences, {
-      title: activeProgram.program.name,
-      filename: `program-${activeProgram.program.name.replace(/\s+/g, '-').toLowerCase()}`,
+    await exportProgramToPDF(activeProgramData, weightUnitPreferences, {
+      title: activeProgramData.program.name,
+      filename: `program-${activeProgramData.program.name.replace(/\s+/g, '-').toLowerCase()}`,
     });
   };
 
   // Show loading state while data is being fetched
-  if (isLoading) {
+  if (isDataLoading || isLoading) {
     return <LoadingSpinner message="Loading workout data..." fullHeight={false} />;
   }
 
@@ -325,12 +302,12 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user }) => {
                 </Box>
 
                 {/* Volume Flow Chart */}
-                {userDataExport?.training_programs &&
-                  userDataExport.training_programs.length > 0 &&
-                  userDataExport.training_programs.some(program => program.workouts.length > 0) && (
+                {userData?.training_programs &&
+                  userData.training_programs.length > 0 &&
+                  userData.training_programs.some(program => program.workouts.length > 0) && (
                     <Box sx={{ mt: 2 }}>
                       <StreamChart
-                        userDataExport={userDataExport}
+                        userDataExport={userData}
                         exerciseData={exerciseData}
                         weightUnitPreferences={weightUnitPreferences}
                         title="Volume Flow Over Time"

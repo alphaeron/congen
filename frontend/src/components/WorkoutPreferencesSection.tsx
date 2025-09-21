@@ -8,9 +8,6 @@ import { FormDialog } from './FormDialog';
 import { FormField } from './FormField';
 import { LoadingSpinner } from './LoadingSpinner';
 import { PreferenceSection } from './PreferenceSection';
-import { getEquipment } from '../api/equipment';
-import { getExercises } from '../api/exercise';
-import { getMuscles } from '../api/muscle';
 import {
   WeightUnit,
   type Exercise,
@@ -21,19 +18,18 @@ import {
   type UserWeakMuscle,
   type UserExercisePreference,
 } from '../api/types';
-import { getUserEquipment, addUserEquipment, removeUserEquipment } from '../api/userEquipment';
+import { addUserEquipment, removeUserEquipment } from '../api/userEquipment';
 import {
-  getUserExercisePreferences,
   upsertUserExercisePreference,
   removeUserExercisePreference,
 } from '../api/userExercisePreference';
-import { getUserWeakMuscles, addUserWeakMuscle, removeUserWeakMuscle } from '../api/userWeakMuscle';
+import { addUserWeakMuscle, removeUserWeakMuscle } from '../api/userWeakMuscle';
 import {
-  getUserWeightUnitPreferences,
   upsertUserWeightUnitPreference,
   deleteUserWeightUnitPreference,
 } from '../api/userWeightUnitPreference';
 import { useAuth } from '../contexts/AuthContext';
+import { useData } from '../contexts/DataContext';
 
 import type { AxiosError } from 'axios';
 
@@ -72,13 +68,18 @@ function TabPanel(props: TabPanelProps) {
 export function WorkoutPreferencesSection(): React.ReactElement {
   const { user } = useAuth();
   const { enqueueSnackbar } = useSnackbar();
+  const { 
+    weightUnitPreferences,
+    loadAllExercises,
+    loadAllMuscles,
+    loadAllEquipment,
+    loadUserEquipment,
+    loadUserWeakMuscles,
+    loadUserExercisePreferences,
+    refreshData
+  } = useData();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-
-  // Weight unit preferences state
-  const [weightUnitPreferences, setWeightUnitPreferences] = useState<UserWeightUnitPreference[]>(
-    []
-  );
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [unitDialogOpen, setUnitDialogOpen] = useState(false);
 
@@ -115,70 +116,41 @@ export function WorkoutPreferencesSection(): React.ReactElement {
     if (user?.keycloak_id) {
       loadData();
     }
-  }, [user?.keycloak_id]);
+  }, [user?.keycloak_id, loadAllExercises, loadAllMuscles, loadAllEquipment, loadUserEquipment, loadUserWeakMuscles, loadUserExercisePreferences]);
 
   const loadData = async () => {
     setLoading(true);
 
-    // Load all data in parallel for better performance
-    const [
-      unitResponse,
-      exercisesResponse,
-      musclesResponse,
-      equipmentResponse,
-      userEquipmentResponse,
-      userWeakMusclesResponse,
-      userExercisePreferencesResponse,
-    ] = await Promise.allSettled([
-      getUserWeightUnitPreferences(user!.keycloak_id),
-      getExercises(),
-      getMuscles(),
-      getEquipment(),
-      getUserEquipment(user!.keycloak_id),
-      getUserWeakMuscles(user!.keycloak_id),
-      getUserExercisePreferences(user!.keycloak_id),
-    ]);
+    try {
+      // Load all data in parallel using DataContext
+      const [
+        exercisesData,
+        musclesData,
+        equipmentData,
+        userEquipmentData,
+        userWeakMusclesData,
+        userExercisePreferencesData,
+      ] = await Promise.all([
+        loadAllExercises(),
+        loadAllMuscles(),
+        loadAllEquipment(),
+        loadUserEquipment(),
+        loadUserWeakMuscles(),
+        loadUserExercisePreferences(),
+      ]);
 
-    // Handle weight unit preferences
-    if (unitResponse.status === 'fulfilled') {
-      setWeightUnitPreferences(unitResponse.value);
+      setExercises(exercisesData);
+      setMuscles(musclesData);
+      setEquipment(equipmentData);
+      setUserEquipment(userEquipmentData);
+      setUserWeakMuscles(userWeakMusclesData);
+      setUserExercisePreferences(userExercisePreferencesData);
+    } catch (error) {
+      enqueueSnackbar('Failed to load preferences data. Please try again.', { variant: 'error' });
+      console.error('Failed to load preferences data:', error);
+    } finally {
+      setLoading(false);
     }
-    // If rejected, no weight unit preferences yet
-
-    // Handle exercises
-    if (exercisesResponse.status === 'fulfilled') {
-      setExercises(exercisesResponse.value);
-    } else {
-      enqueueSnackbar('Failed to load exercises. Please try again.', { variant: 'error' });
-      setExercises([]);
-    }
-
-    // Handle muscles
-    if (musclesResponse.status === 'fulfilled') {
-      setMuscles(musclesResponse.value);
-    }
-
-    // Handle equipment
-    if (equipmentResponse.status === 'fulfilled') {
-      setEquipment(equipmentResponse.value);
-    }
-
-    // Handle user equipment
-    if (userEquipmentResponse.status === 'fulfilled') {
-      setUserEquipment(userEquipmentResponse.value);
-    }
-
-    // Handle user weak muscles
-    if (userWeakMusclesResponse.status === 'fulfilled') {
-      setUserWeakMuscles(userWeakMusclesResponse.value);
-    }
-
-    // Handle exercise preferences
-    if (userExercisePreferencesResponse.status === 'fulfilled') {
-      setUserExercisePreferences(userExercisePreferencesResponse.value);
-    }
-
-    setLoading(false);
   };
 
   // Tab change handler
@@ -194,9 +166,8 @@ export function WorkoutPreferencesSection(): React.ReactElement {
 
       await upsertUserWeightUnitPreference(user.keycloak_id, data.exerciseName, data.preferredUnit);
 
-      // Refresh weight unit preferences
-      const unitResponse = await getUserWeightUnitPreferences(user.keycloak_id);
-      setWeightUnitPreferences(unitResponse);
+      // Refresh weight unit preferences from DataContext
+      await refreshData();
 
       setUnitDialogOpen(false);
       enqueueSnackbar('Weight unit preference added successfully', { variant: 'success' });
@@ -219,9 +190,8 @@ export function WorkoutPreferencesSection(): React.ReactElement {
 
       await deleteUserWeightUnitPreference(user.keycloak_id, exerciseName);
 
-      // Refresh weight unit preferences
-      const unitResponse = await getUserWeightUnitPreferences(user.keycloak_id);
-      setWeightUnitPreferences(unitResponse);
+      // Refresh weight unit preferences from DataContext
+      await refreshData();
 
       enqueueSnackbar('Weight unit preference deleted successfully', { variant: 'success' });
     } catch (err: unknown) {
@@ -255,9 +225,11 @@ export function WorkoutPreferencesSection(): React.ReactElement {
       setSaving(true);
       await addUserEquipment(user.keycloak_id, equipmentName);
 
-      // Refresh user equipment
-      const userEquipmentResponse = await getUserEquipment(user.keycloak_id);
+      // Refresh user equipment using DataContext
+      const userEquipmentResponse = await loadUserEquipment();
       setUserEquipment(userEquipmentResponse);
+      // Refresh DataContext to keep it in sync
+      await refreshData();
 
       enqueueSnackbar('Equipment added successfully', { variant: 'success' });
     } catch (err: unknown) {
@@ -277,9 +249,11 @@ export function WorkoutPreferencesSection(): React.ReactElement {
       setSaving(true);
       await removeUserEquipment(user.keycloak_id, equipmentName);
 
-      // Refresh user equipment
-      const userEquipmentResponse = await getUserEquipment(user.keycloak_id);
+      // Refresh user equipment using DataContext
+      const userEquipmentResponse = await loadUserEquipment();
       setUserEquipment(userEquipmentResponse);
+      // Refresh DataContext to keep it in sync
+      await refreshData();
 
       enqueueSnackbar('Equipment removed successfully', { variant: 'success' });
     } catch (err: unknown) {
@@ -300,9 +274,11 @@ export function WorkoutPreferencesSection(): React.ReactElement {
       setSaving(true);
       await addUserWeakMuscle(user.keycloak_id, muscleName);
 
-      // Refresh user weak muscles
-      const userWeakMusclesResponse = await getUserWeakMuscles(user.keycloak_id);
+      // Refresh user weak muscles using DataContext
+      const userWeakMusclesResponse = await loadUserWeakMuscles();
       setUserWeakMuscles(userWeakMusclesResponse);
+      // Refresh DataContext to keep it in sync
+      await refreshData();
 
       enqueueSnackbar('Weak muscle group added successfully', { variant: 'success' });
     } catch (err: unknown) {
@@ -322,9 +298,11 @@ export function WorkoutPreferencesSection(): React.ReactElement {
       setSaving(true);
       await removeUserWeakMuscle(user.keycloak_id, muscleName);
 
-      // Refresh user weak muscles
-      const userWeakMusclesResponse = await getUserWeakMuscles(user.keycloak_id);
+      // Refresh user weak muscles using DataContext
+      const userWeakMusclesResponse = await loadUserWeakMuscles();
       setUserWeakMuscles(userWeakMusclesResponse);
+      // Refresh DataContext to keep it in sync
+      await refreshData();
 
       enqueueSnackbar('Weak muscle group removed successfully', { variant: 'success' });
     } catch (err: unknown) {
@@ -345,9 +323,11 @@ export function WorkoutPreferencesSection(): React.ReactElement {
       setSaving(true);
       await upsertUserExercisePreference(user.keycloak_id, exerciseName, shouldAvoid);
 
-      // Refresh exercise preferences
-      const userExercisePreferencesResponse = await getUserExercisePreferences(user.keycloak_id);
+      // Refresh exercise preferences using DataContext
+      const userExercisePreferencesResponse = await loadUserExercisePreferences();
       setUserExercisePreferences(userExercisePreferencesResponse);
+      // Refresh DataContext to keep it in sync
+      await refreshData();
 
       enqueueSnackbar('Exercise preference added successfully', { variant: 'success' });
     } catch (err: unknown) {
@@ -367,9 +347,11 @@ export function WorkoutPreferencesSection(): React.ReactElement {
       setSaving(true);
       await removeUserExercisePreference(user.keycloak_id, exerciseName);
 
-      // Refresh exercise preferences
-      const userExercisePreferencesResponse = await getUserExercisePreferences(user.keycloak_id);
+      // Refresh exercise preferences using DataContext
+      const userExercisePreferencesResponse = await loadUserExercisePreferences();
       setUserExercisePreferences(userExercisePreferencesResponse);
+      // Refresh DataContext to keep it in sync
+      await refreshData();
 
       enqueueSnackbar('Exercise preference removed successfully', { variant: 'success' });
     } catch (err: unknown) {

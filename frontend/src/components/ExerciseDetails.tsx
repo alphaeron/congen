@@ -15,12 +15,9 @@ import { Slate, Editable, withReact } from 'slate-react';
 import { BinaryTag } from './BinaryTag';
 import { ExercisePreferenceControls } from './ExercisePreferenceControls';
 import { LoadingSpinner } from './LoadingSpinner';
-import { getIndividualEquipment } from '../api/equipment';
-import { getIndividualExercise, getExerciseMuscles, getExerciseEquipment } from '../api/exercise';
-import { useApiGet } from '../api/hooks';
-import { getIndividualMuscle } from '../api/muscle';
 import type { Exercise, ExerciseEquipment, ExerciseMuscle, Equipment, Muscle } from '../api/types';
 import { capitalizeEachWord } from '../common/utils';
+import { useData } from '../contexts/DataContext';
 
 /**
  * Props for the ExerciseDetails component.
@@ -37,109 +34,75 @@ interface ExerciseDetailsProps {
 export function ExerciseDetails(
   props: ExerciseDetailsProps
 ): React.ReactElement<ExerciseDetailsProps> {
-  const {
-    data: exercise,
-    isLoading: isExerciseLoading,
-    error: exerciseError,
-    isError: isExerciseError,
-  } = useApiGet<Exercise>(
-    [`individualExercise${props.exerciseName}`],
-    (exerciseName: unknown) => getIndividualExercise(exerciseName as string),
-    {
-      retry: 1,
-    },
-    [props.exerciseName]
-  );
+  const { getExercise, getExerciseEquipmentData, getMuscle, getEquipment, getExerciseMuscles } = useData();
+  const [exercise, setExercise] = React.useState<Exercise | null>(null);
+  const [exerciseLoading, setExerciseLoading] = React.useState(true);
+  const [exerciseError, setExerciseError] = React.useState<Error | null>(null);
 
-  const {
-    data: exerciseMuscles,
-    isLoading: isExerciseMuscleLoading,
-    error: exerciseMuscleError,
-    isError: isExerciseMuscleError,
-  } = useApiGet<ExerciseMuscle[]>(
-    [`exerciseMuscle${props.exerciseName}`],
-    (exerciseName: unknown) => getExerciseMuscles(exerciseName as string),
-    {
-      retry: 1,
-    },
-    [props.exerciseName]
-  );
+  const [exerciseMuscles, setExerciseMuscles] = React.useState<ExerciseMuscle[]>([]);
+  const [muscles, setMuscles] = React.useState<Muscle[]>([]);
+  const [exerciseEquipment, setExerciseEquipment] = React.useState<ExerciseEquipment[]>([]);
+  const [equipment, setEquipment] = React.useState<Equipment[]>([]);
+  const [isLoading, setIsLoading] = React.useState(true);
+  const [error, setError] = React.useState<Error | null>(null);
 
-  const {
-    data: muscles,
-    isLoading: isMusclesLoading,
-    isError: isMusclesError,
-  } = useApiGet<Muscle[]>(
-    [`muscles${props.exerciseName}`, exerciseMuscles?.map(m => m.muscle_name).join(',') || ''],
-    async (): Promise<Muscle[]> => {
-      if (!exerciseMuscles || exerciseMuscles.length === 0) return [];
-      return Promise.all(exerciseMuscles.map(element => getIndividualMuscle(element.muscle_name)));
-    },
-    {
-      retry: 1,
-    }
-  );
+  // Load exercise data using DataContext
+  React.useEffect(() => {
+    const loadExerciseData = async () => {
+      if (!props.exerciseName) return;
+      
+      setIsLoading(true);
+      setError(null);
+      
+      try {
+        // Load exercise data from DataContext
+        const exerciseData = await getExercise(props.exerciseName);
+        if (!exerciseData) {
+          throw new Error('Exercise not found');
+        }
+        setExercise(exerciseData);
 
-  const {
-    data: exerciseEquipment,
-    isLoading: isExerciseEquipmentLoading,
-    error: exerciseEquipmentError,
-    isError: isExerciseEquipmentError,
-  } = useApiGet<ExerciseEquipment[]>(
-    [`exerciseEquipment${props.exerciseName}`],
-    (exerciseName: unknown) => getExerciseEquipment(exerciseName as string),
-    {
-      retry: 1,
-    },
-    [props.exerciseName]
-  );
+        // Load exercise muscles using DataContext
+        const musclesData = await getExerciseMuscles(props.exerciseName);
+        setExerciseMuscles(musclesData);
 
-  const {
-    data: equipment,
-    isLoading: isEquipmentLoading,
-    isError: isEquipmentError,
-  } = useApiGet<Equipment[]>(
-    [
-      `equipment${props.exerciseName}`,
-      exerciseEquipment?.map(e => e.equipment_name).join(',') || '',
-    ],
-    async (): Promise<Equipment[]> => {
-      if (!exerciseEquipment || exerciseEquipment.length === 0) return [];
-      return Promise.all(
-        exerciseEquipment.map(element => getIndividualEquipment(element.equipment_name))
-      );
-    },
-    {
-      retry: 1,
-    }
-  );
+        // Load individual muscle details using DataContext
+        const muscleDetails = await Promise.all(
+          musclesData.map(muscle => getMuscle(muscle.muscle_name))
+        );
+        setMuscles(muscleDetails.filter(Boolean) as Muscle[]);
+
+        // Load exercise equipment using DataContext
+        const equipmentData = await getExerciseEquipmentData(props.exerciseName);
+        if (equipmentData) {
+          setExerciseEquipment(equipmentData);
+          
+          // Load individual equipment details using DataContext
+          const equipmentDetails = await Promise.all(
+            equipmentData.map(eq => getEquipment(eq.equipment_name))
+          );
+          setEquipment(equipmentDetails.filter(Boolean) as Equipment[]);
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err : new Error('Failed to load exercise data'));
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadExerciseData();
+  }, [props.exerciseName, getExercise, getExerciseEquipmentData, getMuscle, getEquipment, getExerciseMuscles]);
 
   const editor = React.useMemo(() => withReact(createEditor()), []);
 
-  if (
-    isExerciseLoading ||
-    isEquipmentLoading ||
-    isMusclesLoading ||
-    isExerciseMuscleLoading ||
-    isExerciseEquipmentLoading ||
-    !props.exerciseName ||
-    exercise === undefined ||
-    equipment === undefined ||
-    muscles === undefined
-  ) {
+  if (isLoading || !props.exerciseName || !exercise) {
     return <LoadingSpinner message="Loading exercise details..." fullHeight={true} />;
-  } else if (
-    isExerciseError ||
-    isEquipmentError ||
-    isMusclesError ||
-    isExerciseMuscleError ||
-    isExerciseEquipmentError
-  ) {
+  } else if (error) {
     // Check if it's a network error or authentication error
     const isNetworkError =
-      exerciseError?.message?.includes('Network Error') ||
-      exerciseError?.message?.includes('timeout') ||
-      exerciseError?.message?.includes('NS_BINDING_ABORTED');
+      error?.message?.includes('Network Error') ||
+      error?.message?.includes('timeout') ||
+      error?.message?.includes('NS_BINDING_ABORTED');
 
     if (isNetworkError) {
       return (
@@ -149,7 +112,7 @@ export function ExerciseDetails(
             Unable to connect to the server. Please check your internet connection and try again.
           </Typography>
           <Typography variant="body2" sx={{ mt: 1 }}>
-            Error: {exerciseError?.message || 'Network error'}
+            Error: {error?.message || 'Network error'}
           </Typography>
         </Alert>
       );
@@ -158,19 +121,9 @@ export function ExerciseDetails(
         <Alert severity="error">
           <AlertTitle>Exercise Not Found</AlertTitle>
           <Typography>The specified exercise could not be found.</Typography>
-          {exerciseError && (
+          {error && (
             <Typography variant="body2" sx={{ mt: 1 }}>
-              {exerciseError.toString()}
-            </Typography>
-          )}
-          {exerciseMuscleError && (
-            <Typography variant="body2" sx={{ mt: 1 }}>
-              {exerciseMuscleError.toString()}
-            </Typography>
-          )}
-          {exerciseEquipmentError && (
-            <Typography variant="body2" sx={{ mt: 1 }}>
-              {exerciseEquipmentError.toString()}
+              {error.toString()}
             </Typography>
           )}
         </Alert>
