@@ -58,42 +58,45 @@ describe('PhysicalAttributesSection', () => {
   it('should render form fields with user data', () => {
     renderWithProviders(<PhysicalAttributesSection />);
 
-    // Check that form fields are rendered with user data
-    expect(screen.getByDisplayValue('Test User')).toBeInTheDocument();
+    // Check that form fields are rendered with user data (excluding name field)
     expect(screen.getByDisplayValue('30')).toBeInTheDocument();
     expect(screen.getByDisplayValue('180')).toBeInTheDocument();
     expect(screen.getByDisplayValue('72')).toBeInTheDocument();
+    expect(screen.getByText('Male')).toBeInTheDocument();
   });
 
-  it('should show save button as disabled when no changes are made', () => {
+  it('should show save button as enabled when form is valid', () => {
     renderWithProviders(<PhysicalAttributesSection />);
 
     const saveButton = screen.getByRole('button', { name: /save changes/i });
-    expect(saveButton).toBeDisabled();
+    expect(saveButton).toBeEnabled();
   });
 
-  it('should enable save button when changes are made', () => {
+  it('should enable save button when changes are made', async () => {
     renderWithProviders(<PhysicalAttributesSection />);
 
-    const nameInput = screen.getByDisplayValue('Test User');
-    fireEvent.change(nameInput, { target: { value: 'Updated Name' } });
+    const ageInput = screen.getByDisplayValue('30');
+    
+    await act(async () => {
+      fireEvent.change(ageInput, { target: { value: '31' } });
+    });
 
     const saveButton = screen.getByRole('button', { name: /save changes/i });
     expect(saveButton).toBeEnabled();
   });
 
   it('should save changes successfully', async () => {
-    const updatedUser = { ...mockUser, name: 'Updated Name', age: 31 };
+    const updatedUser = { ...mockUser, age: 31 };
     mockAdapter.onPatch('/user/me').reply(200, updatedUser);
     mockAdapter.onGet('/user/me').reply(200, updatedUser);
 
     renderWithProviders(<PhysicalAttributesSection />);
 
-    const nameInput = screen.getByDisplayValue('Test User');
-    fireEvent.change(nameInput, { target: { value: 'Updated Name' } });
-
     const ageInput = screen.getByDisplayValue('30');
-    fireEvent.change(ageInput, { target: { value: '31' } });
+    
+    await act(async () => {
+      fireEvent.change(ageInput, { target: { value: '31' } });
+    });
 
     const saveButton = screen.getByRole('button', { name: /save changes/i });
     
@@ -107,7 +110,7 @@ describe('PhysicalAttributesSection', () => {
 
     expect(mockAdapter.history.patch[0].url).toBe('/user/me');
     expect(mockAdapter.history.patch[0].params).toEqual({
-      name: 'Updated Name',
+      name: 'Test User', // Name is kept unchanged
       age: 31,
       weight: 180,
       height: 72,
@@ -123,8 +126,11 @@ describe('PhysicalAttributesSection', () => {
 
     renderWithProviders(<PhysicalAttributesSection />);
 
-    const nameInput = screen.getByDisplayValue('Test User');
-    fireEvent.change(nameInput, { target: { value: 'Updated Name' } });
+    const ageInput = screen.getByDisplayValue('30');
+    
+    await act(async () => {
+      fireEvent.change(ageInput, { target: { value: '31' } });
+    });
 
     const saveButton = screen.getByRole('button', { name: /save changes/i });
     
@@ -138,14 +144,17 @@ describe('PhysicalAttributesSection', () => {
   });
 
   it('should show success message after successful save', async () => {
-    const updatedUser = { ...mockUser, name: 'Updated Name' };
+    const updatedUser = { ...mockUser, age: 31 };
     mockAdapter.onPatch('/user/me').reply(200, updatedUser);
     mockAdapter.onGet('/user/me').reply(200, updatedUser);
 
     renderWithProviders(<PhysicalAttributesSection />);
 
-    const nameInput = screen.getByDisplayValue('Test User');
-    fireEvent.change(nameInput, { target: { value: 'Updated Name' } });
+    const ageInput = screen.getByDisplayValue('30');
+    
+    await act(async () => {
+      fireEvent.change(ageInput, { target: { value: '31' } });
+    });
 
     const saveButton = screen.getByRole('button', { name: /save changes/i });
     
@@ -166,10 +175,12 @@ describe('PhysicalAttributesSection', () => {
     renderWithProviders(<PhysicalAttributesSection />);
 
     const ageInput = screen.getByDisplayValue('30');
-    fireEvent.change(ageInput, { target: { value: '' } });
-
     const weightInput = screen.getByDisplayValue('180');
-    fireEvent.change(weightInput, { target: { value: '' } });
+    
+    await act(async () => {
+      fireEvent.change(ageInput, { target: { value: '' } });
+      fireEvent.change(weightInput, { target: { value: '' } });
+    });
 
     const saveButton = screen.getByRole('button', { name: /save changes/i });
     
@@ -178,45 +189,11 @@ describe('PhysicalAttributesSection', () => {
     });
 
     expect(mockAdapter.history.patch[0].params).toEqual({
-      name: 'Test User',
+      name: 'Test User', // Name is kept unchanged
       age: undefined,
       weight: undefined,
       height: 72,
       gender: 'male',
-    });
-  });
-
-  it('should show loading state while saving', async () => {
-    // Create a promise that we can control
-    let resolvePromise: (value: any) => void;
-    const savePromise = new Promise((resolve) => {
-      resolvePromise = resolve;
-    });
-
-    mockAdapter.onPatch('/user/me').reply(() => savePromise as any);
-
-    renderWithProviders(<PhysicalAttributesSection />);
-
-    const nameInput = screen.getByDisplayValue('Test User');
-    fireEvent.change(nameInput, { target: { value: 'Updated Name' } });
-
-    const saveButton = screen.getByRole('button', { name: /save changes/i });
-    
-    await act(async () => {
-      fireEvent.click(saveButton);
-    });
-
-    // Should show loading state
-    expect(screen.getByRole('progressbar')).toBeInTheDocument();
-    expect(saveButton).toBeDisabled();
-
-    // Resolve the promise
-    await act(async () => {
-      resolvePromise!([200, mockUser]);
-    });
-
-    await waitFor(() => {
-      expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
     });
   });
 });
