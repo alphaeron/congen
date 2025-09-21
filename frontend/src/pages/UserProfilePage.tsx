@@ -38,7 +38,7 @@ export const UserProfilePage: React.FC = () => {
   }
 
   // Extract query parameters
-  const section = searchParams.get('section') || 'privacy';
+  const section = searchParams.get('section') || 'physical';
 
   // If user has a profile, show the profile view with query parameters
   return <UserProfile user={user} initialSection={section} />;

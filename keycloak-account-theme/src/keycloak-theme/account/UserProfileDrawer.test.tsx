@@ -116,9 +116,10 @@ describe('UserProfileDrawer', () => {
     render(<UserProfileDrawer {...defaultProps} />);
 
     const listItems = screen.getAllByRole('listitem');
-    expect(listItems).toHaveLength(2);
+    expect(listItems).toHaveLength(3);
 
     // Check that each item has the correct structure
+    expect(screen.getByText('Physical Attributes')).toBeInTheDocument();
     expect(screen.getByText('Privacy & Data')).toBeInTheDocument();
     expect(screen.getByText('Manage Profile')).toBeInTheDocument();
   });

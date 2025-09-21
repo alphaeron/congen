@@ -1,5 +1,5 @@
 import React from 'react';
-import { Person as PersonIcon, PrivacyTip as PrivacyIcon } from '@mui/icons-material';
+import { Person as PersonIcon, PrivacyTip as PrivacyIcon, FitnessCenter as FitnessIcon } from '@mui/icons-material';
 import {
   Box,
   Drawer,
@@ -28,6 +28,13 @@ export const UserProfileDrawer: React.FC<UserProfileDrawerProps> = ({
   onSectionChange,
 }) => {
   const menuItems = [
+    {
+      id: 'physical',
+      label: 'Physical Attributes',
+      icon: <FitnessIcon />,
+      isExternal: true,
+      path: '/profile?section=physical',
+    },
     {
       id: 'privacy',
       label: 'Privacy & Data',
