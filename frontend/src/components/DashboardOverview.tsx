@@ -6,7 +6,8 @@ import { useNavigate } from 'react-router';
 import { ActionCard } from './ActionCard';
 import { LoadingSpinner } from './LoadingSpinner';
 import { StatusChip } from './StatusChip';
-import { UserStatusSystem } from './UserStatusSystem';
+import { AdventurerStatusCard } from './AdventurerStatusCard';
+import { WeeklyTestTracker } from './WeeklyTestTracker';
 import type {
   User,
   UserOneRepMax,
@@ -40,7 +41,15 @@ interface DashboardOverviewProps {
 export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ user }) => {
   const navigate = useNavigate();
   const { enqueueSnackbar } = useSnackbar();
-  const { userData, isLoading: isDataLoading, getExercise } = useData();
+  const { 
+    userData, 
+    isLoading: isDataLoading, 
+    getExercise, 
+    performanceScores, 
+    performanceMetrics,
+    weeklyTests,
+    refreshPerformanceData 
+  } = useData();
 
   const [oneRepMaxes, setOneRepMaxes] = useState<UserOneRepMax[]>([]);
   const [exerciseData, setExerciseData] = useState<Map<string, Exercise>>(new Map());
@@ -187,17 +196,33 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ user }) =>
 
   return (
     <React.Fragment>
-      {/* User Status System */}
-      <UserStatusSystem user={user} userData={userData} oneRepMaxes={oneRepMaxes} />
+      {/* Performance Tracking Section */}
+      {performanceScores ? (
+        <Box sx={{ mb: 3 }}>
+          <AdventurerStatusCard
+            scores={performanceScores}
+            metrics={performanceMetrics}
+            userName={user.name}
+          />
+        </Box>) : (
+          <React.Fragment />
+        )}
+
+      {/* Weekly Test Tracker */}
+      {performanceScores && (
+        <Box sx={{ mb: 3 }}>
+          <WeeklyTestTracker 
+            weeklyTests={weeklyTests} 
+            onTestUpdate={refreshPerformanceData}
+          />
+        </Box>
+      )}
 
       {/* Key Performance Indicators */}
       <Card sx={{ mb: 3 }}>
         <CardContent>
           <Box display="flex" alignItems="center" gap={1} sx={{ mb: 2 }}>
             <Typography variant="h6">Key Performance Indicators</Typography>
-            <Typography variant="body2" color="text.secondary">
-              • Your training overview
-            </Typography>
           </Box>
           <Grid container spacing={2}>
             <Grid size={{ xs: 12, sm: 6, md: 3 }}>

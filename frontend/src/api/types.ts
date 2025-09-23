@@ -7,6 +7,60 @@ export interface Equipment {
 } // end interface Equipment
 
 /**
+ * User performance metrics for gamified tracking.
+ */
+export interface UserPerformanceMetrics {
+  keycloak_id: string;
+  vo2_max?: number;
+  strain?: number;
+  recovery?: number;
+  hrv?: number;
+  sleep_score?: number;
+  rem_sleep_minutes?: number;
+  deep_sleep_minutes?: number;
+  subjective_tiredness?: number;
+  created_at: string;
+  updated_at: string;
+}
+
+/**
+ * User performance scores for gamified tracking.
+ */
+export interface UserPerformanceScores {
+  keycloak_id: string;
+  explosiveness_score?: number;
+  aerobic_capacity_score?: number;
+  recovery_score?: number;
+  reaction_time_score?: number;
+  level: number;
+  hp: number;
+  hp_loss: number;
+  mp: number;
+  mp_loss: number;
+  fatigue: number;
+  fatigue_loss: number;
+  skills: string[];
+  created_at: string;
+  updated_at: string;
+}
+
+/**
+ * Weekly test results for a user.
+ */
+export interface UserWeeklyTest {
+  keycloak_id: string;
+  week_start_timestamp: string;
+  vertical_jump_status: 'PENDING' | 'COMPLETED' | 'SKIPPED';
+  vertical_jump_result?: number;
+  hr_recovery_status: 'PENDING' | 'COMPLETED' | 'SKIPPED';
+  hr_recovery_result?: number;
+  reflex_status: 'PENDING' | 'COMPLETED' | 'SKIPPED';
+  reflex_result?: number;
+  created_at: string;
+  updated_at: string;
+}
+
+/**
  * Weight unit enum.
  */
 export enum WeightUnit {

@@ -204,8 +204,23 @@ class ReactiveMemcachedCache(
         logger.debug("Deleting cache keys matching pattern: {}", pattern)
 
         return Mono.fromCallable {
-            val regexPattern = pattern.replace("*", ".*")
-            val regex = regexPattern.toRegex()
+            // Escape regex special characters except for our wildcard pattern
+            val escapedPattern = pattern.replace("*", "___WILDCARD___")
+                .replace("(", "\\(")
+                .replace(")", "\\)")
+                .replace("[", "\\[")
+                .replace("]", "\\]")
+                .replace("{", "\\{")
+                .replace("}", "\\}")
+                .replace("^", "\\^")
+                .replace("$", "\\$")
+                .replace(".", "\\.")
+                .replace("+", "\\+")
+                .replace("?", "\\?")
+                .replace("|", "\\|")
+                .replace("\\", "\\\\")
+                .replace("___WILDCARD___", ".*")
+            val regex = escapedPattern.toRegex()
 
             synchronized(keyIndex) {
                 val matchingKeys = keyIndex.filter { key -> regex.matches(key) }

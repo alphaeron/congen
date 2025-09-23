@@ -50,12 +50,12 @@ jest.mock('@nivo/pie', () => ({
   ),
 }));
 
-// Mock UserStatusSystem component
-jest.mock('./UserStatusSystem', () => ({
-  UserStatusSystem: ({ user }: { user: User }) => (
-    <div data-testid="user-status-system">
-      <div>Overall Health & Fitness Status</div>
-      <div>Status System for {user.name}</div>
+// Mock AdventurerStatusCard component
+jest.mock('./AdventurerStatusCard', () => ({
+  AdventurerStatusCard: ({ userName }: { userName: string }) => (
+    <div data-testid="adventurer-status-card">
+      <div>Adventurer Status Card</div>
+      <div>Status for {userName}</div>
     </div>
   ),
 }));
@@ -319,8 +319,8 @@ describe('DashboardOverview', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByTestId('user-status-system')).toBeInTheDocument();
-      expect(screen.getByText('Overall Health & Fitness Status')).toBeInTheDocument();
+      expect(screen.getByTestId('adventurer-status-card')).toBeInTheDocument();
+      expect(screen.getByText('Adventurer Status Card')).toBeInTheDocument();
     });
   });
 
