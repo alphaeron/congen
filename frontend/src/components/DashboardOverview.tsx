@@ -48,6 +48,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ user }) =>
     performanceScores, 
     performanceMetrics,
     weeklyTests,
+    wilksScore,
     refreshPerformanceData 
   } = useData();
 
@@ -202,6 +203,8 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ user }) =>
           <AdventurerStatusCard
             scores={performanceScores}
             metrics={performanceMetrics}
+            weeklyTest={weeklyTests?.[0] || null}
+            wilksScore={wilksScore}
             userName={user.name}
           />
         </Box>) : (

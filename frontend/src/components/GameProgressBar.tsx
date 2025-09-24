@@ -70,7 +70,7 @@ export const GameProgressBar: React.FC<GameProgressBarProps> = ({
   color,
   tooltip,
 }) => {
-  const percentage = Math.max(0, Math.min(100, (current / max) * 100));
+  const percentage = max === 0 ? 0 : Math.max(0, Math.min(100, (current / max) * 100));
 
   return (
     <Tooltip title={tooltip}>
@@ -132,7 +132,7 @@ export const GameCircularProgressBar: React.FC<GameProgressBarProps> = ({
   color,
   tooltip,
 }) => {
-  const percentage = Math.max(0, Math.min(100, (current / max) * 100));
+  const percentage = max === 0 ? 0 : Math.max(0, Math.min(100, (current / max) * 100));
 
   return (
     <Tooltip title={tooltip}>

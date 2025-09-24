@@ -1,13 +1,18 @@
 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <!-- Modern character silhouette -->
-  <path d="M12 4 C8 4, 6 6, 6 8 C6 10, 8 12, 12 12 C16 12, 18 10, 18 8 C18 6, 16 4, 12 4 Z" fill="currentColor"/>
-  <!-- Body -->
-  <rect x="8" y="12" width="8" height="8" fill="currentColor" rx="2"/>
-  <!-- Modern crown -->
-  <path d="M10 4 L12 2 L14 4 L13 3 L12 2 L11 3 Z" fill="currentColor"/>
-  <!-- Sharp accent lines -->
-  <line x1="4" y1="6" x2="6" y2="8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-  <line x1="18" y1="6" x2="20" y2="8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-  <line x1="4" y1="18" x2="6" y2="16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-  <line x1="18" y1="18" x2="20" y2="16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+  <!-- Solo Leveling inspired character silhouette -->
+  <!-- Head -->
+  <circle cx="12" cy="8" r="4" fill="currentColor"/>
+  <!-- Body/Torso -->
+  <rect x="8" y="12" width="8" height="10" fill="currentColor" rx="1"/>
+  <!-- Shoulders -->
+  <rect x="6" y="12" width="3" height="2" fill="currentColor" rx="0.5"/>
+  <rect x="15" y="12" width="3" height="2" fill="currentColor" rx="0.5"/>
+  <!-- Arms -->
+  <rect x="5" y="14" width="2" height="6" fill="currentColor" rx="1"/>
+  <rect x="17" y="14" width="2" height="6" fill="currentColor" rx="1"/>
+  <!-- Legs -->
+  <rect x="9" y="22" width="2" height="2" fill="currentColor" rx="0.5"/>
+  <rect x="13" y="22" width="2" height="2" fill="currentColor" rx="0.5"/>
+  <!-- Shadow/aura effect -->
+  <ellipse cx="12" cy="20" rx="8" ry="2" fill="currentColor" opacity="0.3"/>
 </svg>

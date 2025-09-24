@@ -8,6 +8,7 @@ import com.congen.model.UserPerformanceScores
 import com.congen.model.UserWeeklyTest
 import com.congen.service.GdprComplianceService
 import com.congen.service.PerformanceTrackingService
+import com.congen.service.WilksCalculationService
 import com.congen.util.KeycloakUtil
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.media.Content
@@ -54,6 +55,7 @@ import java.time.LocalDate
 @Tag(name = "Performance Tracking", description = "APIs for gamified performance tracking and metrics")
 class PerformanceTrackingController(
     private val performanceTrackingService: PerformanceTrackingService,
+    private val wilksCalculationService: WilksCalculationService,
     private val keycloakUtil: KeycloakUtil,
     private val gdprComplianceService: GdprComplianceService
 ) {
@@ -332,6 +334,53 @@ class PerformanceTrackingController(
                         .map { ResponseEntity.ok(it) }
                         .doOnSuccess { logger.debug("Weekly tests in range retrieved successfully") }
                         .doOnError { logger.error("Failed to retrieve weekly tests in range", it) }
+                }
+            }
+    }
+
+    /**
+     * Retrieves the Wilks score for the authenticated user.
+     *
+     * This endpoint calculates the Wilks score based on the user's 1RM data
+     * for the big three lifts (squat, bench press, deadlift) and their body weight.
+     *
+     * @param bodyWeightKg The user's body weight in kilograms
+     * @param isMale Whether the user is male (true) or female (false)
+     * @return The calculated Wilks score, or null if insufficient data
+     */
+    @GetMapping("/wilks")
+    @PreAuthorize("isAuthenticated()")
+    @Operation(
+        summary = "Get Wilks score",
+        description = "Calculate Wilks score based on 1RM data for big three lifts."
+    )
+    @ApiResponses(
+        value = [
+            ApiResponse(
+                responseCode = "200",
+                description = "Wilks score calculated successfully"
+            ),
+            ApiResponse(
+                responseCode = "401",
+                description = "Unauthorized - user not authenticated"
+            ),
+            ApiResponse(
+                responseCode = "500",
+                description = "Internal server error"
+            )
+        ]
+    )
+    fun getWilksScore(
+        @RequestParam("body_weight_kg") bodyWeightKg: Double,
+        @RequestParam("is_male") isMale: Boolean
+    ): Mono<ResponseEntity<Double?>> {
+        return keycloakUtil.getCurrentUserId()
+            .flatMap { keycloakId ->
+                gdprComplianceService.withUserConsent(keycloakId) {
+                    wilksCalculationService.calculateWilksScore(keycloakId, bodyWeightKg, isMale)
+                        .map { ResponseEntity.ok(it) }
+                        .doOnSuccess { logger.debug("Wilks score calculated successfully") }
+                        .doOnError { logger.error("Failed to calculate Wilks score", it) }
                 }
             }
     }

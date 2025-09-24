@@ -64,6 +64,7 @@ import {
   getCurrentPerformanceMetrics,
   getWeeklyTestsInRange,
   submitWeeklyTest as submitWeeklyTestAPI,
+  getWilksScore,
 } from '../api/performanceTracking';
 
 interface DataContextType {
@@ -94,6 +95,7 @@ interface DataContextType {
   performanceScores: UserPerformanceScores | null;
   performanceMetrics: UserPerformanceMetrics | null;
   weeklyTests: UserWeeklyTest[];
+  wilksScore: number | null;
   isLoading: boolean;
   error: string | null;
   refreshData: () => Promise<void>;
@@ -124,6 +126,7 @@ interface DataContextType {
   loadPerformanceScores: () => Promise<UserPerformanceScores | null>;
   loadPerformanceMetrics: () => Promise<UserPerformanceMetrics | null>;
   loadWeeklyTests: (startDate?: string, endDate?: string) => Promise<UserWeeklyTest[]>;
+  loadWilksScore: () => Promise<number | null>;
   refreshPerformanceData: () => Promise<void>;
   // Performance tracking utility functions
   getCurrentWeekTest: () => UserWeeklyTest | null;
@@ -217,6 +220,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
   const [performanceScores, setPerformanceScores] = useState<UserPerformanceScores | null>(null);
   const [performanceMetrics, setPerformanceMetrics] = useState<UserPerformanceMetrics | null>(null);
   const [weeklyTests, setWeeklyTests] = useState<UserWeeklyTest[]>([]);
+  const [wilksScore, setWilksScore] = useState<number | null>(null);
   // Additional data caches
   // Centralized exercise data cache for components
   const [allExercisesMap, setAllExercisesMap] = useState<Map<string, Exercise>>(new Map());
@@ -291,6 +295,24 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
         setPerformanceScores(performanceScoresData);
         setPerformanceMetrics(performanceMetricsData);
         setWeeklyTests(weeklyTestsData);
+        
+        // Load Wilks score if user has weight and gender data
+        if (dataExport?.weight && dataExport?.gender) {
+          try {
+            const wilksScoreData = await getWilksScore(
+              dataExport.weight, 
+              dataExport.gender.toLowerCase() === 'male', 
+              { forceRefresh }
+            );
+            setWilksScore(wilksScoreData);
+          } catch (err) {
+            console.warn('Failed to load Wilks score:', err);
+            setWilksScore(null);
+          }
+        } else {
+          setWilksScore(null);
+        }
+        
         setLastFetchTime(Date.now());
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'Failed to load data';
@@ -717,6 +739,28 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
       return [];
     }
   }, [user?.keycloak_id]);
+
+  const loadWilksScore = useCallback(async (): Promise<number | null> => {
+    if (!user?.keycloak_id || !userData?.weight || !userData?.gender) return null;
+
+    if (wilksScore !== null) {
+      return wilksScore;
+    }
+
+    try {
+      const score = await getWilksScore(
+        userData.weight, 
+        userData.gender.toLowerCase() === 'male'
+      );
+      setWilksScore(score);
+      setCacheTimestamps(prev => new Map(prev).set('wilksScore', Date.now()));
+      return score;
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load Wilks score';
+      setError(errorMessage);
+      return null;
+    }
+  }, [user?.keycloak_id, userData?.weight, userData?.gender, wilksScore]);
 
   const refreshPerformanceData = useCallback(async (): Promise<void> => {
     if (!user?.keycloak_id) return;
@@ -1207,6 +1251,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
       performanceScores,
       performanceMetrics,
       weeklyTests,
+      wilksScore,
       isLoading,
       error,
       refreshData,
@@ -1232,6 +1277,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
       loadPerformanceScores,
       loadPerformanceMetrics,
       loadWeeklyTests,
+      loadWilksScore,
       refreshPerformanceData,
       getCurrentWeekTest,
       getPerformanceDataForDateRange,
@@ -1298,6 +1344,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
       loadPerformanceScores,
       loadPerformanceMetrics,
       loadWeeklyTests,
+      loadWilksScore,
       refreshPerformanceData,
       getCurrentWeekTest,
       getPerformanceDataForDateRange,

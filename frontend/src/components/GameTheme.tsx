@@ -45,17 +45,18 @@ export const TEXT_COLORS = {
  * Base game card with consistent styling - matches Congen's modern aesthetic
  */
 export const GameCard = styled(Card)(({ theme }) => ({
-  background: GAME_GRADIENT,
+  background: alpha(brand[500], 0.15), // Use hover background as default
   color: TEXT_COLORS.primary,
   borderRadius: GAME_SPACING.borderRadius,
   boxShadow: GAME_SPACING.shadow,
   backdropFilter: GAME_SPACING.backdropFilter,
-  border: GAME_SPACING.border,
-  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', // Matches Congen's transitions
+  border: `1px solid ${alpha(brand[500], 0.3)}`, // More visible border
   overflow: 'hidden',
+  // Explicitly disable hover animation
   '&:hover': {
-    boxShadow: '0 12px 40px rgba(0, 0, 0, 0.15)',
-    transform: 'translateY(-2px)', // Matches Congen's hover effect
+    background: alpha(brand[500], 0.15), // Keep same background
+    boxShadow: GAME_SPACING.shadow, // Keep same shadow
+    transform: 'none', // No transform
   },
 }));
 
