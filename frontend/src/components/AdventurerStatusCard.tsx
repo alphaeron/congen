@@ -76,14 +76,21 @@ export const AdventurerStatusCard: React.FC<AdventurerStatusCardProps> = ({
           {/* Status Information - Left side */}
           <Box sx={{ flex: '0 0 55%', display: 'flex', flexDirection: 'column', gap: 2 }}>
             {/* Level and Name */}
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-              <CustomSvgIcon src={AdventurerProfileIcon} alt="Adventurer Profile" sx={{ fontSize: 80, color: 'white' }} />
-              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-                <GameText variant="h2" sx={{ fontSize: '3rem', fontWeight: 'bold', color: '#00bcd4', textShadow: '0 0 10px #00bcd4', lineHeight: 1 }}>
-                  {scores.level}
-                </GameText>
-                <GameText variant="h6" sx={{ color: '#e0e0e0', textShadow: '0 0 5px #00bcd4', mt: -0.5 }}>
-                  LEVEL
+            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', mb: 2 }}>
+              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <CustomSvgIcon src={AdventurerProfileIcon} alt="Adventurer Profile" sx={{ fontSize: 80, color: 'white' }} />
+                  <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                    <GameText variant="h2" sx={{ fontSize: '3rem', fontWeight: 'bold', color: '#00bcd4', textShadow: '0 0 10px #00bcd4', lineHeight: 1 }}>
+                      {scores.level}
+                    </GameText>
+                    <GameText variant="h6" sx={{ color: '#e0e0e0', textShadow: '0 0 5px #00bcd4', mt: -0.5 }}>
+                      LEVEL
+                    </GameText>
+                  </Box>
+                </Box>
+                <GameText variant="h6" sx={{ color: '#ffffff', textShadow: '0 0 3px #00bcd4' }}>
+                  {userName}
                 </GameText>
               </Box>
             </Box>
@@ -91,29 +98,29 @@ export const AdventurerStatusCard: React.FC<AdventurerStatusCardProps> = ({
             {/* Status Bars - Single Row */}
             <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1, alignItems: 'center' }}>
               <GameProgressBar
-                icon={<CustomSvgIcon src={RecoveryIcon} alt="HP" sx={{ fontSize: 20, color: '#00bcd4' }} />}
+                icon={<CustomSvgIcon src={RecoveryIcon} alt="HP" sx={{ fontSize: 20, color: getHpColor(scores.hp) }} />}
                 label="HP"
                 current={Math.max(0, scores.hp - scores.hp_loss)}
                 max={scores.hp}
-                color="#00bcd4"
+                color={getHpColor(scores.hp)}
                 tooltip="HP (Health Points) - Long-term physical durability and structural integrity. Represents tissue wear and tear that accumulates over time. Recovers slowly (days to weeks)."
               />
 
               <GameProgressBar
-                icon={<CustomSvgIcon src={PotionIcon} alt="MP" sx={{ fontSize: 20, color: '#00bcd4' }} />}
+                icon={<CustomSvgIcon src={PotionIcon} alt="MP" sx={{ fontSize: 20, color: getMpColor(scores.mp) }} />}
                 label="MP"
                 current={Math.max(0, scores.mp - scores.mp_loss)}
                 max={scores.mp}
-                color="#00bcd4"
+                color={getMpColor(scores.mp)}
                 tooltip="MP (Magic Points) - Short-term neurological and cognitive energy. Represents CNS readiness and mental sharpness. Recovers overnight to 2-3 days."
               />
 
               <GameCircularProgressBar
-                icon={<CustomSvgIcon src={GearIcon} alt="Fatigue" sx={{ fontSize: 20, color: '#00bcd4' }} />}
+                icon={<CustomSvgIcon src={GearIcon} alt="Fatigue" sx={{ fontSize: 20, color: getFatigueColor(scores.fatigue) }} />}
                 label="Fatigue"
                 current={Math.max(0, scores.fatigue - scores.fatigue_loss)}
                 max={scores.fatigue}
-                color="#00bcd4"
+                color={getFatigueColor(scores.fatigue)}
                 tooltip="Fatigue - Immediate performance inhibition and session-to-session exhaustion. Represents how drained you feel right now. Recovers in hours to 1-2 days."
               />
             </Box>
