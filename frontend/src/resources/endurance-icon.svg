@@ -1,26 +1,13 @@
 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <!-- Solo Leveling inspired Endurance/Running icon -->
-  <!-- Running figure silhouette -->
-  <circle cx="8" cy="6" r="2" fill="currentColor" opacity="0.9"/>
-  <!-- Body -->
-  <rect x="7" y="8" width="2" height="4" fill="currentColor" opacity="0.9"/>
-  <!-- Arms in running motion -->
-  <rect x="5" y="9" width="1.5" height="3" fill="currentColor" opacity="0.9" rx="0.5"/>
-  <rect x="9.5" y="8" width="1.5" height="3" fill="currentColor" opacity="0.9" rx="0.5"/>
-  <!-- Legs in running motion -->
-  <rect x="6.5" y="12" width="1" height="4" fill="currentColor" opacity="0.9" rx="0.5"/>
-  <rect x="8.5" y="12" width="1" height="4" fill="currentColor" opacity="0.9" rx="0.5"/>
-  <!-- Motion lines -->
+  <!-- Running figure with motion blur -->
+  <circle cx="8" cy="6" r="2" fill="currentColor"/>
+  <rect x="7" y="8" width="2" height="4" fill="currentColor"/>
+  <rect x="5" y="9" width="1.5" height="3" fill="currentColor" rx="0.5"/>
+  <rect x="9.5" y="8" width="1.5" height="3" fill="currentColor" rx="0.5"/>
+  <rect x="6.5" y="12" width="1" height="4" fill="currentColor" rx="0.5"/>
+  <rect x="8.5" y="12" width="1" height="4" fill="currentColor" rx="0.5"/>
+  <!-- Motion blur lines -->
   <line x1="2" y1="14" x2="6" y2="14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" opacity="0.7"/>
   <line x1="2" y1="16" x2="5" y2="16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" opacity="0.7"/>
   <line x1="2" y1="18" x2="4" y2="18" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" opacity="0.7"/>
-  <!-- Heart rate monitor lines -->
-  <path d="M12 6 L13 8 L14 4 L15 10 L16 6 L17 8 L18 4 L19 10 L20 6" 
-        stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.8"/>
-  <!-- Endurance indicator -->
-  <rect x="12" y="14" width="8" height="2" fill="currentColor" opacity="0.6" rx="1"/>
-  <rect x="12" y="17" width="6" height="2" fill="currentColor" opacity="0.7" rx="1"/>
-  <rect x="12" y="20" width="4" height="2" fill="currentColor" opacity="0.8" rx="1"/>
-  <!-- Energy aura -->
-  <ellipse cx="8" cy="16" rx="6" ry="2" fill="currentColor" opacity="0.2"/>
 </svg>

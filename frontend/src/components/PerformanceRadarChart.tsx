@@ -8,7 +8,7 @@ import { ResponsiveRadar } from '@nivo/radar';
 import { 
   Radar as RadarIcon,
 } from '@mui/icons-material';
-import type { UserPerformanceScores, UserPerformanceMetrics, UserWeeklyTest } from '../api/types';
+import type { UserPerformanceScores, UserPerformanceMetrics, UserTestResult } from '../api/types';
 import { createCongenNivoTheme } from '../theme/nivoTheme';
 import { GameText } from './GameTheme';
 import { CustomSvgIcon } from './CustomSvgIcon';
@@ -18,17 +18,18 @@ import PowerIcon from '../resources/power-icon.svg';
 import EnduranceIcon from '../resources/endurance-icon.svg';
 import RecoveryIcon from '../resources/recovery-icon.svg';
 import SpeedIcon from '../resources/speed-icon.svg';
+import MobilityIcon from '../resources/mobility-icon.svg';
 
 interface PerformanceRadarChartProps {
   scores: UserPerformanceScores;
   metrics?: UserPerformanceMetrics | null;
-  weeklyTest?: UserWeeklyTest | null;
+  weeklyTests?: UserTestResult[] | null;
   wilksScore?: number | null;
   title?: string;
   height?: number;
 }
 
-const getMetricData = (scores: UserPerformanceScores, metrics?: UserPerformanceMetrics | null, weeklyTest?: UserWeeklyTest | null, wilksScore?: number | null) => {
+const getMetricData = (scores: UserPerformanceScores, metrics?: UserPerformanceMetrics | null, weeklyTests?: UserTestResult[] | null, wilksScore?: number | null) => {
   // Calculate strength score from Wilks score (scale 0-100)
   const strengthScore = wilksScore ? Math.max(1, Math.min(100, (wilksScore / 5.0))) : null; // Rough scaling: 500 Wilks = 100 score
 
@@ -37,29 +38,33 @@ const getMetricData = (scores: UserPerformanceScores, metrics?: UserPerformanceM
       metric: 'Explosiveness',
       value: Math.max(1, Math.min(100, scores.explosiveness_score || 1)), // Use scaled score for radar chart
       description: 'Explosive power based on vertical jump height',
-      rawValue: weeklyTest?.vertical_jump_result ? `${weeklyTest.vertical_jump_result.toFixed(1)} cm` : 'Vertical jump test required',
+      rawValue: weeklyTests?.find(test => test.test_name === 'vertical_jump')?.result_value ? `${weeklyTests.find(test => test.test_name === 'vertical_jump')?.result_value?.toFixed(1)} cm` : 'Vertical jump test required',
       color: '#4ECDC4',
+      icon: <CustomSvgIcon src={PowerIcon} alt="Explosiveness" sx={{ fontSize: 16, color: '#00bcd4' }} />,
     },
     {
-      metric: 'Endurance',
+      metric: 'Stamina',
       value: Math.max(1, Math.min(100, scores.aerobic_capacity_score || 1)), // Use scaled score for radar chart
       description: 'Aerobic capacity based on VO₂ max',
       rawValue: metrics?.vo2_max ? `${metrics.vo2_max.toFixed(1)} ml/kg/min` : 'VO₂ max test required',
       color: '#45B7D1',
+      icon: <CustomSvgIcon src={EnduranceIcon} alt="Stamina" sx={{ fontSize: 16, color: '#00bcd4' }} />,
     },
     {
       metric: 'Recovery',
       value: Math.max(1, Math.min(100, scores.recovery_score || 1)), // Use scaled score for radar chart
       description: 'Recovery ability based on HR recovery',
-      rawValue: weeklyTest?.hr_recovery_result ? `${weeklyTest.hr_recovery_result} bpm drop` : 'HR recovery test required',
+      rawValue: weeklyTests?.find(test => test.test_name === 'hr_recovery')?.result_value ? `${weeklyTests.find(test => test.test_name === 'hr_recovery')?.result_value} bpm drop` : 'HR recovery test required',
       color: '#96CEB4',
+      icon: <CustomSvgIcon src={RecoveryIcon} alt="Recovery" sx={{ fontSize: 16, color: '#00bcd4' }} />,
     },
     {
-      metric: 'Reaction Time',
+      metric: 'Reflexes',
       value: Math.max(1, Math.min(100, scores.reaction_time_score || 1)), // Use scaled score for radar chart
       description: 'Reaction speed based on response time',
-      rawValue: weeklyTest?.reflex_result ? `${weeklyTest.reflex_result} ms` : 'Reflex test required',
+      rawValue: weeklyTests?.find(test => test.test_name === 'reflex')?.result_value ? `${weeklyTests.find(test => test.test_name === 'reflex')?.result_value} ms` : 'Reflex test required',
       color: '#DDA0DD',
+      icon: <CustomSvgIcon src={SpeedIcon} alt="Reflexes" sx={{ fontSize: 16, color: '#00bcd4' }} />,
     },
     {
       metric: 'Strength',
@@ -67,6 +72,15 @@ const getMetricData = (scores: UserPerformanceScores, metrics?: UserPerformanceM
       description: 'Relative strength based on Wilks score',
       rawValue: wilksScore ? `${wilksScore.toFixed(1)} Wilks` : '1RM data required',
       color: '#FF6B6B',
+      icon: <CustomSvgIcon src={PowerIcon} alt="Strength" sx={{ fontSize: 16, color: '#00bcd4' }} />,
+    },
+    {
+      metric: 'Dexterity',
+      value: Math.max(1, Math.min(100, scores.mobility_score || 1)), // Use scaled score for radar chart
+      description: 'Joint mobility and flexibility',
+      rawValue: weeklyTests?.find(test => test.test_name === 'mobility')?.result_value ? `${weeklyTests.find(test => test.test_name === 'mobility')?.result_value?.toFixed(1)}%` : 'Mobility test required',
+      color: '#9C27B0',
+      icon: <CustomSvgIcon src={MobilityIcon} alt="Dexterity" sx={{ fontSize: 16, color: '#00bcd4' }} />,
     },
   ];
 
@@ -76,7 +90,7 @@ const getMetricData = (scores: UserPerformanceScores, metrics?: UserPerformanceM
 export const PerformanceRadarChart: React.FC<PerformanceRadarChartProps> = ({
   scores,
   metrics,
-  weeklyTest,
+  weeklyTests,
   wilksScore,
   title = 'Performance Metrics',
   height = 400,
@@ -84,7 +98,7 @@ export const PerformanceRadarChart: React.FC<PerformanceRadarChartProps> = ({
   const theme = useTheme();
   const nivoTheme = createCongenNivoTheme(theme.palette.mode);
   
-  const metricData = getMetricData(scores, metrics, weeklyTest, wilksScore);
+  const metricData = getMetricData(scores, metrics, weeklyTests, wilksScore);
   
   // Ensure we have valid data to prevent NaN errors
   const validMetricData = metricData.map(item => ({
@@ -125,17 +139,6 @@ export const PerformanceRadarChart: React.FC<PerformanceRadarChartProps> = ({
         );
       }
 
-    const getIcon = (metricName: string) => {
-      switch (metricName) {
-        case 'Explosiveness': return <CustomSvgIcon src={PowerIcon} alt="Explosiveness" sx={{ fontSize: 16, color: '#00bcd4' }} />;
-        case 'Endurance': return <CustomSvgIcon src={EnduranceIcon} alt="Endurance" sx={{ fontSize: 16, color: '#00bcd4' }} />;
-        case 'Recovery': return <CustomSvgIcon src={RecoveryIcon} alt="Recovery" sx={{ fontSize: 16, color: '#00bcd4' }} />;
-        case 'Reaction Time': return <CustomSvgIcon src={SpeedIcon} alt="Reaction Time" sx={{ fontSize: 16, color: '#00bcd4' }} />;
-        case 'Strength': return <CustomSvgIcon src={PowerIcon} alt="Strength" sx={{ fontSize: 16, color: '#00bcd4' }} />;
-        default: return null;
-      }
-    };
-
     return (
       <Box
         sx={{
@@ -151,7 +154,7 @@ export const PerformanceRadarChart: React.FC<PerformanceRadarChartProps> = ({
         }}
       >
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, fontSize: '0.9rem' }}>
-          {getIcon(metric.metric)}
+          {metric.icon}
           <Box sx={{ fontWeight: 'bold' }}>
             {metric.metric}:
           </Box>
@@ -204,29 +207,17 @@ export const PerformanceRadarChart: React.FC<PerformanceRadarChartProps> = ({
     const safeX = typeof x === 'number' && !isNaN(x) ? x : 0;
     const safeY = typeof y === 'number' && !isNaN(y) ? y : 0;
     
-    const getIconPath = (metric: string) => {
-      switch (metric) {
-        case 'Explosiveness': return PowerIcon;
-        case 'Endurance': return EnduranceIcon;
-        case 'Recovery': return RecoveryIcon;
-        case 'Reaction Time': return SpeedIcon;
-        case 'Strength': return PowerIcon;
-        default: return null;
-      }
-    };
-
-    const iconPath = getIconPath(id);
-    if (!iconPath) return null;
+    // Find the metric data to get the icon
+    const metricData = validMetricData.find(m => m.metric === id);
+    if (!metricData?.icon) return null;
 
     return (
       <g transform={`translate(${safeX}, ${safeY})`}>
-        <image
-          href={iconPath}
-          width="20"
-          height="20"
-          x={-10}
-          y={-10}
-        />
+        <foreignObject width="20" height="20" x={-10} y={-10}>
+          <div style={{ width: '20px', height: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            {metricData.icon}
+          </div>
+        </foreignObject>
       </g>
     );
   };

@@ -24,63 +24,56 @@ import {
   SkipNext as SkipNextIcon,
   Edit as EditIcon,
   CalendarToday as CalendarTodayIcon,
-  FitnessCenter as FitnessCenterIcon,
-  Favorite as FavoriteIcon,
-  Psychology as PsychologyIcon,
 } from '@mui/icons-material';
-import { useMutation } from '@tanstack/react-query';
-import type { UserWeeklyTest } from '../api/types';
+import { CustomSvgIcon } from './CustomSvgIcon';
+import PowerIcon from '../resources/power-icon.svg';
+import EnduranceIcon from '../resources/endurance-icon.svg';
+import RecoveryIcon from '../resources/recovery-icon.svg';
+import SpeedIcon from '../resources/speed-icon.svg';
+import MobilityIcon from '../resources/mobility-icon.svg';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import type { UserTestResult, TestProtocol } from '../api/types';
 import { GameCard, GameSubCard, GameStatusChip, GameText, GameTextSecondary } from './GameTheme';
 import { useData } from '../contexts/DataContext';
+import { getTestProtocols } from '../api/performanceTracking';
 
 interface WeeklyTestTrackerProps {
-  weeklyTests: UserWeeklyTest[];
+  weeklyTests: UserTestResult[];
   onTestUpdate?: () => void;
 }
 
-const testSchedule = [
-  {
-    day: 'Monday',
-    test: 'Vertical Jump',
-    icon: <FitnessCenterIcon />,
-    description: 'Measure explosive power using MyJump2 app',
-    unit: 'cm',
-    field: 'vertical_jump_result' as keyof UserWeeklyTest,
-    statusField: 'vertical_jump_status' as keyof UserWeeklyTest,
-  },
-  {
-    day: 'Any Day',
-    test: 'HR Recovery',
-    icon: <FavoriteIcon />,
-    description: '1-minute heart rate drop after exercise',
-    unit: 'bpm drop',
-    field: 'hr_recovery_result' as keyof UserWeeklyTest,
-    statusField: 'hr_recovery_status' as keyof UserWeeklyTest,
-  },
-  {
-    day: 'Any Day',
-    test: 'Reflex Speed',
-    icon: <PsychologyIcon />,
-    description: 'Reaction time using Human Benchmark',
-    unit: 'ms',
-    field: 'reflex_result' as keyof UserWeeklyTest,
-    statusField: 'reflex_status' as keyof UserWeeklyTest,
-  },
-];
+// Icon mapping for test protocols - using same icons as radar chart
+const getIconForProtocol = (testName: string) => {
+  switch (testName) {
+    case 'vertical_jump': return <CustomSvgIcon src={PowerIcon} alt="Explosiveness" sx={{ fontSize: 20, color: '#00bcd4' }} />;
+    case 'vo2_max': return <CustomSvgIcon src={EnduranceIcon} alt="Stamina" sx={{ fontSize: 20, color: '#00bcd4' }} />;
+    case 'hr_recovery': return <CustomSvgIcon src={RecoveryIcon} alt="Recovery" sx={{ fontSize: 20, color: '#00bcd4' }} />;
+    case 'reflex': return <CustomSvgIcon src={SpeedIcon} alt="Reflexes" sx={{ fontSize: 20, color: '#00bcd4' }} />;
+    case 'mobility': return <CustomSvgIcon src={MobilityIcon} alt="Dexterity" sx={{ fontSize: 20, color: '#00bcd4' }} />;
+    default: return <CustomSvgIcon src={PowerIcon} alt="Test" sx={{ fontSize: 20, color: '#00bcd4' }} />;
+  }
+};
 
 export const WeeklyTestTracker: React.FC<WeeklyTestTrackerProps> = ({ weeklyTests, onTestUpdate }) => {
   const { submitWeeklyTest, getCurrentWeekTest } = useData();
   const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [editingTest, setEditingTest] = useState<any>(null);
+  const [editingTest, setEditingTest] = useState<TestProtocol | null>(null);
   const [testValue, setTestValue] = useState<string>('');
   const [testStatus, setTestStatus] = useState<'PENDING' | 'COMPLETED' | 'SKIPPED'>('PENDING');
 
-  // Use DataContext function to get current week test, fallback to prop
-  const weeklyTest = getCurrentWeekTest() || weeklyTests?.[0];
+  // Fetch test protocols from backend
+  const { data: testProtocols = [], isLoading: protocolsLoading } = useQuery({
+    queryKey: ['testProtocols'],
+    queryFn: () => getTestProtocols(),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
+  // Get current week test results
+  const currentWeekTests = getCurrentWeekTest() || weeklyTests;
 
   const submitTestMutation = useMutation({
-    mutationFn: (weeklyTest: Omit<UserWeeklyTest, 'keycloak_id' | 'created_at' | 'updated_at'>) => 
-      submitWeeklyTest(weeklyTest),
+    mutationFn: (testResults: Omit<UserTestResult, 'id' | 'keycloak_id' | 'created_at' | 'updated_at'>[]) => 
+      submitWeeklyTest(testResults),
     onSuccess: () => {
       // DataContext automatically refreshes performance data after submission
       onTestUpdate?.();
@@ -91,36 +84,52 @@ export const WeeklyTestTracker: React.FC<WeeklyTestTrackerProps> = ({ weeklyTest
     },
   });
 
-  const handleEditTest = (test: any) => {
-    setEditingTest(test);
-    const resultValue = weeklyTest?.[test.field as keyof UserWeeklyTest] as number | undefined;
-    setTestValue(resultValue?.toString() || '');
-    const statusValue = weeklyTest?.[test.statusField as keyof UserWeeklyTest] as 'PENDING' | 'COMPLETED' | 'SKIPPED' | undefined;
-    setTestStatus(statusValue || 'PENDING');
+  const handleEditTest = (protocol: TestProtocol) => {
+    setEditingTest(protocol);
+    // Find existing test result for this protocol
+    const existingResult = currentWeekTests.find(test => test.test_name === protocol.test_name);
+    setTestValue(existingResult?.result_value?.toString() || '');
+    setTestStatus(existingResult?.status || 'PENDING');
     setEditDialogOpen(true);
   };
 
   const handleSubmitTest = () => {
-    if (!weeklyTest || !editingTest) return;
+    if (!editingTest) return;
 
-    const updatedTest: UserWeeklyTest = {
-      ...weeklyTest,
-      [editingTest.statusField]: testStatus,
-      [editingTest.field]: testStatus === 'COMPLETED' && testValue ? 
-        (editingTest.field.includes('result') ? Number(testValue) : testValue) : 
-        undefined,
+    // Create or update the test result for this protocol
+    const updatedTestResult: Omit<UserTestResult, 'id' | 'keycloak_id' | 'created_at' | 'updated_at'> = {
+      week_start_timestamp: currentWeekTests[0]?.week_start_timestamp || new Date().toISOString(),
+      test_name: editingTest.test_name,
+      status: testStatus,
+      result_value: testStatus === 'COMPLETED' && testValue ? Number(testValue) : undefined,
     };
 
-    submitTestMutation.mutate(updatedTest);
+    // Create the full array of test results, updating the one we're editing
+    const updatedTestResults = testProtocols.map(protocol => {
+      if (protocol.test_name === editingTest.test_name) {
+        return updatedTestResult;
+      }
+      // Return existing result or create a new pending one
+      const existingResult = currentWeekTests.find(test => test.test_name === protocol.test_name);
+      return existingResult || {
+        week_start_timestamp: updatedTestResult.week_start_timestamp,
+        test_name: protocol.test_name,
+        status: 'PENDING' as const,
+        result_value: undefined,
+      };
+    });
+
+    submitTestMutation.mutate(updatedTestResults);
   };
 
   const getCompletionPercentage = () => {
-    if (!weeklyTest) return 0;
+    if (testProtocols.length === 0) return 0;
     
-    const totalTests = testSchedule.length;
-    const completedTests = testSchedule.filter(test => 
-      weeklyTest[test.statusField] === 'COMPLETED'
-    ).length;
+    const totalTests = testProtocols.length;
+    const completedTests = testProtocols.filter(protocol => {
+      const testResult = currentWeekTests.find(test => test.test_name === protocol.test_name);
+      return testResult?.status === 'COMPLETED';
+    }).length;
     
     return Math.round((completedTests / totalTests) * 100);
   };
@@ -145,13 +154,13 @@ export const WeeklyTestTracker: React.FC<WeeklyTestTrackerProps> = ({ weeklyTest
           avatar={<CalendarTodayIcon sx={{ color: 'white', fontSize: '2rem' }} />}
           title={
             <GameText variant="h6" sx={{ fontWeight: 'bold' }}>
-              📅 Weekly Test Protocol
+              Weekly Quests
             </GameText>
           }
           subheader={
             <Box sx={{ mt: 1 }}>
               <GameTextSecondary variant="body2" sx={{ mb: 1 }}>
-                Week of {weeklyTest?.week_start_timestamp ? new Date(weeklyTest.week_start_timestamp).toLocaleDateString() : 'N/A'}
+                Week of {currentWeekTests[0]?.week_start_timestamp ? new Date(currentWeekTests[0].week_start_timestamp).toLocaleDateString() : 'N/A'}
               </GameTextSecondary>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <LinearProgress
@@ -177,10 +186,16 @@ export const WeeklyTestTracker: React.FC<WeeklyTestTrackerProps> = ({ weeklyTest
         />
         
         <CardContent>
-          <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 2 }}>
-            {testSchedule.map((test, index) => {
-              const status = weeklyTest?.[test.statusField as keyof UserWeeklyTest] as 'PENDING' | 'COMPLETED' | 'SKIPPED' || 'PENDING';
-              const result = weeklyTest?.[test.field as keyof UserWeeklyTest] as number | undefined;
+          {protocolsLoading ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+              <LinearProgress sx={{ width: '100%' }} />
+            </Box>
+          ) : (
+            <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 2 }}>
+              {testProtocols.map((protocol, index) => {
+              const testResult = currentWeekTests.find(test => test.test_name === protocol.test_name);
+              const status = testResult?.status || 'PENDING';
+              const result = testResult?.result_value;
               
               return (
                 <Box key={index}>
@@ -188,9 +203,9 @@ export const WeeklyTestTracker: React.FC<WeeklyTestTrackerProps> = ({ weeklyTest
                     <CardContent sx={{ p: 2 }}>
                       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          {test.icon}
+                          {getIconForProtocol(protocol.test_name)}
                           <GameText variant="subtitle2" sx={{ fontWeight: 'bold' }}>
-                            {test.day}
+                            {protocol.display_name}
                           </GameText>
                         </Box>
                         <GameStatusChip
@@ -200,18 +215,14 @@ export const WeeklyTestTracker: React.FC<WeeklyTestTrackerProps> = ({ weeklyTest
                         />
                       </Box>
                       
-                      <GameText variant="h6" sx={{ mb: 1, fontWeight: 'bold' }}>
-                        {test.test}
-                      </GameText>
-                      
                       <GameTextSecondary variant="body2" sx={{ mb: 2 }}>
-                        {test.description}
+                        {protocol.description}
                       </GameTextSecondary>
                       
                       {status === 'COMPLETED' && result && (
                         <Box sx={{ mb: 2, p: 1, backgroundColor: 'rgba(76, 175, 80, 0.2)', borderRadius: 1 }}>
                           <GameText variant="body2" sx={{ fontWeight: 'bold' }}>
-                            Result: {result} {test.unit}
+                            Result: {result} {protocol.unit}
                           </GameText>
                         </Box>
                       )}
@@ -228,7 +239,7 @@ export const WeeklyTestTracker: React.FC<WeeklyTestTrackerProps> = ({ weeklyTest
                         <Tooltip title="Edit test result">
                           <IconButton
                             size="small"
-                            onClick={() => handleEditTest(test)}
+                            onClick={() => handleEditTest(protocol)}
                             sx={{ color: 'white' }}
                           >
                             <EditIcon fontSize="small" />
@@ -239,15 +250,16 @@ export const WeeklyTestTracker: React.FC<WeeklyTestTrackerProps> = ({ weeklyTest
                   </GameSubCard>
                 </Box>
               );
-            })}
-          </Box>
+              })}
+            </Box>
+          )}
         </CardContent>
       </GameCard>
 
       {/* Edit Test Dialog */}
       <Dialog open={editDialogOpen} onClose={() => setEditDialogOpen(false)} maxWidth="sm" fullWidth>
         <DialogTitle>
-          Edit {editingTest?.test} Result
+          Edit {editingTest?.test_name} Result
         </DialogTitle>
         <DialogContent>
           <Box sx={{ mt: 2 }}>
@@ -271,7 +283,7 @@ export const WeeklyTestTracker: React.FC<WeeklyTestTrackerProps> = ({ weeklyTest
                 type="number"
                 value={testValue}
                 onChange={(e) => setTestValue(e.target.value)}
-                placeholder={`Enter your ${editingTest?.test.toLowerCase()} result`}
+                placeholder={`Enter your ${editingTest?.test_name.toLowerCase()} result`}
                 sx={{ mb: 2 }}
               />
             )}

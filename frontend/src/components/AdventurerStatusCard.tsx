@@ -11,7 +11,7 @@ import {
   ExpandMore as ExpandMoreIcon,
   ExpandLess as ExpandLessIcon,
 } from '@mui/icons-material';
-import type { UserPerformanceScores, UserPerformanceMetrics, UserWeeklyTest } from '../api/types';
+import type { UserPerformanceScores, UserPerformanceMetrics, UserTestResult } from '../api/types';
 import { PerformanceRadarChart } from './PerformanceRadarChart';
 import { CustomSvgIcon } from './CustomSvgIcon';
 import { GameProgressBar, GameCircularProgressBar } from './GameProgressBar';
@@ -23,11 +23,14 @@ import SkillsIcon from '../resources/skills-icon.svg';
 import PowerIcon from '../resources/power-icon.svg';
 import RecoveryIcon from '../resources/recovery-icon.svg';
 import SpeedIcon from '../resources/speed-icon.svg';
+import HeartIcon from '../resources/heart-icon.svg';
+import PotionIcon from '../resources/potion-icon.svg';
+import GearIcon from '../resources/gear-icon.svg';
 
 interface AdventurerStatusCardProps {
   scores: UserPerformanceScores;
   metrics?: UserPerformanceMetrics | null;
-  weeklyTest?: UserWeeklyTest | null;
+  weeklyTests?: UserTestResult[] | null;
   wilksScore?: number | null;
   userName?: string;
 }
@@ -35,7 +38,7 @@ interface AdventurerStatusCardProps {
 export const AdventurerStatusCard: React.FC<AdventurerStatusCardProps> = ({
   scores,
   metrics,
-  weeklyTest,
+  weeklyTests,
   wilksScore,
   userName = 'Raven Thornfield',
 }) => {
@@ -96,7 +99,7 @@ export const AdventurerStatusCard: React.FC<AdventurerStatusCardProps> = ({
             {/* Status Bars */}
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
               <GameProgressBar
-                icon={<CustomSvgIcon src={PowerIcon} alt="HP" sx={{ fontSize: 20, color: '#00bcd4' }} />}
+                icon={<CustomSvgIcon src={RecoveryIcon} alt="HP" sx={{ fontSize: 20, color: '#00bcd4' }} />}
                 label="HP"
                 current={Math.max(0, scores.hp - scores.hp_loss)}
                 max={scores.hp}
@@ -105,7 +108,7 @@ export const AdventurerStatusCard: React.FC<AdventurerStatusCardProps> = ({
               />
 
               <GameProgressBar
-                icon={<CustomSvgIcon src={RecoveryIcon} alt="MP" sx={{ fontSize: 20, color: '#00bcd4' }} />}
+                icon={<CustomSvgIcon src={PotionIcon} alt="MP" sx={{ fontSize: 20, color: '#00bcd4' }} />}
                 label="MP"
                 current={Math.max(0, scores.mp - scores.mp_loss)}
                 max={scores.mp}
@@ -114,7 +117,7 @@ export const AdventurerStatusCard: React.FC<AdventurerStatusCardProps> = ({
               />
 
               <GameCircularProgressBar
-                icon={<CustomSvgIcon src={SpeedIcon} alt="Fatigue" sx={{ fontSize: 20, color: '#00bcd4' }} />}
+                icon={<CustomSvgIcon src={GearIcon} alt="Fatigue" sx={{ fontSize: 20, color: '#00bcd4' }} />}
                 label="Fatigue"
                 current={Math.max(0, scores.fatigue - scores.fatigue_loss)}
                 max={scores.fatigue}
@@ -129,7 +132,7 @@ export const AdventurerStatusCard: React.FC<AdventurerStatusCardProps> = ({
             <PerformanceRadarChart
               scores={scores}
               metrics={metrics}
-              weeklyTest={weeklyTest}
+              weeklyTests={weeklyTests}
               wilksScore={wilksScore}
               title=""
               height={250}

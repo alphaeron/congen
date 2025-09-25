@@ -32,6 +32,7 @@ export interface UserPerformanceScores {
   aerobic_capacity_score?: number;
   recovery_score?: number;
   reaction_time_score?: number;
+  mobility_score?: number;
   level: number;
   hp: number;
   hp_loss: number;
@@ -45,19 +46,32 @@ export interface UserPerformanceScores {
 }
 
 /**
- * Weekly test results for a user.
+ * Individual user test result for a specific test protocol.
  */
-export interface UserWeeklyTest {
+export interface UserTestResult {
+  id?: number;
   keycloak_id: string;
   week_start_timestamp: string;
-  vertical_jump_status: 'PENDING' | 'COMPLETED' | 'SKIPPED';
-  vertical_jump_result?: number;
-  hr_recovery_status: 'PENDING' | 'COMPLETED' | 'SKIPPED';
-  hr_recovery_result?: number;
-  reflex_status: 'PENDING' | 'COMPLETED' | 'SKIPPED';
-  reflex_result?: number;
+  test_name: string;
+  status: 'PENDING' | 'COMPLETED' | 'SKIPPED';
+  result_value?: number;
   created_at: string;
   updated_at: string;
+}
+
+/**
+ * Test protocol configuration for weekly testing.
+ */
+export interface TestProtocol {
+  test_name: string;
+  display_name: string;
+  description: string;
+  unit: string;
+  icon_name: string;
+  is_required: boolean;
+  display_order: number;
+  radar_chart_color: string;
+  radar_chart_enabled: boolean;
 }
 
 /**

@@ -203,7 +203,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ user }) =>
           <AdventurerStatusCard
             scores={performanceScores}
             metrics={performanceMetrics}
-            weeklyTest={weeklyTests?.[0] || null}
+            weeklyTests={weeklyTests}
             wilksScore={wilksScore}
             userName={user.name}
           />

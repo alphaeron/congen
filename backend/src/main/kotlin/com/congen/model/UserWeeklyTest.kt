@@ -22,6 +22,7 @@ import java.time.Instant
  * - **Friday**: 12-minute Run + VO₂ Max calculation
  * - **Any Day**: HRV & HR Recovery (Oura/Whoop or manual)
  * - **Any Day**: Reflex Speed (Human Benchmark or similar)
+ * - **Any Day**: Mobility Assessment (Functional Movement Screen or similar)
  *
  * ## Test Status
  *
@@ -45,6 +46,8 @@ import java.time.Instant
  * @property hrRecoveryResult Result in bpm drop (if completed)
  * @property reflexStatus Status of reflex test
  * @property reflexResult Result in milliseconds (if completed)
+ * @property mobilityStatus Status of mobility test
+ * @property mobilityResult Result as percentage (if completed)
  * @property createdAt Timestamp when the weekly test was created
  * @property updatedAt Timestamp when the weekly test was last updated
  *
@@ -122,6 +125,23 @@ data class UserWeeklyTest(
         minimum = "0"
     )
     @param:JsonProperty("reflex_result") val reflexResult: Int?,
+    
+    /** Status of mobility test. */
+    @Schema(
+        description = "Status of mobility test",
+        example = "COMPLETED",
+        allowableValues = ["PENDING", "COMPLETED", "SKIPPED"]
+    )
+    @param:JsonProperty("mobility_status") val mobilityStatus: TestStatus,
+    
+    /** Result as percentage (if completed). */
+    @Schema(
+        description = "Result as percentage (if completed)",
+        example = "85.5",
+        minimum = "0",
+        maximum = "100"
+    )
+    @param:JsonProperty("mobility_result") val mobilityResult: Double?,
     
     /** Timestamp when the weekly test was created. */
     @Schema(

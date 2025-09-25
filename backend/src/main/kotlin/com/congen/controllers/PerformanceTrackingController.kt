@@ -5,7 +5,8 @@ import com.congen.exceptions.NoResultsFoundException
 import com.congen.exceptions.ValidationException
 import com.congen.model.UserPerformanceMetrics
 import com.congen.model.UserPerformanceScores
-import com.congen.model.UserWeeklyTest
+import com.congen.model.UserTestResult
+import com.congen.model.TestProtocol
 import com.congen.service.GdprComplianceService
 import com.congen.service.PerformanceTrackingService
 import com.congen.service.WilksCalculationService
@@ -17,19 +18,17 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.slf4j.LoggerFactory
-import org.springframework.format.annotation.DateTimeFormat
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.AccessDeniedException
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import reactor.core.publisher.Mono
-import java.time.LocalDate
+import java.time.Instant
 
 /**
  * REST controller for performance tracking and gamified metrics.
@@ -242,7 +241,7 @@ class PerformanceTrackingController(
             ApiResponse(
                 responseCode = "200",
                 description = "Weekly test submitted successfully",
-                content = [Content(schema = Schema(implementation = UserWeeklyTest::class))]
+                content = [Content(schema = Schema(implementation = UserTestResult::class))]
             ),
             ApiResponse(
                 responseCode = "400",
@@ -258,25 +257,31 @@ class PerformanceTrackingController(
             )
         ]
     )
-    fun submitWeeklyTest(@RequestBody weeklyTest: UserWeeklyTest): Mono<ResponseEntity<UserWeeklyTest>> {
+    fun submitWeeklyTest(@RequestBody testResults: List<UserTestResult>): Mono<ResponseEntity<List<UserTestResult>>> {
+        if (testResults.isEmpty()) {
+            return Mono.just(ResponseEntity.badRequest().build())
+        }
+        
+        val keycloakId = testResults.first().keycloakId
+        
         return keycloakUtil.getCurrentUserId().zipWith(keycloakUtil.getCurrentUserRoles()) { currentUserId, roles ->
             Pair(currentUserId, roles)
         }.flatMap { (currentUserId, roles) ->
             val isAdminOrService = roles.contains("admin") || roles.contains("service")
-            if (isAdminOrService || currentUserId == weeklyTest.keycloakId) {
+            if (isAdminOrService || currentUserId == keycloakId) {
                 val consentUserIdMono = if (isAdminOrService) {
-                    Mono.just(weeklyTest.keycloakId)
+                    Mono.just(keycloakId)
                 } else {
                     Mono.just(currentUserId)
                 }
                 consentUserIdMono.flatMap { ownerId ->
                     gdprComplianceService.withUserConsent(ownerId) {
-                        performanceTrackingService.submitWeeklyTest(weeklyTest)
+                        performanceTrackingService.submitWeeklyTest(testResults)
                             .map { ResponseEntity.ok(it) }
                     }
                 }
             } else {
-                Mono.error(AccessDeniedException("Access denied: User can only submit weekly tests for themselves"))
+                Mono.error(AccessDeniedException("Access denied: User can only submit test results for themselves"))
             }
         }
     }
@@ -288,8 +293,8 @@ class PerformanceTrackingController(
      * This endpoint returns all weekly tests within the specified date range,
      * ordered by week start date (most recent first).
      *
-     * @param startDate The start date of the range (format: yyyy-MM-dd)
-     * @param endDate The end date of the range (format: yyyy-MM-dd)
+     * @param startTimestamp The start timestamp of the range (inclusive)
+     * @param endTimestamp The end timestamp of the range (inclusive)
      * @return List of weekly tests within the date range
      */
     @GetMapping("/weekly_test")
@@ -303,11 +308,11 @@ class PerformanceTrackingController(
             ApiResponse(
                 responseCode = "200",
                 description = "Weekly tests retrieved successfully",
-                content = [Content(schema = Schema(implementation = Array<UserWeeklyTest>::class))]
+                content = [Content(schema = Schema(implementation = Array<UserTestResult>::class))]
             ),
             ApiResponse(
                 responseCode = "400",
-                description = "Bad request - invalid date format"
+                description = "Bad request - validation error"
             ),
             ApiResponse(
                 responseCode = "401",
@@ -320,20 +325,18 @@ class PerformanceTrackingController(
         ]
     )
     fun getWeeklyTestsInRange(
-        @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) startDate: LocalDate,
-        @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) endDate: LocalDate
-    ): Mono<ResponseEntity<List<UserWeeklyTest>>> {
+        @RequestParam startTimestamp: Instant,
+        @RequestParam endTimestamp: Instant
+    ): Mono<ResponseEntity<List<UserTestResult>>> {
         return keycloakUtil.getCurrentUserId()
             .flatMap { keycloakId ->
                 gdprComplianceService.withUserConsent(keycloakId) {
                     performanceTrackingService.getWeeklyTests(
                         keycloakId,
-                        startDate.atStartOfDay().toInstant(java.time.ZoneOffset.UTC),
-                        endDate.atTime(23, 59, 59).toInstant(java.time.ZoneOffset.UTC)
+                        startTimestamp,
+                        endTimestamp
                     )
                         .map { ResponseEntity.ok(it) }
-                        .doOnSuccess { logger.debug("Weekly tests in range retrieved successfully") }
-                        .doOnError { logger.error("Failed to retrieve weekly tests in range", it) }
                 }
             }
     }
@@ -381,6 +384,48 @@ class PerformanceTrackingController(
                         .map { ResponseEntity.ok(it) }
                         .doOnSuccess { logger.debug("Wilks score calculated successfully") }
                         .doOnError { logger.error("Failed to calculate Wilks score", it) }
+                }
+            }
+    }
+
+    /**
+     * Retrieves the current test protocol configuration.
+     *
+     * This endpoint returns the dynamic test protocol configuration from the database,
+     * including display names, descriptions, units, icons, and radar chart metadata.
+     *
+     * @return List of test protocol configurations
+     */
+    @GetMapping("/test_protocols")
+    @PreAuthorize("isAuthenticated()")
+    @Operation(
+        summary = "Get weekly test protocols",
+        description = "Retrieve the current weekly test protocol configuration."
+    )
+    @ApiResponses(
+        value = [
+            ApiResponse(
+                responseCode = "200",
+                description = "Test protocols retrieved successfully"
+            ),
+            ApiResponse(
+                responseCode = "401",
+                description = "Unauthorized - user not authenticated"
+            ),
+            ApiResponse(
+                responseCode = "500",
+                description = "Internal server error"
+            )
+        ]
+    )
+    fun getTestProtocols(): Mono<ResponseEntity<List<TestProtocol>>> {
+        return keycloakUtil.getCurrentUserId()
+            .flatMap { keycloakId ->
+                gdprComplianceService.withUserConsent(keycloakId) {
+                    performanceTrackingService.getTestProtocolsFromDatabase()
+                        .map { protocols -> ResponseEntity.ok(protocols) }
+                        .doOnSuccess { logger.debug("Test protocols retrieved successfully") }
+                        .doOnError { logger.error("Failed to retrieve test protocols", it) }
                 }
             }
     }

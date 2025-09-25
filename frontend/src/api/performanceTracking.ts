@@ -1,5 +1,5 @@
 import { REQUEST } from './endpoint';
-import type { UserPerformanceMetrics, UserPerformanceScores, UserWeeklyTest } from './types';
+import type { UserPerformanceMetrics, UserPerformanceScores, UserTestResult, TestProtocol } from './types';
 
 /**
  * Submit performance metrics for the current user.
@@ -46,13 +46,13 @@ export const getCurrentPerformanceMetrics = async (
  * Submit weekly test results for the current user.
  */
 export const submitWeeklyTest = async (
-  weeklyTest: Omit<UserWeeklyTest, 'keycloak_id' | 'created_at' | 'updated_at'>,
+  testResults: Omit<UserTestResult, 'id' | 'keycloak_id' | 'created_at' | 'updated_at'>[],
   options: { forceRefresh?: boolean } = {}
-): Promise<UserWeeklyTest> => {
-  return REQUEST<UserWeeklyTest>({
+): Promise<UserTestResult[]> => {
+  return REQUEST<UserTestResult[]>({
     method: 'PUT',
     url: '/performance/weekly_test',
-    data: weeklyTest,
+    data: testResults,
     ...options,
   });
 };
@@ -64,13 +64,13 @@ export const getWeeklyTestsInRange = async (
   startDate: string,
   endDate: string,
   options: { forceRefresh?: boolean } = {}
-): Promise<UserWeeklyTest[]> => {
-  return REQUEST<UserWeeklyTest[]>({
+): Promise<UserTestResult[]> => {
+  return REQUEST<UserTestResult[]>({
     method: 'GET',
     url: '/performance/weekly_test',
     params: {
-      startDate,
-      endDate,
+      startTimestamp: startDate,
+      endTimestamp: endDate,
     },
     ...options,
   });
@@ -91,6 +91,19 @@ export const getWilksScore = async (
       body_weight_kg: bodyWeightKg,
       is_male: isMale,
     },
+    ...options,
+  });
+};
+
+/**
+ * Get test protocols configuration.
+ */
+export const getTestProtocols = async (
+  options: { forceRefresh?: boolean } = {}
+): Promise<TestProtocol[]> => {
+  return REQUEST<TestProtocol[]>({
+    method: 'GET',
+    url: '/performance/test_protocols',
     ...options,
   });
 };

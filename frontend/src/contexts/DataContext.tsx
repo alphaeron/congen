@@ -30,6 +30,14 @@ import {
 } from '../api/programmedExercise';
 import { getProgrammedWorkouts } from '../api/programmedWorkout';
 import { getProgramPreferences } from '../api/programPreferences';
+import {
+  getCurrentPerformanceScores,
+  getCurrentPerformanceMetrics,
+  getWeeklyTestsInRange,
+  submitWeeklyTest as submitWeeklyTestAPI,
+  getWilksScore,
+  getTestProtocols,
+} from '../api/performanceTracking';
 import type {
   UserDataExport,
   ExerciseMuscle,
@@ -52,20 +60,14 @@ import type {
   ProgrammedExercise,
   UserPerformanceScores,
   UserPerformanceMetrics,
-  UserWeeklyTest,
+  UserTestResult,
+  TestProtocol,
 } from '../api/types';
 import { getUserEquipment } from '../api/userEquipment';
 import { getUserExercisePreferences } from '../api/userExercisePreference';
 import { getUserOneRepMaxes } from '../api/userOneRepMax';
 import { getUserWeakMuscles } from '../api/userWeakMuscle';
 import { getUserWeightUnitPreferences } from '../api/userWeightUnitPreference';
-import {
-  getCurrentPerformanceScores,
-  getCurrentPerformanceMetrics,
-  getWeeklyTestsInRange,
-  submitWeeklyTest as submitWeeklyTestAPI,
-  getWilksScore,
-} from '../api/performanceTracking';
 
 interface DataContextType {
   userData: UserDataExport | null;
@@ -94,7 +96,8 @@ interface DataContextType {
   // Performance tracking data
   performanceScores: UserPerformanceScores | null;
   performanceMetrics: UserPerformanceMetrics | null;
-  weeklyTests: UserWeeklyTest[];
+  weeklyTests: UserTestResult[];
+  testProtocols: TestProtocol[];
   wilksScore: number | null;
   isLoading: boolean;
   error: string | null;
@@ -125,18 +128,19 @@ interface DataContextType {
   // Performance tracking data loading functions
   loadPerformanceScores: () => Promise<UserPerformanceScores | null>;
   loadPerformanceMetrics: () => Promise<UserPerformanceMetrics | null>;
-  loadWeeklyTests: (startDate?: string, endDate?: string) => Promise<UserWeeklyTest[]>;
+  loadWeeklyTests: (startDate?: string, endDate?: string) => Promise<UserTestResult[]>;
+  loadTestProtocols: () => Promise<TestProtocol[]>;
   loadWilksScore: () => Promise<number | null>;
   refreshPerformanceData: () => Promise<void>;
   // Performance tracking utility functions
-  getCurrentWeekTest: () => UserWeeklyTest | null;
+  getCurrentWeekTest: () => UserTestResult[] | null;
   getPerformanceDataForDateRange: (startDate: string, endDate: string) => Promise<{
     scores: UserPerformanceScores | null;
     metrics: UserPerformanceMetrics | null;
-    tests: UserWeeklyTest[];
+    tests: UserTestResult[];
   }>;
   // Performance tracking mutation functions
-  submitWeeklyTest: (weeklyTest: Omit<UserWeeklyTest, 'keycloak_id' | 'created_at' | 'updated_at'>) => Promise<UserWeeklyTest>;
+  submitWeeklyTest: (testResults: Omit<UserTestResult, 'id' | 'keycloak_id' | 'created_at' | 'updated_at'>[]) => Promise<UserTestResult[]>;
   // GDPR functions
   exportUserData: () => Promise<UserDataExport>;
   deleteAllPersonalData: (confirmationText: string) => Promise<void>;
@@ -219,7 +223,8 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
   // Performance tracking data
   const [performanceScores, setPerformanceScores] = useState<UserPerformanceScores | null>(null);
   const [performanceMetrics, setPerformanceMetrics] = useState<UserPerformanceMetrics | null>(null);
-  const [weeklyTests, setWeeklyTests] = useState<UserWeeklyTest[]>([]);
+  const [weeklyTests, setWeeklyTests] = useState<UserTestResult[]>([]);
+  const [testProtocols, setTestProtocols] = useState<TestProtocol[]>([]);
   const [wilksScore, setWilksScore] = useState<number | null>(null);
   // Additional data caches
   // Centralized exercise data cache for components
@@ -275,8 +280,8 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
           getCurrentPerformanceScores({ forceRefresh }).catch(() => null),
           getCurrentPerformanceMetrics({ forceRefresh }).catch(() => null),
           getWeeklyTestsInRange(
-            new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 30 days ago
-            new Date().toISOString().split('T')[0], // today
+            new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days ago
+            new Date().toISOString(), // today
             { forceRefresh }
           ).catch(() => []),
         ]);
@@ -721,12 +726,12 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
     }
   }, [user?.keycloak_id, performanceMetrics]);
 
-  const loadWeeklyTests = useCallback(async (startDate?: string, endDate?: string): Promise<UserWeeklyTest[]> => {
+  const loadWeeklyTests = useCallback(async (startDate?: string, endDate?: string): Promise<UserTestResult[]> => {
     if (!user?.keycloak_id) return [];
 
     // Use default date range if not provided
-    const start = startDate || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]; // 30 days ago
-    const end = endDate || new Date().toISOString().split('T')[0]; // today
+    const start = startDate || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(); // 30 days ago
+    const end = endDate || new Date().toISOString(); // today
 
     try {
       const tests = await getWeeklyTestsInRange(start, end);
@@ -739,6 +744,23 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
       return [];
     }
   }, [user?.keycloak_id]);
+
+  const loadTestProtocols = useCallback(async (): Promise<TestProtocol[]> => {
+    if (testProtocols.length > 0) {
+      return testProtocols;
+    }
+
+    try {
+      const protocols = await getTestProtocols();
+      setTestProtocols(protocols);
+      setCacheTimestamps(prev => new Map(prev).set('testProtocols', Date.now()));
+      return protocols;
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load test protocols';
+      setError(errorMessage);
+      return [];
+    }
+  }, [testProtocols]);
 
   const loadWilksScore = useCallback(async (): Promise<number | null> => {
     if (!user?.keycloak_id || !userData?.weight || !userData?.gender) return null;
@@ -771,8 +793,8 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
         getCurrentPerformanceScores().catch(() => null),
         getCurrentPerformanceMetrics().catch(() => null),
         getWeeklyTestsInRange(
-          new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 30 days ago
-          new Date().toISOString().split('T')[0] // today
+          new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days ago
+          new Date().toISOString() // today
         ).catch(() => [])
       ]);
 
@@ -793,11 +815,11 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
   }, [user?.keycloak_id]);
 
   // Performance tracking utility functions
-  const getCurrentWeekTest = useCallback((): UserWeeklyTest | null => {
+  const getCurrentWeekTest = useCallback((): UserTestResult[] | null => {
     if (!weeklyTests || weeklyTests.length === 0) return null;
     
-    // Get the most recent weekly test (assuming they're sorted by date)
-    return weeklyTests[0];
+    // Get the most recent weekly test results (assuming they're sorted by date)
+    return weeklyTests;
   }, [weeklyTests]);
 
   const getPerformanceDataForDateRange = useCallback(async (startDate: string, endDate: string) => {
@@ -834,13 +856,13 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
   }, [user?.keycloak_id]);
 
   // Performance tracking mutation functions
-  const submitWeeklyTest = useCallback(async (weeklyTest: Omit<UserWeeklyTest, 'keycloak_id' | 'created_at' | 'updated_at'>): Promise<UserWeeklyTest> => {
+  const submitWeeklyTest = useCallback(async (testResults: Omit<UserTestResult, 'id' | 'keycloak_id' | 'created_at' | 'updated_at'>[]): Promise<UserTestResult[]> => {
     if (!user?.keycloak_id) {
       throw new Error('User not authenticated');
     }
 
     try {
-      const result = await submitWeeklyTestAPI(weeklyTest);
+      const result = await submitWeeklyTestAPI(testResults);
       
       // Refresh performance data after successful submission
       await refreshPerformanceData();
@@ -1251,6 +1273,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
       performanceScores,
       performanceMetrics,
       weeklyTests,
+      testProtocols,
       wilksScore,
       isLoading,
       error,
@@ -1277,6 +1300,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
       loadPerformanceScores,
       loadPerformanceMetrics,
       loadWeeklyTests,
+      loadTestProtocols,
       loadWilksScore,
       refreshPerformanceData,
       getCurrentWeekTest,
@@ -1344,6 +1368,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
       loadPerformanceScores,
       loadPerformanceMetrics,
       loadWeeklyTests,
+      loadTestProtocols,
       loadWilksScore,
       refreshPerformanceData,
       getCurrentWeekTest,

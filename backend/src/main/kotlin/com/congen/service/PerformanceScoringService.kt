@@ -61,13 +61,15 @@ class PerformanceScoringService {
         val aerobicCapacityScore = calculateAerobicCapacityScore(dailyMetrics.vo2Max)
         val recoveryScore = calculateRecoveryScore(weeklyTest?.hrRecoveryResult?.toDouble())
         val reactionTimeScore = calculateReactionTimeScore(weeklyTest?.reflexResult?.toDouble())
+        val mobilityScore = calculateMobilityScore(weeklyTest?.mobilityResult)
 
         // Calculate average score
         val scores = listOfNotNull(
             explosivenessScore,
             aerobicCapacityScore,
             recoveryScore,
-            reactionTimeScore
+            reactionTimeScore,
+            mobilityScore
         )
         val averageScore = if (scores.isNotEmpty()) scores.average() else 0.0
 
@@ -87,7 +89,8 @@ class PerformanceScoringService {
             explosivenessScore,
             aerobicCapacityScore,
             recoveryScore,
-            reactionTimeScore
+            reactionTimeScore,
+            mobilityScore
         )
 
         return UserPerformanceScores(
@@ -96,6 +99,7 @@ class PerformanceScoringService {
             aerobicCapacityScore = aerobicCapacityScore,
             recoveryScore = recoveryScore,
             reactionTimeScore = reactionTimeScore,
+            mobilityScore = mobilityScore,
             level = level,
             hp = hp,
             hpLoss = hpLoss,
@@ -144,6 +148,15 @@ class PerformanceScoringService {
     private fun calculateReactionTimeScore(reactionTimeMs: Double?): Double? {
         if (reactionTimeMs == null || reactionTimeMs <= 0) return null
         return max(0.0, min(100.0, 100.0 - ((reactionTimeMs - 300.0) * 0.33)))
+    }
+
+    /**
+     * Calculates mobility score using linear scaling.
+     * Input is already a percentage (0-100), so we use it directly.
+     */
+    private fun calculateMobilityScore(mobilityPercentage: Double?): Double? {
+        if (mobilityPercentage == null || mobilityPercentage < 0) return null
+        return max(0.0, min(100.0, mobilityPercentage))
     }
 
     /**
@@ -356,7 +369,8 @@ class PerformanceScoringService {
         explosivenessScore: Double?,
         aerobicScore: Double?,
         recoveryScore: Double?,
-        reactionScore: Double?
+        reactionScore: Double?,
+        mobilityScore: Double?
     ): List<String> {
         val skills = mutableListOf<String>()
 
@@ -386,6 +400,13 @@ class PerformanceScoringService {
             skills.add("Lightning Reflexes")
         } else if (reactionScore != null && reactionScore >= 60) {
             skills.add("Quick Response")
+        }
+
+        // Mobility-based skills
+        if (mobilityScore != null && mobilityScore >= 80) {
+            skills.add("Flexible Warrior")
+        } else if (mobilityScore != null && mobilityScore >= 60) {
+            skills.add("Agile Movement")
         }
 
         return skills

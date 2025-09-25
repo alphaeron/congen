@@ -1,18 +1,5 @@
 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <!-- Solo Leveling inspired character silhouette -->
-  <!-- Head -->
-  <circle cx="12" cy="8" r="4" fill="currentColor"/>
-  <!-- Body/Torso -->
-  <rect x="8" y="12" width="8" height="10" fill="currentColor" rx="1"/>
-  <!-- Shoulders -->
-  <rect x="6" y="12" width="3" height="2" fill="currentColor" rx="0.5"/>
-  <rect x="15" y="12" width="3" height="2" fill="currentColor" rx="0.5"/>
-  <!-- Arms -->
-  <rect x="5" y="14" width="2" height="6" fill="currentColor" rx="1"/>
-  <rect x="17" y="14" width="2" height="6" fill="currentColor" rx="1"/>
-  <!-- Legs -->
-  <rect x="9" y="22" width="2" height="2" fill="currentColor" rx="0.5"/>
-  <rect x="13" y="22" width="2" height="2" fill="currentColor" rx="0.5"/>
-  <!-- Shadow/aura effect -->
-  <ellipse cx="12" cy="20" rx="8" ry="2" fill="currentColor" opacity="0.3"/>
+  <!-- Simple person silhouette -->
+  <circle cx="12" cy="8" r="3" fill="currentColor"/>
+  <path d="M6 20 C6 16, 8 14, 12 14 C16 14, 18 16, 18 20" fill="currentColor"/>
 </svg>

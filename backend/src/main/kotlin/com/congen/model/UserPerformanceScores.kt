@@ -30,6 +30,7 @@ import java.time.Instant
  * @property aerobicCapacityScore Individual aerobic capacity score (0-100)
  * @property recoveryScore Individual recovery score (0-100)
  * @property reactionTimeScore Individual reaction time score (0-100)
+ * @property mobilityScore Individual mobility score (0-100)
  * @property level Athleticism level with tanh scaling (1-100)
  * @property hp Health Points - physical resilience (0-100)
  * @property hpLoss HP Loss - current HP reduction from daily stress factors (0-100)
@@ -96,6 +97,15 @@ data class UserPerformanceScores(
         maximum = "100"
     )
     @param:JsonProperty("reaction_time_score") val reactionTimeScore: Double?,
+
+    /** Individual mobility score (0-100). */
+    @Schema(
+        description = "Individual mobility score (0-100)",
+        example = "68.5",
+        minimum = "0",
+        maximum = "100"
+    )
+    @param:JsonProperty("mobility_score") val mobilityScore: Double?,
 
     /** Athleticism level with tanh scaling (1-100). */
     @Schema(
