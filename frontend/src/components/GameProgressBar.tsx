@@ -12,9 +12,10 @@ const ProgressBarContainer = styled(Box)(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
-  height: 10,
-  borderRadius: 5,
-  backgroundColor: alpha('#ffffff', 0.2), // Using Congen's alpha approach
+  height: 12,
+  minWidth: 200,
+  borderRadius: 6,
+  backgroundColor: alpha('#ffffff', 0.3),
   overflow: 'hidden',
 }));
 
@@ -23,7 +24,7 @@ const ProgressBarFill = styled(Box)<{ percentage: number; color: string }>(({ pe
   left: 0,
   top: 0,
   height: '100%',
-  width: `${percentage}%`,
+  width: `${Math.max(2, percentage)}%`, // Show available portion in blue
   backgroundColor: color,
   borderRadius: 4,
   transition: 'width 0.3s cubic-bezier(0.4, 0, 0.2, 1)', // Matches Congen's transition
@@ -98,8 +99,8 @@ const CircularProgressContainer = styled(Box)(({ theme }) => ({
   flexDirection: 'column',
   alignItems: 'center',
   justifyContent: 'center',
-  width: 60,
-  height: 60,
+  width: 90,
+  height: 90,
 }));
 
 const CircularProgressWrapper = styled(Box)(({ theme }) => ({
@@ -107,8 +108,8 @@ const CircularProgressWrapper = styled(Box)(({ theme }) => ({
   display: 'inline-flex',
   alignItems: 'center',
   justifyContent: 'center',
-  width: 50,
-  height: 50,
+  width: 75,
+  height: 75,
 }));
 
 const CircularProgressText = styled(Typography)(({ theme }) => ({
@@ -137,7 +138,6 @@ export const GameCircularProgressBar: React.FC<GameProgressBarProps> = ({
   return (
     <Tooltip title={tooltip}>
       <StatusBarContainer>
-        {icon}
         <CircularProgressContainer>
           <CircularProgressWrapper>
             <Box
@@ -146,36 +146,36 @@ export const GameCircularProgressBar: React.FC<GameProgressBarProps> = ({
                 display: 'inline-flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                width: 50,
-                height: 50,
+                width: 75,
+                height: 75,
               }}
             >
               {/* Custom circular progress using SVG */}
               <svg
-                width={50}
-                height={50}
+                width={75}
+                height={75}
                 style={{ transform: 'rotate(-90deg)' }}
               >
                 {/* Background circle */}
                 <circle
-                  cx={25}
-                  cy={25}
-                  r={20}
+                  cx={37.5}
+                  cy={37.5}
+                  r={30}
                   fill="none"
                   stroke={alpha('#ffffff', 0.2)} // Using Congen's alpha approach
                   strokeWidth={5}
                 />
                 {/* Progress circle */}
                 <circle
-                  cx={25}
-                  cy={25}
-                  r={20}
+                  cx={37.5}
+                  cy={37.5}
+                  r={30}
                   fill="none"
                   stroke={color}
                   strokeWidth={5}
                   strokeLinecap="round"
-                  strokeDasharray={`${2 * Math.PI * 20}`}
-                  strokeDashoffset={`${2 * Math.PI * 20 * (1 - percentage / 100)}`}
+                  strokeDasharray={`${2 * Math.PI * 30}`}
+                  strokeDashoffset={`${2 * Math.PI * 30 * (1 - percentage / 100)}`}
                   style={{ transition: 'stroke-dashoffset 0.3s cubic-bezier(0.4, 0, 0.2, 1)' }} // Matches Congen's transition
                 />
               </svg>
@@ -184,9 +184,12 @@ export const GameCircularProgressBar: React.FC<GameProgressBarProps> = ({
               </CircularProgressText>
             </Box>
           </CircularProgressWrapper>
-          <LabelText>
-            {label}
-          </LabelText>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+            {icon}
+            <LabelText>
+              {label}
+            </LabelText>
+          </Box>
         </CircularProgressContainer>
       </StatusBarContainer>
     </Tooltip>

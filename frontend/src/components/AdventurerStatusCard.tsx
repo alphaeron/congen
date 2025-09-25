@@ -1,16 +1,9 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   CardContent,
   CardHeader,
   Box,
-  Collapse,
-  IconButton,
-  Avatar,
 } from '@mui/material';
-import {
-  ExpandMore as ExpandMoreIcon,
-  ExpandLess as ExpandLessIcon,
-} from '@mui/icons-material';
 import type { UserPerformanceScores, UserPerformanceMetrics, UserTestResult } from '../api/types';
 import { PerformanceRadarChart } from './PerformanceRadarChart';
 import { CustomSvgIcon } from './CustomSvgIcon';
@@ -42,7 +35,6 @@ export const AdventurerStatusCard: React.FC<AdventurerStatusCardProps> = ({
   wilksScore,
   userName = 'Raven Thornfield',
 }) => {
-  const [expandedSkills, setExpandedSkills] = useState(false);
 
   const getHpColor = (hp: number): string => {
     if (hp >= 80) return '#4CAF50';
@@ -96,8 +88,8 @@ export const AdventurerStatusCard: React.FC<AdventurerStatusCardProps> = ({
               </Box>
             </Box>
 
-            {/* Status Bars */}
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+            {/* Status Bars - Single Row */}
+            <Box sx={{ display: 'flex', flexDirection: 'row', gap: 2, alignItems: 'center' }}>
               <GameProgressBar
                 icon={<CustomSvgIcon src={RecoveryIcon} alt="HP" sx={{ fontSize: 20, color: '#00bcd4' }} />}
                 label="HP"
@@ -142,44 +134,42 @@ export const AdventurerStatusCard: React.FC<AdventurerStatusCardProps> = ({
 
         {/* Skills Section */}
         <Box>
+          {/* Skills Header */}
           <Box
             sx={{
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'space-between',
-              cursor: 'pointer',
               p: 1,
               backgroundColor: 'rgba(255, 255, 255, 0.1)',
               borderRadius: 1,
+              mb: 1,
             }}
-            onClick={() => setExpandedSkills(!expandedSkills)}
           >
-                  <GameText variant="subtitle2" sx={{ fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <CustomSvgIcon src={SkillsIcon} alt="Skills" sx={{ fontSize: 16, color: 'white' }} />
-                    Skills
-                  </GameText>
-            <IconButton size="small" sx={{ color: 'white' }}>
-              {expandedSkills ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-            </IconButton>
+            <GameText variant="subtitle2" sx={{ fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: 1 }}>
+              <CustomSvgIcon src={SkillsIcon} alt="Skills" sx={{ fontSize: 16, color: 'white' }} />
+              Skills
+            </GameText>
           </Box>
-          <Collapse in={expandedSkills}>
-            <Box sx={{ p: 1, backgroundColor: 'rgba(255, 255, 255, 0.05)', borderRadius: 1 }}>
-              {scores.skills.length > 0 ? (
-                      scores.skills.map((skill, index) => (
-                        <GameSkillChip
-                          key={index}
-                          label={skill}
-                          size="small"
-                          icon={<CustomSvgIcon src={SkillsIcon} alt="Skill" sx={{ fontSize: 16, color: '#00bcd4' }} />}
-                        />
-                      ))
-                    ) : (
-                      <GameTextSecondary variant="body2" sx={{ fontStyle: 'italic' }}>
-                        No skills unlocked yet. Complete tests to unlock skills!
-                      </GameTextSecondary>
-                    )}
-            </Box>
-          </Collapse>
+          
+          {/* Skills Content */}
+          <Box sx={{ p: 1, backgroundColor: 'rgba(255, 255, 255, 0.05)', borderRadius: 1 }}>
+            {scores.skills.length > 0 ? (
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                {scores.skills.map((skill, index) => (
+                  <GameSkillChip
+                    key={index}
+                    label={skill}
+                    size="small"
+                    icon={<CustomSvgIcon src={SkillsIcon} alt="Skill" sx={{ fontSize: 16, color: '#00bcd4' }} />}
+                  />
+                ))}
+              </Box>
+            ) : (
+              <GameTextSecondary variant="body2" sx={{ fontStyle: 'italic' }}>
+                No skills unlocked yet. Complete quests to unlock skills!
+              </GameTextSecondary>
+            )}
+          </Box>
         </Box>
       </CardContent>
     </GameCard>

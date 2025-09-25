@@ -138,8 +138,6 @@ export const StatusBarContainer = styled(Box)(({ theme }) => ({
   gap: theme.spacing(1),
   marginBottom: theme.spacing(1),
   padding: theme.spacing(1),
-  backgroundColor: alpha('#ffffff', 0.1),
-  borderRadius: 12, // Matches Congen's borderRadius
   transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
 }));
 
