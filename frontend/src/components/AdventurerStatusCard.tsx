@@ -72,9 +72,9 @@ export const AdventurerStatusCard: React.FC<AdventurerStatusCardProps> = ({
       
       <CardContent>
         {/* Main Content: Status Info (left) and Radar Chart (right) */}
-        <Box sx={{ display: 'flex', gap: 3, mb: 3, overflow: 'visible' }}>
+        <Box sx={{ display: 'flex', gap: 1, mb: 3, overflow: 'visible' }}>
           {/* Status Information - Left side */}
-          <Box sx={{ flex: '0 0 60%', display: 'flex', flexDirection: 'column', gap: 2 }}>
+          <Box sx={{ flex: '0 0 55%', display: 'flex', flexDirection: 'column', gap: 2 }}>
             {/* Level and Name */}
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
               <CustomSvgIcon src={AdventurerProfileIcon} alt="Adventurer Profile" sx={{ fontSize: 80, color: 'white' }} />
@@ -89,7 +89,7 @@ export const AdventurerStatusCard: React.FC<AdventurerStatusCardProps> = ({
             </Box>
 
             {/* Status Bars - Single Row */}
-            <Box sx={{ display: 'flex', flexDirection: 'row', gap: 2, alignItems: 'center' }}>
+            <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1, alignItems: 'center' }}>
               <GameProgressBar
                 icon={<CustomSvgIcon src={RecoveryIcon} alt="HP" sx={{ fontSize: 20, color: '#00bcd4' }} />}
                 label="HP"
@@ -120,7 +120,7 @@ export const AdventurerStatusCard: React.FC<AdventurerStatusCardProps> = ({
           </Box>
 
           {/* Performance Radar Chart - Right side */}
-          <Box sx={{ flex: '0 0 40%', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'visible' }}>
+          <Box sx={{ flex: '0 0 45%', display: 'flex', alignItems: 'center', justifyContent: 'flex-start', overflow: 'visible', p: 0, m: 0, mr: -3 }}>
             <PerformanceRadarChart
               scores={scores}
               metrics={metrics}
@@ -140,8 +140,6 @@ export const AdventurerStatusCard: React.FC<AdventurerStatusCardProps> = ({
               display: 'flex',
               alignItems: 'center',
               p: 1,
-              backgroundColor: 'rgba(255, 255, 255, 0.1)',
-              borderRadius: 1,
               mb: 1,
             }}
           >
@@ -152,7 +150,7 @@ export const AdventurerStatusCard: React.FC<AdventurerStatusCardProps> = ({
           </Box>
           
           {/* Skills Content */}
-          <Box sx={{ p: 1, backgroundColor: 'rgba(255, 255, 255, 0.05)', borderRadius: 1 }}>
+          <Box sx={{ p: 1 }}>
             {scores.skills.length > 0 ? (
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
                 {scores.skills.map((skill, index) => (
