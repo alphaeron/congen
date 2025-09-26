@@ -1,7 +1,21 @@
-<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <path d="M8 2h8v2H8V2z" stroke="currentColor" stroke-width="2" fill="none"/>
-  <path d="M9 4h6v2H9V4z" stroke="currentColor" stroke-width="2" fill="none"/>
-  <path d="M10 6h4v14c0 1.1-.9 2-2 2s-2-.9-2-2V6z" stroke="currentColor" stroke-width="2" fill="none"/>
-  <path d="M10 6h4" stroke="currentColor" stroke-width="2"/>
-  <path d="M10 20h4" stroke="currentColor" stroke-width="2"/>
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!-- Uploaded to: SVG Repo, www.svgrepo.com, Generator: SVG Repo Mixer Tools -->
+<svg fill="#000000" version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" 
+	 viewBox="0 0 512 512" xml:space="preserve">
+<g>
+	<g>
+		<rect x="213.333" width="85.333" height="56.889"/>
+	</g>
+</g>
+<g>
+	<g>
+		<path d="M86.659,362.667C97.156,446.854,168.969,512,256,512s158.842-65.146,169.341-149.333H86.659z"/>
+	</g>
+</g>
+<g>
+	<g>
+		<path d="M298.667,176.044V99.556h-85.333v76.489C146.412,193.267,95.39,250.065,86.667,320h338.667
+			C416.612,250.065,365.588,193.267,298.667,176.044z"/>
+	</g>
+</g>
 </svg>
