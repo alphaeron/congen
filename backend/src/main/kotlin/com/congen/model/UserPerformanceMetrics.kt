@@ -33,19 +33,14 @@ import java.time.Instant
  * - **Manual Input**: For users without wearables
  *
  * @property keycloakId Unique Keycloak identifier for the user (primary key)
- * @property relativeStrength Wilks score or pull-ups max (optional)
- * @property verticalJumpCm Vertical jump height in centimeters (optional)
  * @property vo2Max VO₂ max estimate in ml/kg/min (optional)
- * @property hrRecovery Heart rate recovery in bpm drop (optional)
- * @property muscularEndurance Push-ups or pull-ups max in 1 minute (optional)
- * @property reactionTimeMs Reaction time in milliseconds (optional)
- * @property whoopStrain Daily strain score from Whoop (optional)
- * @property whoopRecovery Daily recovery score from Whoop (optional)
- * @property whoopHrv Heart rate variability from Whoop (optional)
- * @property whoopSleepScore Sleep score from Whoop (optional)
- * @property ouraHrv Heart rate variability from Oura (optional)
- * @property ouraVo2Max VO₂ max estimate from Oura (optional)
- * @property ouraSleepScore Sleep score from Oura (optional)
+ * @property strain Daily strain score from wearables (optional)
+ * @property recovery Daily recovery score (optional)
+ * @property hrv Heart rate variability (optional)
+ * @property sleepScore Sleep score (optional)
+ * @property remSleepMinutes REM sleep duration in minutes (optional)
+ * @property deepSleepMinutes Deep sleep duration in minutes (optional)
+ * @property subjectiveTiredness Subjective tiredness rating 1-5 scale (optional)
  * @property createdAt Timestamp when the metrics were created
  * @property updatedAt Timestamp when the metrics were last updated
  *
@@ -57,9 +52,10 @@ import java.time.Instant
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Schema(
     description = "User performance metrics for gamified tracking",
-    example = "UserPerformanceMetrics(keycloakId=\"123e4567-e89b-12d3-a456-426614174000\", " +
-        "relativeStrength=350, verticalJumpCm=50, vo2Max=48, hrRecovery=40, " +
-        "muscularEndurance=40, reactionTimeMs=350)"
+    example =
+        "UserPerformanceMetrics(keycloakId=\"123e4567-e89b-12d3-a456-426614174000\", " +
+            "relativeStrength=350, verticalJumpCm=50, vo2Max=48, hrRecovery=40, " +
+            "muscularEndurance=40, reactionTimeMs=350)"
 )
 data class UserPerformanceMetrics(
     /** Unique Keycloak identifier for the user (primary key). */
@@ -69,7 +65,6 @@ data class UserPerformanceMetrics(
         readOnly = true
     )
     @param:JsonProperty("keycloak_id") val keycloakId: String,
-    
     /** VO₂ max estimate in ml/kg/min (optional). */
     @Schema(
         description = "VO₂ max estimate in ml/kg/min",
@@ -77,17 +72,16 @@ data class UserPerformanceMetrics(
         minimum = "0"
     )
     @param:JsonProperty("vo2_max") val vo2Max: Double?,
-    
     /** Daily strain score (optional). If not provided, system will use subjective tiredness with higher weight. */
     @Schema(
-        description = "Daily strain score from wearables (e.g., Whoop). " +
+        description =
+            "Daily strain score from wearables (e.g., Whoop). " +
                 "If not provided, system will rely more heavily on subjective tiredness.",
         example = "15.2",
         minimum = "0",
         maximum = "21"
     )
     @param:JsonProperty("strain") val strain: Double?,
-    
     /** Daily recovery score (optional). */
     @Schema(
         description = "Daily recovery score",
@@ -96,7 +90,6 @@ data class UserPerformanceMetrics(
         maximum = "100"
     )
     @param:JsonProperty("recovery") val recovery: Double?,
-    
     /** Heart rate variability (optional). */
     @Schema(
         description = "Heart rate variability",
@@ -104,7 +97,6 @@ data class UserPerformanceMetrics(
         minimum = "0"
     )
     @param:JsonProperty("hrv") val hrv: Double?,
-    
     /** Sleep score (optional). */
     @Schema(
         description = "Sleep score",
@@ -113,7 +105,6 @@ data class UserPerformanceMetrics(
         maximum = "100"
     )
     @param:JsonProperty("sleep_score") val sleepScore: Double?,
-    
     /** REM sleep duration in minutes (optional). */
     @Schema(
         description = "REM sleep duration in minutes",
@@ -121,7 +112,6 @@ data class UserPerformanceMetrics(
         minimum = "0"
     )
     @param:JsonProperty("rem_sleep_minutes") val remSleepMinutes: Double?,
-    
     /** Deep sleep duration in minutes (optional). */
     @Schema(
         description = "Deep sleep duration in minutes",
@@ -129,16 +119,16 @@ data class UserPerformanceMetrics(
         minimum = "0"
     )
     @param:JsonProperty("deep_sleep_minutes") val deepSleepMinutes: Double?,
-    
     /** Subjective tiredness rating (1-5 scale) (optional). Has higher impact on HP and fatigue when strain is not available. */
     @Schema(
-        description = "Subjective tiredness rating (1=fresh, 5=exhausted). Has higher impact on HP and fatigue calculations when strain data is not available.",
+        description =
+            "Subjective tiredness rating (1=fresh, 5=exhausted). " +
+                "Has higher impact on HP and fatigue calculations when strain data is not available.",
         example = "3",
         minimum = "1",
         maximum = "5"
     )
     @param:JsonProperty("subjective_tiredness") val subjectiveTiredness: Int?,
-
     /** Timestamp when the metrics were created. */
     @Schema(
         description = "Timestamp when the metrics were created",
@@ -146,7 +136,6 @@ data class UserPerformanceMetrics(
         readOnly = true
     )
     @param:JsonProperty("created_at") val createdAt: Instant,
-    
     /** Timestamp when the metrics were last updated. */
     @Schema(
         description = "Timestamp when the metrics were last updated",

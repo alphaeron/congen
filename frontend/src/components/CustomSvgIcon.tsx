@@ -1,5 +1,7 @@
+import { SvgIcon } from '@mui/material';
 import React from 'react';
-import { SvgIcon, SvgIconProps } from '@mui/material';
+
+import type { SvgIconProps } from '@mui/material';
 
 interface CustomSvgIconProps extends Omit<SvgIconProps, 'children'> {
   src: string;
@@ -11,9 +13,9 @@ interface CustomSvgIconProps extends Omit<SvgIconProps, 'children'> {
  * This provides better integration with MUI's theming and accessibility.
  * The SVG icons use 'currentColor' so they inherit the theme's color.
  */
-export const CustomSvgIcon: React.FC<CustomSvgIconProps> = ({ src, alt, sx, ...props }) => {
+export const CustomSvgIcon: React.FC<CustomSvgIconProps> = ({ src, sx, ...props }) => {
   return (
-    <SvgIcon 
+    <SvgIcon
       {...props}
       sx={{
         // Default styling for better integration

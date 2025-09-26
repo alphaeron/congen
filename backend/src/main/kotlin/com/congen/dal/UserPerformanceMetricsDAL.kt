@@ -88,10 +88,11 @@ class UserPerformanceMetricsDAL(
         logger.debug("Upserting performance metrics for user: ${metrics.keycloakId}")
 
         val now = Instant.now()
-        val metricsWithTimestamps = metrics.copy(
-            createdAt = now,
-            updatedAt = now
-        )
+        val metricsWithTimestamps =
+            metrics.copy(
+                createdAt = now,
+                updatedAt = now
+            )
 
         return auditService.logDataAccess("user_performance_metrics", "UPSERT", metrics.keycloakId)
             .then(
@@ -100,7 +101,7 @@ class UserPerformanceMetricsDAL(
                     .flatMap { existingMetrics ->
                         val existingDate = existingMetrics.createdAt.atZone(ZoneOffset.UTC).toLocalDate()
                         val newDate = now.atZone(ZoneOffset.UTC).toLocalDate()
-                        
+
                         if (existingDate == newDate) {
                             // Update existing record for today
                             postgresClient.update<UserPerformanceMetrics>(
@@ -195,23 +196,23 @@ class UserPerformanceMetricsDAL(
         entityName = "user_performance_metrics"
     )
     fun getUserPerformanceMetricsInRange(
-        keycloakId: String, 
-        startTimestamp: Instant, 
+        keycloakId: String,
+        startTimestamp: Instant,
         endTimestamp: Instant
     ): Mono<List<UserPerformanceMetrics>> {
         logger.debug("Selecting performance metrics for user: $keycloakId, range: $startTimestamp to $endTimestamp")
-        
+
         return auditService.logDataAccess("user_performance_metrics", "SELECT_RANGE", keycloakId)
             .then(
                 postgresClient.select(
                     """
-                    SELECT * FROM user_performance_metrics 
-                    WHERE keycloak_id = $1 
-                    AND created_at >= $2 
-                    AND created_at <= $3 
+                    SELECT * FROM user_performance_metrics
+                    WHERE keycloak_id = $1
+                    AND created_at >= $2
+                    AND created_at <= $3
                     ORDER BY created_at ASC
                     """,
-                    keycloakId, 
+                    keycloakId,
                     LocalDateTime.ofInstant(startTimestamp, ZoneOffset.UTC),
                     LocalDateTime.ofInstant(endTimestamp, ZoneOffset.UTC)
                 )
@@ -231,20 +232,20 @@ class UserPerformanceMetricsDAL(
     )
     fun getLatestUserPerformanceMetrics(keycloakId: String): Mono<UserPerformanceMetrics> {
         logger.debug("Selecting latest performance metrics for user: $keycloakId")
-        
+
         return auditService.logDataAccess("user_performance_metrics", "SELECT_LATEST", keycloakId)
             .then(
                 postgresClient.select<UserPerformanceMetrics>(
                     """
-                    SELECT * FROM user_performance_metrics 
-                    WHERE keycloak_id = $1 
-                    ORDER BY created_at DESC 
+                    SELECT * FROM user_performance_metrics
+                    WHERE keycloak_id = $1
+                    ORDER BY created_at DESC
                     LIMIT 1
                     """,
                     keycloakId
                 )
             )
-            .flatMap { metricsList: List<UserPerformanceMetrics> -> 
+            .flatMap { metricsList: List<UserPerformanceMetrics> ->
                 if (metricsList.isEmpty()) {
                     Mono.error(NoResultsFoundException("No performance metrics found for user: $keycloakId"))
                 } else {

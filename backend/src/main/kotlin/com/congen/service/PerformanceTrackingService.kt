@@ -1,13 +1,13 @@
 package com.congen.service
 
+import com.congen.dal.TestProtocolConfigDAL
 import com.congen.dal.UserPerformanceMetricsDAL
 import com.congen.dal.UserPerformanceScoresDAL
 import com.congen.dal.UserTestResultDAL
-import com.congen.dal.TestProtocolConfigDAL
 import com.congen.exceptions.NoResultsFoundException
 import com.congen.exceptions.ValidationException
-import com.congen.model.TestStatus
 import com.congen.model.TestProtocol
+import com.congen.model.TestStatus
 import com.congen.model.UserPerformanceMetrics
 import com.congen.model.UserPerformanceScores
 import com.congen.model.UserTestResult
@@ -72,7 +72,7 @@ class PerformanceTrackingService(
      */
     fun getCurrentPerformanceScores(keycloakId: String): Mono<UserPerformanceScores> {
         logger.debug("Retrieving current performance scores for user: $keycloakId")
-        
+
         return userPerformanceScoresDAL.selectUserPerformanceScores(keycloakId)
             .onErrorResume { throwable ->
                 if (throwable is NoResultsFoundException) {
@@ -93,7 +93,7 @@ class PerformanceTrackingService(
      */
     fun getCurrentPerformanceMetrics(keycloakId: String): Mono<UserPerformanceMetrics> {
         logger.debug("Retrieving current performance metrics for user: $keycloakId")
-        
+
         return userPerformanceMetricsDAL.selectUserPerformanceMetrics(keycloakId)
             .onErrorResume { throwable ->
                 if (throwable is NoResultsFoundException) {
@@ -115,34 +115,37 @@ class PerformanceTrackingService(
      */
     private fun createDefaultPerformanceData(keycloakId: String): Mono<UserPerformanceScores> {
         logger.info("Creating default performance data for new user: $keycloakId")
-        
+
         val now = Instant.now()
-        
+
         // Create default metrics with minimal values
-        val defaultMetrics = UserPerformanceMetrics(
-            keycloakId = keycloakId,
-            vo2Max = 30.0,
-            strain = 0.0,
-            recovery = 50.0,
-            hrv = 30.0,
-            sleepScore = 50.0,
-            remSleepMinutes = 90.0,
-            deepSleepMinutes = 60.0,
-            subjectiveTiredness = 3,
-            createdAt = now,
-            updatedAt = now
-        )
-        
+        val defaultMetrics =
+            UserPerformanceMetrics(
+                keycloakId = keycloakId,
+                vo2Max = 30.0,
+                strain = 0.0,
+                recovery = 50.0,
+                hrv = 30.0,
+                sleepScore = 50.0,
+                remSleepMinutes = 90.0,
+                deepSleepMinutes = 60.0,
+                subjectiveTiredness = 3,
+                createdAt = now,
+                updatedAt = now
+            )
+
         // Create default test results for each test protocol
         val weekStart = getCurrentWeekStart()
-        
+
         // Save metrics first, then create default test results
         return userPerformanceMetricsDAL.upsertUserPerformanceMetrics(defaultMetrics)
             .then(createDefaultTestResults(keycloakId, weekStart))
-            .then(Mono.fromCallable { 
-                // For new users, we'll create default scores without test results
-                performanceScoringService.calculatePerformanceScores(defaultMetrics, null)
-            })
+            .then(
+                Mono.fromCallable {
+                    // For new users, we'll create default scores without test results
+                    performanceScoringService.calculatePerformanceScores(defaultMetrics, null)
+                }
+            )
             .flatMap { defaultScores ->
                 userPerformanceScoresDAL.upsertUserPerformanceScores(defaultScores)
                     .then(Mono.just(defaultScores))
@@ -156,26 +159,30 @@ class PerformanceTrackingService(
      * @param weekStartTimestamp The week start timestamp
      * @return Mono containing the number of test results created
      */
-    private fun createDefaultTestResults(keycloakId: String, weekStartTimestamp: Instant): Mono<Int> {
+    private fun createDefaultTestResults(
+        keycloakId: String,
+        weekStartTimestamp: Instant
+    ): Mono<Int> {
         logger.debug("Creating default test results for user: $keycloakId, week: $weekStartTimestamp")
-        
+
         return testProtocolConfigDAL.getAllTestProtocols()
             .flatMap { protocols ->
-                val testResults = protocols.map { protocol ->
-                    UserTestResult(
-                        keycloakId = keycloakId,
-                        weekStartTimestamp = weekStartTimestamp,
-                        testName = protocol.testName,
-                        status = TestStatus.PENDING,
-                        resultValue = null,
-                        createdAt = Instant.now(),
-                        updatedAt = Instant.now()
-                    )
-                }
-                
+                val testResults =
+                    protocols.map { protocol ->
+                        UserTestResult(
+                            keycloakId = keycloakId,
+                            weekStartTimestamp = weekStartTimestamp,
+                            testName = protocol.testName,
+                            status = TestStatus.PENDING,
+                            resultValue = null,
+                            createdAt = Instant.now(),
+                            updatedAt = Instant.now()
+                        )
+                    }
+
                 // Upsert all test results
                 Mono.fromCallable { testResults }
-                    .flatMapMany { results -> 
+                    .flatMapMany { results ->
                         reactor.core.publisher.Flux.fromIterable(results)
                             .flatMap { result -> userTestResultDAL.upsertUserTestResult(result) }
                     }
@@ -192,27 +199,27 @@ class PerformanceTrackingService(
      */
     private fun createDefaultPerformanceMetrics(keycloakId: String): Mono<UserPerformanceMetrics> {
         logger.info("Creating default performance metrics for new user: $keycloakId")
-        
+
         val now = Instant.now()
-        
-        val defaultMetrics = UserPerformanceMetrics(
-            keycloakId = keycloakId,
-            vo2Max = 30.0,
-            strain = 0.0,
-            recovery = 50.0,
-            hrv = 30.0,
-            sleepScore = 50.0,
-            remSleepMinutes = 90.0,
-            deepSleepMinutes = 60.0,
-            subjectiveTiredness = 3,
-            createdAt = now,
-            updatedAt = now
-        )
-        
+
+        val defaultMetrics =
+            UserPerformanceMetrics(
+                keycloakId = keycloakId,
+                vo2Max = 30.0,
+                strain = 0.0,
+                recovery = 50.0,
+                hrv = 30.0,
+                sleepScore = 50.0,
+                remSleepMinutes = 90.0,
+                deepSleepMinutes = 60.0,
+                subjectiveTiredness = 3,
+                createdAt = now,
+                updatedAt = now
+            )
+
         return userPerformanceMetricsDAL.upsertUserPerformanceMetrics(defaultMetrics)
             .then(Mono.just(defaultMetrics))
     }
-
 
     /**
      * Retrieves test results for the current user, optionally within a date range.
@@ -222,9 +229,13 @@ class PerformanceTrackingService(
      * @param endTimestamp Optional end timestamp of the range
      * @return Mono containing list of test results
      */
-    fun getWeeklyTests(keycloakId: String, startTimestamp: Instant? = null, endTimestamp: Instant? = null): Mono<List<UserTestResult>> {
+    fun getWeeklyTests(
+        keycloakId: String,
+        startTimestamp: Instant? = null,
+        endTimestamp: Instant? = null
+    ): Mono<List<UserTestResult>> {
         logger.debug("Retrieving test results for user: $keycloakId, range: $startTimestamp to $endTimestamp")
-        
+
         return when {
             startTimestamp != null && endTimestamp != null -> {
                 // Get test results within the specified date range
@@ -246,12 +257,12 @@ class PerformanceTrackingService(
      * @return Mono containing list of performance metrics within the range
      */
     fun getPerformanceMetricsInRange(
-        keycloakId: String, 
-        startTimestamp: Instant, 
+        keycloakId: String,
+        startTimestamp: Instant,
         endTimestamp: Instant
     ): Mono<List<UserPerformanceMetrics>> {
         logger.debug("Retrieving performance metrics for user: $keycloakId, range: $startTimestamp to $endTimestamp")
-        
+
         return userPerformanceMetricsDAL.getUserPerformanceMetricsInRange(keycloakId, startTimestamp, endTimestamp)
     }
 
@@ -266,12 +277,12 @@ class PerformanceTrackingService(
      */
     fun submitPerformanceMetrics(metrics: UserPerformanceMetrics): Mono<UserPerformanceScores> {
         logger.debug("Submitting performance metrics for user: ${metrics.keycloakId}")
-        
+
         // Upsert metrics (insert or update)
         return userPerformanceMetricsDAL.upsertUserPerformanceMetrics(metrics)
             .flatMap { updatedMetrics ->
                 // Calculate new scores
-                Mono.fromCallable { 
+                Mono.fromCallable {
                     performanceScoringService.calculatePerformanceScores(updatedMetrics)
                 }.flatMap { scores ->
                     // Upsert scores (insert or update)
@@ -286,33 +297,34 @@ class PerformanceTrackingService(
      * This method handles the structured weekly testing protocol and automatically
      * integrates results into the overall performance tracking system.
      *
-     * @param weeklyTest The weekly test results to submit
-     * @return Mono containing the updated weekly test
+     * @param testResults The list of weekly test results to submit
+     * @return Mono containing the updated test results
      */
     fun submitWeeklyTest(testResults: List<UserTestResult>): Mono<List<UserTestResult>> {
         if (testResults.isEmpty()) {
             return Mono.error(ValidationException("At least one test result must be provided"))
         }
-        
+
         val keycloakId = testResults.first().keycloakId
         val weekStartTimestamp = testResults.first().weekStartTimestamp
-        
+
         logger.debug("Submitting test results for user: $keycloakId, week: $weekStartTimestamp, count: ${testResults.size}")
-        
+
         // Validate week start timestamp is a Monday
         val weekStartLocalDate = weekStartTimestamp.atZone(java.time.ZoneOffset.UTC).toLocalDate()
         if (weekStartLocalDate.dayOfWeek.value != 1) {
             return Mono.error(ValidationException("Week start date must be a Monday"))
         }
-        
+
         // Validate all test results are for the same user and week
-        val invalidResults = testResults.filter { 
-            it.keycloakId != keycloakId || it.weekStartTimestamp != weekStartTimestamp 
-        }
+        val invalidResults =
+            testResults.filter {
+                it.keycloakId != keycloakId || it.weekStartTimestamp != weekStartTimestamp
+            }
         if (invalidResults.isNotEmpty()) {
             return Mono.error(ValidationException("All test results must be for the same user and week"))
         }
-        
+
         // Upsert all test results
         return reactor.core.publisher.Flux.fromIterable(testResults)
             .flatMap { testResult -> userTestResultDAL.upsertUserTestResult(testResult) }
@@ -341,10 +353,10 @@ class PerformanceTrackingService(
     fun getTestProtocolsFromDatabase(): Mono<List<TestProtocol>> {
         logger.debug("Retrieving test protocols from database configuration")
         return testProtocolConfigDAL.getAllTestProtocols()
-            .doOnSuccess { protocols -> 
+            .doOnSuccess { protocols ->
                 logger.debug("Retrieved ${protocols.size} test protocols from database")
             }
-            .doOnError { error -> 
+            .doOnError { error ->
                 logger.error("Failed to retrieve test protocols from database", error)
             }
     }

@@ -40,12 +40,12 @@ class TestProtocolConfigDAL(
     )
     fun getAllTestProtocols(): Mono<List<TestProtocol>> {
         logger.debug("Retrieving all test protocol configurations")
-        
+
         return postgresClient.select(
             "SELECT test_name, display_name, description, unit, icon_name, is_required, " +
-            "display_order, radar_chart_color, radar_chart_enabled " +
-            "FROM test_protocol_config " +
-            "ORDER BY display_order, test_name"
+                "display_order, radar_chart_color, radar_chart_enabled " +
+                "FROM test_protocol_config " +
+                "ORDER BY display_order, test_name"
         )
     }
 
@@ -63,12 +63,12 @@ class TestProtocolConfigDAL(
     )
     fun getTestProtocol(testName: String): Mono<TestProtocol> {
         logger.debug("Retrieving test protocol configuration for: $testName")
-        
+
         return postgresClient.selectIndividual(
             "SELECT test_name, display_name, description, unit, icon_name, is_required, " +
-            "display_order, radar_chart_color, radar_chart_enabled " +
-            "FROM test_protocol_config " +
-            "WHERE test_name = $1",
+                "display_order, radar_chart_color, radar_chart_enabled " +
+                "FROM test_protocol_config " +
+                "WHERE test_name = $1",
             testName
         )
     }

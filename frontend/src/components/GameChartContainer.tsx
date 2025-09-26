@@ -1,12 +1,12 @@
-import React from 'react';
 import { Box } from '@mui/material';
 import { styled, alpha } from '@mui/material/styles';
+import React from 'react';
 
 /**
  * Shared chart container for consistent styling across game charts.
  * Uses Congen's design system for consistent theming.
  */
-const ChartContainer = styled(Box)(({ theme }) => ({
+const ChartContainer = styled(Box)(() => ({
   height: '100%',
   '& .nivo-radar': {
     '& text': {
@@ -37,13 +37,9 @@ interface GameChartContainerProps {
 /**
  * Container for game-themed charts with consistent styling
  */
-export const GameChartContainer: React.FC<GameChartContainerProps> = ({ 
-  children, 
-  height = 400 
+export const GameChartContainer: React.FC<GameChartContainerProps> = ({
+  children,
+  height = 400,
 }) => {
-  return (
-    <ChartContainer sx={{ height }}>
-      {children}
-    </ChartContainer>
-  );
+  return <ChartContainer sx={{ height }}>{children}</ChartContainer>;
 };

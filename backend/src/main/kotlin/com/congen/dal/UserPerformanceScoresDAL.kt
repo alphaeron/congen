@@ -67,7 +67,7 @@ class UserPerformanceScoresDAL(
     )
     fun selectUserPerformanceScores(keycloakId: String): Mono<UserPerformanceScores> {
         logger.debug("Selecting performance scores for user: $keycloakId")
-        
+
         return auditService.logDataAccess("user_performance_scores", "SELECT", keycloakId)
             .then(
                 postgresClient.selectIndividual(
@@ -91,10 +91,11 @@ class UserPerformanceScoresDAL(
         logger.debug("Upserting performance scores for user: ${scores.keycloakId}")
 
         val now = Instant.now()
-        val scoresWithTimestamps = scores.copy(
-            createdAt = now,
-            updatedAt = now
-        )
+        val scoresWithTimestamps =
+            scores.copy(
+                createdAt = now,
+                updatedAt = now
+            )
 
         return auditService.logDataAccess("user_performance_scores", "UPSERT", scores.keycloakId)
             .then(
@@ -108,65 +109,65 @@ class UserPerformanceScoresDAL(
                         $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, NOW(), NOW()
                     )
                     ON CONFLICT (keycloak_id) DO UPDATE SET
-                        explosiveness_score = CASE 
-                            WHEN DATE(user_performance_scores.created_at) = DATE(NOW()) 
-                            THEN EXCLUDED.explosiveness_score 
-                            ELSE user_performance_scores.explosiveness_score 
+                        explosiveness_score = CASE
+                            WHEN DATE(user_performance_scores.created_at) = DATE(NOW())
+                            THEN EXCLUDED.explosiveness_score
+                            ELSE user_performance_scores.explosiveness_score
                         END,
-                        aerobic_capacity_score = CASE 
-                            WHEN DATE(user_performance_scores.created_at) = DATE(NOW()) 
-                            THEN EXCLUDED.aerobic_capacity_score 
-                            ELSE user_performance_scores.aerobic_capacity_score 
+                        aerobic_capacity_score = CASE
+                            WHEN DATE(user_performance_scores.created_at) = DATE(NOW())
+                            THEN EXCLUDED.aerobic_capacity_score
+                            ELSE user_performance_scores.aerobic_capacity_score
                         END,
-                        recovery_score = CASE 
-                            WHEN DATE(user_performance_scores.created_at) = DATE(NOW()) 
-                            THEN EXCLUDED.recovery_score 
-                            ELSE user_performance_scores.recovery_score 
+                        recovery_score = CASE
+                            WHEN DATE(user_performance_scores.created_at) = DATE(NOW())
+                            THEN EXCLUDED.recovery_score
+                            ELSE user_performance_scores.recovery_score
                         END,
-                        reaction_time_score = CASE 
-                            WHEN DATE(user_performance_scores.created_at) = DATE(NOW()) 
-                            THEN EXCLUDED.reaction_time_score 
-                            ELSE user_performance_scores.reaction_time_score 
+                        reaction_time_score = CASE
+                            WHEN DATE(user_performance_scores.created_at) = DATE(NOW())
+                            THEN EXCLUDED.reaction_time_score
+                            ELSE user_performance_scores.reaction_time_score
                         END,
-                        level = CASE 
-                            WHEN DATE(user_performance_scores.created_at) = DATE(NOW()) 
-                            THEN EXCLUDED.level 
-                            ELSE user_performance_scores.level 
+                        level = CASE
+                            WHEN DATE(user_performance_scores.created_at) = DATE(NOW())
+                            THEN EXCLUDED.level
+                            ELSE user_performance_scores.level
                         END,
-                        hp = CASE 
-                            WHEN DATE(user_performance_scores.created_at) = DATE(NOW()) 
-                            THEN EXCLUDED.hp 
-                            ELSE user_performance_scores.hp 
+                        hp = CASE
+                            WHEN DATE(user_performance_scores.created_at) = DATE(NOW())
+                            THEN EXCLUDED.hp
+                            ELSE user_performance_scores.hp
                         END,
-                        hp_loss = CASE 
-                            WHEN DATE(user_performance_scores.created_at) = DATE(NOW()) 
-                            THEN EXCLUDED.hp_loss 
-                            ELSE user_performance_scores.hp_loss 
+                        hp_loss = CASE
+                            WHEN DATE(user_performance_scores.created_at) = DATE(NOW())
+                            THEN EXCLUDED.hp_loss
+                            ELSE user_performance_scores.hp_loss
                         END,
-                        mp = CASE 
-                            WHEN DATE(user_performance_scores.created_at) = DATE(NOW()) 
-                            THEN EXCLUDED.mp 
-                            ELSE user_performance_scores.mp 
+                        mp = CASE
+                            WHEN DATE(user_performance_scores.created_at) = DATE(NOW())
+                            THEN EXCLUDED.mp
+                            ELSE user_performance_scores.mp
                         END,
-                        mp_loss = CASE 
-                            WHEN DATE(user_performance_scores.created_at) = DATE(NOW()) 
-                            THEN EXCLUDED.mp_loss 
-                            ELSE user_performance_scores.mp_loss 
+                        mp_loss = CASE
+                            WHEN DATE(user_performance_scores.created_at) = DATE(NOW())
+                            THEN EXCLUDED.mp_loss
+                            ELSE user_performance_scores.mp_loss
                         END,
-                        fatigue = CASE 
-                            WHEN DATE(user_performance_scores.created_at) = DATE(NOW()) 
-                            THEN EXCLUDED.fatigue 
-                            ELSE user_performance_scores.fatigue 
+                        fatigue = CASE
+                            WHEN DATE(user_performance_scores.created_at) = DATE(NOW())
+                            THEN EXCLUDED.fatigue
+                            ELSE user_performance_scores.fatigue
                         END,
-                        fatigue_loss = CASE 
-                            WHEN DATE(user_performance_scores.created_at) = DATE(NOW()) 
-                            THEN EXCLUDED.fatigue_loss 
-                            ELSE user_performance_scores.fatigue_loss 
+                        fatigue_loss = CASE
+                            WHEN DATE(user_performance_scores.created_at) = DATE(NOW())
+                            THEN EXCLUDED.fatigue_loss
+                            ELSE user_performance_scores.fatigue_loss
                         END,
-                        skills = CASE 
-                            WHEN DATE(user_performance_scores.created_at) = DATE(NOW()) 
-                            THEN EXCLUDED.skills 
-                            ELSE user_performance_scores.skills 
+                        skills = CASE
+                            WHEN DATE(user_performance_scores.created_at) = DATE(NOW())
+                            THEN EXCLUDED.skills
+                            ELSE user_performance_scores.skills
                         END,
                         updated_at = NOW()
                     """,

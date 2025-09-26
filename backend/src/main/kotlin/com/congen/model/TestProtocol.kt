@@ -40,56 +40,48 @@ data class TestProtocol(
         example = "vertical_jump"
     )
     @param:JsonProperty("test_name") val testName: String,
-    
     /** Display name for the test. */
     @Schema(
         description = "Display name for the test",
         example = "Vertical Jump"
     )
     @param:JsonProperty("display_name") val displayName: String,
-    
     /** Detailed description of the test. */
     @Schema(
         description = "Detailed description of the test",
         example = "Measure explosive power using MyJump2 app"
     )
     @param:JsonProperty("description") val description: String,
-    
     /** Unit of measurement for the test result. */
     @Schema(
         description = "Unit of measurement for the test result",
         example = "cm"
     )
     @param:JsonProperty("unit") val unit: String,
-    
     /** Icon identifier for UI display. */
     @Schema(
         description = "Icon identifier for UI display",
         example = "fitness_center"
     )
     @param:JsonProperty("icon_name") val iconName: String,
-    
     /** Whether this test is required for the protocol. */
     @Schema(
         description = "Whether this test is required for the protocol",
         example = "true"
     )
     @param:JsonProperty("is_required") val isRequired: Boolean = true,
-    
     /** Order for displaying tests in UI. */
     @Schema(
         description = "Order for displaying tests in UI",
         example = "1"
     )
     @param:JsonProperty("display_order") val displayOrder: Int = 0,
-    
     /** Color for radar chart display. */
     @Schema(
         description = "Color for radar chart display",
         example = "#FF6B6B"
     )
     @param:JsonProperty("radar_chart_color") val radarChartColor: String = "#00bcd4",
-    
     /** Whether this test should appear in radar chart. */
     @Schema(
         description = "Whether this test should appear in radar chart",

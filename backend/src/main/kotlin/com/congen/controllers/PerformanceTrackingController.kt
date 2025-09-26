@@ -3,10 +3,10 @@ package com.congen.controllers
 import com.congen.exceptions.DatabaseException
 import com.congen.exceptions.NoResultsFoundException
 import com.congen.exceptions.ValidationException
+import com.congen.model.TestProtocol
 import com.congen.model.UserPerformanceMetrics
 import com.congen.model.UserPerformanceScores
 import com.congen.model.UserTestResult
-import com.congen.model.TestProtocol
 import com.congen.service.GdprComplianceService
 import com.congen.service.PerformanceTrackingService
 import com.congen.service.WilksCalculationService
@@ -45,6 +45,9 @@ import java.time.Instant
  * - **Wearable Integration**: Support for Whoop and Oura data
  *
  * @param performanceTrackingService Service for performance tracking operations
+ * @param wilksCalculationService Service for calculating Wilks scores
+ * @param keycloakUtil Utility for Keycloak operations
+ * @param gdprComplianceService Service for GDPR compliance operations
  *
  * @author Congen Development Team
  * @since 1.0.0
@@ -101,17 +104,20 @@ class PerformanceTrackingController(
             )
         ]
     )
-    fun submitPerformanceMetrics(@RequestBody metrics: UserPerformanceMetrics): Mono<ResponseEntity<UserPerformanceScores>> {
+    fun submitPerformanceMetrics(
+        @RequestBody metrics: UserPerformanceMetrics
+    ): Mono<ResponseEntity<UserPerformanceScores>> {
         return keycloakUtil.getCurrentUserId().zipWith(keycloakUtil.getCurrentUserRoles()) { currentUserId, roles ->
             Pair(currentUserId, roles)
         }.flatMap { (currentUserId, roles) ->
             val isAdminOrService = roles.contains("admin") || roles.contains("service")
             if (isAdminOrService || currentUserId == metrics.keycloakId) {
-                val consentUserIdMono = if (isAdminOrService) {
-                    Mono.just(metrics.keycloakId)
-                } else {
-                    Mono.just(currentUserId)
-                }
+                val consentUserIdMono =
+                    if (isAdminOrService) {
+                        Mono.just(metrics.keycloakId)
+                    } else {
+                        Mono.just(currentUserId)
+                    }
                 consentUserIdMono.flatMap { ownerId ->
                     gdprComplianceService.withUserConsent(ownerId) {
                         performanceTrackingService.submitPerformanceMetrics(metrics)
@@ -224,8 +230,8 @@ class PerformanceTrackingController(
      * This endpoint handles the structured weekly testing protocol and automatically
      * integrates results into the overall performance tracking system.
      *
-     * @param weeklyTest The weekly test results to submit
-     * @return The updated weekly test
+     * @param testResults The list of weekly test results to submit
+     * @return The updated test results
      *
      * @throws ValidationException if weekly test data fails validation
      * @throws DatabaseException if database operation fails
@@ -257,23 +263,26 @@ class PerformanceTrackingController(
             )
         ]
     )
-    fun submitWeeklyTest(@RequestBody testResults: List<UserTestResult>): Mono<ResponseEntity<List<UserTestResult>>> {
+    fun submitWeeklyTest(
+        @RequestBody testResults: List<UserTestResult>
+    ): Mono<ResponseEntity<List<UserTestResult>>> {
         if (testResults.isEmpty()) {
             return Mono.just(ResponseEntity.badRequest().build())
         }
-        
+
         val keycloakId = testResults.first().keycloakId
-        
+
         return keycloakUtil.getCurrentUserId().zipWith(keycloakUtil.getCurrentUserRoles()) { currentUserId, roles ->
             Pair(currentUserId, roles)
         }.flatMap { (currentUserId, roles) ->
             val isAdminOrService = roles.contains("admin") || roles.contains("service")
             if (isAdminOrService || currentUserId == keycloakId) {
-                val consentUserIdMono = if (isAdminOrService) {
-                    Mono.just(keycloakId)
-                } else {
-                    Mono.just(currentUserId)
-                }
+                val consentUserIdMono =
+                    if (isAdminOrService) {
+                        Mono.just(keycloakId)
+                    } else {
+                        Mono.just(currentUserId)
+                    }
                 consentUserIdMono.flatMap { ownerId ->
                     gdprComplianceService.withUserConsent(ownerId) {
                         performanceTrackingService.submitWeeklyTest(testResults)
@@ -285,7 +294,6 @@ class PerformanceTrackingController(
             }
         }
     }
-
 
     /**
      * Retrieves weekly tests for the authenticated user within a date range.

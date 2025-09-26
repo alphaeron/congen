@@ -74,13 +74,13 @@ class UserWeeklyTestDAL(
         endTimestamp: Instant
     ): Mono<List<UserWeeklyTest>> {
         logger.debug("Selecting weekly tests for user: $keycloakId, range: $startTimestamp to $endTimestamp")
-        
+
         return auditService.logDataAccess("user_weekly_test", "SELECT_RANGE", keycloakId)
             .then(
                 postgresClient.select(
                     """
-                    SELECT * FROM user_weekly_test 
-                    WHERE keycloak_id = $1 AND week_start_timestamp BETWEEN $2 AND $3 
+                    SELECT * FROM user_weekly_test
+                    WHERE keycloak_id = $1 AND week_start_timestamp BETWEEN $2 AND $3
                     ORDER BY week_start_timestamp DESC
                     """,
                     keycloakId,
@@ -104,10 +104,11 @@ class UserWeeklyTestDAL(
         logger.debug("Upserting weekly test for user: ${weeklyTest.keycloakId}, week: ${weeklyTest.weekStartTimestamp}")
 
         val now = Instant.now()
-        val weeklyTestWithTimestamps = weeklyTest.copy(
-            createdAt = now,
-            updatedAt = now
-        )
+        val weeklyTestWithTimestamps =
+            weeklyTest.copy(
+                createdAt = now,
+                updatedAt = now
+            )
 
         return auditService.logDataAccess("user_weekly_test", "UPSERT", weeklyTest.keycloakId)
             .then(

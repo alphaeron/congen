@@ -205,21 +205,22 @@ class ReactiveMemcachedCache(
 
         return Mono.fromCallable {
             // Escape regex special characters except for our wildcard pattern
-            val escapedPattern = pattern.replace("*", "___WILDCARD___")
-                .replace("(", "\\(")
-                .replace(")", "\\)")
-                .replace("[", "\\[")
-                .replace("]", "\\]")
-                .replace("{", "\\{")
-                .replace("}", "\\}")
-                .replace("^", "\\^")
-                .replace("$", "\\$")
-                .replace(".", "\\.")
-                .replace("+", "\\+")
-                .replace("?", "\\?")
-                .replace("|", "\\|")
-                .replace("\\", "\\\\")
-                .replace("___WILDCARD___", ".*")
+            val escapedPattern =
+                pattern.replace("*", "___WILDCARD___")
+                    .replace("(", "\\(")
+                    .replace(")", "\\)")
+                    .replace("[", "\\[")
+                    .replace("]", "\\]")
+                    .replace("{", "\\{")
+                    .replace("}", "\\}")
+                    .replace("^", "\\^")
+                    .replace("$", "\\$")
+                    .replace(".", "\\.")
+                    .replace("+", "\\+")
+                    .replace("?", "\\?")
+                    .replace("|", "\\|")
+                    .replace("\\", "\\\\")
+                    .replace("___WILDCARD___", ".*")
             val regex = escapedPattern.toRegex()
 
             synchronized(keyIndex) {

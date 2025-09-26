@@ -7,7 +7,7 @@ task lintCheck {
     dependsOn npm_run_lint
     inputs.dir('src')
     inputs.file('package.json')
-    inputs.file('eslint.config.js')
+    inputs.file('eslint.config.mjs')
 }
 
 task prettierFix {

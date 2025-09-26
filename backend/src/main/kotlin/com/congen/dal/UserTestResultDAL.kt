@@ -46,15 +46,19 @@ class UserTestResultDAL(
         keyStrategy = CacheKeyStrategy.USER_SPECIFIC,
         entityName = "user_test_results"
     )
-    fun getUserTestResultsForWeek(keycloakId: String, weekStartTimestamp: Instant): Mono<List<UserTestResult>> {
+    fun getUserTestResultsForWeek(
+        keycloakId: String,
+        weekStartTimestamp: Instant
+    ): Mono<List<UserTestResult>> {
         logger.debug("Retrieving test results for user: $keycloakId, week: $weekStartTimestamp")
-        
+
         return postgresClient.select(
             "SELECT id, keycloak_id, week_start_timestamp, test_name, status, result_value, created_at, updated_at " +
-            "FROM user_test_results " +
-            "WHERE keycloak_id = $1 AND week_start_timestamp = $2 " +
-            "ORDER BY test_name",
-            keycloakId, LocalDateTime.ofInstant(weekStartTimestamp, ZoneOffset.UTC)
+                "FROM user_test_results " +
+                "WHERE keycloak_id = $1 AND week_start_timestamp = $2 " +
+                "ORDER BY test_name",
+            keycloakId,
+            LocalDateTime.ofInstant(weekStartTimestamp, ZoneOffset.UTC)
         )
     }
 
@@ -71,15 +75,21 @@ class UserTestResultDAL(
         keyStrategy = CacheKeyStrategy.USER_SPECIFIC,
         entityName = "user_test_results"
     )
-    fun getUserTestResultsInRange(keycloakId: String, startTimestamp: Instant, endTimestamp: Instant): Mono<List<UserTestResult>> {
+    fun getUserTestResultsInRange(
+        keycloakId: String,
+        startTimestamp: Instant,
+        endTimestamp: Instant
+    ): Mono<List<UserTestResult>> {
         logger.debug("Retrieving test results for user: $keycloakId, range: $startTimestamp to $endTimestamp")
-        
+
         return postgresClient.select(
             "SELECT id, keycloak_id, week_start_timestamp, test_name, status, result_value, created_at, updated_at " +
-            "FROM user_test_results " +
-            "WHERE keycloak_id = $1 AND week_start_timestamp >= $2 AND week_start_timestamp <= $3 " +
-            "ORDER BY week_start_timestamp, test_name",
-            keycloakId, LocalDateTime.ofInstant(startTimestamp, ZoneOffset.UTC), LocalDateTime.ofInstant(endTimestamp, ZoneOffset.UTC)
+                "FROM user_test_results " +
+                "WHERE keycloak_id = $1 AND week_start_timestamp >= $2 AND week_start_timestamp <= $3 " +
+                "ORDER BY week_start_timestamp, test_name",
+            keycloakId,
+            LocalDateTime.ofInstant(startTimestamp, ZoneOffset.UTC),
+            LocalDateTime.ofInstant(endTimestamp, ZoneOffset.UTC)
         )
     }
 
@@ -97,14 +107,20 @@ class UserTestResultDAL(
         keyStrategy = CacheKeyStrategy.USER_SPECIFIC,
         entityName = "user_test_results"
     )
-    fun getUserTestResult(keycloakId: String, weekStartTimestamp: Instant, testName: String): Mono<UserTestResult> {
+    fun getUserTestResult(
+        keycloakId: String,
+        weekStartTimestamp: Instant,
+        testName: String
+    ): Mono<UserTestResult> {
         logger.debug("Retrieving test result for user: $keycloakId, test: $testName, week: $weekStartTimestamp")
-        
+
         return postgresClient.selectIndividual(
             "SELECT id, keycloak_id, week_start_timestamp, test_name, status, result_value, created_at, updated_at " +
-            "FROM user_test_results " +
-            "WHERE keycloak_id = $1 AND week_start_timestamp = $2 AND test_name = $3",
-            keycloakId, LocalDateTime.ofInstant(weekStartTimestamp, ZoneOffset.UTC), testName
+                "FROM user_test_results " +
+                "WHERE keycloak_id = $1 AND week_start_timestamp = $2 AND test_name = $3",
+            keycloakId,
+            LocalDateTime.ofInstant(weekStartTimestamp, ZoneOffset.UTC),
+            testName
         )
     }
 
@@ -120,15 +136,15 @@ class UserTestResultDAL(
     )
     fun upsertUserTestResult(testResult: UserTestResult): Mono<UserTestResult> {
         logger.debug("Upserting test result for user: ${testResult.keycloakId}, test: ${testResult.testName}")
-        
+
         return postgresClient.update(
             "INSERT INTO user_test_results (keycloak_id, week_start_timestamp, test_name, status, result_value, created_at, updated_at) " +
-            "VALUES ($1, $2, $3, $4, $5, NOW(), NOW()) " +
-            "ON CONFLICT (keycloak_id, week_start_timestamp, test_name) " +
-            "DO UPDATE SET " +
-            "    status = EXCLUDED.status, " +
-            "    result_value = EXCLUDED.result_value, " +
-            "    updated_at = NOW()",
+                "VALUES ($1, $2, $3, $4, $5, NOW(), NOW()) " +
+                "ON CONFLICT (keycloak_id, week_start_timestamp, test_name) " +
+                "DO UPDATE SET " +
+                "    status = EXCLUDED.status, " +
+                "    result_value = EXCLUDED.result_value, " +
+                "    updated_at = NOW()",
             testResult.keycloakId,
             LocalDateTime.ofInstant(testResult.weekStartTimestamp, ZoneOffset.UTC),
             testResult.testName,
@@ -150,13 +166,19 @@ class UserTestResultDAL(
         invalidationStrategy = CacheInvalidationStrategy.USER_DATA,
         entityName = "user_test_results"
     )
-    fun deleteUserTestResult(keycloakId: String, weekStartTimestamp: Instant, testName: String): Mono<UserTestResult> {
+    fun deleteUserTestResult(
+        keycloakId: String,
+        weekStartTimestamp: Instant,
+        testName: String
+    ): Mono<UserTestResult> {
         logger.debug("Deleting test result for user: $keycloakId, test: $testName, week: $weekStartTimestamp")
-        
+
         return postgresClient.update(
             "DELETE FROM user_test_results " +
-            "WHERE keycloak_id = $1 AND week_start_timestamp = $2 AND test_name = $3",
-            keycloakId, LocalDateTime.ofInstant(weekStartTimestamp, ZoneOffset.UTC), testName
+                "WHERE keycloak_id = $1 AND week_start_timestamp = $2 AND test_name = $3",
+            keycloakId,
+            LocalDateTime.ofInstant(weekStartTimestamp, ZoneOffset.UTC),
+            testName
         )
     }
 }

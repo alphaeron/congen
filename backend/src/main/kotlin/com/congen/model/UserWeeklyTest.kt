@@ -32,16 +32,9 @@ import java.time.Instant
  * - **SKIPPED**: Intentionally skipped for the week
  *
  * @property keycloakId Unique Keycloak identifier for the user (primary key)
- * @property weekStartDate Start date of the week (Monday)
+ * @property weekStartTimestamp Start timestamp of the week (Monday)
  * @property verticalJumpStatus Status of vertical jump test
  * @property verticalJumpResult Result in centimeters (if completed)
- * @property pushupsStatus Status of push-ups test
- * @property pushupsResult Result in reps (if completed)
- * @property pullupsStatus Status of pull-ups test
- * @property pullupsResult Result in reps (if completed)
- * @property runStatus Status of 12-minute run test
- * @property runResult Result in distance meters (if completed)
- * @property vo2MaxResult Calculated VO₂ max from run (if completed)
  * @property hrRecoveryStatus Status of HR recovery test
  * @property hrRecoveryResult Result in bpm drop (if completed)
  * @property reflexStatus Status of reflex test
@@ -59,8 +52,9 @@ import java.time.Instant
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Schema(
     description = "Weekly test protocol tracking for performance monitoring",
-    example = "UserWeeklyTest(keycloakId=\"123e4567-e89b-12d3-a456-426614174000\", " +
-        "weekStartDate=\"2023-08-07\", verticalJumpStatus=\"COMPLETED\", verticalJumpResult=52.0)"
+    example =
+        "UserWeeklyTest(keycloakId=\"123e4567-e89b-12d3-a456-426614174000\", " +
+            "weekStartDate=\"2023-08-07\", verticalJumpStatus=\"COMPLETED\", verticalJumpResult=52.0)"
 )
 data class UserWeeklyTest(
     /** Unique Keycloak identifier for the user (primary key). */
@@ -70,14 +64,12 @@ data class UserWeeklyTest(
         readOnly = true
     )
     @param:JsonProperty("keycloak_id") val keycloakId: String,
-    
     /** Start timestamp of the week (Monday). */
     @Schema(
         description = "Start timestamp of the week (Monday)",
         example = "2023-08-07T00:00:00Z"
     )
     @param:JsonProperty("week_start_timestamp") val weekStartTimestamp: Instant,
-    
     /** Status of vertical jump test. */
     @Schema(
         description = "Status of vertical jump test",
@@ -85,7 +77,6 @@ data class UserWeeklyTest(
         allowableValues = ["PENDING", "COMPLETED", "SKIPPED"]
     )
     @param:JsonProperty("vertical_jump_status") val verticalJumpStatus: TestStatus,
-    
     /** Result in centimeters (if completed). */
     @Schema(
         description = "Result in centimeters (if completed)",
@@ -93,7 +84,6 @@ data class UserWeeklyTest(
         minimum = "0"
     )
     @param:JsonProperty("vertical_jump_result") val verticalJumpResult: Double?,
-
     /** Status of HR recovery test. */
     @Schema(
         description = "Status of HR recovery test",
@@ -101,7 +91,6 @@ data class UserWeeklyTest(
         allowableValues = ["PENDING", "COMPLETED", "SKIPPED"]
     )
     @param:JsonProperty("hr_recovery_status") val hrRecoveryStatus: TestStatus,
-    
     /** Result in bpm drop (if completed). */
     @Schema(
         description = "Result in bpm drop (if completed)",
@@ -109,7 +98,6 @@ data class UserWeeklyTest(
         minimum = "0"
     )
     @param:JsonProperty("hr_recovery_result") val hrRecoveryResult: Int?,
-    
     /** Status of reflex test. */
     @Schema(
         description = "Status of reflex test",
@@ -117,7 +105,6 @@ data class UserWeeklyTest(
         allowableValues = ["PENDING", "COMPLETED", "SKIPPED"]
     )
     @param:JsonProperty("reflex_status") val reflexStatus: TestStatus,
-    
     /** Result in milliseconds (if completed). */
     @Schema(
         description = "Result in milliseconds (if completed)",
@@ -125,7 +112,6 @@ data class UserWeeklyTest(
         minimum = "0"
     )
     @param:JsonProperty("reflex_result") val reflexResult: Int?,
-    
     /** Status of mobility test. */
     @Schema(
         description = "Status of mobility test",
@@ -133,7 +119,6 @@ data class UserWeeklyTest(
         allowableValues = ["PENDING", "COMPLETED", "SKIPPED"]
     )
     @param:JsonProperty("mobility_status") val mobilityStatus: TestStatus,
-    
     /** Result as percentage (if completed). */
     @Schema(
         description = "Result as percentage (if completed)",
@@ -142,7 +127,6 @@ data class UserWeeklyTest(
         maximum = "100"
     )
     @param:JsonProperty("mobility_result") val mobilityResult: Double?,
-    
     /** Timestamp when the weekly test was created. */
     @Schema(
         description = "Timestamp when the weekly test was created",
@@ -150,7 +134,6 @@ data class UserWeeklyTest(
         readOnly = true
     )
     @param:JsonProperty("created_at") val createdAt: Instant,
-    
     /** Timestamp when the weekly test was last updated. */
     @Schema(
         description = "Timestamp when the weekly test was last updated",
@@ -170,10 +153,10 @@ data class UserWeeklyTest(
 enum class TestStatus {
     /** Test has not been completed yet. */
     PENDING,
-    
+
     /** Test has been successfully completed with results. */
     COMPLETED,
-    
+
     /** Test was intentionally skipped for the week. */
     SKIPPED
 }

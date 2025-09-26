@@ -50,8 +50,9 @@ import java.time.Instant
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Schema(
     description = "Calculated performance scores and gamified metrics",
-    example = "UserPerformanceScores(keycloakId=\"123e4567-e89b-12d3-a456-426614174000\", " +
-        "athleticismScore=73.5, level=12, hp=82.0, mp=76.0, fatigue=42.0)"
+    example =
+        "UserPerformanceScores(keycloakId=\"123e4567-e89b-12d3-a456-426614174000\", " +
+            "athleticismScore=73.5, level=12, hp=82.0, mp=76.0, fatigue=42.0)"
 )
 data class UserPerformanceScores(
     /** Unique Keycloak identifier for the user (primary key). */
@@ -61,7 +62,6 @@ data class UserPerformanceScores(
         readOnly = true
     )
     @param:JsonProperty("keycloak_id") val keycloakId: String,
-
     /** Individual explosiveness score (0-100). */
     @Schema(
         description = "Individual explosiveness score (0-100)",
@@ -70,7 +70,6 @@ data class UserPerformanceScores(
         maximum = "100"
     )
     @param:JsonProperty("explosiveness_score") val explosivenessScore: Double?,
-    
     /** Individual aerobic capacity score (0-100). */
     @Schema(
         description = "Individual aerobic capacity score (0-100)",
@@ -79,7 +78,6 @@ data class UserPerformanceScores(
         maximum = "100"
     )
     @param:JsonProperty("aerobic_capacity_score") val aerobicCapacityScore: Double?,
-    
     /** Individual recovery score (0-100). */
     @Schema(
         description = "Individual recovery score (0-100)",
@@ -88,7 +86,6 @@ data class UserPerformanceScores(
         maximum = "100"
     )
     @param:JsonProperty("recovery_score") val recoveryScore: Double?,
-
     /** Individual reaction time score (0-100). */
     @Schema(
         description = "Individual reaction time score (0-100)",
@@ -97,7 +94,6 @@ data class UserPerformanceScores(
         maximum = "100"
     )
     @param:JsonProperty("reaction_time_score") val reactionTimeScore: Double?,
-
     /** Individual mobility score (0-100). */
     @Schema(
         description = "Individual mobility score (0-100)",
@@ -106,7 +102,6 @@ data class UserPerformanceScores(
         maximum = "100"
     )
     @param:JsonProperty("mobility_score") val mobilityScore: Double?,
-
     /** Athleticism level with tanh scaling (1-100). */
     @Schema(
         description = "Athleticism level with tanh scaling (1-100)",
@@ -115,7 +110,6 @@ data class UserPerformanceScores(
         maximum = "100"
     )
     @param:JsonProperty("level") val level: Int,
-    
     /** Health Points - physical resilience (0-100). */
     @Schema(
         description = "Health Points - physical resilience (0-100)",
@@ -124,7 +118,6 @@ data class UserPerformanceScores(
         maximum = "100"
     )
     @param:JsonProperty("hp") val hp: Double,
-    
     /** HP Loss - current HP reduction from daily stress factors (0-100). */
     @Schema(
         description = "HP Loss - current HP reduction from daily stress factors (0-100)",
@@ -133,7 +126,6 @@ data class UserPerformanceScores(
         maximum = "100"
     )
     @param:JsonProperty("hp_loss") val hpLoss: Double,
-    
     /** Magic Points - neural readiness (0-100). */
     @Schema(
         description = "Magic Points - neural readiness (0-100)",
@@ -142,7 +134,6 @@ data class UserPerformanceScores(
         maximum = "100"
     )
     @param:JsonProperty("mp") val mp: Double,
-    
     /** MP Loss - current MP reduction from daily stress factors (0-100). */
     @Schema(
         description = "MP Loss - current MP reduction from daily stress factors (0-100)",
@@ -151,7 +142,6 @@ data class UserPerformanceScores(
         maximum = "100"
     )
     @param:JsonProperty("mp_loss") val mpLoss: Double,
-    
     /** Current fatigue level (0-100). */
     @Schema(
         description = "Current fatigue level (0-100)",
@@ -160,7 +150,6 @@ data class UserPerformanceScores(
         maximum = "100"
     )
     @param:JsonProperty("fatigue") val fatigue: Double,
-    
     /** Fatigue Loss - current fatigue increase from daily stress factors (0-100). */
     @Schema(
         description = "Fatigue Loss - current fatigue increase from daily stress factors (0-100)",
@@ -169,14 +158,12 @@ data class UserPerformanceScores(
         maximum = "100"
     )
     @param:JsonProperty("fatigue_loss") val fatigueLoss: Double,
-    
     /** List of auto-generated skills. */
     @Schema(
         description = "List of auto-generated skills",
         example = "[\"Explosive Power\", \"Iron Lungs\", \"Lightning Reflexes\"]"
     )
     @param:JsonProperty("skills") val skills: List<String>,
-    
     /** Timestamp when the scores were calculated. */
     @Schema(
         description = "Timestamp when the scores were calculated",
@@ -184,7 +171,6 @@ data class UserPerformanceScores(
         readOnly = true
     )
     @param:JsonProperty("created_at") val createdAt: Instant,
-    
     /** Timestamp when the scores were last updated. */
     @Schema(
         description = "Timestamp when the scores were last updated",

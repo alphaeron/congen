@@ -1,13 +1,13 @@
-import React from 'react';
 import { Box, Typography, Tooltip } from '@mui/material';
 import { styled, alpha } from '@mui/material/styles';
+import React from 'react';
+
 import { StatusBarContainer } from './GameTheme';
-import { brand, gray } from '../theme';
 
 /**
  * Shared progress bar components for consistent styling across the game UI.
  */
-const ProgressBarContainer = styled(Box)(({ theme }) => ({
+const ProgressBarContainer = styled(Box)(() => ({
   position: 'relative',
   display: 'flex',
   alignItems: 'center',
@@ -19,18 +19,20 @@ const ProgressBarContainer = styled(Box)(({ theme }) => ({
   overflow: 'hidden',
 }));
 
-const ProgressBarFill = styled(Box)<{ percentage: number; color: string }>(({ percentage, color }) => ({
-  position: 'absolute',
-  left: 0,
-  top: 0,
-  height: '100%',
-  width: `${Math.max(2, percentage)}%`, // Show available portion in blue
-  backgroundColor: color,
-  borderRadius: 4,
-  transition: 'width 0.3s cubic-bezier(0.4, 0, 0.2, 1)', // Matches Congen's transition
-}));
+const ProgressBarFill = styled(Box)<{ percentage: number; color: string }>(
+  ({ percentage, color }) => ({
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    height: '100%',
+    width: `${Math.max(2, percentage)}%`, // Show available portion in blue
+    backgroundColor: color,
+    borderRadius: 4,
+    transition: 'width 0.3s cubic-bezier(0.4, 0, 0.2, 1)', // Matches Congen's transition
+  })
+);
 
-const ProgressBarText = styled(Typography)(({ theme }) => ({
+const ProgressBarText = styled(Typography)(() => ({
   position: 'relative',
   zIndex: 1,
   fontSize: '0.75rem',
@@ -42,12 +44,12 @@ const ProgressBarText = styled(Typography)(({ theme }) => ({
   fontFamily: '"Inter", "system-ui", "sans-serif"', // Matches Congen's font
 }));
 
-const LabelText = styled(Typography)(({ theme }) => ({
+const LabelText = styled(Typography)(() => ({
   fontSize: '0.75rem',
   color: '#ffffff',
   textShadow: '0 0 3px #00bcd4',
   textAlign: 'center',
-  marginTop: theme.spacing(0.5),
+  marginTop: 4,
   fontWeight: 600, // Matches Congen's font weight
   fontFamily: '"Inter", "system-ui", "sans-serif"', // Matches Congen's font
   textTransform: 'uppercase',
@@ -80,9 +82,7 @@ export const GameProgressBar: React.FC<GameProgressBarProps> = ({
       <StatusBarContainer>
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.25 }}>
           {icon}
-          <LabelText>
-            {label}
-          </LabelText>
+          <LabelText>{label}</LabelText>
         </Box>
         <Box sx={{ flexGrow: 1 }}>
           <ProgressBarContainer>
@@ -97,7 +97,7 @@ export const GameProgressBar: React.FC<GameProgressBarProps> = ({
   );
 };
 
-const CircularProgressContainer = styled(Box)(({ theme }) => ({
+const CircularProgressContainer = styled(Box)(() => ({
   position: 'relative',
   display: 'flex',
   flexDirection: 'column',
@@ -107,7 +107,7 @@ const CircularProgressContainer = styled(Box)(({ theme }) => ({
   height: 90,
 }));
 
-const CircularProgressWrapper = styled(Box)(({ theme }) => ({
+const CircularProgressWrapper = styled(Box)(() => ({
   position: 'relative',
   display: 'inline-flex',
   alignItems: 'center',
@@ -116,7 +116,7 @@ const CircularProgressWrapper = styled(Box)(({ theme }) => ({
   height: 75,
 }));
 
-const CircularProgressText = styled(Typography)(({ theme }) => ({
+const CircularProgressText = styled(Typography)(() => ({
   position: 'absolute',
   fontSize: '0.6rem',
   fontWeight: 600, // Matches Congen's font weight
@@ -182,8 +182,8 @@ export const GameCircularProgressBar: React.FC<GameProgressBarProps> = ({
                   strokeLinecap="round"
                   strokeDasharray={`${2 * Math.PI * 30}`}
                   strokeDashoffset={`-${2 * Math.PI * 30 * (1 - percentage / 100)}`}
-                  style={{ 
-                    transition: 'stroke-dashoffset 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+                  style={{
+                    transition: 'stroke-dashoffset 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                   }}
                 />
               </svg>
@@ -194,9 +194,7 @@ export const GameCircularProgressBar: React.FC<GameProgressBarProps> = ({
           </CircularProgressWrapper>
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5 }}>
             {icon && icon}
-            <LabelText>
-              {label}
-            </LabelText>
+            <LabelText>{label}</LabelText>
           </Box>
         </CircularProgressContainer>
       </StatusBarContainer>

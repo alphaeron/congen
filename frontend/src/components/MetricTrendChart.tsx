@@ -1,8 +1,9 @@
-import React, { useMemo } from 'react';
 import { Box, useTheme } from '@mui/material';
 import { ResponsiveLine } from '@nivo/line';
-import { createCongenNivoTheme, congenColorSchemes } from '../theme/nivoTheme';
+import React, { useMemo } from 'react';
+
 import type { UserPerformanceMetrics } from '../api/types';
+import { createCongenNivoTheme, congenColorSchemes } from '../theme/nivoTheme';
 
 interface MetricTrendChartProps {
   metricKey: string;
@@ -15,9 +16,9 @@ interface MetricTrendChartProps {
 
 /**
  * Metric Trend Chart component for displaying 30-day trend data.
- * 
+ *
  * This component shows historical data for a specific metric over the past 30 days.
- * 
+ *
  * @param metricKey The key identifier for the metric
  * @param metricLabel The display label for the metric
  * @param metricUnit The unit of measurement for the metric
@@ -39,14 +40,22 @@ export const MetricTrendChart: React.FC<MetricTrendChartProps> = ({
   // Get metric value from UserPerformanceMetrics object
   const getMetricValue = (metrics: UserPerformanceMetrics, key: string): number | null => {
     switch (key) {
-      case 'strain': return metrics.strain || null;
-      case 'recovery': return metrics.recovery || null;
-      case 'hrv': return metrics.hrv || null;
-      case 'sleep_score': return metrics.sleep_score || null;
-      case 'rem_sleep_minutes': return metrics.rem_sleep_minutes || null;
-      case 'deep_sleep_minutes': return metrics.deep_sleep_minutes || null;
-      case 'subjective_tiredness': return metrics.subjective_tiredness || null;
-      default: return null;
+      case 'strain':
+        return metrics.strain || null;
+      case 'recovery':
+        return metrics.recovery || null;
+      case 'hrv':
+        return metrics.hrv || null;
+      case 'sleep_score':
+        return metrics.sleep_score || null;
+      case 'rem_sleep_minutes':
+        return metrics.rem_sleep_minutes || null;
+      case 'deep_sleep_minutes':
+        return metrics.deep_sleep_minutes || null;
+      case 'subjective_tiredness':
+        return metrics.subjective_tiredness || null;
+      default:
+        return null;
     }
   };
 
@@ -54,17 +63,19 @@ export const MetricTrendChart: React.FC<MetricTrendChartProps> = ({
   const chartData = useMemo(() => {
     if (isLoading || historicalData.length === 0) {
       // Show empty state or loading
-      return [{
-        id: metricLabel,
-        data: [],
-      }];
+      return [
+        {
+          id: metricLabel,
+          data: [],
+        },
+      ];
     }
 
     const data = historicalData
       .map((metrics: UserPerformanceMetrics) => {
         const value = getMetricValue(metrics, metricKey);
         if (value === null || value === undefined) return null;
-        
+
         return {
           x: new Date(metrics.created_at).toISOString().split('T')[0], // YYYY-MM-DD format
           y: Math.round(value * 10) / 10, // Round to 1 decimal place
@@ -72,11 +83,13 @@ export const MetricTrendChart: React.FC<MetricTrendChartProps> = ({
       })
       .filter((point): point is { x: string; y: number } => point !== null)
       .sort((a, b) => new Date(a.x).getTime() - new Date(b.x).getTime());
-    
-    return [{
-      id: metricLabel,
-      data: data,
-    }];
+
+    return [
+      {
+        id: metricLabel,
+        data: data,
+      },
+    ];
   }, [historicalData, metricKey, metricLabel, isLoading, getMetricValue]);
 
   // Format tooltip value based on metric type
@@ -90,14 +103,19 @@ export const MetricTrendChart: React.FC<MetricTrendChartProps> = ({
   // Handle loading state
   if (isLoading) {
     return (
-      <Box sx={{ height, width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <Box sx={{ color: '#00bcd4', fontStyle: 'italic' }}>
-          Loading 30-day trend data...
-        </Box>
+      <Box
+        sx={{
+          height,
+          width: '100%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <Box sx={{ color: '#00bcd4', fontStyle: 'italic' }}>Loading 30-day trend data...</Box>
       </Box>
     );
   }
-
 
   return (
     <Box sx={{ height, width: '100%' }}>
@@ -166,7 +184,10 @@ export const MetricTrendChart: React.FC<MetricTrendChartProps> = ({
                 Date: <span style={{ fontWeight: 'bold' }}>{point.data.xFormatted}</span>
               </div>
               <div>
-                {metricLabel}: <span style={{ fontWeight: 'bold' }}>{formatTooltipValue(point.data.y as number)} {metricUnit}</span>
+                {metricLabel}:{' '}
+                <span style={{ fontWeight: 'bold' }}>
+                  {formatTooltipValue(point.data.y as number)} {metricUnit}
+                </span>
               </div>
             </div>
           </div>

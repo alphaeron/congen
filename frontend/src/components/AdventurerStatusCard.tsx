@@ -1,22 +1,15 @@
+import { CardContent, CardHeader, Box, Stack, Grid } from '@mui/material';
 import React from 'react';
-import {
-  CardContent,
-  CardHeader,
-  Box,
-  Stack,
-  Grid,
-} from '@mui/material';
-import type { UserPerformanceScores, UserPerformanceMetrics, UserTestResult } from '../api/types';
-import { PerformanceRadarChart } from './PerformanceRadarChart';
+
 import { CustomSvgIcon } from './CustomSvgIcon';
 import { GameProgressBar, GameCircularProgressBar } from './GameProgressBar';
 import { GameCard, GameSkillChip, GameText, GameTextSecondary } from './GameTheme';
-
-// Import custom SVG icons
+import { PerformanceRadarChart } from './PerformanceRadarChart';
+import type { UserPerformanceScores, UserPerformanceMetrics, UserTestResult } from '../api/types';
 import AdventurerProfileIcon from '../resources/adventurer-profile-icon.svg';
-import SkillsIcon from '../resources/skills-icon.svg';
 import HeartIcon from '../resources/heart-icon.svg';
 import PotionBottleIcon from '../resources/potion-bottle-icon.svg';
+import SkillsIcon from '../resources/skills-icon.svg';
 
 interface AdventurerStatusCardProps {
   scores: UserPerformanceScores;
@@ -33,20 +26,22 @@ export const AdventurerStatusCard: React.FC<AdventurerStatusCardProps> = ({
   wilksScore,
   userName = 'Raven Thornfield',
 }) => {
-
   return (
     <GameCard sx={{ overflow: 'visible' }}>
       <CardHeader
         title={
           <Box sx={{ textAlign: 'center' }}>
-            <GameText variant="h3" sx={{ fontWeight: 'bold', color: '#ffffff', textShadow: '0 0 3px #00bcd4' }}>
+            <GameText
+              variant="h3"
+              sx={{ fontWeight: 'bold', color: '#ffffff', textShadow: '0 0 3px #00bcd4' }}
+            >
               STATUS
             </GameText>
           </Box>
         }
         sx={{ textAlign: 'center' }}
       />
-      
+
       <CardContent sx={{ pt: 0 }}>
         {/* Profile Information - Centered under STATUS */}
         <Grid container spacing={1} mb={1} overflow="visible">
@@ -54,16 +49,41 @@ export const AdventurerStatusCard: React.FC<AdventurerStatusCardProps> = ({
             <Stack direction="column" alignItems="center">
               <Stack direction="row" alignItems="flex-start" spacing={2}>
                 <Stack direction="column" alignItems="center" sx={{ rowGap: 0 }}>
-                  <CustomSvgIcon src={AdventurerProfileIcon} alt="Profile" sx={{ fontSize: 80, color: 'white' }} />
-                  <GameText variant="h6" sx={{ mt: '-16px', color: '#ffffff', textShadow: '0 0 5px #00bcd4', textTransform: 'uppercase' }}>
+                  <CustomSvgIcon
+                    src={AdventurerProfileIcon}
+                    alt="Profile"
+                    sx={{ fontSize: 80, color: 'white' }}
+                  />
+                  <GameText
+                    variant="h6"
+                    sx={{
+                      mt: '-16px',
+                      color: '#ffffff',
+                      textShadow: '0 0 5px #00bcd4',
+                      textTransform: 'uppercase',
+                    }}
+                  >
                     {userName}
                   </GameText>
                 </Stack>
                 <Stack direction="column" alignItems="center" sx={{ rowGap: 0 }}>
-                  <GameText variant="h2" sx={{ fontSize: '3rem', fontWeight: 'bold', color: '#00bcd4', textShadow: '0 0 10px #00bcd4', lineHeight: 1, mt: '16px' }}>
+                  <GameText
+                    variant="h2"
+                    sx={{
+                      fontSize: '3rem',
+                      fontWeight: 'bold',
+                      color: '#00bcd4',
+                      textShadow: '0 0 10px #00bcd4',
+                      lineHeight: 1,
+                      mt: '16px',
+                    }}
+                  >
                     {scores.level}
                   </GameText>
-                  <GameText variant="h6" sx={{ color: '#e0e0e0', textShadow: '0 0 5px #00bcd4', mt: '-10px' }}>
+                  <GameText
+                    variant="h6"
+                    sx={{ color: '#e0e0e0', textShadow: '0 0 5px #00bcd4', mt: '-10px' }}
+                  >
                     LEVEL
                   </GameText>
                 </Stack>
@@ -76,7 +96,9 @@ export const AdventurerStatusCard: React.FC<AdventurerStatusCardProps> = ({
         <Grid container spacing={6} justifyContent="center" alignItems="center" mb={3}>
           <Grid size="auto">
             <GameProgressBar
-              icon={<CustomSvgIcon src={HeartIcon} alt="HP" sx={{ fontSize: 40, color: '#00bcd4' }} />}
+              icon={
+                <CustomSvgIcon src={HeartIcon} alt="HP" sx={{ fontSize: 40, color: '#00bcd4' }} />
+              }
               label="HP"
               current={Math.max(0, scores.hp - scores.hp_loss)}
               max={scores.hp}
@@ -86,7 +108,13 @@ export const AdventurerStatusCard: React.FC<AdventurerStatusCardProps> = ({
           </Grid>
           <Grid size="auto">
             <GameProgressBar
-              icon={<CustomSvgIcon src={PotionBottleIcon} alt="MP" sx={{ fontSize: 40, color: '#00bcd4' }} />}
+              icon={
+                <CustomSvgIcon
+                  src={PotionBottleIcon}
+                  alt="MP"
+                  sx={{ fontSize: 40, color: '#00bcd4' }}
+                />
+              }
               label="MP"
               current={Math.max(0, scores.mp - scores.mp_loss)}
               max={scores.mp}
@@ -110,8 +138,15 @@ export const AdventurerStatusCard: React.FC<AdventurerStatusCardProps> = ({
           {/* Skills Section - Left */}
           <Grid size="auto">
             <Stack direction="row" alignItems="center" spacing={1} mb={1}>
-              <CustomSvgIcon src={SkillsIcon} alt="Skills" sx={{ fontSize: 32, color: '#00bcd4' }} />
-              <GameText variant="h6" sx={{ fontWeight: 'bold', color: '#ffffff', textShadow: '0 0 3px #00bcd4' }}>
+              <CustomSvgIcon
+                src={SkillsIcon}
+                alt="Skills"
+                sx={{ fontSize: 32, color: '#00bcd4' }}
+              />
+              <GameText
+                variant="h6"
+                sx={{ fontWeight: 'bold', color: '#ffffff', textShadow: '0 0 3px #00bcd4' }}
+              >
                 Skills
               </GameText>
             </Stack>
@@ -122,7 +157,13 @@ export const AdventurerStatusCard: React.FC<AdventurerStatusCardProps> = ({
                     <GameSkillChip
                       label={skill}
                       size="small"
-                      icon={<CustomSvgIcon src={SkillsIcon} alt="Skill" sx={{ fontSize: 16, color: '#00bcd4' }} />}
+                      icon={
+                        <CustomSvgIcon
+                          src={SkillsIcon}
+                          alt="Skill"
+                          sx={{ fontSize: 16, color: '#00bcd4' }}
+                        />
+                      }
                     />
                   </Grid>
                 ))}
@@ -133,7 +174,7 @@ export const AdventurerStatusCard: React.FC<AdventurerStatusCardProps> = ({
               </GameTextSecondary>
             )}
           </Grid>
-          
+
           {/* Performance Radar Chart - Right */}
           <Grid size="auto">
             <PerformanceRadarChart
@@ -146,7 +187,6 @@ export const AdventurerStatusCard: React.FC<AdventurerStatusCardProps> = ({
             />
           </Grid>
         </Grid>
-
       </CardContent>
     </GameCard>
   );

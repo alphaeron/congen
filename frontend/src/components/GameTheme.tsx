@@ -1,5 +1,6 @@
+import { Card, Box, Chip, Typography } from '@mui/material';
 import { styled, alpha } from '@mui/material/styles';
-import { Card, Box, Chip, Typography, useTheme } from '@mui/material';
+
 import { brand, secondary, gray, green, warning } from '../theme';
 
 /**
@@ -44,7 +45,7 @@ export const TEXT_COLORS = {
 /**
  * Base game card with consistent styling - matches Congen's modern aesthetic
  */
-export const GameCard = styled(Card)(({ theme }) => ({
+export const GameCard = styled(Card)(() => ({
   background: alpha(brand[500], 0.15), // Use hover background as default
   color: TEXT_COLORS.primary,
   borderRadius: GAME_SPACING.borderRadius,
@@ -63,7 +64,7 @@ export const GameCard = styled(Card)(({ theme }) => ({
 /**
  * Secondary card for nested content - using Congen's alpha values
  */
-export const GameSubCard = styled(Card)(({ theme }) => ({
+export const GameSubCard = styled(Card)(() => ({
   backgroundColor: alpha('#ffffff', 0.1),
   color: TEXT_COLORS.primary,
   borderRadius: 12, // Matches Congen's borderRadius
@@ -78,9 +79,9 @@ export const GameSubCard = styled(Card)(({ theme }) => ({
 /**
  * Status chip with consistent styling - matches Congen's chip design
  */
-export const GameStatusChip = styled(Chip)<{ 
-  status?: 'PENDING' | 'COMPLETED' | 'SKIPPED' | 'ERROR' | 'WARNING' | 'INFO' | 'SUCCESS' 
-}>(({ theme, status = 'PENDING' }) => {
+export const GameStatusChip = styled(Chip)<{
+  status?: 'PENDING' | 'COMPLETED' | 'SKIPPED' | 'ERROR' | 'WARNING' | 'INFO' | 'SUCCESS';
+}>(({ status = 'PENDING' }) => {
   const getStatusColor = () => {
     switch (status) {
       case 'COMPLETED':
@@ -97,7 +98,7 @@ export const GameStatusChip = styled(Chip)<{
         return { bg: STATUS_COLORS.pending, color: TEXT_COLORS.primary };
     }
   };
-  
+
   const colors = getStatusColor();
   return {
     backgroundColor: colors.bg,
@@ -115,11 +116,11 @@ export const GameStatusChip = styled(Chip)<{
 /**
  * Skill chip with accent styling using Congen's warning color
  */
-export const GameSkillChip = styled(Chip)(({ theme }) => ({
+export const GameSkillChip = styled(Chip)(() => ({
   backgroundColor: alpha(warning[400], 0.2),
   color: warning[400],
   border: `1px solid ${alpha(warning[400], 0.3)}`,
-  margin: theme.spacing(0.5),
+  margin: 4,
   borderRadius: 20, // Matches Congen's chip borderRadius
   fontWeight: 600,
   fontSize: '0.75rem',
@@ -132,18 +133,18 @@ export const GameSkillChip = styled(Chip)(({ theme }) => ({
 /**
  * Container for status bars with consistent spacing - matches Congen's design
  */
-export const StatusBarContainer = styled(Box)(({ theme }) => ({
+export const StatusBarContainer = styled(Box)(() => ({
   display: 'flex',
   alignItems: 'center',
-  gap: theme.spacing(1),
-  padding: theme.spacing(1),
+  gap: 8,
+  padding: 8,
   transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
 }));
 
 /**
  * Base text styling for game theme - matches Congen's typography
  */
-export const GameText = styled(Typography)(({ theme }) => ({
+export const GameText = styled(Typography)(() => ({
   color: TEXT_COLORS.primary,
   fontFamily: '"Inter", "system-ui", "sans-serif"', // Matches Congen's font family
   fontWeight: 400,
@@ -152,7 +153,7 @@ export const GameText = styled(Typography)(({ theme }) => ({
 /**
  * Secondary text styling
  */
-export const GameTextSecondary = styled(Typography)(({ theme }) => ({
+export const GameTextSecondary = styled(Typography)(() => ({
   color: TEXT_COLORS.secondary,
   fontFamily: '"Inter", "system-ui", "sans-serif"',
   fontWeight: 400,
@@ -161,7 +162,7 @@ export const GameTextSecondary = styled(Typography)(({ theme }) => ({
 /**
  * Muted text styling
  */
-export const GameTextMuted = styled(Typography)(({ theme }) => ({
+export const GameTextMuted = styled(Typography)(() => ({
   color: TEXT_COLORS.muted,
   fontFamily: '"Inter", "system-ui", "sans-serif"',
   fontWeight: 400,
@@ -170,7 +171,7 @@ export const GameTextMuted = styled(Typography)(({ theme }) => ({
 /**
  * Accent text styling using Congen's warning color
  */
-export const GameTextAccent = styled(Typography)(({ theme }) => ({
+export const GameTextAccent = styled(Typography)(() => ({
   color: TEXT_COLORS.accent,
   fontFamily: '"Inter", "system-ui", "sans-serif"',
   fontWeight: 600, // Slightly bolder for accent text

@@ -53,7 +53,10 @@ class PerformanceScoringService {
      * @param weeklyTest Latest weekly test results (optional)
      * @return Complete performance scores with HP/MP/Fatigue and athleticism level
      */
-    fun calculatePerformanceScores(dailyMetrics: UserPerformanceMetrics, weeklyTest: UserWeeklyTest? = null): UserPerformanceScores {
+    fun calculatePerformanceScores(
+        dailyMetrics: UserPerformanceMetrics,
+        weeklyTest: UserWeeklyTest? = null
+    ): UserPerformanceScores {
         logger.debug("Calculating performance scores for user: ${dailyMetrics.keycloakId}")
 
         // Calculate individual metric scores from weekly test data and daily metrics
@@ -64,13 +67,14 @@ class PerformanceScoringService {
         val mobilityScore = calculateMobilityScore(weeklyTest?.mobilityResult)
 
         // Calculate average score
-        val scores = listOfNotNull(
-            explosivenessScore,
-            aerobicCapacityScore,
-            recoveryScore,
-            reactionTimeScore,
-            mobilityScore
-        )
+        val scores =
+            listOfNotNull(
+                explosivenessScore,
+                aerobicCapacityScore,
+                recoveryScore,
+                reactionTimeScore,
+                mobilityScore
+            )
         val averageScore = if (scores.isNotEmpty()) scores.average() else 0.0
 
         // Level is the tanh-scaled athleticism score (1-100)
@@ -85,13 +89,14 @@ class PerformanceScoringService {
         val fatigueLoss = calculateFatigueLoss(dailyMetrics)
 
         // Generate skills based on metric thresholds
-        val skills = generateSkills(
-            explosivenessScore,
-            aerobicCapacityScore,
-            recoveryScore,
-            reactionTimeScore,
-            mobilityScore
-        )
+        val skills =
+            generateSkills(
+                explosivenessScore,
+                aerobicCapacityScore,
+                recoveryScore,
+                reactionTimeScore,
+                mobilityScore
+            )
 
         return UserPerformanceScores(
             keycloakId = dailyMetrics.keycloakId,
@@ -112,7 +117,6 @@ class PerformanceScoringService {
             updatedAt = dailyMetrics.updatedAt
         )
     }
-
 
     /**
      * Calculates explosiveness score using logarithmic scaling.
@@ -173,15 +177,18 @@ class PerformanceScoringService {
      * Represents physical durability based on VO₂ Max, muscular endurance, and recovery ability.
      * This is the "max HP" - HP loss is tracked separately based on daily stress factors.
      */
-    private fun calculateHpScore(metrics: UserPerformanceMetrics, weeklyTest: UserWeeklyTest?): Double {
+    private fun calculateHpScore(
+        metrics: UserPerformanceMetrics,
+        weeklyTest: UserWeeklyTest?
+    ): Double {
         // HP is based on physical resilience metrics from weekly tests and daily metrics
         val vo2MaxScore = calculateAerobicCapacityScore(metrics.vo2Max)
         val recoveryScore = calculateRecoveryScore(weeklyTest?.hrRecoveryResult?.toDouble())
-        
+
         // Average the physical resilience scores
         val scores = listOfNotNull(vo2MaxScore, recoveryScore)
         val avgHp = if (scores.isNotEmpty()) scores.average() else 50.0 // Default to 50 if no data
-        
+
         return round(avgHp * 10.0) / 10.0
     }
 
@@ -194,30 +201,30 @@ class PerformanceScoringService {
         val recoveryScore = metrics.recovery ?: 75.0
         val sleepScore = metrics.sleepScore ?: 75.0
         val subjectiveTiredness = metrics.subjectiveTiredness?.toDouble() ?: 3.0
-        
+
         var hpLoss = 0.0
-        
+
         // HP loss from high strain (structural stress) - only if strain is available
         if (strain != null && strain > 12) {
             hpLoss += (strain - 12) * 2.0 // More significant HP loss for high strain
         }
-        
+
         // HP loss from poor recovery
         if (recoveryScore < 70) {
             hpLoss += (70 - recoveryScore) * 0.5
         }
-        
+
         // HP loss from poor sleep quality
         if (sleepScore < 70) {
             hpLoss += (70 - sleepScore) * 0.3
         }
-        
+
         // HP loss from subjective tiredness (increased weight when strain is missing)
         if (subjectiveTiredness > 3) {
             val tirednessMultiplier = if (strain == null) 8.0 else 5.0 // Higher impact when strain is missing
             hpLoss += (subjectiveTiredness - 3) * tirednessMultiplier
         }
-        
+
         return max(0.0, min(100.0, round(hpLoss * 10.0) / 10.0))
     }
 
@@ -314,19 +321,22 @@ class PerformanceScoringService {
      * Represents CNS efficiency, focus, and mental energy.
      * Based on HRV, reaction time, and explosiveness (fast-twitch/CNS power).
      */
-    private fun calculateMpScore(metrics: UserPerformanceMetrics, weeklyTest: UserWeeklyTest?): Double {
+    private fun calculateMpScore(
+        metrics: UserPerformanceMetrics,
+        weeklyTest: UserWeeklyTest?
+    ): Double {
         // MP is based on neurological readiness metrics
         val hrvScore = calculateHrvScore(metrics.hrv)
         val reactionTimeScore = calculateReactionTimeScore(weeklyTest?.reflexResult?.toDouble())
         val explosivenessScore = calculateExplosivenessScore(weeklyTest?.verticalJumpResult)
-        
+
         // Average the neurological readiness scores
         val scores = listOfNotNull(hrvScore, reactionTimeScore, explosivenessScore)
         val avgMp = if (scores.isNotEmpty()) scores.average() else 50.0 // Default to 50 if no data
-        
+
         return round(avgMp * 10.0) / 10.0
     }
-    
+
     /**
      * Calculates HRV score for MP calculation.
      * Higher HRV indicates better neurological readiness.
@@ -345,19 +355,20 @@ class PerformanceScoringService {
     private fun calculateFatigueScore(metrics: UserPerformanceMetrics): Double {
         val strain = metrics.strain
         val subjectiveTiredness = metrics.subjectiveTiredness?.toDouble() ?: 3.0
-        
+
         // Calculate fatigue based on available data
-        val fatigue = when {
-            strain != null -> {
-                // Use both strain and subjective tiredness
-                min(100.0, strain * 5.0 + subjectiveTiredness * 10.0)
+        val fatigue =
+            when {
+                strain != null -> {
+                    // Use both strain and subjective tiredness
+                    min(100.0, strain * 5.0 + subjectiveTiredness * 10.0)
+                }
+                else -> {
+                    // Use only subjective tiredness with higher weight
+                    min(100.0, subjectiveTiredness * 15.0)
+                }
             }
-            else -> {
-                // Use only subjective tiredness with higher weight
-                min(100.0, subjectiveTiredness * 15.0)
-            }
-        }
-        
+
         return round(fatigue * 10.0) / 10.0
     }
 

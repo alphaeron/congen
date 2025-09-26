@@ -22,14 +22,6 @@ import {
   deleteAllPersonalData as deleteAllPersonalDataAPI,
 } from '../api/gdpr';
 import { getIndividualMuscle, getMuscles as getMusclesAPI } from '../api/muscle';
-import { getProgram as getProgramAPI, getProgramsWithPreferences } from '../api/program';
-import {
-  createProgrammedExercise as createProgrammedExerciseAPI,
-  updateProgrammedExercise as updateProgrammedExerciseAPI,
-  deleteProgrammedExercise as deleteProgrammedExerciseAPI,
-} from '../api/programmedExercise';
-import { getProgrammedWorkouts } from '../api/programmedWorkout';
-import { getProgramPreferences } from '../api/programPreferences';
 import {
   getCurrentPerformanceScores,
   getCurrentPerformanceMetrics,
@@ -39,6 +31,14 @@ import {
   getTestProtocols,
   getPerformanceMetricsInRange,
 } from '../api/performanceTracking';
+import { getProgram as getProgramAPI, getProgramsWithPreferences } from '../api/program';
+import {
+  createProgrammedExercise as createProgrammedExerciseAPI,
+  updateProgrammedExercise as updateProgrammedExerciseAPI,
+  deleteProgrammedExercise as deleteProgrammedExerciseAPI,
+} from '../api/programmedExercise';
+import { getProgrammedWorkouts } from '../api/programmedWorkout';
+import { getProgramPreferences } from '../api/programPreferences';
 import type {
   UserDataExport,
   ExerciseMuscle,
@@ -129,20 +129,28 @@ interface DataContextType {
   // Performance tracking data loading functions
   loadPerformanceScores: () => Promise<UserPerformanceScores | null>;
   loadPerformanceMetrics: () => Promise<UserPerformanceMetrics | null>;
-  loadPerformanceMetricsInRange: (startDate: string, endDate: string) => Promise<UserPerformanceMetrics[]>;
+  loadPerformanceMetricsInRange: (
+    startDate: string,
+    endDate: string
+  ) => Promise<UserPerformanceMetrics[]>;
   loadWeeklyTests: (startDate?: string, endDate?: string) => Promise<UserTestResult[]>;
   loadTestProtocols: () => Promise<TestProtocol[]>;
   loadWilksScore: () => Promise<number | null>;
   refreshPerformanceData: () => Promise<void>;
   // Performance tracking utility functions
   getCurrentWeekTest: () => UserTestResult[] | null;
-  getPerformanceDataForDateRange: (startDate: string, endDate: string) => Promise<{
+  getPerformanceDataForDateRange: (
+    startDate: string,
+    endDate: string
+  ) => Promise<{
     scores: UserPerformanceScores | null;
     metrics: UserPerformanceMetrics | null;
     tests: UserTestResult[];
   }>;
   // Performance tracking mutation functions
-  submitWeeklyTest: (testResults: Omit<UserTestResult, 'id' | 'keycloak_id' | 'created_at' | 'updated_at'>[]) => Promise<UserTestResult[]>;
+  submitWeeklyTest: (
+    testResults: Omit<UserTestResult, 'id' | 'keycloak_id' | 'created_at' | 'updated_at'>[]
+  ) => Promise<UserTestResult[]>;
   // GDPR functions
   exportUserData: () => Promise<UserDataExport>;
   deleteAllPersonalData: (confirmationText: string) => Promise<void>;
@@ -275,7 +283,14 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
         setError(null);
 
         // Load all data in parallel to minimize API calls
-        const [dataExport, exerciseMuscleData, weightUnitPreferencesData, performanceScoresData, performanceMetricsData, weeklyTestsData] = await Promise.all([
+        const [
+          dataExport,
+          exerciseMuscleData,
+          weightUnitPreferencesData,
+          performanceScoresData,
+          performanceMetricsData,
+          weeklyTestsData,
+        ] = await Promise.all([
           getUserDataExport({ forceRefresh }),
           getExerciseMuscle({ forceRefresh }),
           getUserWeightUnitPreferences(user.keycloak_id, { forceRefresh }),
@@ -302,23 +317,23 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
         setPerformanceScores(performanceScoresData);
         setPerformanceMetrics(performanceMetricsData);
         setWeeklyTests(weeklyTestsData);
-        
+
         // Load Wilks score if user has weight and gender data
         if (dataExport?.weight && dataExport?.gender) {
           try {
             const wilksScoreData = await getWilksScore(
-              dataExport.weight, 
-              dataExport.gender.toLowerCase() === 'male', 
+              dataExport.weight,
+              dataExport.gender.toLowerCase() === 'male',
               { forceRefresh }
             );
             setWilksScore(wilksScoreData);
-          } catch (err) {
+          } catch {
             setWilksScore(null);
           }
         } else {
           setWilksScore(null);
         }
-        
+
         setLastFetchTime(Date.now());
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'Failed to load data';
@@ -721,43 +736,51 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
       setCacheTimestamps(prev => new Map(prev).set('performanceMetrics', Date.now()));
       return metrics;
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to load performance metrics';
+      const errorMessage =
+        err instanceof Error ? err.message : 'Failed to load performance metrics';
       setError(errorMessage);
       return null;
     }
   }, [user?.keycloak_id, performanceMetrics]);
 
-  const loadPerformanceMetricsInRange = useCallback(async (startDate: string, endDate: string): Promise<UserPerformanceMetrics[]> => {
-    if (!user?.keycloak_id) return [];
+  const loadPerformanceMetricsInRange = useCallback(
+    async (startDate: string, endDate: string): Promise<UserPerformanceMetrics[]> => {
+      if (!user?.keycloak_id) return [];
 
-    try {
-      const metrics = await getPerformanceMetricsInRange(startDate, endDate);
-      return metrics;
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to load performance metrics in range';
-      setError(errorMessage);
-      return [];
-    }
-  }, [user?.keycloak_id]);
+      try {
+        const metrics = await getPerformanceMetricsInRange(startDate, endDate);
+        return metrics;
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : 'Failed to load performance metrics in range';
+        setError(errorMessage);
+        return [];
+      }
+    },
+    [user?.keycloak_id]
+  );
 
-  const loadWeeklyTests = useCallback(async (startDate?: string, endDate?: string): Promise<UserTestResult[]> => {
-    if (!user?.keycloak_id) return [];
+  const loadWeeklyTests = useCallback(
+    async (startDate?: string, endDate?: string): Promise<UserTestResult[]> => {
+      if (!user?.keycloak_id) return [];
 
-    // Use default date range if not provided
-    const start = startDate || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(); // 30 days ago
-    const end = endDate || new Date().toISOString(); // today
+      // Use default date range if not provided
+      const start = startDate || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(); // 30 days ago
+      const end = endDate || new Date().toISOString(); // today
 
-    try {
-      const tests = await getWeeklyTestsInRange(start, end);
-      setWeeklyTests(tests);
-      setCacheTimestamps(prev => new Map(prev).set('weeklyTests', Date.now()));
-      return tests;
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to load weekly tests';
-      setError(errorMessage);
-      return [];
-    }
-  }, [user?.keycloak_id]);
+      try {
+        const tests = await getWeeklyTestsInRange(start, end);
+        setWeeklyTests(tests);
+        setCacheTimestamps(prev => new Map(prev).set('weeklyTests', Date.now()));
+        return tests;
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'Failed to load weekly tests';
+        setError(errorMessage);
+        return [];
+      }
+    },
+    [user?.keycloak_id]
+  );
 
   const loadTestProtocols = useCallback(async (): Promise<TestProtocol[]> => {
     if (testProtocols.length > 0) {
@@ -784,10 +807,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
     }
 
     try {
-      const score = await getWilksScore(
-        userData.weight, 
-        userData.gender.toLowerCase() === 'male'
-      );
+      const score = await getWilksScore(userData.weight, userData.gender.toLowerCase() === 'male');
       setWilksScore(score);
       setCacheTimestamps(prev => new Map(prev).set('wilksScore', Date.now()));
       return score;
@@ -809,7 +829,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
         getWeeklyTestsInRange(
           new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days ago
           new Date().toISOString() // today
-        ).catch(() => [])
+        ).catch(() => []),
       ]);
 
       setPerformanceScores(scores);
@@ -823,7 +843,8 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
         return newMap;
       });
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to refresh performance data';
+      const errorMessage =
+        err instanceof Error ? err.message : 'Failed to refresh performance data';
       setError(errorMessage);
     }
   }, [user?.keycloak_id]);
@@ -831,63 +852,72 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
   // Performance tracking utility functions
   const getCurrentWeekTest = useCallback((): UserTestResult[] | null => {
     if (!weeklyTests || weeklyTests.length === 0) return null;
-    
+
     // Get the most recent weekly test results (assuming they're sorted by date)
     return weeklyTests;
   }, [weeklyTests]);
 
-  const getPerformanceDataForDateRange = useCallback(async (startDate: string, endDate: string) => {
-    if (!user?.keycloak_id) {
-      return {
-        scores: null,
-        metrics: null,
-        tests: []
-      };
-    }
+  const getPerformanceDataForDateRange = useCallback(
+    async (startDate: string, endDate: string) => {
+      if (!user?.keycloak_id) {
+        return {
+          scores: null,
+          metrics: null,
+          tests: [],
+        };
+      }
 
-    try {
-      // Load data for the specific date range
-      const [scores, metrics, tests] = await Promise.all([
-        getCurrentPerformanceScores().catch(() => null),
-        getCurrentPerformanceMetrics().catch(() => null),
-        getWeeklyTestsInRange(startDate, endDate).catch(() => [])
-      ]);
+      try {
+        // Load data for the specific date range
+        const [scores, metrics, tests] = await Promise.all([
+          getCurrentPerformanceScores().catch(() => null),
+          getCurrentPerformanceMetrics().catch(() => null),
+          getWeeklyTestsInRange(startDate, endDate).catch(() => []),
+        ]);
 
-      return {
-        scores,
-        metrics,
-        tests
-      };
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to load performance data for date range';
-      setError(errorMessage);
-      return {
-        scores: null,
-        metrics: null,
-        tests: []
-      };
-    }
-  }, [user?.keycloak_id]);
+        return {
+          scores,
+          metrics,
+          tests,
+        };
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : 'Failed to load performance data for date range';
+        setError(errorMessage);
+        return {
+          scores: null,
+          metrics: null,
+          tests: [],
+        };
+      }
+    },
+    [user?.keycloak_id]
+  );
 
   // Performance tracking mutation functions
-  const submitWeeklyTest = useCallback(async (testResults: Omit<UserTestResult, 'id' | 'keycloak_id' | 'created_at' | 'updated_at'>[]): Promise<UserTestResult[]> => {
-    if (!user?.keycloak_id) {
-      throw new Error('User not authenticated');
-    }
+  const submitWeeklyTest = useCallback(
+    async (
+      testResults: Omit<UserTestResult, 'id' | 'keycloak_id' | 'created_at' | 'updated_at'>[]
+    ): Promise<UserTestResult[]> => {
+      if (!user?.keycloak_id) {
+        throw new Error('User not authenticated');
+      }
 
-    try {
-      const result = await submitWeeklyTestAPI(testResults);
-      
-      // Refresh performance data after successful submission
-      await refreshPerformanceData();
-      
-      return result;
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to submit weekly test';
-      setError(errorMessage);
-      throw err;
-    }
-  }, [user?.keycloak_id, refreshPerformanceData]);
+      try {
+        const result = await submitWeeklyTestAPI(testResults);
+
+        // Refresh performance data after successful submission
+        await refreshPerformanceData();
+
+        return result;
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'Failed to submit weekly test';
+        setError(errorMessage);
+        throw err;
+      }
+    },
+    [user?.keycloak_id, refreshPerformanceData]
+  );
 
   const updateUserConsent = useCallback(
     async (consent: boolean): Promise<UserConsent> => {

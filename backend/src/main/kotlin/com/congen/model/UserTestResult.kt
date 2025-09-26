@@ -31,7 +31,9 @@ import java.time.Instant
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Schema(
     description = "Individual test result for a user",
-    example = "UserTestResult(id=1, keycloakId=\"123e4567-e89b-12d3-a456-426614174000\", testName=\"vertical_jump\", status=\"COMPLETED\", resultValue=52.0)"
+    example =
+        "UserTestResult(id=1, keycloakId=\"123e4567-e89b-12d3-a456-426614174000\", " +
+            "testName=\"vertical_jump\", status=\"COMPLETED\", resultValue=52.0)"
 )
 data class UserTestResult(
     /** Unique identifier for the test result. */
@@ -41,28 +43,24 @@ data class UserTestResult(
         readOnly = true
     )
     @param:JsonProperty("id") val id: Int? = null,
-    
     /** Unique Keycloak identifier for the user. */
     @Schema(
         description = "Unique Keycloak identifier for the user",
         example = "123e4567-e89b-12d3-a456-426614174000"
     )
     @param:JsonProperty("keycloak_id") val keycloakId: String,
-    
     /** Start timestamp of the week (Monday). */
     @Schema(
         description = "Start timestamp of the week (Monday)",
         example = "2023-08-07T00:00:00Z"
     )
     @param:JsonProperty("week_start_timestamp") val weekStartTimestamp: Instant,
-    
     /** Name of the test protocol. */
     @Schema(
         description = "Name of the test protocol",
         example = "vertical_jump"
     )
     @param:JsonProperty("test_name") val testName: String,
-    
     /** Status of the test. */
     @Schema(
         description = "Status of the test",
@@ -70,7 +68,6 @@ data class UserTestResult(
         allowableValues = ["PENDING", "COMPLETED", "SKIPPED"]
     )
     @param:JsonProperty("status") val status: TestStatus,
-    
     /** The actual test result value (if completed). */
     @Schema(
         description = "The actual test result value (if completed)",
@@ -78,7 +75,6 @@ data class UserTestResult(
         minimum = "0"
     )
     @param:JsonProperty("result_value") val resultValue: Double?,
-    
     /** Timestamp when the test result was created. */
     @Schema(
         description = "Timestamp when the test result was created",
@@ -86,7 +82,6 @@ data class UserTestResult(
         readOnly = true
     )
     @param:JsonProperty("created_at") val createdAt: Instant,
-    
     /** Timestamp when the test result was last updated. */
     @Schema(
         description = "Timestamp when the test result was last updated",

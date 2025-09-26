@@ -1,5 +1,10 @@
 import { REQUEST } from './endpoint';
-import type { UserPerformanceMetrics, UserPerformanceScores, UserTestResult, TestProtocol } from './types';
+import type {
+  UserPerformanceMetrics,
+  UserPerformanceScores,
+  UserTestResult,
+  TestProtocol,
+} from './types';
 
 /**
  * Submit performance metrics for the current user.
