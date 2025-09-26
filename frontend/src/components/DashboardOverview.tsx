@@ -1,13 +1,11 @@
-import { Box, Card, CardContent, Grid, Typography, Stack } from '@mui/material';
+import { Grid, Stack } from '@mui/material';
 import { useSnackbar } from 'notistack';
 import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router';
 
-import { ActionCard } from './ActionCard';
 import { LoadingSpinner } from './LoadingSpinner';
-import { StatusChip } from './StatusChip';
 import { AdventurerStatusCard } from './AdventurerStatusCard';
-import { WeeklyTestTracker } from './WeeklyTestTracker';
+import { CompactQuestCard } from './CompactQuestCard';
 import type {
   User,
   UserOneRepMax,
@@ -199,7 +197,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ user }) =>
     <React.Fragment>
       {/* Main Dashboard Layout: 3/4 Status Card + 1/4 Sidebar */}
       {performanceScores ? (
-        <Grid container spacing={2} sx={{ mb: 3 }}>
+        <Grid container spacing={3} sx={{ mb: 3 }}>
           {/* Status Card - 3/4 width */}
           <Grid size={{ xs: 12, lg: 9 }}>
             <AdventurerStatusCard
@@ -213,11 +211,20 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ user }) =>
           
           {/* Sidebar - 1/4 width */}
           <Grid size={{ xs: 12, lg: 3 }}>
-            {/* Weekly Test Tracker */}
-            <WeeklyTestTracker 
-              weeklyTests={weeklyTests} 
-              onTestUpdate={refreshPerformanceData}
-            />
+            <Stack spacing={1}>
+              {/* Daily Quests */}
+              <CompactQuestCard 
+                type="daily"
+                currentMetrics={performanceMetrics || undefined}
+              />
+              
+              {/* Weekly Quests */}
+              <CompactQuestCard 
+                type="weekly"
+                weeklyTests={weeklyTests} 
+                onTestUpdate={refreshPerformanceData}
+              />
+            </Stack>
           </Grid>
         </Grid>
       ) : (
