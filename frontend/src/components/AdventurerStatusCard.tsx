@@ -76,25 +76,27 @@ export const AdventurerStatusCard: React.FC<AdventurerStatusCardProps> = ({
       
       <CardContent>
         {/* Profile Information - Centered under STATUS */}
-        <Grid container spacing={1} mb={3} overflow="visible">
-          <Grid size={12}>
-            <Stack direction="column" alignItems="center">
-              <Stack direction="row" alignItems="center" spacing={2}>
-                <CustomSvgIcon src={AdventurerProfileIcon} alt="Profile" sx={{ fontSize: 80, color: 'white' }} />
-                <Stack direction="column" alignItems="flex-start">
-                  <GameText variant="h2" sx={{ fontSize: '3rem', fontWeight: 'bold', color: '#00bcd4', textShadow: '0 0 10px #00bcd4', lineHeight: 1 }}>
-                    {scores.level}
-                  </GameText>
-                  <GameText variant="h6" sx={{ color: '#e0e0e0', textShadow: '0 0 5px #00bcd4', mt: -0.5 }}>
-                    LEVEL
-                  </GameText>
-                </Stack>
-              </Stack>
-              <GameText variant="h6" sx={{ color: '#ffffff', textShadow: '0 0 3px #00bcd4', mt: 1 }}>
-                {userName}
-              </GameText>
-            </Stack>
-          </Grid>
+        <Grid container spacing={1} mb={1} overflow="visible">
+                  <Grid size={12}>
+                    <Stack direction="column" alignItems="center">
+                      <Stack direction="row" alignItems="flex-start" spacing={2}>
+                        <Stack direction="column" alignItems="center" sx={{ rowGap: 0 }}>
+                          <CustomSvgIcon src={AdventurerProfileIcon} alt="Profile" sx={{ fontSize: 80, color: 'white' }} />
+                          <GameText variant="h6" sx={{ color: '#ffffff', textShadow: '0 0 3px #00bcd4', mt: 0, textTransform: 'uppercase' }}>
+                            {userName}
+                          </GameText>
+                        </Stack>
+                        <Stack direction="column" alignItems="center" sx={{ rowGap: 0 }}>
+                          <GameText variant="h2" sx={{ fontSize: '3rem', fontWeight: 'bold', color: '#00bcd4', textShadow: '0 0 10px #00bcd4', lineHeight: 1, mt: '20px' }}>
+                            {scores.level}
+                          </GameText>
+                          <GameText variant="h6" sx={{ color: '#e0e0e0', textShadow: '0 0 5px #00bcd4', mt: '2px' }}>
+                            LEVEL
+                          </GameText>
+                        </Stack>
+                      </Stack>
+                    </Stack>
+                  </Grid>
         </Grid>
 
         {/* Status Bars - Centered under profile */}
@@ -136,13 +138,15 @@ export const AdventurerStatusCard: React.FC<AdventurerStatusCardProps> = ({
             {/* Weekly Quests Progress and Skills - Left side */}
             <Grid container spacing={3} p={2} justifyContent="center" alignItems="center">
               <Grid size={12}>
-                <GameProgressBar
-                  label="Weekly Quests"
-                  current={weeklyTests?.filter(test => test.status === 'COMPLETED').length || 0}
-                  max={weeklyTests?.length || 0}
-                  color="#FFD700"
-                  tooltip="Weekly quest completion progress"
-                />
+                <Box sx={{ width: '75%' }}>
+                  <GameProgressBar
+                    label="Weekly Quests"
+                    current={weeklyTests?.filter(test => test.status === 'COMPLETED').length || 0}
+                    max={weeklyTests?.length || 0}
+                    color="#FFD700"
+                    tooltip="Weekly quest completion progress"
+                  />
+                </Box>
               </Grid>
               
               {/* Skills Section */}
