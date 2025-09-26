@@ -19,6 +19,7 @@ import HeartIcon from '../resources/heart-icon.svg';
 import BrainMindIcon from '../resources/brain-mind-icon.svg';
 import RunningShoeIcon from '../resources/running-shoe-icon.svg';
 import EarSoundIcon from '../resources/ear-sound-icon.svg';
+import GearIcon from '../resources/gear-icon.svg';
 
 interface PerformanceRadarChartProps {
   scores: UserPerformanceScores;
@@ -72,7 +73,7 @@ const getMetricData = (scores: UserPerformanceScores, metrics?: UserPerformanceM
       description: 'Relative strength based on Wilks score',
       rawValue: wilksScore ? `${wilksScore.toFixed(1)} Wilks` : '1RM data required',
       color: '#FF6B6B',
-      icon: <CustomSvgIcon src={FistPowerIcon} alt="Strength" sx={{ fontSize: 32, color: '#00bcd4' }} />,
+      icon: <CustomSvgIcon src={GearIcon} alt="Strength" sx={{ fontSize: 32, color: '#00bcd4' }} />,
     },
     {
       metric: 'Dexterity',

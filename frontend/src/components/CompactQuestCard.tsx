@@ -31,12 +31,12 @@ import { submitPerformanceMetrics, getTestProtocols, submitWeeklyTest } from '..
 import { formatDate } from '../common/utils';
 import type { UserPerformanceMetrics, UserTestResult, TestProtocol } from '../api/types';
 
-// Import icons for weekly tests
-import PowerIcon from '../resources/power-icon.svg';
-import EnduranceIcon from '../resources/endurance-icon.svg';
-import RecoveryIcon from '../resources/recovery-icon.svg';
-import SpeedIcon from '../resources/speed-icon.svg';
-import MobilityIcon from '../resources/mobility-icon.svg';
+// Import icons for weekly tests - matching radar chart icons
+import FistPowerIcon from '../resources/fist-power-icon.svg';
+import HeartIcon from '../resources/heart-icon.svg';
+import BrainMindIcon from '../resources/brain-mind-icon.svg';
+import RunningShoeIcon from '../resources/running-shoe-icon.svg';
+import EarSoundIcon from '../resources/ear-sound-icon.svg';
 
 interface CompactQuestCardProps {
   type: 'daily' | 'weekly';
@@ -48,21 +48,21 @@ interface CompactQuestCardProps {
 // Icon mapping for test protocols - using same icons as radar chart
 const getIconForProtocol = (testName: string) => {
   switch (testName) {
-    case 'vertical_jump': return <CustomSvgIcon src={PowerIcon} alt="Explosiveness" sx={{ fontSize: 24, color: '#00bcd4' }} />;
-    case 'vo2_max': return <CustomSvgIcon src={EnduranceIcon} alt="Stamina" sx={{ fontSize: 24, color: '#00bcd4' }} />;
-    case 'hr_recovery': return <CustomSvgIcon src={RecoveryIcon} alt="Recovery" sx={{ fontSize: 24, color: '#00bcd4' }} />;
-    case 'reflex': return <CustomSvgIcon src={SpeedIcon} alt="Reflexes" sx={{ fontSize: 24, color: '#00bcd4' }} />;
-    case 'mobility': return <CustomSvgIcon src={MobilityIcon} alt="Dexterity" sx={{ fontSize: 24, color: '#00bcd4' }} />;
-    default: return <CustomSvgIcon src={PowerIcon} alt="Test" sx={{ fontSize: 24, color: '#00bcd4' }} />;
+    case 'vertical_jump': return <CustomSvgIcon src={FistPowerIcon} alt="Explosiveness" sx={{ fontSize: 24, color: '#00bcd4' }} />;
+    case 'vo2_max': return <CustomSvgIcon src={HeartIcon} alt="Stamina" sx={{ fontSize: 24, color: '#00bcd4' }} />;
+    case 'hr_recovery': return <CustomSvgIcon src={BrainMindIcon} alt="Recovery" sx={{ fontSize: 24, color: '#00bcd4' }} />;
+    case 'reflex': return <CustomSvgIcon src={RunningShoeIcon} alt="Reflexes" sx={{ fontSize: 24, color: '#00bcd4' }} />;
+    case 'mobility': return <CustomSvgIcon src={EarSoundIcon} alt="Dexterity" sx={{ fontSize: 24, color: '#00bcd4' }} />;
+    default: return <CustomSvgIcon src={FistPowerIcon} alt="Test" sx={{ fontSize: 24, color: '#00bcd4' }} />;
   }
 };
 
 // Daily metrics configuration
 const dailyMetricsConfig = [
-  { key: 'strain', label: 'Strain', icon: '•', unit: '', description: 'Daily strain score from wearables' },
-  { key: 'recovery', label: 'Recovery', icon: '+', unit: '%', description: 'Daily recovery score percentage' },
-  { key: 'hrv', label: 'HRV', icon: '♥', unit: ' ms', description: 'Heart rate variability measurement' },
-  { key: 'sleep_score', label: 'Sleep Score', icon: '💤', unit: '%', description: 'Overall sleep quality score' },
+  { key: 'strain', label: 'Strain', icon: <CustomSvgIcon src={FistPowerIcon} alt="Strain" sx={{ fontSize: 24, color: '#00bcd4' }} />, unit: '', description: 'Daily strain score from wearables' },
+  { key: 'recovery', label: 'Recovery', icon: <CustomSvgIcon src={BrainMindIcon} alt="Recovery" sx={{ fontSize: 24, color: '#00bcd4' }} />, unit: '%', description: 'Daily recovery score percentage' },
+  { key: 'hrv', label: 'HRV', icon: <CustomSvgIcon src={HeartIcon} alt="HRV" sx={{ fontSize: 24, color: '#00bcd4' }} />, unit: ' ms', description: 'Heart rate variability measurement' },
+  { key: 'sleep_score', label: 'Sleep Score', icon: <CustomSvgIcon src={BrainMindIcon} alt="Sleep Score" sx={{ fontSize: 24, color: '#00bcd4' }} />, unit: '%', description: 'Overall sleep quality score' },
 ];
 
 export const CompactQuestCard: React.FC<CompactQuestCardProps> = ({ 

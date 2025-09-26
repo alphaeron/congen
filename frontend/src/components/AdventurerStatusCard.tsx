@@ -15,14 +15,8 @@ import { GameCard, GameSkillChip, GameText, GameTextSecondary } from './GameThem
 // Import custom SVG icons
 import AdventurerProfileIcon from '../resources/adventurer-profile-icon.svg';
 import SkillsIcon from '../resources/skills-icon.svg';
-import PowerIcon from '../resources/power-icon.svg';
-import RecoveryIcon from '../resources/recovery-icon.svg';
-import SpeedIcon from '../resources/speed-icon.svg';
 import HeartIcon from '../resources/heart-icon.svg';
 import PotionBottleIcon from '../resources/potion-bottle-icon.svg';
-import Gear8Icon from '../resources/gear-8-icon.svg';
-import RunningShoeIcon from '../resources/running-shoe-icon.svg';
-import EarSoundIcon from '../resources/ear-sound-icon.svg';
 
 interface AdventurerStatusCardProps {
   scores: UserPerformanceScores;
