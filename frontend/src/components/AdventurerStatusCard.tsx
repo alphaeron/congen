@@ -40,27 +40,6 @@ export const AdventurerStatusCard: React.FC<AdventurerStatusCardProps> = ({
   userName = 'Raven Thornfield',
 }) => {
 
-  const getHpColor = (hp: number): string => {
-    if (hp >= 80) return '#4CAF50';
-    if (hp >= 60) return '#FF9800';
-    if (hp >= 40) return '#FF5722';
-    return '#F44336';
-  };
-
-  const getMpColor = (mp: number): string => {
-    if (mp >= 80) return '#2196F3';
-    if (mp >= 60) return '#9C27B0';
-    if (mp >= 40) return '#E91E63';
-    return '#673AB7';
-  };
-
-  const getFatigueColor = (fatigue: number): string => {
-    if (fatigue <= 30) return '#4CAF50';
-    if (fatigue <= 60) return '#FF9800';
-    if (fatigue <= 80) return '#FF5722';
-    return '#F44336';
-  };
-
   return (
     <GameCard sx={{ overflow: 'visible' }}>
       <CardHeader
@@ -103,21 +82,21 @@ export const AdventurerStatusCard: React.FC<AdventurerStatusCardProps> = ({
         <Grid container spacing={6} justifyContent="center" alignItems="center" mb={3}>
           <Grid size="auto">
             <GameProgressBar
-              icon={<CustomSvgIcon src={HeartIcon} alt="HP" sx={{ fontSize: 40, color: getHpColor(scores.hp) }} />}
+              icon={<CustomSvgIcon src={HeartIcon} alt="HP" sx={{ fontSize: 40, color: '#00bcd4' }} />}
               label="HP"
               current={Math.max(0, scores.hp - scores.hp_loss)}
               max={scores.hp}
-              color={getHpColor(scores.hp)}
+              color="#00bcd4"
               tooltip="HP (Health Points) - Long-term physical durability and structural integrity. Represents tissue wear and tear that accumulates over time. Recovers slowly (days to weeks)."
             />
           </Grid>
           <Grid size="auto">
             <GameProgressBar
-              icon={<CustomSvgIcon src={PotionBottleIcon} alt="MP" sx={{ fontSize: 40, color: getMpColor(scores.mp) }} />}
+              icon={<CustomSvgIcon src={PotionBottleIcon} alt="MP" sx={{ fontSize: 40, color: '#00bcd4' }} />}
               label="MP"
               current={Math.max(0, scores.mp - scores.mp_loss)}
               max={scores.mp}
-              color={getMpColor(scores.mp)}
+              color="#00bcd4"
               tooltip="MP (Magic Points) - Short-term neurological and cognitive energy. Represents CNS readiness and mental sharpness. Recovers overnight to 2-3 days."
             />
           </Grid>
@@ -126,7 +105,7 @@ export const AdventurerStatusCard: React.FC<AdventurerStatusCardProps> = ({
               label="Fatigue"
               current={Math.max(0, scores.fatigue - scores.fatigue_loss)}
               max={scores.fatigue}
-              color={getFatigueColor(scores.fatigue)}
+              color="#00bcd4"
               tooltip="Fatigue - Immediate performance inhibition and session-to-session exhaustion. Represents how drained you feel right now. Recovers in hours to 1-2 days."
             />
           </Grid>
