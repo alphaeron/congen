@@ -44,15 +44,17 @@ const ProgressBarText = styled(Typography)(({ theme }) => ({
 
 const LabelText = styled(Typography)(({ theme }) => ({
   fontSize: '0.75rem',
-  color: 'white',
+  color: '#ffffff',
+  textShadow: '0 0 3px #00bcd4',
   textAlign: 'center',
   marginTop: theme.spacing(0.5),
   fontWeight: 600, // Matches Congen's font weight
   fontFamily: '"Inter", "system-ui", "sans-serif"', // Matches Congen's font
+  textTransform: 'uppercase',
 }));
 
 interface GameProgressBarProps {
-  icon: React.ReactNode;
+  icon?: React.ReactNode;
   label: string;
   current: number;
   max: number;
@@ -76,7 +78,12 @@ export const GameProgressBar: React.FC<GameProgressBarProps> = ({
   return (
     <Tooltip title={tooltip}>
       <StatusBarContainer>
-        {icon}
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.25 }}>
+          {icon}
+          <LabelText>
+            {label}
+          </LabelText>
+        </Box>
         <Box sx={{ flexGrow: 1 }}>
           <ProgressBarContainer>
             <ProgressBarFill percentage={percentage} color={color} />
@@ -84,9 +91,6 @@ export const GameProgressBar: React.FC<GameProgressBarProps> = ({
               {current.toFixed(0)}/{max.toFixed(0)}
             </ProgressBarText>
           </ProgressBarContainer>
-          <LabelText>
-            {label}
-          </LabelText>
         </Box>
       </StatusBarContainer>
     </Tooltip>
@@ -184,8 +188,8 @@ export const GameCircularProgressBar: React.FC<GameProgressBarProps> = ({
               </CircularProgressText>
             </Box>
           </CircularProgressWrapper>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-            {icon}
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5 }}>
+            {icon && icon}
             <LabelText>
               {label}
             </LabelText>

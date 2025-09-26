@@ -14,11 +14,11 @@ import { GameText } from './GameTheme';
 import { CustomSvgIcon } from './CustomSvgIcon';
 
 // Import custom SVG icons for attributes
-import PowerIcon from '../resources/power-icon.svg';
-import EnduranceIcon from '../resources/endurance-icon.svg';
-import RecoveryIcon from '../resources/recovery-icon.svg';
-import SpeedIcon from '../resources/speed-icon.svg';
-import MobilityIcon from '../resources/mobility-icon.svg';
+import FistPowerIcon from '../resources/fist-power-icon.svg';
+import HeartIcon from '../resources/heart-icon.svg';
+import BrainMindIcon from '../resources/brain-mind-icon.svg';
+import RunningShoeIcon from '../resources/running-shoe-icon.svg';
+import EarSoundIcon from '../resources/ear-sound-icon.svg';
 
 interface PerformanceRadarChartProps {
   scores: UserPerformanceScores;
@@ -40,7 +40,7 @@ const getMetricData = (scores: UserPerformanceScores, metrics?: UserPerformanceM
       description: 'Explosive power based on vertical jump height',
       rawValue: weeklyTests?.find(test => test.test_name === 'vertical_jump')?.result_value ? `${weeklyTests.find(test => test.test_name === 'vertical_jump')?.result_value?.toFixed(1)} cm` : 'Vertical jump test required',
       color: '#4ECDC4',
-      icon: <CustomSvgIcon src={PowerIcon} alt="Explosiveness" sx={{ fontSize: 16, color: '#00bcd4' }} />,
+      icon: <CustomSvgIcon src={FistPowerIcon} alt="Explosiveness" sx={{ fontSize: 32, color: '#00bcd4' }} />,
     },
     {
       metric: 'Stamina',
@@ -48,7 +48,7 @@ const getMetricData = (scores: UserPerformanceScores, metrics?: UserPerformanceM
       description: 'Aerobic capacity based on VO₂ max',
       rawValue: metrics?.vo2_max ? `${metrics.vo2_max.toFixed(1)} ml/kg/min` : 'VO₂ max test required',
       color: '#45B7D1',
-      icon: <CustomSvgIcon src={EnduranceIcon} alt="Stamina" sx={{ fontSize: 16, color: '#00bcd4' }} />,
+      icon: <CustomSvgIcon src={HeartIcon} alt="Stamina" sx={{ fontSize: 32, color: '#00bcd4' }} />,
     },
     {
       metric: 'Recovery',
@@ -56,7 +56,7 @@ const getMetricData = (scores: UserPerformanceScores, metrics?: UserPerformanceM
       description: 'Recovery ability based on HR recovery',
       rawValue: weeklyTests?.find(test => test.test_name === 'hr_recovery')?.result_value ? `${weeklyTests.find(test => test.test_name === 'hr_recovery')?.result_value} bpm drop` : 'HR recovery test required',
       color: '#96CEB4',
-      icon: <CustomSvgIcon src={RecoveryIcon} alt="Recovery" sx={{ fontSize: 16, color: '#00bcd4' }} />,
+      icon: <CustomSvgIcon src={BrainMindIcon} alt="Recovery" sx={{ fontSize: 32, color: '#00bcd4' }} />,
     },
     {
       metric: 'Reflexes',
@@ -64,7 +64,7 @@ const getMetricData = (scores: UserPerformanceScores, metrics?: UserPerformanceM
       description: 'Reaction speed based on response time',
       rawValue: weeklyTests?.find(test => test.test_name === 'reflex')?.result_value ? `${weeklyTests.find(test => test.test_name === 'reflex')?.result_value} ms` : 'Reflex test required',
       color: '#DDA0DD',
-      icon: <CustomSvgIcon src={SpeedIcon} alt="Reflexes" sx={{ fontSize: 16, color: '#00bcd4' }} />,
+      icon: <CustomSvgIcon src={RunningShoeIcon} alt="Reflexes" sx={{ fontSize: 32, color: '#00bcd4' }} />,
     },
     {
       metric: 'Strength',
@@ -72,7 +72,7 @@ const getMetricData = (scores: UserPerformanceScores, metrics?: UserPerformanceM
       description: 'Relative strength based on Wilks score',
       rawValue: wilksScore ? `${wilksScore.toFixed(1)} Wilks` : '1RM data required',
       color: '#FF6B6B',
-      icon: <CustomSvgIcon src={PowerIcon} alt="Strength" sx={{ fontSize: 16, color: '#00bcd4' }} />,
+      icon: <CustomSvgIcon src={FistPowerIcon} alt="Strength" sx={{ fontSize: 32, color: '#00bcd4' }} />,
     },
     {
       metric: 'Dexterity',
@@ -80,7 +80,7 @@ const getMetricData = (scores: UserPerformanceScores, metrics?: UserPerformanceM
       description: 'Joint mobility and flexibility',
       rawValue: weeklyTests?.find(test => test.test_name === 'mobility')?.result_value ? `${weeklyTests.find(test => test.test_name === 'mobility')?.result_value?.toFixed(1)}%` : 'Mobility test required',
       color: '#9C27B0',
-      icon: <CustomSvgIcon src={MobilityIcon} alt="Dexterity" sx={{ fontSize: 16, color: '#00bcd4' }} />,
+      icon: <CustomSvgIcon src={EarSoundIcon} alt="Dexterity" sx={{ fontSize: 32, color: '#00bcd4' }} />,
     },
   ];
 

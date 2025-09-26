@@ -136,7 +136,6 @@ export const StatusBarContainer = styled(Box)(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',
   gap: theme.spacing(1),
-  marginBottom: theme.spacing(1),
   padding: theme.spacing(1),
   transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
 }));
