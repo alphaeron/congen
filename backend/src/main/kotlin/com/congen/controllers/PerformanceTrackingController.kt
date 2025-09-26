@@ -342,6 +342,62 @@ class PerformanceTrackingController(
     }
 
     /**
+     * Retrieves performance metrics for the authenticated user within a date range.
+     *
+     * This endpoint returns historical performance metrics data for trend analysis
+     * and chart visualization.
+     *
+     * @param startTimestamp The start timestamp of the range
+     * @param endTimestamp The end timestamp of the range
+     * @return List of performance metrics within the specified range
+     *
+     * @throws ValidationException if date range is invalid
+     */
+    @GetMapping("/metrics/range")
+    @PreAuthorize("isAuthenticated()")
+    @Operation(
+        summary = "Get performance metrics in date range",
+        description = "Retrieve historical performance metrics within the specified date range for trend analysis."
+    )
+    @ApiResponses(
+        value = [
+            ApiResponse(
+                responseCode = "200",
+                description = "Performance metrics retrieved successfully",
+                content = [Content(schema = Schema(implementation = Array<UserPerformanceMetrics>::class))]
+            ),
+            ApiResponse(
+                responseCode = "400",
+                description = "Bad request - validation error"
+            ),
+            ApiResponse(
+                responseCode = "401",
+                description = "Unauthorized - user not authenticated"
+            ),
+            ApiResponse(
+                responseCode = "500",
+                description = "Internal server error"
+            )
+        ]
+    )
+    fun getPerformanceMetricsInRange(
+        @RequestParam startTimestamp: Instant,
+        @RequestParam endTimestamp: Instant
+    ): Mono<ResponseEntity<List<UserPerformanceMetrics>>> {
+        return keycloakUtil.getCurrentUserId()
+            .flatMap { keycloakId ->
+                gdprComplianceService.withUserConsent(keycloakId) {
+                    performanceTrackingService.getPerformanceMetricsInRange(
+                        keycloakId,
+                        startTimestamp,
+                        endTimestamp
+                    )
+                        .map { ResponseEntity.ok(it) }
+                }
+            }
+    }
+
+    /**
      * Retrieves the Wilks score for the authenticated user.
      *
      * This endpoint calculates the Wilks score based on the user's 1RM data

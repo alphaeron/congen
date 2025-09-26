@@ -4,8 +4,10 @@
 --comment: Add performance tracking tables for gamified fitness metrics and weekly test protocol.
 
 -- Create user_performance_metrics table for storing daily wearable and subjective data
+-- Modified to support historical data with composite primary key
 CREATE TABLE user_performance_metrics (
-  keycloak_id VARCHAR(255) PRIMARY KEY NOT NULL,
+  id SERIAL PRIMARY KEY,
+  keycloak_id VARCHAR(255) NOT NULL,
   vo2_max NUMERIC(6,2) CHECK (vo2_max >= 0),
   strain NUMERIC(4,2) CHECK (strain >= 0 AND strain <= 21),
   recovery NUMERIC(5,2) CHECK (recovery >= 0 AND recovery <= 100),
@@ -72,7 +74,10 @@ CREATE TABLE user_test_results (
 
 -- Add indexes for better performance
 CREATE INDEX idx_user_performance_metrics_keycloak_id ON user_performance_metrics(keycloak_id);
+CREATE INDEX idx_user_performance_metrics_created_at ON user_performance_metrics(created_at);
 CREATE INDEX idx_user_performance_metrics_updated_at ON user_performance_metrics(updated_at);
+-- Composite index for range queries
+CREATE INDEX idx_user_performance_metrics_user_date ON user_performance_metrics(keycloak_id, created_at);
 
 CREATE INDEX idx_user_performance_scores_keycloak_id ON user_performance_scores(keycloak_id);
 CREATE INDEX idx_user_performance_scores_level ON user_performance_scores(level);

@@ -96,6 +96,25 @@ export const getWilksScore = async (
 };
 
 /**
+ * Get performance metrics for the authenticated user within a date range.
+ */
+export const getPerformanceMetricsInRange = async (
+  startDate: string,
+  endDate: string,
+  options: { forceRefresh?: boolean } = {}
+): Promise<UserPerformanceMetrics[]> => {
+  return REQUEST<UserPerformanceMetrics[]>({
+    method: 'GET',
+    url: '/performance/metrics/range',
+    params: {
+      startTimestamp: startDate,
+      endTimestamp: endDate,
+    },
+    ...options,
+  });
+};
+
+/**
  * Get test protocols configuration.
  */
 export const getTestProtocols = async (

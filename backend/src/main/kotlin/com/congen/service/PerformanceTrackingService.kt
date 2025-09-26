@@ -238,6 +238,24 @@ class PerformanceTrackingService(
     }
 
     /**
+     * Retrieves performance metrics for the current user within a date range.
+     *
+     * @param keycloakId The user's Keycloak identifier
+     * @param startTimestamp The start timestamp of the range
+     * @param endTimestamp The end timestamp of the range
+     * @return Mono containing list of performance metrics within the range
+     */
+    fun getPerformanceMetricsInRange(
+        keycloakId: String, 
+        startTimestamp: Instant, 
+        endTimestamp: Instant
+    ): Mono<List<UserPerformanceMetrics>> {
+        logger.debug("Retrieving performance metrics for user: $keycloakId, range: $startTimestamp to $endTimestamp")
+        
+        return userPerformanceMetricsDAL.getUserPerformanceMetricsInRange(keycloakId, startTimestamp, endTimestamp)
+    }
+
+    /**
      * Submits or updates performance metrics for the current user.
      *
      * This method handles both manual test inputs and wearable device data.

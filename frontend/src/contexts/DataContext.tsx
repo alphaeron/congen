@@ -37,6 +37,7 @@ import {
   submitWeeklyTest as submitWeeklyTestAPI,
   getWilksScore,
   getTestProtocols,
+  getPerformanceMetricsInRange,
 } from '../api/performanceTracking';
 import type {
   UserDataExport,
@@ -128,6 +129,7 @@ interface DataContextType {
   // Performance tracking data loading functions
   loadPerformanceScores: () => Promise<UserPerformanceScores | null>;
   loadPerformanceMetrics: () => Promise<UserPerformanceMetrics | null>;
+  loadPerformanceMetricsInRange: (startDate: string, endDate: string) => Promise<UserPerformanceMetrics[]>;
   loadWeeklyTests: (startDate?: string, endDate?: string) => Promise<UserTestResult[]>;
   loadTestProtocols: () => Promise<TestProtocol[]>;
   loadWilksScore: () => Promise<number | null>;
@@ -725,6 +727,19 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
     }
   }, [user?.keycloak_id, performanceMetrics]);
 
+  const loadPerformanceMetricsInRange = useCallback(async (startDate: string, endDate: string): Promise<UserPerformanceMetrics[]> => {
+    if (!user?.keycloak_id) return [];
+
+    try {
+      const metrics = await getPerformanceMetricsInRange(startDate, endDate);
+      return metrics;
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load performance metrics in range';
+      setError(errorMessage);
+      return [];
+    }
+  }, [user?.keycloak_id]);
+
   const loadWeeklyTests = useCallback(async (startDate?: string, endDate?: string): Promise<UserTestResult[]> => {
     if (!user?.keycloak_id) return [];
 
@@ -1298,6 +1313,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
       loadDashboardStats,
       loadPerformanceScores,
       loadPerformanceMetrics,
+      loadPerformanceMetricsInRange,
       loadWeeklyTests,
       loadTestProtocols,
       loadWilksScore,
@@ -1366,6 +1382,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
       loadDashboardStats,
       loadPerformanceScores,
       loadPerformanceMetrics,
+      loadPerformanceMetricsInRange,
       loadWeeklyTests,
       loadTestProtocols,
       loadWilksScore,

@@ -20,11 +20,12 @@ import {
   Alert,
   LinearProgress,
 } from '@mui/material';
-import { Add as AddIcon, Edit as EditIcon, ExpandMore as ExpandMoreIcon } from '@mui/icons-material';
+import { Add as AddIcon, Edit as EditIcon } from '@mui/icons-material';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useSnackbar } from 'notistack';
 import { GameCard, GameSubCard, GameStatusChip, GameText, GameTextSecondary } from './GameTheme';
 import { CustomSvgIcon } from './CustomSvgIcon';
+import { MetricTrendChart } from './MetricTrendChart';
 import { useData } from '../contexts/DataContext';
 import { submitPerformanceMetrics, getTestProtocols, submitWeeklyTest } from '../api/performanceTracking';
 import { formatDate } from '../common/utils';
@@ -47,12 +48,12 @@ interface CompactQuestCardProps {
 // Icon mapping for test protocols - using same icons as radar chart
 const getIconForProtocol = (testName: string) => {
   switch (testName) {
-    case 'vertical_jump': return <CustomSvgIcon src={PowerIcon} alt="Explosiveness" sx={{ fontSize: 16, color: '#00bcd4' }} />;
-    case 'vo2_max': return <CustomSvgIcon src={EnduranceIcon} alt="Stamina" sx={{ fontSize: 16, color: '#00bcd4' }} />;
-    case 'hr_recovery': return <CustomSvgIcon src={RecoveryIcon} alt="Recovery" sx={{ fontSize: 16, color: '#00bcd4' }} />;
-    case 'reflex': return <CustomSvgIcon src={SpeedIcon} alt="Reflexes" sx={{ fontSize: 16, color: '#00bcd4' }} />;
-    case 'mobility': return <CustomSvgIcon src={MobilityIcon} alt="Dexterity" sx={{ fontSize: 16, color: '#00bcd4' }} />;
-    default: return <CustomSvgIcon src={PowerIcon} alt="Test" sx={{ fontSize: 16, color: '#00bcd4' }} />;
+    case 'vertical_jump': return <CustomSvgIcon src={PowerIcon} alt="Explosiveness" sx={{ fontSize: 24, color: '#00bcd4' }} />;
+    case 'vo2_max': return <CustomSvgIcon src={EnduranceIcon} alt="Stamina" sx={{ fontSize: 24, color: '#00bcd4' }} />;
+    case 'hr_recovery': return <CustomSvgIcon src={RecoveryIcon} alt="Recovery" sx={{ fontSize: 24, color: '#00bcd4' }} />;
+    case 'reflex': return <CustomSvgIcon src={SpeedIcon} alt="Reflexes" sx={{ fontSize: 24, color: '#00bcd4' }} />;
+    case 'mobility': return <CustomSvgIcon src={MobilityIcon} alt="Dexterity" sx={{ fontSize: 24, color: '#00bcd4' }} />;
+    default: return <CustomSvgIcon src={PowerIcon} alt="Test" sx={{ fontSize: 24, color: '#00bcd4' }} />;
   }
 };
 
@@ -70,10 +71,11 @@ export const CompactQuestCard: React.FC<CompactQuestCardProps> = ({
   weeklyTests = [], 
   onTestUpdate 
 }) => {
-  const { refreshPerformanceData, submitWeeklyTest: submitWeeklyTestData, getCurrentWeekTest } = useData();
+  const { refreshPerformanceData, submitWeeklyTest: submitWeeklyTestData, getCurrentWeekTest, loadPerformanceMetricsInRange } = useData();
   const { enqueueSnackbar } = useSnackbar();
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [expanded, setExpanded] = useState(false);
+  const [historicalMetrics, setHistoricalMetrics] = useState<UserPerformanceMetrics[]>([]);
+  const [isLoadingHistorical, setIsLoadingHistorical] = useState(false);
   
   // Daily metrics state
   const [formData, setFormData] = useState({
@@ -90,6 +92,10 @@ export const CompactQuestCard: React.FC<CompactQuestCardProps> = ({
   const [editingTest, setEditingTest] = useState<TestProtocol | null>(null);
   const [testValue, setTestValue] = useState<string>('');
   const [testStatus, setTestStatus] = useState<'PENDING' | 'COMPLETED' | 'SKIPPED'>('PENDING');
+  
+  // Metric editing state
+  const [editingMetric, setEditingMetric] = useState<string | null>(null);
+  const [editingProtocol, setEditingProtocol] = useState<TestProtocol | null>(null);
 
   // Fetch test protocols from backend
   const { data: testProtocols = [], isLoading: protocolsLoading } = useQuery({
@@ -157,17 +163,17 @@ export const CompactQuestCard: React.FC<CompactQuestCardProps> = ({
   };
 
   const handleSubmitTest = () => {
-    if (!editingTest) return;
+    if (!editingProtocol || !testValue) return;
 
     const updatedTestResult: Omit<UserTestResult, 'id' | 'keycloak_id' | 'created_at' | 'updated_at'> = {
-      week_start_timestamp: currentWeekTests[0]?.week_start_timestamp || new Date().toISOString(),
-      test_name: editingTest.test_name,
-      status: testStatus,
-      result_value: testStatus === 'COMPLETED' && testValue ? Number(testValue) : undefined,
+      week_start_timestamp: new Date(getCurrentWeekStart()),
+      test_name: editingProtocol.test_name,
+      status: 'COMPLETED',
+      result_value: Number(testValue),
     };
 
     const updatedTestResults = testProtocols.map(protocol => {
-      if (protocol.test_name === editingTest.test_name) {
+      if (protocol.test_name === editingProtocol.test_name) {
         return updatedTestResult;
       }
       const existingResult = currentWeekTests.find(test => test.test_name === protocol.test_name);
@@ -182,21 +188,18 @@ export const CompactQuestCard: React.FC<CompactQuestCardProps> = ({
     submitTestMutation.mutate(updatedTestResults);
   };
 
-  // Calculate completion stats
-  const getCompletionStats = () => {
-    if (type === 'daily') {
-      const completed = dailyMetricsConfig.filter(metric => formData[metric.key as keyof typeof formData]).length;
-      return { completed, total: dailyMetricsConfig.length };
-    } else {
-      const completed = currentWeekTests.filter(test => test.status === 'COMPLETED').length;
-      return { completed, total: testProtocols.length };
-    }
-  };
 
-  const { completed, total } = getCompletionStats();
-  const hasAnyData = type === 'daily' 
-    ? Object.values(formData).some(value => value !== '')
-    : currentWeekTests.length > 0;
+  const getCurrentWeekStart = () => {
+    // Calculate current week start (Monday)
+    const now = new Date();
+    const dayOfWeek = now.getDay();
+    const daysToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek; // Sunday = 0, Monday = 1
+    const monday = new Date(now);
+    monday.setDate(now.getDate() + daysToMonday);
+    monday.setHours(0, 0, 0, 0);
+    
+    return monday.toISOString();
+  };
 
   const getTitle = () => type === 'daily' ? 'Daily Quests' : 'Weekly Quests';
   const getSubtitle = () => {
@@ -208,10 +211,64 @@ export const CompactQuestCard: React.FC<CompactQuestCardProps> = ({
         day: 'numeric' 
       });
     } else {
-      return currentWeekTests[0]?.week_start_timestamp ? 
-        `Week of ${formatDate(currentWeekTests[0].week_start_timestamp)}` : 
-        'N/A';
+      // Calculate current week start (Monday)
+      const now = new Date();
+      const dayOfWeek = now.getDay();
+      const daysToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek; // Sunday = 0, Monday = 1
+      const monday = new Date(now);
+      monday.setDate(now.getDate() + daysToMonday);
+      monday.setHours(0, 0, 0, 0);
+      
+      return `Week of ${formatDate(monday)}`;
     }
+  };
+
+  const loadHistoricalData = async () => {
+    if (type === 'daily') {
+      setIsLoadingHistorical(true);
+      try {
+        const endDate = new Date().toISOString();
+        const startDate = new Date();
+        startDate.setDate(startDate.getDate() - 30);
+        const startDateStr = startDate.toISOString();
+        
+        const data = await loadPerformanceMetricsInRange(startDateStr, endDate);
+        setHistoricalMetrics(data);
+      } catch (error) {
+        console.error('Failed to load historical data:', error);
+        setHistoricalMetrics([]);
+      } finally {
+        setIsLoadingHistorical(false);
+      }
+    }
+  };
+
+  const handleEditDailyMetric = (metricKey: string) => {
+    setEditingMetric(metricKey);
+    setDialogOpen(true);
+    loadHistoricalData();
+  };
+
+  const handleEditWeeklyTest = (protocol: TestProtocol) => {
+    setEditingProtocol(protocol);
+    setDialogOpen(true);
+  };
+
+  const handleSubmitDailyMetric = () => {
+    if (!editingMetric) return;
+
+    // Create updated metrics with the new value
+    const updatedMetrics: Omit<UserPerformanceMetrics, 'keycloak_id' | 'created_at' | 'updated_at'> = {
+      strain: formData.strain ? parseFloat(formData.strain) : undefined,
+      recovery: formData.recovery ? parseFloat(formData.recovery) : undefined,
+      hrv: formData.hrv ? parseFloat(formData.hrv) : undefined,
+      sleep_score: formData.sleep_score ? parseFloat(formData.sleep_score) : undefined,
+      rem_sleep_minutes: formData.rem_sleep_minutes ? parseFloat(formData.rem_sleep_minutes) : undefined,
+      deep_sleep_minutes: formData.deep_sleep_minutes ? parseFloat(formData.deep_sleep_minutes) : undefined,
+      subjective_tiredness: formData.subjective_tiredness ? parseInt(formData.subjective_tiredness) : undefined,
+    };
+
+    submitMetricsMutation.mutate(updatedMetrics);
   };
 
   const renderCompactGrid = () => {
@@ -223,32 +280,23 @@ export const CompactQuestCard: React.FC<CompactQuestCardProps> = ({
             const hasValue = value && value !== '';
             
             return (
-              <Grid item xs={6} key={index}>
+              <Grid size={{ xs: 6 }} key={index}>
                 <GameSubCard 
                   sx={{ 
                     height: '80px', 
                     cursor: 'pointer',
                     '&:hover': { opacity: 0.8 }
                   }}
-                  onClick={() => setDialogOpen(true)}
+                  onClick={() => handleEditDailyMetric(metric.key)}
                 >
                   <CardContent sx={{ p: 1, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                    <Stack spacing={0.5} alignItems="center">
-                      <Box sx={{ fontSize: 16, color: '#00bcd4', fontWeight: 'bold' }}>
+                    <Stack spacing={0.2} alignItems="center" sx={{ rowGap: '0px !important' }}>
+                      <Box sx={{ fontSize: 24, color: '#00bcd4', fontWeight: 'bold' }}>
                         {metric.icon}
                       </Box>
                       <GameText variant="caption" sx={{ fontWeight: 'bold', textAlign: 'center' }}>
                         {metric.label}
                       </GameText>
-                      {hasValue ? (
-                        <GameText variant="caption" sx={{ color: '#4caf50', fontWeight: 'bold' }}>
-                          {value}{metric.unit}
-                        </GameText>
-                      ) : (
-                        <GameTextSecondary variant="caption" sx={{ fontStyle: 'italic' }}>
-                          Pending
-                        </GameTextSecondary>
-                      )}
                     </Stack>
                   </CardContent>
                 </GameSubCard>
@@ -274,33 +322,21 @@ export const CompactQuestCard: React.FC<CompactQuestCardProps> = ({
             const result = testResult?.result_value;
             
             return (
-              <Grid item xs={6} key={index}>
+              <Grid size={{ xs: 6 }} key={index}>
                 <GameSubCard 
                   sx={{ 
                     height: '80px', 
                     cursor: 'pointer',
                     '&:hover': { opacity: 0.8 }
                   }}
-                  onClick={() => handleEditTest(protocol)}
+                  onClick={() => handleEditWeeklyTest(protocol)}
                 >
                   <CardContent sx={{ p: 1, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                    <Stack spacing={0.5} alignItems="center">
+                    <Stack spacing={0.2} alignItems="center" sx={{ rowGap: '0px !important' }}>
                       {getIconForProtocol(protocol.test_name)}
                       <GameText variant="caption" sx={{ fontWeight: 'bold', textAlign: 'center' }}>
                         {protocol.display_name}
                       </GameText>
-                      {status === 'COMPLETED' && result ? (
-                        <GameText variant="caption" sx={{ color: '#4caf50', fontWeight: 'bold' }}>
-                          {result} {protocol.unit}
-                        </GameText>
-                      ) : (
-                        <GameStatusChip
-                          label={status}
-                          status={status}
-                          size="small"
-                          sx={{ fontSize: '0.6rem', height: '16px' }}
-                        />
-                      )}
                     </Stack>
                   </CardContent>
                 </GameSubCard>
@@ -312,105 +348,6 @@ export const CompactQuestCard: React.FC<CompactQuestCardProps> = ({
     }
   };
 
-  const renderExpandedView = () => {
-    if (type === 'daily') {
-      return (
-        <Stack spacing={0.5} sx={{ alignItems: 'center' }}>
-          {dailyMetricsConfig.map((metric, index) => {
-            const value = formData[metric.key as keyof typeof formData];
-            if (!value || value === '') return null;
-            
-            return (
-              <GameSubCard key={index} sx={{ width: '100%', maxWidth: '400px' }}>
-                <CardContent sx={{ p: 2 }}>
-                  <Stack spacing={0.5}>
-                    <Stack direction="row" alignItems="center" spacing={1}>
-                      <Box sx={{ fontSize: 20, color: '#00bcd4', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>
-                        {metric.icon}
-                      </Box>
-                      <GameText variant="subtitle2" sx={{ fontWeight: 'bold' }}>
-                        {metric.label}
-                      </GameText>
-                    </Stack>
-                    <GameTextSecondary variant="body2" sx={{ wordBreak: 'break-word' }}>
-                      {metric.description}
-                    </GameTextSecondary>
-                    <Box sx={{ p: 1, backgroundColor: 'rgba(76, 175, 80, 0.2)', borderRadius: 1 }}>
-                      <GameText variant="body2" sx={{ fontWeight: 'bold' }}>
-                        Result: {value}{metric.unit}
-                      </GameText>
-                    </Box>
-                  </Stack>
-                </CardContent>
-              </GameSubCard>
-            );
-          })}
-        </Stack>
-      );
-    } else {
-      return (
-        <Stack spacing={0.5} sx={{ alignItems: 'center' }}>
-          {testProtocols.map((protocol, index) => {
-            const testResult = currentWeekTests.find(test => test.test_name === protocol.test_name);
-            const status = testResult?.status || 'PENDING';
-            const result = testResult?.result_value;
-            
-            return (
-              <GameSubCard key={index} sx={{ width: '100%', maxWidth: '400px' }}>
-                <CardContent sx={{ p: 2 }}>
-                  <Stack spacing={0.5}>
-                    <Stack direction="row" alignItems="center" spacing={1} sx={{ flexWrap: 'wrap' }}>
-                      {getIconForProtocol(protocol.test_name)}
-                      <GameText variant="subtitle2" sx={{ fontWeight: 'bold' }}>
-                        {protocol.display_name}
-                      </GameText>
-                    </Stack>
-                    
-                    {status === 'COMPLETED' && result ? (
-                      <Box sx={{ p: 1, backgroundColor: 'rgba(76, 175, 80, 0.2)', borderRadius: 1 }}>
-                        <GameText variant="body2" sx={{ fontWeight: 'bold' }}>
-                          Result: {result} {protocol.unit}
-                        </GameText>
-                      </Box>
-                    ) : (
-                      <GameTextSecondary variant="body2" sx={{ wordBreak: 'break-word' }}>
-                        {protocol.description}
-                      </GameTextSecondary>
-                    )}
-                    
-                    {status !== 'COMPLETED' && (
-                      <Stack direction="row" alignItems="center" justifyContent="space-between">
-                        <Tooltip title="Click to record your results">
-                          <Box
-                            onClick={() => handleEditTest(protocol)}
-                            sx={{ 
-                              cursor: 'pointer',
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: 1,
-                              '&:hover': {
-                                opacity: 0.8
-                              }
-                            }}
-                          >
-                            <GameStatusChip
-                              label={status}
-                              status={status}
-                              size="small"
-                            />
-                          </Box>
-                        </Tooltip>
-                      </Stack>
-                    )}
-                  </Stack>
-                </CardContent>
-              </GameSubCard>
-            );
-          })}
-        </Stack>
-      );
-    }
-  };
 
   return (
     <>
@@ -418,36 +355,9 @@ export const CompactQuestCard: React.FC<CompactQuestCardProps> = ({
         <CardHeader
           sx={{ paddingBottom: 0 }}
           title={
-            <Stack direction="row" alignItems="center" justifyContent="space-between">
-              <GameText variant="h6" sx={{ fontWeight: 'bold' }}>
-                {getTitle()}
-              </GameText>
-              <Stack direction="row" alignItems="center" spacing={1}>
-                <GameText variant="caption" sx={{ color: '#00bcd4' }}>
-                  {completed}/{total}
-                </GameText>
-                <Tooltip title={hasAnyData ? "Edit metrics" : "Record metrics"}>
-                  <IconButton
-                    onClick={() => setDialogOpen(true)}
-                    sx={{ color: '#00bcd4' }}
-                    size="small"
-                  >
-                    {hasAnyData ? <EditIcon /> : <AddIcon />}
-                  </IconButton>
-                </Tooltip>
-                {hasAnyData && (
-                  <Tooltip title={expanded ? "Collapse" : "Expand"}>
-                    <IconButton
-                      onClick={() => setExpanded(!expanded)}
-                      sx={{ color: '#00bcd4' }}
-                      size="small"
-                    >
-                      <ExpandMoreIcon sx={{ transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)' }} />
-                    </IconButton>
-                  </Tooltip>
-                )}
-              </Stack>
-            </Stack>
+            <GameText variant="h6" sx={{ fontWeight: 'bold' }}>
+              {getTitle()}
+            </GameText>
           }
           subheader={
             <GameTextSecondary variant="body2">
@@ -456,167 +366,150 @@ export const CompactQuestCard: React.FC<CompactQuestCardProps> = ({
           }
         />
         <CardContent sx={{ pt: 1 }}>
-          {expanded ? renderExpandedView() : renderCompactGrid()}
+          {renderCompactGrid()}
         </CardContent>
       </GameCard>
 
-      {/* Daily Metrics Dialog */}
-      {type === 'daily' && (
-        <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm" fullWidth>
-          <DialogTitle>
-            <GameText variant="h6" sx={{ fontWeight: 'bold' }}>
-              Daily Metrics
-            </GameText>
-          </DialogTitle>
-          <DialogContent>
-            <Grid container spacing={2} sx={{ mt: 1 }}>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label="Strain"
-                  type="number"
-                  value={formData.strain}
-                  onChange={(e) => handleInputChange('strain', e.target.value)}
-                  fullWidth
-                  inputProps={{ min: 0, max: 21, step: 0.1 }}
-                  helperText="0-21 (from wearables)"
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label="Recovery"
-                  type="number"
-                  value={formData.recovery}
-                  onChange={(e) => handleInputChange('recovery', e.target.value)}
-                  fullWidth
-                  inputProps={{ min: 0, max: 100, step: 1 }}
-                  helperText="0-100%"
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label="HRV"
-                  type="number"
-                  value={formData.hrv}
-                  onChange={(e) => handleInputChange('hrv', e.target.value)}
-                  fullWidth
-                  inputProps={{ min: 0, step: 0.1 }}
-                  helperText="Heart rate variability (ms)"
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label="Sleep Score"
-                  type="number"
-                  value={formData.sleep_score}
-                  onChange={(e) => handleInputChange('sleep_score', e.target.value)}
-                  fullWidth
-                  inputProps={{ min: 0, max: 100, step: 1 }}
-                  helperText="0-100%"
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label="REM Sleep"
-                  type="number"
-                  value={formData.rem_sleep_minutes}
-                  onChange={(e) => handleInputChange('rem_sleep_minutes', e.target.value)}
-                  fullWidth
-                  inputProps={{ min: 0, step: 1 }}
-                  helperText="Minutes"
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label="Deep Sleep"
-                  type="number"
-                  value={formData.deep_sleep_minutes}
-                  onChange={(e) => handleInputChange('deep_sleep_minutes', e.target.value)}
-                  fullWidth
-                  inputProps={{ min: 0, step: 1 }}
-                  helperText="Minutes"
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  label="Subjective Tiredness"
-                  type="number"
-                  value={formData.subjective_tiredness}
-                  onChange={(e) => handleInputChange('subjective_tiredness', e.target.value)}
-                  fullWidth
-                  inputProps={{ min: 1, max: 5, step: 1 }}
-                  helperText="1-5 scale (1 = very fresh, 5 = very tired)"
-                />
-              </Grid>
-            </Grid>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setDialogOpen(false)}>
-              Cancel
-            </Button>
+      {/* Metric Detail Dialog */}
+      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="md" fullWidth>
+        <DialogTitle>
+          <GameText variant="h6" sx={{ fontWeight: 'bold' }}>
+            {type === 'daily' 
+              ? dailyMetricsConfig.find(m => m.key === editingMetric)?.label 
+              : editingProtocol?.display_name
+            }
+          </GameText>
+        </DialogTitle>
+        <DialogContent>
+          <Stack spacing={3} sx={{ mt: 2 }}>
+            {/* 30-day Chart */}
+            {type === 'daily' && editingMetric ? (
+              <MetricTrendChart
+                metricKey={editingMetric}
+                metricLabel={dailyMetricsConfig.find(m => m.key === editingMetric)?.label || editingMetric}
+                metricUnit={dailyMetricsConfig.find(m => m.key === editingMetric)?.unit || ''}
+                historicalData={historicalMetrics}
+                isLoading={isLoadingHistorical}
+                height={200}
+              />
+            ) : type === 'weekly' && editingProtocol ? (
+              <MetricTrendChart
+                metricKey={editingProtocol.test_name}
+                metricLabel={editingProtocol.display_name}
+                metricUnit={editingProtocol.unit}
+                historicalData={[]} // TODO: Add weekly test historical data
+                isLoading={false}
+                height={200}
+              />
+            ) : null}
+            
+            {/* Input Section */}
+            {type === 'daily' ? (
+              <Box>
+                {(() => {
+                  const metric = dailyMetricsConfig.find(m => m.key === editingMetric);
+                  if (!metric) return null;
+                  
+                  const currentValue = formData[editingMetric as keyof typeof formData];
+                  const hasValue = currentValue && currentValue !== '';
+                  
+                  return (
+                    <Stack spacing={2}>
+                      {hasValue ? (
+                        <Alert severity="info">
+                          <GameText variant="body2">
+                            Today's {metric.label.toLowerCase()} has already been recorded ({currentValue}{metric.unit}). 
+                            Check back tomorrow to record your next result!
+                          </GameText>
+                        </Alert>
+                      ) : (
+                        <Stack spacing={2}>
+                          <GameText variant="subtitle2" sx={{ fontWeight: 'bold' }}>
+                            Record Today's {metric.label}
+                          </GameText>
+                          <TextField
+                            label={metric.label}
+                            type="number"
+                            value={currentValue}
+                            onChange={(e) => editingMetric && handleInputChange(editingMetric, e.target.value)}
+                            fullWidth
+                            inputProps={{ 
+                              min: metric.key === 'strain' ? 0 : metric.key === 'subjective_tiredness' ? 1 : 0,
+                              max: metric.key === 'strain' ? 21 : metric.key === 'subjective_tiredness' ? 5 : undefined,
+                              step: metric.key === 'strain' || metric.key === 'hrv' ? 0.1 : 1
+                            }}
+                            helperText={metric.description}
+                          />
+                        </Stack>
+                      )}
+                    </Stack>
+                  );
+                })()}
+              </Box>
+            ) : (
+              <Box>
+                {(() => {
+                  if (!editingProtocol) return null;
+                  
+                  const testResult = currentWeekTests.find(test => test.test_name === editingProtocol.test_name);
+                  const result = testResult?.result_value;
+                  const hasValue = testResult?.status === 'COMPLETED' && result;
+                  
+                  return (
+                    <Stack spacing={2}>
+                      <GameText variant="subtitle2" sx={{ fontWeight: 'bold' }}>
+                        Record This Week's {editingProtocol.display_name}
+                      </GameText>
+                      
+                      <Alert severity="info">
+                        {editingProtocol.description}
+                      </Alert>
+                      
+                      {hasValue ? (
+                        <Alert severity="info">
+                          <GameText variant="body2">
+                            This week's {editingProtocol.display_name.toLowerCase()} has already been recorded ({result} {editingProtocol.unit}). 
+                            Check back next week to record your next result!
+                          </GameText>
+                        </Alert>
+                      ) : (
+                        <TextField
+                          fullWidth
+                          label={`Result (${editingProtocol.unit})`}
+                          type="number"
+                          value={testValue}
+                          onChange={(e) => setTestValue(e.target.value)}
+                          placeholder={`Enter your ${editingProtocol.test_name.toLowerCase()} result`}
+                        />
+                      )}
+                    </Stack>
+                  );
+                })()}
+              </Box>
+            )}
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => {
+            setDialogOpen(false);
+            setEditingMetric(null);
+            setEditingProtocol(null);
+          }}>
+            Close
+          </Button>
+          {((type === 'daily' && editingMetric && !formData[editingMetric as keyof typeof formData]) ||
+            (type === 'weekly' && editingProtocol && testValue)) && (
             <Button
-              onClick={handleSubmitMetrics}
+              onClick={type === 'daily' ? handleSubmitDailyMetric : handleSubmitTest}
               variant="contained"
-              disabled={submitMetricsMutation.isPending}
+              disabled={submitMetricsMutation.isPending || submitTestMutation.isPending}
               sx={{ backgroundColor: '#00bcd4', '&:hover': { backgroundColor: '#00acc1' } }}
             >
-              {submitMetricsMutation.isPending ? 'Saving...' : 'Save Metrics'}
+              {(submitMetricsMutation.isPending || submitTestMutation.isPending) ? 'Saving...' : 'Confirm'}
             </Button>
-          </DialogActions>
-        </Dialog>
-      )}
-
-      {/* Weekly Test Dialog */}
-      {type === 'weekly' && (
-        <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm" fullWidth>
-          <DialogTitle>
-            Edit {editingTest?.test_name} Result
-          </DialogTitle>
-          <DialogContent>
-            <Box sx={{ mt: 2 }}>
-              <FormControl fullWidth sx={{ mb: 2 }}>
-                <InputLabel>Status</InputLabel>
-                <Select
-                  value={testStatus}
-                  onChange={(e) => setTestStatus(e.target.value as any)}
-                  label="Status"
-                >
-                  <MenuItem value="PENDING">Pending</MenuItem>
-                  <MenuItem value="COMPLETED">Completed</MenuItem>
-                  <MenuItem value="SKIPPED">Skipped</MenuItem>
-                </Select>
-              </FormControl>
-              
-              {testStatus === 'COMPLETED' && (
-                <TextField
-                  fullWidth
-                  label={`Result (${editingTest?.unit})`}
-                  type="number"
-                  value={testValue}
-                  onChange={(e) => setTestValue(e.target.value)}
-                  placeholder={`Enter your ${editingTest?.test_name.toLowerCase()} result`}
-                  sx={{ mb: 2 }}
-                />
-              )}
-              
-              <Alert severity="info" sx={{ mb: 2 }}>
-                {editingTest?.description}
-              </Alert>
-            </Box>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button
-              onClick={handleSubmitTest}
-              variant="contained"
-              disabled={submitTestMutation.isPending}
-            >
-              {submitTestMutation.isPending ? 'Saving...' : 'Save'}
-            </Button>
-          </DialogActions>
-        </Dialog>
-      )}
+          )}
+        </DialogActions>
+      </Dialog>
     </>
   );
 };

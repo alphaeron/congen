@@ -1,7 +1,3 @@
-dive in to view trends in each of the 6 stats from clicking on the radar chart, how can we implement that?
-
-
-
 Ensure our svg icons are used consistently on the adventurer status card and between the weekly quests as well.
 
 Remove any svg icons from the resources directory that we are not using to prevent confusion.
