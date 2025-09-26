@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import {
   CardContent,
   CardHeader,
@@ -16,16 +16,8 @@ import {
   Alert,
   LinearProgress,
   Tooltip,
-  IconButton,
   Stack,
 } from '@mui/material';
-import {
-  CheckCircle as CheckCircleIcon,
-  RadioButtonUnchecked as RadioButtonUncheckedIcon,
-  SkipNext as SkipNextIcon,
-  Edit as EditIcon,
-  CalendarToday as CalendarTodayIcon,
-} from '@mui/icons-material';
 import { CustomSvgIcon } from './CustomSvgIcon';
 import PowerIcon from '../resources/power-icon.svg';
 import EnduranceIcon from '../resources/endurance-icon.svg';
@@ -58,7 +50,7 @@ const getIconForProtocol = (testName: string) => {
 };
 
 export const WeeklyTestTracker: React.FC<WeeklyTestTrackerProps> = ({ weeklyTests, onTestUpdate }) => {
-  const { submitWeeklyTest, getCurrentWeekTest } = useData();
+  const { submitWeeklyTest, getCurrentWeekTest, refreshPerformanceData } = useData();
   const { enqueueSnackbar } = useSnackbar();
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editingTest, setEditingTest] = useState<TestProtocol | null>(null);
@@ -76,14 +68,15 @@ export const WeeklyTestTracker: React.FC<WeeklyTestTrackerProps> = ({ weeklyTest
   const currentWeekTests = getCurrentWeekTest() || weeklyTests;
 
   const submitTestMutation = useMutation({
-    mutationFn: (testResults: Omit<UserTestResult, 'id' | 'keycloak_id' | 'created_at' | 'updated_at'>[]) => 
+    mutationFn: (testResults: Omit<UserTestResult, 'id' | 'keycloak_id' | 'created_at' | 'updated_at'>[]) =>
       submitWeeklyTest(testResults),
-    onSuccess: () => {
-      // DataContext automatically refreshes performance data after submission
+    onSuccess: async () => {
+      // Auto-refresh performance data to immediately reflect changes
+      await refreshPerformanceData();
       onTestUpdate?.();
       setEditDialogOpen(false);
     },
-    onError: (error: any) => {
+    onError: () => {
       enqueueSnackbar('Failed to submit weekly test', { variant: 'error' });
     },
   });
@@ -125,31 +118,6 @@ export const WeeklyTestTracker: React.FC<WeeklyTestTrackerProps> = ({ weeklyTest
 
     submitTestMutation.mutate(updatedTestResults);
   };
-
-  const getCompletionPercentage = () => {
-    if (testProtocols.length === 0) return 0;
-    
-    const totalTests = testProtocols.length;
-    const completedTests = testProtocols.filter(protocol => {
-      const testResult = currentWeekTests.find(test => test.test_name === protocol.test_name);
-      return testResult?.status === 'COMPLETED';
-    }).length;
-    
-    return Math.round((completedTests / totalTests) * 100);
-  };
-
-  const getStatusIcon = (status: 'PENDING' | 'COMPLETED' | 'SKIPPED') => {
-    switch (status) {
-      case 'COMPLETED':
-        return <CheckCircleIcon sx={{ color: '#4CAF50' }} />;
-      case 'SKIPPED':
-        return <SkipNextIcon sx={{ color: '#FF9800' }} />;
-      default:
-        return <RadioButtonUncheckedIcon sx={{ color: 'rgba(255, 255, 255, 0.5)' }} />;
-    }
-  };
-
-  const completionPercentage = getCompletionPercentage();
 
   return (
     <>
@@ -194,44 +162,44 @@ export const WeeklyTestTracker: React.FC<WeeklyTestTrackerProps> = ({ weeklyTest
                         <GameText variant="subtitle2" sx={{ fontWeight: 'bold' }}>
                           {protocol.display_name}
                         </GameText>
-                        <GameStatusChip
-                          label={status}
-                          status={status}
-                          size="small"
-                        />
                       </Stack>
                       
-                      <GameTextSecondary variant="body2" sx={{ wordBreak: 'break-word' }}>
-                        {protocol.description}
-                      </GameTextSecondary>
-                      
-                      {status === 'COMPLETED' && result && (
+                      {status === 'COMPLETED' && result ? (
                         <Box sx={{ p: 1, backgroundColor: 'rgba(76, 175, 80, 0.2)', borderRadius: 1 }}>
                           <GameText variant="body2" sx={{ fontWeight: 'bold' }}>
                             Result: {result} {protocol.unit}
                           </GameText>
                         </Box>
+                      ) : (
+                        <GameTextSecondary variant="body2" sx={{ wordBreak: 'break-word' }}>
+                          {protocol.description}
+                        </GameTextSecondary>
                       )}
                       
-                      <Stack direction="row" alignItems="center" justifyContent="space-between">
-                        <Stack direction="row" alignItems="center" spacing={1}>
-                          {getStatusIcon(status)}
-                          <GameTextSecondary variant="caption">
-                            {status === 'COMPLETED' ? 'Completed' : 
-                             status === 'SKIPPED' ? 'Skipped' : 'Pending'}
-                          </GameTextSecondary>
+                      {status !== 'COMPLETED' && (
+                        <Stack direction="row" alignItems="center" justifyContent="space-between">
+                          <Tooltip title="Click to record your results">
+                            <Box
+                              onClick={() => handleEditTest(protocol)}
+                              sx={{ 
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 1,
+                                '&:hover': {
+                                  opacity: 0.8
+                                }
+                              }}
+                            >
+                              <GameStatusChip
+                                label={status}
+                                status={status}
+                                size="small"
+                              />
+                            </Box>
+                          </Tooltip>
                         </Stack>
-                        
-                        <Tooltip title="Edit test result">
-                          <IconButton
-                            size="small"
-                            onClick={() => handleEditTest(protocol)}
-                            sx={{ color: 'white' }}
-                          >
-                            <EditIcon fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
-                      </Stack>
+                      )}
                     </Stack>
                   </CardContent>
                 </GameSubCard>
