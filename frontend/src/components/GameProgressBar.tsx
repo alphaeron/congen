@@ -154,33 +154,37 @@ export const GameCircularProgressBar: React.FC<GameProgressBarProps> = ({
                 height: 75,
               }}
             >
-              {/* Custom circular progress using SVG */}
+              {/* Custom circular progress using SVG - based on Smashing Things Together tutorial */}
               <svg
                 width={75}
                 height={75}
-                style={{ transform: 'rotate(-90deg)' }}
+                viewBox="0 0 75 75"
+                style={{ transform: 'rotate(90deg)' }}
               >
-                {/* Background circle */}
+                {/* Background dashed circle */}
                 <circle
-                  cx={37.5}
-                  cy={37.5}
-                  r={30}
+                  cx="37.5"
+                  cy="37.5"
+                  r="30"
                   fill="none"
-                  stroke={alpha('#ffffff', 0.2)} // Using Congen's alpha approach
-                  strokeWidth={5}
+                  stroke={alpha('#ffffff', 0.2)}
+                  strokeWidth="5"
+                  strokeDasharray="1.5,1.5"
                 />
-                {/* Progress circle */}
+                {/* Progress circle - counterclockwise from bottom */}
                 <circle
-                  cx={37.5}
-                  cy={37.5}
-                  r={30}
+                  cx="37.5"
+                  cy="37.5"
+                  r="30"
                   fill="none"
                   stroke={color}
-                  strokeWidth={5}
+                  strokeWidth="5"
                   strokeLinecap="round"
                   strokeDasharray={`${2 * Math.PI * 30}`}
-                  strokeDashoffset={`${2 * Math.PI * 30 * (1 - percentage / 100)}`}
-                  style={{ transition: 'stroke-dashoffset 0.3s cubic-bezier(0.4, 0, 0.2, 1)' }} // Matches Congen's transition
+                  strokeDashoffset={`-${2 * Math.PI * 30 * (1 - percentage / 100)}`}
+                  style={{ 
+                    transition: 'stroke-dashoffset 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+                  }}
                 />
               </svg>
               <CircularProgressText>
