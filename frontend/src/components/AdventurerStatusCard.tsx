@@ -82,15 +82,15 @@ export const AdventurerStatusCard: React.FC<AdventurerStatusCardProps> = ({
                       <Stack direction="row" alignItems="flex-start" spacing={2}>
                         <Stack direction="column" alignItems="center" sx={{ rowGap: 0 }}>
                           <CustomSvgIcon src={AdventurerProfileIcon} alt="Profile" sx={{ fontSize: 80, color: 'white' }} />
-                          <GameText variant="h6" sx={{ color: '#ffffff', textShadow: '0 0 3px #00bcd4', mt: 0, textTransform: 'uppercase' }}>
+                          <GameText variant="h6" sx={{ mt: '-16px', color: '#ffffff', textShadow: '0 0 5px #00bcd4', textTransform: 'uppercase' }}>
                             {userName}
                           </GameText>
                         </Stack>
                         <Stack direction="column" alignItems="center" sx={{ rowGap: 0 }}>
-                          <GameText variant="h2" sx={{ fontSize: '3rem', fontWeight: 'bold', color: '#00bcd4', textShadow: '0 0 10px #00bcd4', lineHeight: 1, mt: '20px' }}>
+                          <GameText variant="h2" sx={{ fontSize: '3rem', fontWeight: 'bold', color: '#00bcd4', textShadow: '0 0 10px #00bcd4', lineHeight: 1, mt: '16px' }}>
                             {scores.level}
                           </GameText>
-                          <GameText variant="h6" sx={{ color: '#e0e0e0', textShadow: '0 0 5px #00bcd4', mt: '2px' }}>
+                          <GameText variant="h6" sx={{ color: '#e0e0e0', textShadow: '0 0 5px #00bcd4', mt: '-10px' }}>
                             LEVEL
                           </GameText>
                         </Stack>
