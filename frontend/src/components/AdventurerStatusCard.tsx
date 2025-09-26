@@ -6,9 +6,9 @@ import { GameProgressBar, GameCircularProgressBar } from './GameProgressBar';
 import { GameCard, GameSkillChip, GameText, GameTextSecondary } from './GameTheme';
 import { PerformanceRadarChart } from './PerformanceRadarChart';
 import type { UserPerformanceScores, UserPerformanceMetrics, UserTestResult } from '../api/types';
-import AdventurerProfileIcon from '../resources/adventurer-profile-icon.svg';
-import HeartIcon from '../resources/heart-icon.svg';
-import PotionBottleIcon from '../resources/potion-bottle-icon.svg';
+import ProfileIcon from '../resources/profile-icon.svg';
+import HealthIcon from '../resources/health-icon.svg';
+import MagicIcon from '../resources/magic-icon.svg';
 import SkillsIcon from '../resources/skills-icon.svg';
 
 interface AdventurerStatusCardProps {
@@ -50,7 +50,7 @@ export const AdventurerStatusCard: React.FC<AdventurerStatusCardProps> = ({
               <Stack direction="row" alignItems="flex-start" spacing={2}>
                 <Stack direction="column" alignItems="center" sx={{ rowGap: 0 }}>
                   <CustomSvgIcon
-                    src={AdventurerProfileIcon}
+                    src={ProfileIcon}
                     alt="Profile"
                     sx={{ fontSize: 80, color: 'white' }}
                   />
@@ -97,7 +97,7 @@ export const AdventurerStatusCard: React.FC<AdventurerStatusCardProps> = ({
           <Grid size="auto">
             <GameProgressBar
               icon={
-                <CustomSvgIcon src={HeartIcon} alt="HP" sx={{ fontSize: 40, color: '#00bcd4' }} />
+                <CustomSvgIcon src={HealthIcon} alt="HP" sx={{ fontSize: 40, color: '#00bcd4' }} />
               }
               label="HP"
               current={Math.max(0, scores.hp - scores.hp_loss)}
@@ -110,7 +110,7 @@ export const AdventurerStatusCard: React.FC<AdventurerStatusCardProps> = ({
             <GameProgressBar
               icon={
                 <CustomSvgIcon
-                  src={PotionBottleIcon}
+                  src={MagicIcon}
                   alt="MP"
                   sx={{ fontSize: 40, color: '#00bcd4' }}
                 />

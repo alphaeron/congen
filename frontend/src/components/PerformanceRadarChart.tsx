@@ -6,12 +6,12 @@ import React from 'react';
 import { CustomSvgIcon } from './CustomSvgIcon';
 import { GameText } from './GameTheme';
 import type { UserPerformanceScores, UserPerformanceMetrics, UserTestResult } from '../api/types';
-import BrainMindIcon from '../resources/brain-mind-icon.svg';
-import EarSoundIcon from '../resources/ear-sound-icon.svg';
-import FistPowerIcon from '../resources/fist-power-icon.svg';
-import GearIcon from '../resources/gear-icon.svg';
-import HeartIcon from '../resources/heart-icon.svg';
-import RunningShoeIcon from '../resources/running-shoe-icon.svg';
+import RecoveryIcon from '../resources/recovery-icon.svg';
+import DexterityIcon from '../resources/dexterity-icon.svg';
+import ExplosivenessIcon from '../resources/explosiveness-icon.svg';
+import StrengthIcon from '../resources/strength-icon.svg';
+import HealthIcon from '../resources/health-icon.svg';
+import ReflexesIcon from '../resources/reflexes-icon.svg';
 import { createCongenNivoTheme } from '../theme/nivoTheme';
 
 interface PerformanceRadarChartProps {
@@ -43,7 +43,7 @@ const getMetricData = (
       color: '#4ECDC4',
       icon: (
         <CustomSvgIcon
-          src={FistPowerIcon}
+          src={ExplosivenessIcon}
           alt="Explosiveness"
           sx={{ fontSize: 32, color: '#00bcd4' }}
         />
@@ -57,7 +57,7 @@ const getMetricData = (
         ? `${metrics.vo2_max.toFixed(1)} ml/kg/min`
         : 'VO₂ max test required',
       color: '#45B7D1',
-      icon: <CustomSvgIcon src={HeartIcon} alt="Stamina" sx={{ fontSize: 32, color: '#00bcd4' }} />,
+      icon: <CustomSvgIcon src={HealthIcon} alt="Stamina" sx={{ fontSize: 32, color: '#00bcd4' }} />,
     },
     {
       metric: 'Recovery',
@@ -68,7 +68,7 @@ const getMetricData = (
         : 'HR recovery test required',
       color: '#96CEB4',
       icon: (
-        <CustomSvgIcon src={BrainMindIcon} alt="Recovery" sx={{ fontSize: 32, color: '#00bcd4' }} />
+        <CustomSvgIcon src={RecoveryIcon} alt="Recovery" sx={{ fontSize: 32, color: '#00bcd4' }} />
       ),
     },
     {
@@ -81,7 +81,7 @@ const getMetricData = (
       color: '#DDA0DD',
       icon: (
         <CustomSvgIcon
-          src={RunningShoeIcon}
+          src={ReflexesIcon}
           alt="Reflexes"
           sx={{ fontSize: 32, color: '#00bcd4' }}
         />
@@ -93,7 +93,7 @@ const getMetricData = (
       description: 'Relative strength based on Wilks score',
       rawValue: wilksScore ? `${wilksScore.toFixed(1)} Wilks` : '1RM data required',
       color: '#FF6B6B',
-      icon: <CustomSvgIcon src={GearIcon} alt="Strength" sx={{ fontSize: 32, color: '#00bcd4' }} />,
+      icon: <CustomSvgIcon src={StrengthIcon} alt="Strength" sx={{ fontSize: 32, color: '#00bcd4' }} />,
     },
     {
       metric: 'Dexterity',
@@ -104,7 +104,7 @@ const getMetricData = (
         : 'Mobility test required',
       color: '#9C27B0',
       icon: (
-        <CustomSvgIcon src={EarSoundIcon} alt="Dexterity" sx={{ fontSize: 32, color: '#00bcd4' }} />
+        <CustomSvgIcon src={DexterityIcon} alt="Dexterity" sx={{ fontSize: 32, color: '#00bcd4' }} />
       ),
     },
   ];
@@ -137,9 +137,9 @@ export const PerformanceRadarChart: React.FC<PerformanceRadarChartProps> = ({
   }));
 
   // Custom tooltip component following Nivo example
-  const MyCustomTooltip = ({ index }: { index: number }) => {
+  const MyCustomTooltip = ({ index }: { index: string | number }) => {
     // Use 'index' as the metric name since 'id' is undefined
-    const metricName = index;
+    const metricName = String(index);
 
     // Find the metric data using the metric name
     const metric = validMetricData.find(m => m.metric === metricName);
