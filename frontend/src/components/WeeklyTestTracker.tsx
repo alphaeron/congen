@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   CardContent,
   CardHeader,
@@ -17,6 +17,7 @@ import {
   LinearProgress,
   Tooltip,
   IconButton,
+  Stack,
 } from '@mui/material';
 import {
   CheckCircle as CheckCircleIcon,
@@ -32,10 +33,12 @@ import RecoveryIcon from '../resources/recovery-icon.svg';
 import SpeedIcon from '../resources/speed-icon.svg';
 import MobilityIcon from '../resources/mobility-icon.svg';
 import { useMutation, useQuery } from '@tanstack/react-query';
+import { useSnackbar } from 'notistack';
 import type { UserTestResult, TestProtocol } from '../api/types';
 import { GameCard, GameSubCard, GameStatusChip, GameText, GameTextSecondary } from './GameTheme';
 import { useData } from '../contexts/DataContext';
 import { getTestProtocols } from '../api/performanceTracking';
+import { formatDate } from '../common/utils';
 
 interface WeeklyTestTrackerProps {
   weeklyTests: UserTestResult[];
@@ -56,6 +59,7 @@ const getIconForProtocol = (testName: string) => {
 
 export const WeeklyTestTracker: React.FC<WeeklyTestTrackerProps> = ({ weeklyTests, onTestUpdate }) => {
   const { submitWeeklyTest, getCurrentWeekTest } = useData();
+  const { enqueueSnackbar } = useSnackbar();
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editingTest, setEditingTest] = useState<TestProtocol | null>(null);
   const [testValue, setTestValue] = useState<string>('');
@@ -80,7 +84,7 @@ export const WeeklyTestTracker: React.FC<WeeklyTestTrackerProps> = ({ weeklyTest
       setEditDialogOpen(false);
     },
     onError: (error: any) => {
-      console.error('Failed to submit weekly test:', error);
+      enqueueSnackbar('Failed to submit weekly test', { variant: 'error' });
     },
   });
 
@@ -151,7 +155,7 @@ export const WeeklyTestTracker: React.FC<WeeklyTestTrackerProps> = ({ weeklyTest
     <>
       <GameCard>
         <CardHeader
-          avatar={<CalendarTodayIcon sx={{ color: 'white', fontSize: '2rem' }} />}
+          sx={{ paddingBottom: 0 }}
           title={
             <GameText variant="h6" sx={{ fontWeight: 'bold' }}>
               Weekly Quests
@@ -159,28 +163,12 @@ export const WeeklyTestTracker: React.FC<WeeklyTestTrackerProps> = ({ weeklyTest
           }
           subheader={
             <Box sx={{ mt: 1 }}>
-              <GameTextSecondary variant="body2" sx={{ mb: 1 }}>
-                Week of {currentWeekTests[0]?.week_start_timestamp ? new Date(currentWeekTests[0].week_start_timestamp).toLocaleDateString() : 'N/A'}
-              </GameTextSecondary>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <LinearProgress
-                  variant="determinate"
-                  value={completionPercentage}
-                  sx={{
-                    flexGrow: 1,
-                    height: 8,
-                    borderRadius: 4,
-                    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-                    '& .MuiLinearProgress-bar': {
-                      backgroundColor: completionPercentage === 100 ? '#4CAF50' : '#2196F3',
-                      borderRadius: 4,
-                    },
-                  }}
-                />
-                <GameText variant="body2" sx={{ fontWeight: 'bold', minWidth: '40px' }}>
-                  {completionPercentage}%
-                </GameText>
-              </Box>
+                <GameTextSecondary variant="body2">
+                  Week of {currentWeekTests[0]?.week_start_timestamp ? 
+                    formatDate(currentWeekTests[0].week_start_timestamp) : 
+                    'N/A'
+                  }
+                </GameTextSecondary>
             </Box>
           }
         />
@@ -191,50 +179,48 @@ export const WeeklyTestTracker: React.FC<WeeklyTestTrackerProps> = ({ weeklyTest
               <LinearProgress sx={{ width: '100%' }} />
             </Box>
           ) : (
-            <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 2 }}>
+            <Stack spacing={0.5} sx={{ alignItems: 'center' }}>
               {testProtocols.map((protocol, index) => {
               const testResult = currentWeekTests.find(test => test.test_name === protocol.test_name);
               const status = testResult?.status || 'PENDING';
               const result = testResult?.result_value;
               
               return (
-                <Box key={index}>
-                  <GameSubCard>
-                    <CardContent sx={{ p: 2 }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          {getIconForProtocol(protocol.test_name)}
-                          <GameText variant="subtitle2" sx={{ fontWeight: 'bold' }}>
-                            {protocol.display_name}
-                          </GameText>
-                        </Box>
+                <GameSubCard key={index} sx={{ width: '100%', maxWidth: '400px' }}>
+                  <CardContent sx={{ p: 2 }}>
+                    <Stack spacing={0.5}>
+                      <Stack direction="row" alignItems="center" spacing={1} sx={{ flexWrap: 'wrap' }}>
+                        {getIconForProtocol(protocol.test_name)}
+                        <GameText variant="subtitle2" sx={{ fontWeight: 'bold' }}>
+                          {protocol.display_name}
+                        </GameText>
                         <GameStatusChip
                           label={status}
                           status={status}
                           size="small"
                         />
-                      </Box>
+                      </Stack>
                       
-                      <GameTextSecondary variant="body2" sx={{ mb: 2 }}>
+                      <GameTextSecondary variant="body2" sx={{ wordBreak: 'break-word' }}>
                         {protocol.description}
                       </GameTextSecondary>
                       
                       {status === 'COMPLETED' && result && (
-                        <Box sx={{ mb: 2, p: 1, backgroundColor: 'rgba(76, 175, 80, 0.2)', borderRadius: 1 }}>
+                        <Box sx={{ p: 1, backgroundColor: 'rgba(76, 175, 80, 0.2)', borderRadius: 1 }}>
                           <GameText variant="body2" sx={{ fontWeight: 'bold' }}>
                             Result: {result} {protocol.unit}
                           </GameText>
                         </Box>
                       )}
                       
-                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Stack direction="row" alignItems="center" justifyContent="space-between">
+                        <Stack direction="row" alignItems="center" spacing={1}>
                           {getStatusIcon(status)}
                           <GameTextSecondary variant="caption">
                             {status === 'COMPLETED' ? 'Completed' : 
                              status === 'SKIPPED' ? 'Skipped' : 'Pending'}
                           </GameTextSecondary>
-                        </Box>
+                        </Stack>
                         
                         <Tooltip title="Edit test result">
                           <IconButton
@@ -245,13 +231,13 @@ export const WeeklyTestTracker: React.FC<WeeklyTestTrackerProps> = ({ weeklyTest
                             <EditIcon fontSize="small" />
                           </IconButton>
                         </Tooltip>
-                      </Box>
-                    </CardContent>
-                  </GameSubCard>
-                </Box>
+                      </Stack>
+                    </Stack>
+                  </CardContent>
+                </GameSubCard>
               );
               })}
-            </Box>
+            </Stack>
           )}
         </CardContent>
       </GameCard>

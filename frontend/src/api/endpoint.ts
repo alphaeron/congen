@@ -33,7 +33,8 @@ function convertTimestampsToDates(obj: unknown): unknown {
         key === 'consent_timestamp' ||
         key === 'export_timestamp' ||
         key === 'last_updated' ||
-        key === 'timestamp'
+        key === 'timestamp' ||
+        key === 'week_start_timestamp'
       ) {
         // Convert Unix timestamp in seconds to Date object, or ISO date string to Date object
         if (typeof value === 'number') {

@@ -51,7 +51,7 @@ export interface UserPerformanceScores {
 export interface UserTestResult {
   id?: number;
   keycloak_id: string;
-  week_start_timestamp: string;
+  week_start_timestamp: Date;
   test_name: string;
   status: 'PENDING' | 'COMPLETED' | 'SKIPPED';
   result_value?: number;

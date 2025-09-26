@@ -71,32 +71,32 @@ export const AdventurerStatusCard: React.FC<AdventurerStatusCardProps> = ({
             </GameText>
           </Box>
         }
-        sx={{ pb: 1, textAlign: 'center' }}
+        sx={{ textAlign: 'center' }}
       />
       
-      <CardContent>
+      <CardContent sx={{ pt: 0 }}>
         {/* Profile Information - Centered under STATUS */}
         <Grid container spacing={1} mb={1} overflow="visible">
-                  <Grid size={12}>
-                    <Stack direction="column" alignItems="center">
-                      <Stack direction="row" alignItems="flex-start" spacing={2}>
-                        <Stack direction="column" alignItems="center" sx={{ rowGap: 0 }}>
-                          <CustomSvgIcon src={AdventurerProfileIcon} alt="Profile" sx={{ fontSize: 80, color: 'white' }} />
-                          <GameText variant="h6" sx={{ mt: '-16px', color: '#ffffff', textShadow: '0 0 5px #00bcd4', textTransform: 'uppercase' }}>
-                            {userName}
-                          </GameText>
-                        </Stack>
-                        <Stack direction="column" alignItems="center" sx={{ rowGap: 0 }}>
-                          <GameText variant="h2" sx={{ fontSize: '3rem', fontWeight: 'bold', color: '#00bcd4', textShadow: '0 0 10px #00bcd4', lineHeight: 1, mt: '16px' }}>
-                            {scores.level}
-                          </GameText>
-                          <GameText variant="h6" sx={{ color: '#e0e0e0', textShadow: '0 0 5px #00bcd4', mt: '-10px' }}>
-                            LEVEL
-                          </GameText>
-                        </Stack>
-                      </Stack>
-                    </Stack>
-                  </Grid>
+          <Grid size={12}>
+            <Stack direction="column" alignItems="center">
+              <Stack direction="row" alignItems="flex-start" spacing={2}>
+                <Stack direction="column" alignItems="center" sx={{ rowGap: 0 }}>
+                  <CustomSvgIcon src={AdventurerProfileIcon} alt="Profile" sx={{ fontSize: 80, color: 'white' }} />
+                  <GameText variant="h6" sx={{ mt: '-16px', color: '#ffffff', textShadow: '0 0 5px #00bcd4', textTransform: 'uppercase' }}>
+                    {userName}
+                  </GameText>
+                </Stack>
+                <Stack direction="column" alignItems="center" sx={{ rowGap: 0 }}>
+                  <GameText variant="h2" sx={{ fontSize: '3rem', fontWeight: 'bold', color: '#00bcd4', textShadow: '0 0 10px #00bcd4', lineHeight: 1, mt: '16px' }}>
+                    {scores.level}
+                  </GameText>
+                  <GameText variant="h6" sx={{ color: '#e0e0e0', textShadow: '0 0 5px #00bcd4', mt: '-10px' }}>
+                    LEVEL
+                  </GameText>
+                </Stack>
+              </Stack>
+            </Stack>
+          </Grid>
         </Grid>
 
         {/* Status Bars - Centered under profile */}
@@ -132,60 +132,44 @@ export const AdventurerStatusCard: React.FC<AdventurerStatusCardProps> = ({
           </Grid>
         </Grid>
 
-        {/* Bottom Section: Weekly Quests (left) and Radar Chart (right) */}
-        <Grid container spacing={1} mb={3} overflow="visible" justifyContent="center">
+        {/* Skills and Radar Chart - Side by Side */}
+        <Grid container spacing={3} overflow="visible" justifyContent="center">
+          {/* Skills Section - Left */}
           <Grid size="auto">
-            {/* Weekly Quests Progress and Skills - Left side */}
-            <Grid container spacing={3} p={2} justifyContent="center" alignItems="center">
-              <Grid size={12}>
-                <Box sx={{ width: '75%' }}>
-                  <GameProgressBar
-                    label="Weekly Quests"
-                    current={weeklyTests?.filter(test => test.status === 'COMPLETED').length || 0}
-                    max={weeklyTests?.length || 0}
-                    color="#FFD700"
-                    tooltip="Weekly quest completion progress"
-                  />
-                </Box>
-              </Grid>
-              
-              {/* Skills Section */}
-              <Grid size={12}>
-                <Stack direction="row" alignItems="center" spacing={1} mb={1}>
-                  <GameText variant="h6" sx={{ fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: 1, color: '#ffffff', textShadow: '0 0 3px #00bcd4' }}>
-                    Skills
-                  </GameText>
-                </Stack>
-                {scores.skills.length > 0 ? (
-                  <Grid container spacing={1}>
-                    {scores.skills.map((skill, index) => (
-                      <Grid key={index} size="auto">
-                        <GameSkillChip
-                          label={skill}
-                          size="small"
-                          icon={<CustomSvgIcon src={SkillsIcon} alt="Skill" sx={{ fontSize: 16, color: '#00bcd4' }} />}
-                        />
-                      </Grid>
-                    ))}
+            <Stack direction="row" alignItems="center" spacing={1} mb={1}>
+              <CustomSvgIcon src={SkillsIcon} alt="Skills" sx={{ fontSize: 32, color: '#00bcd4' }} />
+              <GameText variant="h6" sx={{ fontWeight: 'bold', color: '#ffffff', textShadow: '0 0 3px #00bcd4' }}>
+                Skills
+              </GameText>
+            </Stack>
+            {scores.skills.length > 0 ? (
+              <Grid container spacing={1} justifyContent="center">
+                {scores.skills.map((skill, index) => (
+                  <Grid key={index} size="auto">
+                    <GameSkillChip
+                      label={skill}
+                      size="small"
+                      icon={<CustomSvgIcon src={SkillsIcon} alt="Skill" sx={{ fontSize: 16, color: '#00bcd4' }} />}
+                    />
                   </Grid>
-                ) : (
-                  <GameTextSecondary variant="body2" sx={{ fontStyle: 'italic' }}>
-                    No skills unlocked yet. Complete quests to unlock skills!
-                  </GameTextSecondary>
-                )}
+                ))}
               </Grid>
-            </Grid>
+            ) : (
+              <GameTextSecondary variant="body2" sx={{ fontStyle: 'italic', textAlign: 'center' }}>
+                No skills unlocked yet. Complete quests to unlock skills!
+              </GameTextSecondary>
+            )}
           </Grid>
           
+          {/* Performance Radar Chart - Right */}
           <Grid size="auto">
-            {/* Performance Radar Chart - Right side */}
             <PerformanceRadarChart
               scores={scores}
               metrics={metrics}
               weeklyTests={weeklyTests}
               wilksScore={wilksScore}
               title=""
-              height={250}
+              height={300}
             />
           </Grid>
         </Grid>

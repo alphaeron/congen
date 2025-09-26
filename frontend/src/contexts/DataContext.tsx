@@ -311,7 +311,6 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
             );
             setWilksScore(wilksScoreData);
           } catch (err) {
-            console.warn('Failed to load Wilks score:', err);
             setWilksScore(null);
           }
         } else {

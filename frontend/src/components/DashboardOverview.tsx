@@ -1,4 +1,4 @@
-import { Box, Card, CardContent, Grid, Typography } from '@mui/material';
+import { Box, Card, CardContent, Grid, Typography, Stack } from '@mui/material';
 import { useSnackbar } from 'notistack';
 import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router';
@@ -197,174 +197,31 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ user }) =>
 
   return (
     <React.Fragment>
-      {/* Performance Tracking Section */}
+      {/* Main Dashboard Layout: 3/4 Status Card + 1/4 Sidebar */}
       {performanceScores ? (
-        <Box sx={{ mb: 3 }}>
-          <AdventurerStatusCard
-            scores={performanceScores}
-            metrics={performanceMetrics}
-            weeklyTests={weeklyTests}
-            wilksScore={wilksScore}
-            userName={user.name}
-          />
-        </Box>) : (
-          <React.Fragment />
-        )}
-
-      {/* Weekly Test Tracker */}
-      {performanceScores && (
-        <Box sx={{ mb: 3 }}>
-          <WeeklyTestTracker 
-            weeklyTests={weeklyTests} 
-            onTestUpdate={refreshPerformanceData}
-          />
-        </Box>
-      )}
-
-      {/* Key Performance Indicators */}
-      <Card sx={{ mb: 3 }}>
-        <CardContent>
-          <Box display="flex" alignItems="center" gap={1} sx={{ mb: 2 }}>
-            <Typography variant="h6">Key Performance Indicators</Typography>
-          </Box>
-          <Grid container spacing={2}>
-            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-              <Box
-                textAlign="center"
-                sx={{
-                  p: 2,
-                  borderRadius: 1,
-                  backgroundColor: 'primary.light',
-                  color: 'primary.contrastText',
-                }}
-              >
-                <Typography variant="h4" fontWeight="bold">
-                  {totalWorkouts}
-                </Typography>
-                <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                  Total Workouts
-                </Typography>
-              </Box>
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-              <Box
-                textAlign="center"
-                sx={{
-                  p: 2,
-                  borderRadius: 1,
-                  backgroundColor: 'secondary.light',
-                  color: 'secondary.contrastText',
-                }}
-              >
-                <Typography variant="h4" fontWeight="bold">
-                  {Math.round(totalVolume / 1000)}k
-                </Typography>
-                <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                  Total Volume (lbs)
-                </Typography>
-              </Box>
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-              <Box
-                textAlign="center"
-                sx={{
-                  p: 2,
-                  borderRadius: 1,
-                  backgroundColor: 'success.light',
-                  color: 'success.contrastText',
-                }}
-              >
-                <Typography variant="h4" fontWeight="bold">
-                  {oneRepMaxes.length}
-                </Typography>
-                <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                  1RM Records
-                </Typography>
-              </Box>
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-              <Box
-                textAlign="center"
-                sx={{
-                  p: 2,
-                  borderRadius: 1,
-                  backgroundColor: 'info.light',
-                  color: 'info.contrastText',
-                }}
-              >
-                <Typography variant="h4" fontWeight="bold">
-                  {Math.round(latestVolume)}
-                </Typography>
-                <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                  Latest Volume (lbs)
-                </Typography>
-              </Box>
-            </Grid>
+        <Grid container spacing={2} sx={{ mb: 3 }}>
+          {/* Status Card - 3/4 width */}
+          <Grid size={{ xs: 12, lg: 9 }}>
+            <AdventurerStatusCard
+              scores={performanceScores}
+              metrics={performanceMetrics}
+              weeklyTests={weeklyTests}
+              wilksScore={wilksScore}
+              userName={user.name}
+            />
           </Grid>
-        </CardContent>
-      </Card>
-
-      {/* Active Program Section */}
-      {activeProgram && (
-        <Box sx={{ mb: 3 }}>
-          <ActionCard title="Active Program" clickable onClick={handleActiveProgramClick}>
-            <Box display="flex" alignItems="center" gap={2} flexWrap="wrap" sx={{ mb: 1 }}>
-              <Typography variant="body1" fontWeight="medium">
-                {activeProgram.name}
-              </Typography>
-              <StatusChip label={`Week ${currentWeek}`} status="info" />
-              <StatusChip label="Active" status="active" />
-            </Box>
-            <Typography variant="body2" color="text.secondary">
-              Click to view workouts
-            </Typography>
-          </ActionCard>
-        </Box>
-      )}
-
-      {/* Recent Achievements Section */}
-      {recentOneRepMaxes.length > 0 && (
-        <Card sx={{ mb: 3 }}>
-          <CardContent>
-            <Box display="flex" alignItems="center" gap={1} sx={{ mb: 2 }}>
-              <Typography variant="h6">Recent Achievements</Typography>
-              <Typography variant="body2" color="text.secondary">
-                • Your latest personal records
-              </Typography>
-            </Box>
-            <Grid container spacing={2}>
-              {recentOneRepMaxes.slice(0, 6).map((oneRepMax, index) => (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }} key={index}>
-                  <Box
-                    sx={{
-                      p: 2,
-                      border: 1,
-                      borderColor: 'divider',
-                      borderRadius: 1,
-                      backgroundColor: 'success.light',
-                      color: 'success.contrastText',
-                      transition: 'all 0.2s ease-in-out',
-                      '&:hover': {
-                        transform: 'translateY(-2px)',
-                        boxShadow: 2,
-                      },
-                    }}
-                  >
-                    <Typography variant="body1" fontWeight="medium" sx={{ mb: 1 }}>
-                      ✅ New 1RM: {oneRepMax.exercise_name}
-                    </Typography>
-                    <Typography variant="h6" fontWeight="bold">
-                      {oneRepMax.one_rep_max} {oneRepMax.unit}
-                    </Typography>
-                    <Typography variant="caption" sx={{ opacity: 0.9 }}>
-                      Achieved: {formatDate(oneRepMax.updated_at)}
-                    </Typography>
-                  </Box>
-                </Grid>
-              ))}
-            </Grid>
-          </CardContent>
-        </Card>
+          
+          {/* Sidebar - 1/4 width */}
+          <Grid size={{ xs: 12, lg: 3 }}>
+            {/* Weekly Test Tracker */}
+            <WeeklyTestTracker 
+              weeklyTests={weeklyTests} 
+              onTestUpdate={refreshPerformanceData}
+            />
+          </Grid>
+        </Grid>
+      ) : (
+        <React.Fragment />
       )}
     </React.Fragment>
   );
