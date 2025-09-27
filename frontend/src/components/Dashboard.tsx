@@ -150,8 +150,8 @@ export const Dashboard: React.FC<DashboardProps> = ({
           maxWidth: 'calc(100% - 240px)', // Prevent overflow
         }}
       >
-        <Container maxWidth="xl" className={GAME_CLASSES.height100}>
-          <Box className={GAME_CLASSES.padding3}>{currentSection.component}</Box>
+        <Container maxWidth="xl" sx={{ height: '100%' }}>
+          <Box sx={{ p: 3 }}>{currentSection.component}</Box>
         </Container>
       </Box>
     </Box>

@@ -322,13 +322,14 @@ export const CompactQuestCard: React.FC<CompactQuestCardProps> = ({
   const renderCompactGrid = () => {
     if (type === 'daily') {
       return (
-        <Grid container spacing={1}>
+        <Grid container spacing={1} sx={{ height: '100%' }}>
           {dailyMetricsConfig.map((metric, index) => {
             return (
-              <Grid size={{ xs: 6 }} key={index}>
+              <Grid size={{ xs: 6 }} key={index} sx={{ height: '50%' }}>
                 <GameSubCard
-                  className={`${GAME_CLASSES.height80} ${GAME_CLASSES.cursorPointer} ${GAME_CLASSES.hoverOpacity80}`}
+                  className={`${GAME_CLASSES.cursorPointer} ${GAME_CLASSES.hoverOpacity80}`}
                   onClick={() => handleEditDailyMetric(metric.key)}
+                  sx={{ height: '100%' }}
                 >
                   <CardContent
                     className={`${GAME_CLASSES.padding2} ${GAME_CLASSES.height100} ${GAME_CLASSES.flex} ${GAME_CLASSES.flexColumn} ${GAME_CLASSES.justifyCenter}`}
@@ -337,7 +338,16 @@ export const CompactQuestCard: React.FC<CompactQuestCardProps> = ({
                       <Box className={`${GAME_CLASSES.fontSize24} ${GAME_CLASSES.colorCyan} ${GAME_CLASSES.textBold}`}>
                         {metric.icon}
                       </Box>
-                      <GameText variant="caption" className={`${GAME_CLASSES.textBold} ${GAME_CLASSES.textCenter}`}>
+                      <GameText 
+                        variant="caption" 
+                        className={`${GAME_CLASSES.textBold} ${GAME_CLASSES.textCenter}`}
+                        sx={{ 
+                          wordBreak: 'break-word',
+                          hyphens: 'auto',
+                          lineHeight: 1.2,
+                          fontSize: '0.75rem'
+                        }}
+                      >
                         {metric.label}
                       </GameText>
                     </Stack>
@@ -358,20 +368,32 @@ export const CompactQuestCard: React.FC<CompactQuestCardProps> = ({
       }
 
       return (
-        <Grid container spacing={1}>
+        <Grid container spacing={1} sx={{ height: '100%' }}>
           {testProtocols.slice(0, 4).map((protocol, index) => {
             return (
-              <Grid size={{ xs: 6 }} key={index}>
+              <Grid size={{ xs: 6 }} key={index} sx={{ height: '50%' }}>
                 <GameSubCard
-                  className={`${GAME_CLASSES.height80} ${GAME_CLASSES.cursorPointer} ${GAME_CLASSES.hoverOpacity80}`}
+                  className={`${GAME_CLASSES.cursorPointer} ${GAME_CLASSES.hoverOpacity80}`}
                   onClick={() => handleEditWeeklyTest(protocol)}
+                  sx={{ height: '100%' }}
                 >
                   <CardContent
                     className={`${GAME_CLASSES.padding2} ${GAME_CLASSES.height100} ${GAME_CLASSES.flex} ${GAME_CLASSES.flexColumn} ${GAME_CLASSES.justifyCenter}`}
                   >
                     <Stack spacing={0.2} alignItems="center" className={GAME_CLASSES.rowGap0}>
-                      {getIconForProtocol(protocol.test_name)}
-                      <GameText variant="caption" className={`${GAME_CLASSES.textBold} ${GAME_CLASSES.textCenter}`}>
+                      <Box className={`${GAME_CLASSES.fontSize24} ${GAME_CLASSES.colorCyan} ${GAME_CLASSES.textBold}`}>
+                        {getIconForProtocol(protocol.test_name)}
+                      </Box>
+                      <GameText 
+                        variant="caption" 
+                        className={`${GAME_CLASSES.textBold} ${GAME_CLASSES.textCenter}`}
+                        sx={{ 
+                          wordBreak: 'break-word',
+                          hyphens: 'auto',
+                          lineHeight: 1.2,
+                          fontSize: '0.75rem'
+                        }}
+                      >
                         {protocol.display_name}
                       </GameText>
                     </Stack>
@@ -387,17 +409,19 @@ export const CompactQuestCard: React.FC<CompactQuestCardProps> = ({
 
   return (
     <React.Fragment>
-      <GameCard className={GAME_CLASSES.width100}>
+      <GameCard className={GAME_CLASSES.width100} sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
         <CardHeader
           className={GAME_CLASSES.paddingBottom0}
           title={
-            <GameText variant="h6" className={GAME_CLASSES.textBold}>
+            <GameText variant="h6" textVariant="glow" className={`${GAME_CLASSES.textBold} ${GAME_CLASSES.textTransformUppercase}`}>
               {getTitle()}
             </GameText>
           }
           subheader={<GameTextSecondary variant="body2">{getSubtitle()}</GameTextSecondary>}
         />
-        <CardContent className={GAME_CLASSES.paddingTop1}>{renderCompactGrid()}</CardContent>
+        <CardContent className={`${GAME_CLASSES.paddingTop1} ${GAME_CLASSES.flex1}`} sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
+          {renderCompactGrid()}
+        </CardContent>
       </GameCard>
 
       {/* Metric Detail Dialog */}
