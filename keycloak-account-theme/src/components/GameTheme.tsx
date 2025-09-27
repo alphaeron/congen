@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card, Box, Chip, Typography } from '@mui/material';
+import { Card, Box, Chip, Typography, TextField, Select, MenuItem, FormControl, InputLabel } from '@mui/material';
 import { styled, alpha } from '@mui/material/styles';
 
 import { brand, secondary, gray, green, warning } from '../theme';
@@ -66,6 +66,7 @@ export const GAME_CLASSES = {
   dialog: 'game-dialog',
   
   // Form classes
+  formInput: 'game-form-input',
   textField: 'game-text-field',
   select: 'game-select',
   menuItem: 'game-menu-item',
@@ -323,34 +324,56 @@ export const GameAlert: React.FC<React.ComponentProps<typeof Box>> = ({
   />
 );
 
-// Game Text Field Component
-export const GameTextField: React.FC<React.ComponentProps<typeof Box>> = ({ 
+// Game Text Field Component - Unified form input styling
+export const GameTextField: React.FC<React.ComponentProps<typeof TextField>> = ({ 
   className = '', 
   ...props 
 }) => (
-  <Box 
-    className={`${GAME_CLASSES.textField} ${className}`}
+  <TextField 
+    className={`${GAME_CLASSES.formInput} ${className}`}
     {...props} 
   />
 );
 
-// Game Select Component
-export const GameSelect: React.FC<React.ComponentProps<typeof Box>> = ({ 
+// Game Select Component - Unified form input styling
+export const GameSelect: React.FC<React.ComponentProps<typeof Select>> = ({ 
   className = '', 
   ...props 
 }) => (
-  <Box 
-    className={`${GAME_CLASSES.select} ${className}`}
+  <Select 
+    className={`${GAME_CLASSES.formInput} ${className}`}
+    {...props} 
+  />
+);
+
+// Game Form Control Component - For Select with label
+export const GameFormControl: React.FC<React.ComponentProps<typeof FormControl>> = ({ 
+  className = '', 
+  ...props 
+}) => (
+  <FormControl 
+    className={`${GAME_CLASSES.formInput} ${className}`}
+    {...props} 
+  />
+);
+
+// Game Input Label Component
+export const GameInputLabel: React.FC<React.ComponentProps<typeof InputLabel>> = ({ 
+  className = '', 
+  ...props 
+}) => (
+  <InputLabel 
+    className={`${GAME_CLASSES.formInput} ${className}`}
     {...props} 
   />
 );
 
 // Game Menu Item Component
-export const GameMenuItem: React.FC<React.ComponentProps<typeof Box>> = ({ 
+export const GameMenuItem: React.FC<React.ComponentProps<typeof MenuItem>> = ({ 
   className = '', 
   ...props 
 }) => (
-  <Box 
+  <MenuItem 
     className={`${GAME_CLASSES.menuItem} ${className}`}
     {...props} 
   />

@@ -9,8 +9,6 @@ import {
 import {
   Box,
   Button,
-  Card,
-  CardContent,
   Chip,
   DialogContentText,
   Divider,
@@ -26,7 +24,7 @@ import React from 'react';
 import { Link } from 'react-router';
 
 import { ConfirmationDialog } from './ConfirmationDialog';
-import { GameText, GAME_CLASSES } from './GameTheme';
+import { GameCard, GameText, GAME_CLASSES } from './GameTheme';
 import { FormDialog } from './FormDialog';
 import { LoadingSpinner } from './LoadingSpinner';
 import { formatDate } from '../common/utils';
@@ -159,24 +157,24 @@ export function GdprComplianceSection(): React.ReactElement {
 
   if (isLoading) {
     return (
-      <Card>
-        <CardContent>
+      <GameCard>
+        <Box className={GAME_CLASSES.padding2}>
           <Box display="flex" alignItems="center" gap={2}>
             <LoadingSpinner size={24} message="" />
             <GameText>Loading GDPR compliance status...</GameText>
           </Box>
-        </CardContent>
-      </Card>
+        </Box>
+      </GameCard>
     );
   }
 
   return (
     <React.Fragment>
-      <Card>
-        <CardContent>
-          <Box display="flex" alignItems="center" gap={2} mb={2}>
-            <PrivacyIcon color="primary" />
-            <GameText variant="h6">Privacy & Data Protection</GameText>
+      <GameCard>
+        <Box className={GAME_CLASSES.padding2}>
+          <Box display="flex" alignItems="center" gap={2} className={GAME_CLASSES.marginBottom2}>
+            <PrivacyIcon sx={{ color: '#00bcd4' }} />
+            <GameText variant="h6" textVariant="glow">Privacy & Data Protection</GameText>
           </Box>
 
           <GameText variant="body2" textVariant="secondary" paragraph>
@@ -187,11 +185,11 @@ export function GdprComplianceSection(): React.ReactElement {
           <Divider sx={{ my: 2 }} />
 
           {/* Consent Status */}
-          <Box sx={{ mb: 3 }}>
+          <Box className={GAME_CLASSES.marginBottom3}>
             <GameText variant="subtitle1" gutterBottom>
               Data Processing Consent
             </GameText>
-            <Box display="flex" alignItems="center" gap={2} mb={2}>
+            <Box display="flex" alignItems="center" gap={2} className={GAME_CLASSES.marginBottom2}>
               {userConsent?.data_processing_consent ? (
                 <Chip
                   icon={<CheckCircleIcon />}
@@ -215,7 +213,19 @@ export function GdprComplianceSection(): React.ReactElement {
                 </GameText>
               )}
             </Box>
-            <Button variant="outlined" size="small" onClick={() => setConsentDialogOpen(true)}>
+            <Button 
+              variant="outlined" 
+              size="small" 
+              onClick={() => setConsentDialogOpen(true)}
+              sx={{ 
+                borderColor: '#00bcd4', 
+                color: '#00bcd4',
+                '&:hover': {
+                  borderColor: '#00acc1',
+                  backgroundColor: 'rgba(0, 188, 212, 0.1)'
+                }
+              }}
+            >
               {userConsent?.data_processing_consent ? 'Withdraw Consent' : 'Give Consent'}
             </Button>
           </Box>
@@ -244,6 +254,14 @@ export function GdprComplianceSection(): React.ReactElement {
                 startIcon={<DownloadIcon />}
                 onClick={handleDataExport}
                 disabled={operationLoading === 'export'}
+                sx={{ 
+                  borderColor: '#00bcd4', 
+                  color: '#00bcd4',
+                  '&:hover': {
+                    borderColor: '#00acc1',
+                    backgroundColor: 'rgba(0, 188, 212, 0.1)'
+                  }
+                }}
               >
                 {operationLoading === 'export' ? 'Exporting...' : 'Export Data'}
               </Button>
@@ -265,19 +283,27 @@ export function GdprComplianceSection(): React.ReactElement {
                 startIcon={<PolicyIcon />}
                 component={Link}
                 to="/privacy_policy"
+                sx={{ 
+                  borderColor: '#00bcd4', 
+                  color: '#00bcd4',
+                  '&:hover': {
+                    borderColor: '#00acc1',
+                    backgroundColor: 'rgba(0, 188, 212, 0.1)'
+                  }
+                }}
               >
                 View Policy
               </Button>
             </Box>
           </Box>
-        </CardContent>
-      </Card>
+        </Box>
+      </GameCard>
 
       {/* Danger Zone */}
-      <Card sx={{ mt: 3, border: '2px solid', borderColor: 'error.main' }}>
-        <CardContent>
-          <Box display="flex" alignItems="center" gap={2} mb={2}>
-            <DeleteForeverIcon color="error" />
+      <GameCard sx={{ mt: 3, border: '2px solid', borderColor: '#f44336' }}>
+        <Box className={GAME_CLASSES.padding2}>
+          <Box display="flex" alignItems="center" gap={2} className={GAME_CLASSES.marginBottom2}>
+            <DeleteForeverIcon sx={{ color: '#f44336' }} />
             <GameText variant="h6" textVariant="accent">
               Danger Zone
             </GameText>
@@ -299,16 +325,26 @@ export function GdprComplianceSection(): React.ReactElement {
             <Button
               variant="contained"
               size="small"
-              color="error"
               startIcon={<DeleteForeverIcon />}
               onClick={() => setDeleteDialogOpen(true)}
               disabled={operationLoading === 'delete'}
+              sx={{
+                backgroundColor: '#f44336',
+                color: '#ffffff',
+                '&:hover': {
+                  backgroundColor: '#d32f2f',
+                },
+                '&:disabled': {
+                  backgroundColor: 'rgba(244, 67, 54, 0.3)',
+                  color: 'rgba(255, 255, 255, 0.5)',
+                }
+              }}
             >
               Delete All Data
             </Button>
           </Box>
-        </CardContent>
-      </Card>
+        </Box>
+      </GameCard>
 
       {/* Consent Dialog */}
       <FormDialog<ConsentFormData>

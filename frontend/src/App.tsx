@@ -18,7 +18,7 @@ import Typography from '@mui/material/Typography';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import * as React from 'react';
 import { AuthProvider as OidcAuthProvider } from 'react-oidc-context';
-import { BrowserRouter, Link, Routes, Route, Navigate } from 'react-router';
+import { BrowserRouter, Link, Routes, Route, Navigate, useNavigate } from 'react-router';
 
 import { getAuthProviderConfig } from './auth/OidcConfig';
 import { AuthCallback } from './components/AuthCallback';
@@ -111,6 +111,7 @@ function RootRedirect(): React.ReactElement | null {
  * @return A component to render for the main application content.
  */
 function AppContent(): React.ReactElement {
+  const navigate = useNavigate();
   const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)');
   const mode = prefersDarkMode ? 'dark' : 'light';
   const [open, setOpen] = React.useState(false);
@@ -194,8 +195,10 @@ function AppContent(): React.ReactElement {
                   style={{
                     ...logoStyle,
                     filter: 'brightness(0) saturate(100%) invert(70%) sepia(100%) saturate(1000%) hue-rotate(180deg) brightness(1.2) contrast(1.2)',
+                    cursor: 'pointer',
                   }} 
-                  alt="ConGen" 
+                  alt="ConGen"
+                  onClick={() => navigate('/')}
                 />
               </Box>
 

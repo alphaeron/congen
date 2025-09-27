@@ -281,47 +281,85 @@
   backdrop-filter: var(--game-backdrop-filter);
 }
 
-/* Game Text Field Styles */
-.game-text-field .MuiInputBase-root {
-  background-color: rgba(255, 255, 255, 0.1);
-  border: 1px solid var(--game-cyan-border);
-  border-radius: var(--game-border-radius-small);
-  color: var(--game-white);
-  transition: var(--game-transition);
+/* Game Form Input Styles - Unified styling for all form inputs */
+.game-form-input .MuiInputBase-root,
+.game-form-input .MuiOutlinedInput-root,
+.game-form-input .MuiFilledInput-root,
+.game-form-input .MuiInput-root {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  border: 1px solid var(--game-cyan-border) !important;
+  border-radius: var(--game-border-radius-small) !important;
+  color: var(--game-white) !important;
+  transition: var(--game-transition) !important;
 }
 
-.game-text-field .MuiInputBase-root:hover {
-  border-color: var(--game-cyan);
+.game-form-input .MuiInputBase-root:hover,
+.game-form-input .MuiOutlinedInput-root:hover,
+.game-form-input .MuiFilledInput-root:hover,
+.game-form-input .MuiInput-root:hover {
+  border-color: var(--game-cyan) !important;
 }
 
-.game-text-field .MuiInputBase-root.Mui-focused {
-  border-color: var(--game-cyan);
-  box-shadow: 0 0 0 3px rgba(0, 188, 212, 0.1);
+.game-form-input .MuiInputBase-root.Mui-focused,
+.game-form-input .MuiOutlinedInput-root.Mui-focused,
+.game-form-input .MuiFilledInput-root.Mui-focused,
+.game-form-input .MuiInput-root.Mui-focused {
+  border-color: var(--game-cyan) !important;
+  box-shadow: 0 0 0 3px rgba(0, 188, 212, 0.1) !important;
 }
 
-.game-text-field .MuiInputLabel-root {
-  color: var(--game-white-secondary);
+.game-form-input .MuiInputLabel-root {
+  color: var(--game-white-secondary) !important;
 }
 
-.game-text-field .MuiInputLabel-root.Mui-focused {
-  color: var(--game-cyan);
+.game-form-input .MuiInputLabel-root.Mui-focused {
+  color: var(--game-cyan) !important;
 }
 
-/* Game Select Styles */
-.game-select .MuiSelect-select {
-  color: var(--game-white);
+/* Game Select Specific Styles */
+.game-form-input .MuiSelect-select {
+  color: var(--game-white) !important;
+  background-color: rgba(255, 255, 255, 0.1) !important;
 }
 
-.game-select .MuiOutlinedInput-notchedOutline {
-  border-color: var(--game-cyan-border);
+.game-form-input .MuiOutlinedInput-notchedOutline {
+  border-color: var(--game-cyan-border) !important;
 }
 
-.game-select:hover .MuiOutlinedInput-notchedOutline {
-  border-color: var(--game-cyan);
+.game-form-input:hover .MuiOutlinedInput-notchedOutline {
+  border-color: var(--game-cyan) !important;
 }
 
-.game-select.Mui-focused .MuiOutlinedInput-notchedOutline {
-  border-color: var(--game-cyan);
+.game-form-input.Mui-focused .MuiOutlinedInput-notchedOutline {
+  border-color: var(--game-cyan) !important;
+}
+
+/* Game Number Input Styles */
+.game-form-input .MuiInputAdornment-root {
+  color: var(--game-white-secondary) !important;
+}
+
+.game-form-input .MuiInputAdornment-root .MuiIconButton-root {
+  color: var(--game-cyan) !important;
+}
+
+.game-form-input .MuiInputAdornment-root .MuiIconButton-root:hover {
+  background-color: var(--game-cyan-hover) !important;
+}
+
+/* Game Form Input Placeholder */
+.game-form-input .MuiInputBase-input::placeholder {
+  color: var(--game-white-muted) !important;
+  opacity: 1 !important;
+}
+
+/* Game Form Input Helper Text */
+.game-form-input .MuiFormHelperText-root {
+  color: var(--game-white-muted) !important;
+}
+
+.game-form-input .MuiFormHelperText-root.Mui-error {
+  color: #f44336 !important;
 }
 
 /* Game Menu Item Styles */

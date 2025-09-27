@@ -1,6 +1,7 @@
 import React from 'react';
 import { TextField, FormControl, InputLabel, Select, MenuItem, Typography } from '@mui/material';
 import { useField } from '@tanstack/react-form';
+import { GameTextField, GameFormControl, GameInputLabel, GameSelect, GameMenuItem, GameText, GAME_CLASSES } from './GameTheme';
 
 interface FormFieldProps {
   name: string;
@@ -50,37 +51,37 @@ export const FormField: React.FC<FormFieldProps> = ({
 
   if (type === 'select') {
     return (
-      <FormControl
+      <GameFormControl
         fullWidth={fullWidth}
         error={fieldError}
         disabled={disabled}
         required={required}
         sx={sx}
       >
-        <InputLabel>{label}</InputLabel>
-        <Select
+        <GameInputLabel>{label}</GameInputLabel>
+        <GameSelect
           value={fieldValue || ''}
           label={label}
           onChange={e => field.handleChange(e.target.value)}
           onBlur={field.handleBlur}
         >
           {options.map(option => (
-            <MenuItem key={option.value} value={option.value}>
+            <GameMenuItem key={option.value} value={option.value}>
               {option.label}
-            </MenuItem>
+            </GameMenuItem>
           ))}
-        </Select>
+        </GameSelect>
         {fieldHelperText && (
-          <Typography variant="caption" color="error" sx={{ mt: 0.5, ml: 1.75 }}>
+          <GameText variant="caption" textVariant="error" sx={{ mt: 0.5, ml: 1.75 }}>
             {fieldHelperText}
-          </Typography>
+          </GameText>
         )}
-      </FormControl>
+      </GameFormControl>
     );
   }
 
   return (
-    <TextField
+    <GameTextField
       name={name}
       type={type}
       label={label}

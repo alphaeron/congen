@@ -9,7 +9,7 @@ import {
 import { useField } from '@tanstack/react-form';
 import React, { useMemo } from 'react';
 
-import { GameText } from './GameTheme';
+import { GameText, GameTextField, GameFormControl, GameInputLabel, GameSelect, GameMenuItem, GAME_CLASSES } from './GameTheme';
 
 interface BaseFormFieldProps {
   label: string;
@@ -116,26 +116,26 @@ export const FormField: React.FC<FormFieldProps> = props => {
   if (type === 'select') {
     const { options } = props as SelectFormFieldProps;
     return (
-      <FormControl fullWidth={fullWidth} error={fieldError} disabled={disabled} required={required}>
-        <InputLabel>{label}</InputLabel>
-        <Select
+      <GameFormControl fullWidth={fullWidth} error={fieldError} disabled={disabled} required={required}>
+        <GameInputLabel>{label}</GameInputLabel>
+        <GameSelect
           value={fieldValue !== undefined ? fieldValue : ''}
           label={label}
           onChange={e => handleChange?.(e.target.value)}
           onBlur={handleBlur}
         >
           {options.map(option => (
-            <MenuItem key={option.value} value={option.value}>
+            <GameMenuItem key={option.value} value={option.value}>
               {option.label}
-            </MenuItem>
+            </GameMenuItem>
           ))}
-        </Select>
+        </GameSelect>
         {fieldHelperText && (
           <GameText variant="caption" textVariant={fieldError ? 'error' : 'secondary'}>
             {fieldHelperText}
           </GameText>
         )}
-      </FormControl>
+      </GameFormControl>
     );
   }
 
@@ -153,7 +153,7 @@ export const FormField: React.FC<FormFieldProps> = props => {
         onBlur={handleBlur}
         getOptionLabel={memoizedGetOptionLabel}
         renderInput={params => (
-          <TextField
+          <GameTextField
             {...params}
             label={label}
             variant="outlined"
@@ -174,7 +174,7 @@ export const FormField: React.FC<FormFieldProps> = props => {
   // Text field types
   const { multiline = false, rows, inputProps } = props as TextFormFieldProps;
   return (
-    <TextField
+    <GameTextField
       label={label}
       type={type}
       value={fieldValue || ''}
