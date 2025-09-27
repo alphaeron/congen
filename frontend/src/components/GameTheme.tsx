@@ -112,6 +112,7 @@ export const GAME_CLASSES = {
   fontSize40: 'game-font-size-40',
   fontSize32: 'game-font-size-32',
   fontSize24: 'game-font-size-24',
+  fontSize20: 'game-font-size-20',
   fontSize16: 'game-font-size-16',
   fontSize3rem: 'game-font-size-3rem',
   colorWhite: 'game-color-white',

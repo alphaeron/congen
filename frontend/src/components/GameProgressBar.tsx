@@ -79,8 +79,8 @@ export const GameProgressBar: React.FC<GameProgressBarProps> = ({
 
   return (
     <Tooltip title={tooltip}>
-      <Box>
-        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.25 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.25, minWidth: 'auto' }}>
           {icon}
           <LabelText>{label}</LabelText>
         </Box>

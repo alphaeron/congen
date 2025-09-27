@@ -219,15 +219,17 @@ export const PerformanceRadarChart: React.FC<PerformanceRadarChartProps> = ({
     if (!metricData?.icon) return null;
 
     return (
-      <g transform={`translate(${safeX}, ${safeY})`}>
-        <foreignObject width="20" height="20" x={-10} y={-10}>
+      <g transform={`translate(${safeX}, ${safeY})`} style={{ zIndex: 10 }}>
+        <foreignObject width="32" height="32" x={-16} y={-16}>
           <div
             style={{
-              width: '20px',
-              height: '20px',
+              width: '32px',
+              height: '32px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
+              zIndex: 10,
+              position: 'relative',
             }}
           >
             {metricData.icon}
@@ -257,7 +259,7 @@ export const PerformanceRadarChart: React.FC<PerformanceRadarChartProps> = ({
           minWidth: 300,
           position: 'relative',
           overflow: 'visible',
-          zIndex: 1,
+          zIndex: 5,
         }}
       >
         <ResponsiveRadar
