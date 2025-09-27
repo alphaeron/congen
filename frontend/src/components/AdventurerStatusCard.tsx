@@ -86,7 +86,7 @@ export const AdventurerStatusCard: React.FC<AdventurerStatusCardProps> = ({
           <Grid size="auto">
             <GameProgressBar
               icon={
-                <CustomSvgIcon src={HealthIcon} alt="HP" className={`${GAME_CLASSES.fontSize20} ${GAME_CLASSES.colorCyan}`} />
+                <CustomSvgIcon src={HealthIcon} alt="HP" className={`${GAME_CLASSES.fontSize32} ${GAME_CLASSES.colorCyan}`} />
               }
               label="HP"
               current={Math.max(0, scores.hp - scores.hp_loss)}
@@ -101,7 +101,7 @@ export const AdventurerStatusCard: React.FC<AdventurerStatusCardProps> = ({
                 <CustomSvgIcon
                   src={MagicIcon}
                   alt="MP"
-                  className={`${GAME_CLASSES.fontSize20} ${GAME_CLASSES.colorCyan}`}
+                  className={`${GAME_CLASSES.fontSize32} ${GAME_CLASSES.colorCyan}`}
                 />
               }
               label="MP"
@@ -131,6 +131,7 @@ export const AdventurerStatusCard: React.FC<AdventurerStatusCardProps> = ({
                 src={SkillsIcon}
                 alt="Skills"
                 className={`${GAME_CLASSES.fontSize32} ${GAME_CLASSES.colorCyan}`}
+                sx={{ fontSize: '32px' }}
               />
               <GameText
                 variant="h6"
