@@ -8,11 +8,11 @@ import {
   Menu,
   MenuItem,
   Toolbar,
-  Typography,
 } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import type { KcContext } from './KcContext';
 import { handleLogout, navigateToFrontend } from './utils';
+import { GameText } from '../../components/GameTheme';
 
 import ConGenIcon from '../../resources/congen-icon.svg';
 
@@ -84,7 +84,7 @@ export const CongenAppBar: React.FC<CongenAppBarProps> = ({
             gap: 2,
           }}
         >
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <img
               src={ConGenIcon}
               alt="ConGen"
@@ -92,34 +92,10 @@ export const CongenAppBar: React.FC<CongenAppBarProps> = ({
                 width: '72px',
                 height: 'auto',
                 cursor: 'pointer',
+                filter: 'brightness(0) saturate(100%) invert(70%) sepia(100%) saturate(1000%) hue-rotate(180deg) brightness(1.2) contrast(1.2)',
               }}
               onClick={handleHomeClick}
             />
-            <Typography
-              variant="h6"
-              className="menuLogo menuLogoText"
-              noWrap={true}
-              component="a"
-              href="#"
-              onClick={e => {
-                e.preventDefault();
-                handleHomeClick();
-              }}
-              sx={{
-                fontWeight: 700,
-                background: 'linear-gradient(135deg, #0ea5e9, #f97316)',
-                backgroundClip: 'text',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                textDecoration: 'none',
-                cursor: 'pointer',
-                '&:hover': {
-                  textDecoration: 'none',
-                },
-              }}
-            >
-              ConGen
-            </Typography>
           </Box>
 
           <Box sx={{ display: { xs: 'none', md: 'flex' }, gap: 1 }}>

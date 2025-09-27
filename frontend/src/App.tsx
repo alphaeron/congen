@@ -188,28 +188,15 @@ function AppContent(): React.ReactElement {
                 gap: 2,
               }}
             >
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <img src={ConGenIcon} style={logoStyle} alt="ConGen" />
-                <Typography
-                  variant="h6"
-                  className="menuLogo menuLogoText"
-                  noWrap={true}
-                  component="a"
-                  href="/"
-                  sx={{
-                    fontWeight: 700,
-                    background: 'linear-gradient(135deg, #0ea5e9, #f97316)',
-                    backgroundClip: 'text',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                    textDecoration: 'none',
-                    '&:hover': {
-                      textDecoration: 'none',
-                    },
-                  }}
-                >
-                  ConGen
-                </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <img 
+                  src={ConGenIcon} 
+                  style={{
+                    ...logoStyle,
+                    filter: 'brightness(0) saturate(100%) invert(70%) sepia(100%) saturate(1000%) hue-rotate(180deg) brightness(1.2) contrast(1.2)',
+                  }} 
+                  alt="ConGen" 
+                />
               </Box>
 
               <AuthorizedElement requireAuth={false}>

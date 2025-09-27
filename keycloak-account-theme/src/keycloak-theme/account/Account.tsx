@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
 // Import only the specific components we need to reduce bundle size
 import Container from '@mui/material/Container';
-import Typography from '@mui/material/Typography';
-import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import Button from '@mui/material/Button';
 import Box from '@mui/material/Box';
@@ -17,6 +15,7 @@ import { useAuth } from './AuthContext';
 import { useAuth as useOidcAuth } from 'react-oidc-context';
 import { FormField } from '../../components/FormField';
 import { createApiClient } from './api/client';
+import { GameText, GameCard } from '../../components/GameTheme';
 
 // Global type declaration for OIDC user
 declare global {
@@ -127,12 +126,12 @@ export default function Account({ kcContext, i18n: _i18n }: AccountProps) {
   if (!kcContext) {
     return (
       <Box sx={{ p: 3, textAlign: 'center' }}>
-        <Typography variant="h6" color="error">
+        <GameText variant="h6" textVariant="accent">
           Error: No Keycloak context available
-        </Typography>
-        <Typography variant="body2" sx={{ mt: 1 }}>
+        </GameText>
+        <GameText variant="body2" textVariant="secondary" sx={{ mt: 1 }}>
           Please refresh the page or contact support if the issue persists.
-        </Typography>
+        </GameText>
       </Box>
     );
   }
@@ -249,11 +248,11 @@ export default function Account({ kcContext, i18n: _i18n }: AccountProps) {
                 <Grid container spacing={3}>
                   {/* Profile Editing Form - Takes up more space */}
                   <Grid size={{ xs: 12, lg: 8 }}>
-                    <Card sx={{ height: '100%' }}>
+                    <GameCard sx={{ height: '100%' }}>
                       <CardContent sx={{ p: 4 }}>
-                        <Typography variant="h6" gutterBottom sx={{ mb: 3, fontWeight: 600 }}>
+                        <GameText variant="h6" textVariant="glow" gutterBottom sx={{ mb: 3, fontWeight: 600 }}>
                           Edit Profile
-                        </Typography>
+                        </GameText>
 
                         {authLoading ? (
                           <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
@@ -330,20 +329,20 @@ export default function Account({ kcContext, i18n: _i18n }: AccountProps) {
                           </Button>
                         </Box>
                       </CardContent>
-                    </Card>
+                    </GameCard>
                   </Grid>
 
                   {/* Password Change Section - Sidebar style */}
                   <Grid size={{ xs: 12, lg: 4 }}>
-                    <Card>
+                    <GameCard>
                       <CardContent sx={{ p: 4 }}>
-                        <Typography variant="h6" gutterBottom sx={{ mb: 3, fontWeight: 600 }}>
+                        <GameText variant="h6" textVariant="glow" gutterBottom sx={{ mb: 3, fontWeight: 600 }}>
                           Security
-                        </Typography>
+                        </GameText>
 
-                        <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                        <GameText variant="body2" textVariant="secondary" sx={{ mb: 3 }}>
                           Change your password to keep your account secure
-                        </Typography>
+                        </GameText>
 
                         <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
                           <Button
@@ -356,7 +355,7 @@ export default function Account({ kcContext, i18n: _i18n }: AccountProps) {
                           </Button>
                         </Box>
                       </CardContent>
-                    </Card>
+                    </GameCard>
                   </Grid>
                 </Grid>
               </form>

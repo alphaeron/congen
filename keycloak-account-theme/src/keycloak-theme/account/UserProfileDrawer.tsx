@@ -12,10 +12,10 @@ import {
   ListItemButton,
   ListItemIcon,
   ListItemText,
-  Typography,
 } from '@mui/material';
 import type { KcContext } from './KcContext';
 import { navigateToFrontend } from './utils';
+import { GameText } from '../../components/GameTheme';
 
 interface UserProfileDrawerProps {
   kcContext: KcContext;
@@ -92,9 +92,9 @@ export const UserProfileDrawer: React.FC<UserProfileDrawerProps> = ({
         }}
       >
         <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider', flexShrink: 0 }}>
-          <Typography variant="h6" color="primary">
+          <GameText variant="h6" textVariant="glow">
             User Profile
-          </Typography>
+          </GameText>
         </Box>
         <List sx={{ flex: 1, overflow: 'auto' }}>
           {menuItems.map(item => (
@@ -104,13 +104,13 @@ export const UserProfileDrawer: React.FC<UserProfileDrawerProps> = ({
                 onClick={() => handleItemClick(item)}
                 sx={{
                   '&.Mui-selected': {
-                    backgroundColor: 'primary.main',
-                    color: 'primary.contrastText',
+                    backgroundColor: '#00bcd4',
+                    color: '#ffffff',
                     '&:hover': {
-                      backgroundColor: 'primary.dark',
+                      backgroundColor: '#00acc1',
                     },
                     '& .MuiListItemIcon-root': {
-                      color: 'primary.contrastText',
+                      color: '#ffffff',
                     },
                   },
                 }}
