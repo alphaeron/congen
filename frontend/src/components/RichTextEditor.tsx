@@ -5,7 +5,7 @@ import {
   FormatListBulleted,
   Save,
 } from '@mui/icons-material';
-import { Box, IconButton, Toolbar, Tooltip, Typography, Paper, Divider } from '@mui/material';
+import { Box, IconButton, Toolbar, Tooltip, Paper, Divider } from '@mui/material';
 import React, { useCallback, useMemo } from 'react';
 import { createEditor, Editor, Transforms, Text } from 'slate';
 import { withHistory } from 'slate-history';
@@ -13,6 +13,7 @@ import { Slate, Editable, withReact } from 'slate-react';
 
 import type { Descendant } from 'slate';
 import type { RenderElementProps, RenderLeafProps } from 'slate-react';
+import { GameText, GAME_CLASSES } from './GameTheme';
 
 // Define custom types for our text formatting
 interface CustomText {
@@ -490,9 +491,9 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
       </Paper>
 
       {!readOnly && (
-        <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
+        <GameText variant="caption" textVariant="secondary" className={GAME_CLASSES.marginTop1} style={{ display: 'block' }}>
           Use Ctrl+B, Ctrl+I, Ctrl+U for formatting. Ctrl+S to save.
-        </Typography>
+        </GameText>
       )}
     </Box>
   );

@@ -4,7 +4,7 @@ import { ResponsiveRadar } from '@nivo/radar';
 import React from 'react';
 
 import { CustomSvgIcon } from './CustomSvgIcon';
-import { GameText } from './GameTheme';
+import { GameText, GAME_CLASSES } from './GameTheme';
 import type { UserPerformanceScores, UserPerformanceMetrics, UserTestResult } from '../api/types';
 import RecoveryIcon from '../resources/recovery-icon.svg';
 import DexterityIcon from '../resources/dexterity-icon.svg';
@@ -45,7 +45,7 @@ const getMetricData = (
         <CustomSvgIcon
           src={ExplosivenessIcon}
           alt="Explosiveness"
-          sx={{ fontSize: 32, color: '#00bcd4' }}
+          className={`${GAME_CLASSES.fontSize32} ${GAME_CLASSES.colorCyan}`}
         />
       ),
     },
@@ -57,7 +57,7 @@ const getMetricData = (
         ? `${metrics.vo2_max.toFixed(1)} ml/kg/min`
         : 'VO₂ max test required',
       color: '#45B7D1',
-      icon: <CustomSvgIcon src={HealthIcon} alt="Stamina" sx={{ fontSize: 32, color: '#00bcd4' }} />,
+      icon: <CustomSvgIcon src={HealthIcon} alt="Stamina" className={`${GAME_CLASSES.fontSize32} ${GAME_CLASSES.colorCyan}`} />,
     },
     {
       metric: 'Recovery',
@@ -68,7 +68,7 @@ const getMetricData = (
         : 'HR recovery test required',
       color: '#96CEB4',
       icon: (
-        <CustomSvgIcon src={RecoveryIcon} alt="Recovery" sx={{ fontSize: 32, color: '#00bcd4' }} />
+        <CustomSvgIcon src={RecoveryIcon} alt="Recovery" className={`${GAME_CLASSES.fontSize32} ${GAME_CLASSES.colorCyan}`} />
       ),
     },
     {
@@ -83,7 +83,7 @@ const getMetricData = (
         <CustomSvgIcon
           src={ReflexesIcon}
           alt="Reflexes"
-          sx={{ fontSize: 32, color: '#00bcd4' }}
+          className={`${GAME_CLASSES.fontSize32} ${GAME_CLASSES.colorCyan}`}
         />
       ),
     },
@@ -93,7 +93,7 @@ const getMetricData = (
       description: 'Relative strength based on Wilks score',
       rawValue: wilksScore ? `${wilksScore.toFixed(1)} Wilks` : '1RM data required',
       color: '#FF6B6B',
-      icon: <CustomSvgIcon src={StrengthIcon} alt="Strength" sx={{ fontSize: 32, color: '#00bcd4' }} />,
+      icon: <CustomSvgIcon src={StrengthIcon} alt="Strength" className={`${GAME_CLASSES.fontSize32} ${GAME_CLASSES.colorCyan}`} />,
     },
     {
       metric: 'Dexterity',
@@ -104,7 +104,7 @@ const getMetricData = (
         : 'Mobility test required',
       color: '#9C27B0',
       icon: (
-        <CustomSvgIcon src={DexterityIcon} alt="Dexterity" sx={{ fontSize: 32, color: '#00bcd4' }} />
+        <CustomSvgIcon src={DexterityIcon} alt="Dexterity" className={`${GAME_CLASSES.fontSize32} ${GAME_CLASSES.colorCyan}`} />
       ),
     },
   ];
@@ -147,16 +147,9 @@ export const PerformanceRadarChart: React.FC<PerformanceRadarChartProps> = ({
     if (!metric) {
       return (
         <Box
-          sx={{
-            background: 'rgba(0, 0, 0, 0.9)',
-            color: 'white',
-            borderRadius: 2,
-            padding: 2,
-            border: '1px solid rgba(255, 255, 255, 0.2)',
-            minWidth: 200,
-          }}
+          className={GAME_CLASSES.tooltipBackground}
         >
-          <Box sx={{ fontSize: '0.9rem' }}>No metric found for: {metricName}</Box>
+          <Box className={GAME_CLASSES.fontSize16}>No metric found for: {metricName}</Box>
         </Box>
       );
     }
@@ -175,12 +168,12 @@ export const PerformanceRadarChart: React.FC<PerformanceRadarChartProps> = ({
           position: 'relative',
         }}
       >
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, fontSize: '0.9rem' }}>
+        <Box className={`${GAME_CLASSES.fontSize16} ${GAME_CLASSES.flex} ${GAME_CLASSES.alignItemsCenter}`} sx={{ gap: 1 }}>
           {metric.icon}
-          <Box sx={{ fontWeight: 'bold' }}>{metric.metric}:</Box>
-          <Box sx={{ fontWeight: 'bold', color: '#00bcd4' }}>{metric.rawValue}</Box>
+          <Box className={GAME_CLASSES.textBold}>{metric.metric}:</Box>
+          <Box className={`${GAME_CLASSES.textBold} ${GAME_CLASSES.colorCyan}`}>{metric.rawValue}</Box>
         </Box>
-        <Box sx={{ fontSize: '0.75rem', opacity: 0.8, fontStyle: 'italic', mt: 1 }}>
+        <Box className={`${GAME_CLASSES.fontSizeSmall} ${GAME_CLASSES.opacity80} ${GAME_CLASSES.fontStyleItalic} ${GAME_CLASSES.marginTop1}`}>
           {metric.description}
         </Box>
       </Box>
@@ -192,8 +185,8 @@ export const PerformanceRadarChart: React.FC<PerformanceRadarChartProps> = ({
     return (
       <Box>
         {title && (
-          <Box display="flex" alignItems="center" gap={1} sx={{ mb: 2 }}>
-            <RadarIcon sx={{ color: 'white' }} />
+          <Box className={`${GAME_CLASSES.flex} ${GAME_CLASSES.alignItemsCenter} ${GAME_CLASSES.marginBottom2}`} sx={{ gap: 1 }}>
+            <RadarIcon className={GAME_CLASSES.colorWhite} />
             <GameText variant="h6">{title}</GameText>
           </Box>
         )}
@@ -207,7 +200,7 @@ export const PerformanceRadarChart: React.FC<PerformanceRadarChartProps> = ({
             borderRadius: 2,
           }}
         >
-          <GameText variant="body1" sx={{ opacity: 0.7 }}>
+          <GameText variant="body1" className={GAME_CLASSES.opacity70}>
             No performance data available. Complete some tests to see your metrics!
           </GameText>
         </Box>
@@ -250,7 +243,7 @@ export const PerformanceRadarChart: React.FC<PerformanceRadarChartProps> = ({
         <Box display="flex" alignItems="center" gap={1} sx={{ mb: 2 }}>
           <RadarIcon sx={{ color: 'white' }} />
           <Tooltip title="Your performance across different fitness domains" arrow>
-            <GameText variant="h6" sx={{ fontWeight: 'bold' }}>
+            <GameText variant="h6" className={GAME_CLASSES.textBold}>
               {title}
             </GameText>
           </Tooltip>

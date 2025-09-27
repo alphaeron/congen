@@ -1,5 +1,5 @@
 import { default as BarChartIcon } from '@mui/icons-material/BarChart';
-import { Box, Card, CardContent, Typography, useTheme } from '@mui/material';
+import { Box, Card, CardContent, useTheme } from '@mui/material';
 import { ResponsiveLine } from '@nivo/line';
 import React, { useState, useMemo } from 'react';
 
@@ -11,6 +11,7 @@ import type {
 } from '../api/types';
 import { formatDate } from '../common/utils';
 import { createCongenNivoTheme, congenColorSchemes } from '../theme/nivoTheme';
+import { GameText, GameCard, GAME_CLASSES } from './GameTheme';
 
 interface LineChartProps {
   userDataExport: UserDataExport | null;
@@ -152,25 +153,25 @@ export const LineChart: React.FC<LineChartProps> = ({
   // Don't render if no data
   if (!chartData.length || !chartData[0].data.length) {
     return (
-      <Card variant="outlined">
+      <GameCard>
         <CardContent>
           <Box display="flex" alignItems="center" gap={1} sx={{ mb: 2 }}>
             <BarChartIcon color="primary" />
-            <Typography variant="h6">{title}</Typography>
+            <GameText variant="h6">{title}</GameText>
           </Box>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          <GameText variant="body2" textVariant="secondary" className={GAME_CLASSES.marginBottom2}>
             {description}
-          </Typography>
+          </GameText>
           <Box
             sx={{ height: 200, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
           >
-            <Typography variant="body2" color="text.secondary">
+            <GameText variant="body2" textVariant="secondary">
               No progress data available. Complete workouts and record 1RM values to see progress
               tracking.
-            </Typography>
+            </GameText>
           </Box>
         </CardContent>
-      </Card>
+      </GameCard>
     );
   }
 
@@ -179,11 +180,11 @@ export const LineChart: React.FC<LineChartProps> = ({
       <CardContent>
         <Box display="flex" alignItems="center" gap={1} sx={{ mb: 2 }}>
           <BarChartIcon color="primary" />
-          <Typography variant="h6">{title}</Typography>
+          <GameText variant="h6">{title}</GameText>
         </Box>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+        <GameText variant="body2" textVariant="secondary" className={GAME_CLASSES.marginBottom2}>
           {description}
-        </Typography>
+        </GameText>
         <Box sx={{ height }}>
           <ResponsiveLine
             data={filteredData}

@@ -1,5 +1,7 @@
-import { Card, CardContent, Box, Typography } from '@mui/material';
+import { CardContent, Box } from '@mui/material';
 import React from 'react';
+
+import { GameCard, GameText, GAME_CLASSES } from './GameTheme';
 
 interface ActionCardProps {
   title: string;
@@ -33,13 +35,8 @@ export const ActionCard: React.FC<ActionCardProps> = ({
   clickable = false,
 }) => {
   return (
-    <Card
-      elevation={2}
-      sx={{
-        borderRadius: 2,
-        cursor: clickable ? 'pointer' : 'default',
-        '&:hover': clickable ? { backgroundColor: 'action.hover' } : {},
-      }}
+    <GameCard
+      interactive={clickable}
       onClick={clickable ? onClick : undefined}
     >
       <CardContent>
@@ -50,13 +47,13 @@ export const ActionCard: React.FC<ActionCardProps> = ({
           sx={{ mb: children ? 2 : 0 }}
         >
           <Box>
-            <Typography variant="h6" component="h3">
+            <GameText variant="h6">
               {title}
-            </Typography>
+            </GameText>
             {subtitle && (
-              <Typography variant="body2" color="text.secondary">
+              <GameText variant="body2" className={GAME_CLASSES.opacity80}>
                 {subtitle}
-              </Typography>
+              </GameText>
             )}
           </Box>
           {actions && (
@@ -67,6 +64,6 @@ export const ActionCard: React.FC<ActionCardProps> = ({
         </Box>
         {children}
       </CardContent>
-    </Card>
+    </GameCard>
   );
 };

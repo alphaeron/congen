@@ -1,6 +1,6 @@
 import { default as RefreshIcon } from '@mui/icons-material/Refresh';
 import ShowChartIcon from '@mui/icons-material/ShowChart';
-import { Box, useTheme, Typography, IconButton, Card, CardContent, Tooltip } from '@mui/material';
+import { Box, useTheme, IconButton, Tooltip } from '@mui/material';
 import { ResponsiveSunburst } from '@nivo/sunburst';
 import React, { useState, useMemo } from 'react';
 
@@ -11,6 +11,7 @@ import {
   type UserWeightUnitPreference,
 } from '../api/types';
 import { createCongenNivoTheme } from '../theme/nivoTheme';
+import { GameText, GameCard, GAME_CLASSES } from './GameTheme';
 
 // Custom layer to display total volume in the center
 interface CenterMetricProps {
@@ -280,7 +281,7 @@ export const SunburstChart: React.FC<SunburstChartProps> = ({
   }
 
   return (
-    <Card
+    <GameCard
       sx={{
         '&:hover': {
           transform: 'none',
@@ -292,7 +293,7 @@ export const SunburstChart: React.FC<SunburstChartProps> = ({
         <Box display="flex" alignItems="center" gap={1} sx={{ mb: 2 }}>
           <ShowChartIcon color="primary" />
           <Tooltip title="Volume distribution by muscle groups for this workout" arrow>
-            <Typography variant="h6">Exercise Volume Hierarchy</Typography>
+            <GameText variant="h6">Exercise Volume Hierarchy</GameText>
           </Tooltip>
         </Box>
 
@@ -335,6 +336,6 @@ export const SunburstChart: React.FC<SunburstChartProps> = ({
           />
         </Box>
       </CardContent>
-    </Card>
+    </GameCard>
   );
 };

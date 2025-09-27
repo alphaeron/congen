@@ -13,6 +13,7 @@ import { WorkoutDetail } from './WorkoutDetail';
 import { WorkoutPreferencesSection } from './WorkoutPreferencesSection';
 import { Workouts } from './Workouts';
 import { WorkoutWeekDetails } from './WorkoutWeekDetails';
+import { GameText, GAME_CLASSES } from './GameTheme';
 import type { User } from '../api/types';
 
 interface WorkoutsOverviewProps {
@@ -143,7 +144,12 @@ export const WorkoutsOverview: React.FC<WorkoutsOverviewProps> = ({ user, select
     <React.Fragment>
       {/* Workout Tabs */}
       <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-        <Tabs value={activeTab} onChange={handleTabChange} aria-label="workout sections">
+        <Tabs 
+          value={activeTab} 
+          onChange={handleTabChange} 
+          aria-label="workout sections"
+          className={GAME_CLASSES.tabs}
+        >
           <Tab
             label="Workout Calendar"
             icon={<AddIcon />}

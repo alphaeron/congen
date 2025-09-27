@@ -5,7 +5,6 @@ import {
   Tooltip,
   Popover,
   Button,
-  Typography,
   Divider,
   Alert,
   CircularProgress,
@@ -15,6 +14,7 @@ import { useSnackbar } from 'notistack';
 import React, { useState } from 'react';
 
 import { SetSchemeForm } from './SetSchemeForm';
+import { GameText } from './GameTheme';
 import { deleteProgrammedExercise } from '../api/programmedExercise';
 import { updateSetScheme } from '../api/setScheme';
 import type { ProgrammedExerciseWithSetSchemes, UserWeightUnitPreference } from '../api/types';
@@ -221,9 +221,9 @@ export const SetSchemeEditor: React.FC<SetSchemeEditorProps> = ({
         <Box sx={{ p: 2 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
             <FitnessCenter fontSize="small" />
-            <Typography variant="subtitle1">
+            <GameText variant="subtitle1">
               Edit Exercise: {exercise.exercise.exercise_name}
-            </Typography>
+            </GameText>
           </Box>
 
           <Alert severity="info" sx={{ mb: 2 }}>

@@ -1,5 +1,5 @@
 import { default as ShowChartIcon } from '@mui/icons-material/ShowChart';
-import { Box, Typography, useTheme } from '@mui/material';
+import { Box, useTheme } from '@mui/material';
 import { ResponsiveStream } from '@nivo/stream';
 import React, { useMemo } from 'react';
 
@@ -16,6 +16,7 @@ import {
   formatDate,
 } from '../common/utils';
 import { createCongenNivoTheme } from '../theme/nivoTheme';
+import { GameText, GAME_CLASSES } from './GameTheme';
 
 interface StreamChartProps {
   userDataExport: UserDataExport | null;
@@ -153,13 +154,13 @@ export const StreamChart: React.FC<StreamChartProps> = ({
     <Box>
       <Box display="flex" alignItems="center" gap={1} sx={{ mb: 1 }}>
         <ShowChartIcon color="secondary" fontSize="small" />
-        <Typography variant="subtitle1" fontWeight="medium">
+        <GameText variant="subtitle1" className={GAME_CLASSES.textMedium}>
           {title}
-        </Typography>
+        </GameText>
       </Box>
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+      <GameText variant="body2" textVariant="secondary" className={GAME_CLASSES.marginBottom2}>
         {description}
-      </Typography>
+      </GameText>
       <Box sx={{ height, borderRadius: 1, overflow: 'hidden', border: 1, borderColor: 'divider' }}>
         <ResponsiveStream
           data={streamData}

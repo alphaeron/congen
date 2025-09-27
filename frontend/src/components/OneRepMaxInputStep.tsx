@@ -10,10 +10,10 @@ import {
   Radio,
   RadioGroup,
   TextField,
-  Typography,
 } from '@mui/material';
 import React from 'react';
 
+import { GameText, GAME_CLASSES } from './GameTheme';
 import type { Exercise } from '../api/types';
 
 interface OneRepMaxData {
@@ -136,13 +136,13 @@ export const OneRepMaxInputStep: React.FC<OneRepMaxInputStepProps> = ({
   if (isComplete) {
     return (
       <Box>
-        <Typography variant="h6" gutterBottom>
+        <GameText variant="h6" gutterBottom>
           All exercises processed!
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
+        </GameText>
+        <GameText variant="body2" textVariant="secondary">
           You have completed entering 1RM data for all exercises. Click &quot;Complete&quot; to
           finish.
-        </Typography>
+        </GameText>
       </Box>
     );
   }
@@ -150,9 +150,9 @@ export const OneRepMaxInputStep: React.FC<OneRepMaxInputStepProps> = ({
   if (!currentExercise || !currentInput) {
     return (
       <Box>
-        <Typography variant="h6" gutterBottom>
+        <GameText variant="h6" gutterBottom>
           No exercises to process
-        </Typography>
+        </GameText>
       </Box>
     );
   }
@@ -161,18 +161,18 @@ export const OneRepMaxInputStep: React.FC<OneRepMaxInputStepProps> = ({
     <Box>
       {/* Progress indicator */}
       <Box sx={{ mb: 3 }}>
-        <Typography variant="h6" gutterBottom>
+        <GameText variant="h6" gutterBottom>
           Record Your 1RM Data ({progress}/{total})
-        </Typography>
+        </GameText>
         <LinearProgress variant="determinate" value={(progress / total) * 100} sx={{ mb: 1 }} />
       </Box>
 
       {/* Current exercise input */}
       <Card sx={{ mb: 3 }}>
         <CardContent>
-          <Typography variant="h5" gutterBottom sx={{ fontWeight: 'bold', mb: 2 }}>
+          <GameText variant="h5" gutterBottom className={`${GAME_CLASSES.textBold} ${GAME_CLASSES.marginBottom2}`}>
             {currentExercise.name}
-          </Typography>
+          </GameText>
           <Grid container spacing={2}>
             <Grid size={4}>
               <TextField
@@ -247,14 +247,14 @@ export const OneRepMaxInputStep: React.FC<OneRepMaxInputStepProps> = ({
                   borderRadius: 1,
                 }}
               >
-                <Typography variant="body2" color="text.secondary">
+                <GameText variant="body2" textVariant="secondary">
                   <strong>Calculated 1RM:</strong>{' '}
                   {calculateOneRepMax(currentInput.weight, currentInput.reps).toFixed(1)}{' '}
                   {currentInput.unit}
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
+                </GameText>
+                <GameText variant="caption" textVariant="secondary">
                   (Using Epley formula: 1RM = weight × (1 + reps ÷ 30))
-                </Typography>
+                </GameText>
               </Box>
             )}
         </CardContent>

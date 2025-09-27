@@ -11,7 +11,6 @@ import {
   ListItemButton,
   ListItemIcon,
   ListItemText,
-  Typography,
   Container,
 } from '@mui/material';
 import React from 'react';
@@ -19,6 +18,7 @@ import { useNavigate, useSearchParams } from 'react-router';
 
 import { GdprComplianceSection } from './GdprComplianceSection';
 import { PhysicalAttributesSection } from './PhysicalAttributesSection';
+import { GameText, GameSidebar, GAME_CLASSES } from './GameTheme';
 
 interface UserProfileProps {
   initialSection?: string;
@@ -118,9 +118,9 @@ export const UserProfile: React.FC<UserProfileProps> = ({ initialSection = 'phys
           }}
         >
           <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider', flexShrink: 0 }}>
-            <Typography variant="h6" color="primary">
+            <GameText variant="h6" textVariant="glow">
               User Profile
-            </Typography>
+            </GameText>
           </Box>
           <List sx={{ flex: 1, overflow: 'auto' }}>
             {menuItems.map(item => (
@@ -128,18 +128,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({ initialSection = 'phys
                 <ListItemButton
                   selected={activeSection === item.id}
                   onClick={() => handleSectionChange(item.id)}
-                  sx={{
-                    '&.Mui-selected': {
-                      backgroundColor: 'primary.main',
-                      color: 'primary.contrastText',
-                      '&:hover': {
-                        backgroundColor: 'primary.dark',
-                      },
-                      '& .MuiListItemIcon-root': {
-                        color: 'primary.contrastText',
-                      },
-                    },
-                  }}
+                  className={GAME_CLASSES.listItem}
                 >
                   <ListItemIcon sx={{ minWidth: 40 }}>{item.icon}</ListItemIcon>
                   <ListItemText primary={item.label} />

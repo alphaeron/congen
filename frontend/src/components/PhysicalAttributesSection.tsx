@@ -1,9 +1,10 @@
-import { Box, Button, Card, CardContent, CircularProgress, Grid, Typography } from '@mui/material';
+import { Box, Button, CircularProgress, Grid } from '@mui/material';
 import { useForm } from '@tanstack/react-form';
 import { useSnackbar } from 'notistack';
 import React from 'react';
 
 import { FormField } from './FormField';
+import { GameText, GameCard, GameButton, GAME_CLASSES } from './GameTheme';
 import { updateUserProfile, getCurrentUser } from '../api/user';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -84,15 +85,15 @@ export function PhysicalAttributesSection(): React.ReactElement {
 
   return (
     <Box>
-      <Typography variant="h5" gutterBottom>
+      <GameText variant="h5" gutterBottom>
         Physical Attributes
-      </Typography>
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+      </GameText>
+      <GameText variant="body2" textVariant="secondary" className={GAME_CLASSES.marginBottom3}>
         Manage your physical attributes for personalized workout recommendations. All data is
         encrypted at rest for your privacy and GDPR compliance.
-      </Typography>
+      </GameText>
 
-      <Card>
+      <GameCard>
         <CardContent>
           <form
             onSubmit={e => {
@@ -160,7 +161,7 @@ export function PhysicalAttributesSection(): React.ReactElement {
             </Box>
           </form>
         </CardContent>
-      </Card>
+      </GameCard>
     </Box>
   );
 }

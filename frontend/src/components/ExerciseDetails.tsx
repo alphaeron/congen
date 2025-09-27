@@ -7,7 +7,6 @@ import Grid from '@mui/material/Grid';
 import Skeleton from '@mui/material/Skeleton';
 import Stack from '@mui/material/Stack';
 import Tooltip from '@mui/material/Tooltip';
-import Typography from '@mui/material/Typography';
 import * as React from 'react';
 import { createEditor } from 'slate';
 import { Slate, Editable, withReact } from 'slate-react';
@@ -15,6 +14,7 @@ import { Slate, Editable, withReact } from 'slate-react';
 import { BinaryTag } from './BinaryTag';
 import { ExercisePreferenceControls } from './ExercisePreferenceControls';
 import { LoadingSpinner } from './LoadingSpinner';
+import { GameText, GAME_CLASSES } from './GameTheme';
 import type { Exercise, ExerciseEquipment, ExerciseMuscle, Equipment, Muscle } from '../api/types';
 import { capitalizeEachWord } from '../common/utils';
 import { useData } from '../contexts/DataContext';
@@ -114,23 +114,23 @@ export function ExerciseDetails(
       return (
         <Alert severity="warning">
           <AlertTitle>Connection Error</AlertTitle>
-          <Typography>
+          <GameText>
             Unable to connect to the server. Please check your internet connection and try again.
-          </Typography>
-          <Typography variant="body2" sx={{ mt: 1 }}>
+          </GameText>
+          <GameText variant="body2" textVariant="secondary" className={GAME_CLASSES.marginTop1}>
             Error: {error?.message || 'Network error'}
-          </Typography>
+          </GameText>
         </Alert>
       );
     } else {
       return (
         <Alert severity="error">
           <AlertTitle>Exercise Not Found</AlertTitle>
-          <Typography>The specified exercise could not be found.</Typography>
+          <GameText>The specified exercise could not be found.</GameText>
           {error && (
-            <Typography variant="body2" sx={{ mt: 1 }}>
+            <GameText variant="body2" textVariant="secondary" className={GAME_CLASSES.marginTop1}>
               {error.toString()}
-            </Typography>
+            </GameText>
           )}
         </Alert>
       );
@@ -139,9 +139,9 @@ export function ExerciseDetails(
     return (
       <React.Fragment>
         <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
-          <Typography variant="h1" gutterBottom={true}>
+          <GameText variant="h1" gutterBottom={true}>
             {exercise.name}
-          </Typography>
+          </GameText>
           <ExercisePreferenceControls
             exerciseName={exercise.name}
             variant="segmented"
@@ -198,7 +198,7 @@ export function ExerciseDetails(
             <Grid container={true} spacing={2}>
               <Grid size={{ xs: 12 }}>
                 <Divider textAlign="left" sx={{ marginBottom: '16px' }}>
-                  <Typography variant="h3">Muscles Worked</Typography>
+                  <GameText variant="h3">Muscles Worked</GameText>
                 </Divider>
                 <Grid container={true} spacing={2}>
                   {exerciseMuscles?.map(em => {
@@ -215,7 +215,7 @@ export function ExerciseDetails(
               </Grid>
               <Grid size={{ xs: 12 }}>
                 <Divider textAlign="left" sx={{ marginBottom: '16px' }}>
-                  <Typography variant="h3">Equipment Needed</Typography>
+                  <GameText variant="h3">Equipment Needed</GameText>
                 </Divider>
                 <Grid container={true} spacing={2}>
                   {exerciseEquipment?.map(ee => {

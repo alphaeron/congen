@@ -9,6 +9,8 @@ import {
 } from '@mui/material';
 import React from 'react';
 
+import { GameText, GameDialog, GameButton, GameAlert, GAME_CLASSES } from './GameTheme';
+
 interface ConfirmationDialogProps {
   open: boolean;
   onClose: () => void;
@@ -59,19 +61,21 @@ export const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
   disabled = false,
 }) => {
   return (
-    <Dialog open={open} onClose={onClose} aria-labelledby="confirmation-dialog-title">
-      <DialogTitle id="confirmation-dialog-title">{title}</DialogTitle>
+    <Dialog open={open} onClose={onClose} aria-labelledby="confirmation-dialog-title" className={GAME_CLASSES.dialog}>
+      <DialogTitle id="confirmation-dialog-title">
+        <GameText variant="h6" textVariant="glow">{title}</GameText>
+      </DialogTitle>
       <DialogContent>
-        {message && <DialogContentText>{message}</DialogContentText>}
+        {message && <DialogContentText className={GAME_CLASSES.text}>{message}</DialogContentText>}
         {children && children}
         {error && (
-          <Alert severity="error" sx={{ mt: 2 }}>
-            {error}
-          </Alert>
+          <GameAlert className={GAME_CLASSES.marginBottom2}>
+            <GameText variant="body2">{error}</GameText>
+          </GameAlert>
         )}
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} disabled={loading}>
+        <Button onClick={onClose} disabled={loading} className={GAME_CLASSES.button}>
           {cancelText}
         </Button>
         <Button
@@ -79,6 +83,7 @@ export const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
           color={confirmColor}
           variant="contained"
           disabled={loading || disabled}
+          className={GAME_CLASSES.button}
         >
           {loading ? 'Processing...' : confirmText}
         </Button>

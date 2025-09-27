@@ -8,7 +8,6 @@ import {
 } from '@mui/icons-material';
 import {
   Box,
-  Typography,
   Alert,
   IconButton,
   Paper,
@@ -28,6 +27,7 @@ import {
   MenuItem,
 } from '@mui/material';
 import { useForm } from '@tanstack/react-form';
+
 import {
   useReactTable,
   getCoreRowModel,
@@ -47,6 +47,7 @@ import { RichTextEditor } from './RichTextEditor';
 import { SetSchemeEditor } from './SetSchemeEditor';
 import { SetSchemeForm } from './SetSchemeForm';
 import { SunburstChart } from './SunburstChart';
+import { GameCard, GameText, GAME_CLASSES } from './GameTheme';
 import type {
   Exercise,
   ProgramWithWorkouts,
@@ -489,7 +490,7 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
         header: 'Sets',
         cell: ({ row }) => {
           if (row.original.type === 'exercise') {
-            return <Typography variant="body2">{row.original.sets}</Typography>;
+            return <GameText variant="body2">{row.original.sets}</GameText>;
           }
           return null;
         },
@@ -502,7 +503,7 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
         header: 'Reps',
         cell: ({ row }) => {
           if (row.original.type === 'exercise') {
-            return <Typography variant="body2">{row.original.reps || '-'}</Typography>;
+            return <GameText variant="body2">{row.original.reps || '-'}</GameText>;
           }
           return null;
         },
@@ -515,7 +516,7 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
         header: 'Tempo',
         cell: ({ row }) => {
           if (row.original.type === 'exercise') {
-            return <Typography variant="body2">{row.original.tempo || '-'}</Typography>;
+            return <GameText variant="body2">{row.original.tempo || '-'}</GameText>;
           }
           return null;
         },
@@ -528,7 +529,7 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
         header: 'Weight',
         cell: ({ row }) => {
           if (row.original.type === 'exercise') {
-            return <Typography variant="body2">{row.original.weight || '-'}</Typography>;
+            return <GameText variant="body2">{row.original.weight || '-'}</GameText>;
           }
           return null;
         },
@@ -541,7 +542,7 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
         header: 'Rest',
         cell: ({ row }) => {
           if (row.original.type === 'exercise') {
-            return <Typography variant="body2">{row.original.rest || '-'}</Typography>;
+            return <GameText variant="body2">{row.original.rest || '-'}</GameText>;
           }
           return null;
         },
@@ -594,9 +595,9 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
                     }}
                   />
                 ) : (
-                  <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
+                  <GameText variant="body2" textVariant="secondary" className={GAME_CLASSES.textItalic}>
                     {canEdit ? 'Click to add notes...' : 'No notes'}
-                  </Typography>
+                  </GameText>
                 )}
               </Box>
             );
@@ -701,7 +702,7 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
       <Grid container spacing={3} sx={{ p: 3, pt: 0 }}>
         {/* Table Container - 2/3 width */}
         <Grid size={{ xs: 12, lg: 8 }}>
-          <Paper sx={{ width: '100%', overflow: 'hidden', height: '100%' }}>
+          <GameCard className={`${GAME_CLASSES.width100} ${GAME_CLASSES.overflowHidden} ${GAME_CLASSES.height100}`}>
             <Box
               sx={{
                 overflow: 'auto',
@@ -783,9 +784,9 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
                           onClick={() => row.original.stageId && toggleStage(row.original.stageId)}
                         >
                           <Box display="flex" alignItems="center" justifyContent="space-between">
-                            <Typography variant="h6" color="primary" sx={{ fontWeight: 'bold' }}>
+                            <GameText variant="h6" textVariant="accent" className={GAME_CLASSES.textBold}>
                               {row.original.stageName}
-                            </Typography>
+                            </GameText>
                             <IconButton
                               size="small"
                               onClick={e => {
@@ -831,7 +832,7 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
                 </tbody>
               </table>
             </Box>
-          </Paper>
+          </GameCard>
         </Grid>
 
         {/* Charts - 1/3 width */}
@@ -867,9 +868,9 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
         <DialogTitle>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <FitnessCenterIcon />
-            <Typography variant="h6">
+            <GameText variant="h6">
               Edit Notes: {selectedExerciseForNotes?.exercise?.exercise_name}
-            </Typography>
+            </GameText>
           </Box>
         </DialogTitle>
 
@@ -918,7 +919,7 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
         <DialogTitle>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <AddIcon />
-            <Typography variant="h6">Add Exercise to Workout</Typography>
+            <GameText variant="h6">Add Exercise to Workout</GameText>
           </Box>
         </DialogTitle>
 
@@ -948,10 +949,10 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
               renderOption={(props, option) => (
                 <Box component="li" {...props}>
                   <Box>
-                    <Typography variant="body1">{option.name}</Typography>
-                    <Typography variant="caption" color="text.secondary">
+                    <GameText variant="body1">{option.name}</GameText>
+                    <GameText variant="caption" textVariant="secondary">
                       {option.movement_type} • {option.is_upper ? 'Upper' : 'Lower'} Body
-                    </Typography>
+                    </GameText>
                   </Box>
                 </Box>
               )}

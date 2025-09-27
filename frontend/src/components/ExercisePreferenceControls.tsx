@@ -7,7 +7,6 @@ import {
   Chip,
   IconButton,
   Tooltip,
-  Typography,
   ToggleButton,
   ToggleButtonGroup,
 } from '@mui/material';
@@ -15,6 +14,7 @@ import { useSnackbar } from 'notistack';
 import React, { useState, useEffect } from 'react';
 
 import { LoadingSpinner } from './LoadingSpinner';
+import { GameText } from './GameTheme';
 import type { UserExercisePreference } from '../api/types';
 import {
   upsertUserExercisePreference,
@@ -169,15 +169,15 @@ export function ExercisePreferenceControls(
       >
         <ToggleButton value="prefer" aria-label="prefer exercise">
           <FavoriteIcon sx={{ mr: 0.5 }} />
-          <Typography variant="caption">Prefer</Typography>
+          <GameText variant="caption">Prefer</GameText>
         </ToggleButton>
         <ToggleButton value="neutral" aria-label="neutral preference">
           <RemoveIcon sx={{ mr: 0.5 }} />
-          <Typography variant="caption">Neutral</Typography>
+          <GameText variant="caption">Neutral</GameText>
         </ToggleButton>
         <ToggleButton value="ignore" aria-label="ignore exercise">
           <BlockIcon sx={{ mr: 0.5 }} />
-          <Typography variant="caption">Ignore</Typography>
+          <GameText variant="caption">Ignore</GameText>
         </ToggleButton>
       </ToggleButtonGroup>
     );
@@ -311,15 +311,15 @@ export function ExercisePreferenceControls(
     >
       <ToggleButton value="prefer" aria-label="prefer exercise">
         <FavoriteIcon sx={{ mr: 0.5 }} />
-        <Typography variant="caption">Prefer</Typography>
+        <GameText variant="caption">Prefer</GameText>
       </ToggleButton>
       <ToggleButton value="neutral" aria-label="neutral preference">
         <RemoveIcon sx={{ mr: 0.5 }} />
-        <Typography variant="caption">No Preference</Typography>
+        <GameText variant="caption">No Preference</GameText>
       </ToggleButton>
       <ToggleButton value="ignore" aria-label="ignore exercise">
         <BlockIcon sx={{ mr: 0.5 }} />
-        <Typography variant="caption">Ignore</Typography>
+        <GameText variant="caption">Ignore</GameText>
       </ToggleButton>
     </ToggleButtonGroup>
   );

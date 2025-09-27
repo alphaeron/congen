@@ -7,8 +7,9 @@ import Container from '@mui/material/Container';
 import Grid from '@mui/material/Grid';
 import Stack from '@mui/material/Stack';
 import { alpha } from '@mui/material/styles';
-import Typography from '@mui/material/Typography';
 import * as React from 'react';
+
+import { GameText, GameCard, GAME_CLASSES } from './GameTheme';
 
 export const FEATURE_ITEMS = [
   {
@@ -54,51 +55,37 @@ export function Features() {
           mb: 3,
         }}
       >
-        <Typography
+        <GameText
           component="h2"
           variant="h3"
+          textVariant="glow"
           sx={{
             fontWeight: 700,
             mb: 2,
-            background: 'linear-gradient(135deg, #0ea5e9, #f97316)',
-            backgroundClip: 'text',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
           }}
         >
           Features
-        </Typography>
-        <Typography
+        </GameText>
+        <GameText
           variant="h6"
-          color="text.secondary"
+          textVariant="secondary"
           sx={{
             fontWeight: 400,
             opacity: 0.8,
           }}
         >
           Everything you need to build the perfect conjugate workout program
-        </Typography>
+        </GameText>
       </Box>
 
       <Grid container spacing={4}>
         {FEATURE_ITEMS.map((item, index) => (
           <Grid size={{ xs: 12, sm: 6, md: 4 }} key={index}>
-            <Card
+            <GameCard
+              interactive={true}
               sx={{
                 p: 4,
                 height: '100%',
-                borderRadius: 3,
-                background: theme =>
-                  `linear-gradient(135deg, ${alpha(theme.palette.background.paper, 0.8)}, ${alpha(theme.palette.background.paper, 0.6)})`,
-                border: theme => `1px solid ${alpha(theme.palette.divider, 0.3)}`,
-                backdropFilter: 'blur(20px)',
-                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                cursor: 'pointer',
-                '&:hover': {
-                  transform: 'translateY(-8px)',
-                  boxShadow: theme => `0 20px 40px ${alpha(theme.palette.primary.main, 0.15)}`,
-                  border: theme => `1px solid ${alpha(theme.palette.primary.main, 0.3)}`,
-                },
               }}
             >
               <Stack spacing={3} sx={{ height: '100%' }}>
@@ -132,30 +119,30 @@ export function Features() {
                 </Box>
 
                 <Box sx={{ flex: 1 }}>
-                  <Typography
+                  <GameText
                     variant="h5"
-                    fontWeight={600}
-                    gutterBottom
                     sx={{
+                      fontWeight: 600,
                       mb: 2,
                       lineHeight: 1.3,
                     }}
+                    gutterBottom
                   >
                     {item.title}
-                  </Typography>
-                  <Typography
+                  </GameText>
+                  <GameText
                     variant="body1"
-                    color="text.secondary"
+                    textVariant="secondary"
                     sx={{
                       lineHeight: 1.6,
                       opacity: 0.8,
                     }}
                   >
                     {item.description}
-                  </Typography>
+                  </GameText>
                 </Box>
               </Stack>
-            </Card>
+            </GameCard>
           </Grid>
         ))}
       </Grid>

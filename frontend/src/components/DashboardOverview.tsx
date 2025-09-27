@@ -4,6 +4,7 @@ import React from 'react';
 import { AdventurerStatusCard } from './AdventurerStatusCard';
 import { CompactQuestCard } from './CompactQuestCard';
 import { LoadingSpinner } from './LoadingSpinner';
+import { GameContainer, GAME_CLASSES } from './GameTheme';
 import type { User } from '../api/types';
 import { useData } from '../contexts/DataContext';
 
@@ -35,10 +36,10 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ user }) =>
   }
 
   return (
-    <React.Fragment>
+    <GameContainer>
       {/* Main Dashboard Layout: 3/4 Status Card + 1/4 Sidebar */}
       {performanceScores ? (
-        <Grid container spacing={3} sx={{ mb: 3 }}>
+        <Grid container spacing={3} className={GAME_CLASSES.marginBottom3}>
           {/* Status Card - 3/4 width */}
           <Grid size={{ xs: 12, lg: 9 }}>
             <AdventurerStatusCard
@@ -65,6 +66,6 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ user }) =>
           </Grid>
         </Grid>
       ) : null}
-    </React.Fragment>
+    </GameContainer>
   );
 };

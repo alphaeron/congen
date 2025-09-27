@@ -1,7 +1,8 @@
-import { Backdrop, Typography } from '@mui/material';
+import { Backdrop } from '@mui/material';
 import React from 'react';
 
 import { LoadingSpinner } from './LoadingSpinner';
+import { GameText, GAME_CLASSES } from './GameTheme';
 
 interface LoadingBackdropProps {
   open: boolean;
@@ -41,9 +42,9 @@ export const LoadingBackdrop: React.FC<LoadingBackdropProps> = ({
     >
       <LoadingSpinner message={message} size={spinnerSize} />
       {subMessage && (
-        <Typography variant="body2" color="inherit" sx={{ opacity: 0.8 }}>
+        <GameText variant="body2" textVariant="secondary" className={GAME_CLASSES.opacity80}>
           {subMessage}
-        </Typography>
+        </GameText>
       )}
     </Backdrop>
   );

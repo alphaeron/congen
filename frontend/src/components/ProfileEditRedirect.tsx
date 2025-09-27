@@ -1,10 +1,11 @@
-import { Box, Typography } from '@mui/material';
+import { Box } from '@mui/material';
 import { useSnackbar } from 'notistack';
 import React, { useEffect, useState } from 'react';
 import { useAuth } from 'react-oidc-context';
 import { useNavigate } from 'react-router';
 
 import { LoadingSpinner } from './LoadingSpinner';
+import { GameText, GAME_CLASSES } from './GameTheme';
 import { updateUserProfile } from '../api/user';
 
 /**
@@ -70,20 +71,20 @@ export const ProfileEditRedirect: React.FC = () => {
     return (
       <Box display="flex" flexDirection="column" alignItems="center" gap={2} p={4}>
         <LoadingSpinner />
-        <Typography variant="h6">Profile updated successfully!</Typography>
-        <Typography variant="body2" color="text.secondary" textAlign="center">
+        <GameText variant="h6">Profile updated successfully!</GameText>
+        <GameText variant="body2" textVariant="secondary" textAlign="center">
           Redirecting you back to your profile...
-        </Typography>
+        </GameText>
       </Box>
     );
   }
 
   return (
     <Box display="flex" flexDirection="column" alignItems="center" gap={2} p={4}>
-      <Typography variant="h6">Redirecting...</Typography>
-      <Typography variant="body2" color="text.secondary" textAlign="center">
+      <GameText variant="h6">Redirecting...</GameText>
+      <GameText variant="body2" textVariant="secondary" textAlign="center">
         Please wait while we process your request.
-      </Typography>
+      </GameText>
     </Box>
   );
 };

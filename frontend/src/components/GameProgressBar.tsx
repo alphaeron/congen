@@ -1,8 +1,8 @@
-import { Box, Typography, Tooltip } from '@mui/material';
+import { Box, Tooltip } from '@mui/material';
 import { styled, alpha } from '@mui/material/styles';
 import React from 'react';
 
-import { StatusBarContainer } from './GameTheme';
+import { GameText, GAME_CLASSES } from './GameTheme';
 
 /**
  * Shared progress bar components for consistent styling across the game UI.
@@ -32,7 +32,7 @@ const ProgressBarFill = styled(Box)<{ percentage: number; color: string }>(
   })
 );
 
-const ProgressBarText = styled(Typography)(() => ({
+const ProgressBarText = styled(GameText)(() => ({
   position: 'relative',
   zIndex: 1,
   fontSize: '0.75rem',
@@ -44,7 +44,7 @@ const ProgressBarText = styled(Typography)(() => ({
   fontFamily: '"Inter", "system-ui", "sans-serif"', // Matches Congen's font
 }));
 
-const LabelText = styled(Typography)(() => ({
+const LabelText = styled(GameText)(() => ({
   fontSize: '0.75rem',
   color: '#ffffff',
   textShadow: '0 0 3px #00bcd4',
@@ -79,7 +79,7 @@ export const GameProgressBar: React.FC<GameProgressBarProps> = ({
 
   return (
     <Tooltip title={tooltip}>
-      <StatusBarContainer>
+      <Box>
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.25 }}>
           {icon}
           <LabelText>{label}</LabelText>
@@ -92,7 +92,7 @@ export const GameProgressBar: React.FC<GameProgressBarProps> = ({
             </ProgressBarText>
           </ProgressBarContainer>
         </Box>
-      </StatusBarContainer>
+      </Box>
     </Tooltip>
   );
 };
@@ -116,7 +116,7 @@ const CircularProgressWrapper = styled(Box)(() => ({
   height: 75,
 }));
 
-const CircularProgressText = styled(Typography)(() => ({
+const CircularProgressText = styled(GameText)(() => ({
   position: 'absolute',
   fontSize: '0.6rem',
   fontWeight: 600, // Matches Congen's font weight
@@ -141,7 +141,7 @@ export const GameCircularProgressBar: React.FC<GameProgressBarProps> = ({
 
   return (
     <Tooltip title={tooltip}>
-      <StatusBarContainer>
+      <Box>
         <CircularProgressContainer>
           <CircularProgressWrapper>
             <Box
@@ -197,7 +197,7 @@ export const GameCircularProgressBar: React.FC<GameProgressBarProps> = ({
             <LabelText>{label}</LabelText>
           </Box>
         </CircularProgressContainer>
-      </StatusBarContainer>
+      </Box>
     </Tooltip>
   );
 };

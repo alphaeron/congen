@@ -5,12 +5,12 @@ import Chip from '@mui/material/Chip';
 import Divider from '@mui/material/Divider';
 import Stack from '@mui/material/Stack';
 import { alpha } from '@mui/material/styles';
-import Typography from '@mui/material/Typography';
 import * as React from 'react';
 import { Link } from 'react-router';
 
 import { BinaryTag } from './BinaryTag';
 import { ExercisePreferenceControls } from './ExercisePreferenceControls';
+import { GameCard, GameText, GAME_CLASSES } from './GameTheme';
 import type { Exercise } from '../api/types';
 import { capitalizeEachWord } from '../common/utils';
 
@@ -36,24 +36,9 @@ export function ExerciseCard(props: ExerciseCardProps): React.ReactElement<Exerc
   const { exercise, equipment = [], muscles = [] } = props;
 
   return (
-    <Card
-      variant="outlined"
-      sx={{
-        height: '100%',
-        borderRadius: 3,
-        background: theme =>
-          `linear-gradient(135deg, ${alpha(theme.palette.background.paper, 0.8)}, ${alpha(theme.palette.background.paper, 0.6)})`,
-        border: theme => `1px solid ${alpha(theme.palette.divider, 0.3)}`,
-        backdropFilter: 'blur(20px)',
-        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-        cursor: 'pointer',
-        overflow: 'hidden',
-        '&:hover': {
-          transform: 'translateY(-4px)',
-          boxShadow: theme => `0 20px 40px ${alpha(theme.palette.primary.main, 0.15)}`,
-          border: theme => `1px solid ${alpha(theme.palette.primary.main, 0.3)}`,
-        },
-      }}
+    <GameCard
+      interactive={true}
+      sx={{ height: '100%' }}
     >
       <CardContent sx={{ p: 3, height: '100%', display: 'flex', flexDirection: 'column' }}>
         <Link
@@ -61,7 +46,7 @@ export function ExerciseCard(props: ExerciseCardProps): React.ReactElement<Exerc
           to={`/exercises/${exercise.name}`}
           style={{ textDecoration: 'none' }}
         >
-          <Typography
+          <GameText
             variant="h6"
             sx={{
               fontWeight: 600,
@@ -74,7 +59,7 @@ export function ExerciseCard(props: ExerciseCardProps): React.ReactElement<Exerc
             }}
           >
             {exercise.name}
-          </Typography>
+          </GameText>
         </Link>
 
         <Stack spacing={2} sx={{ flex: 1 }}>
@@ -129,9 +114,9 @@ export function ExerciseCard(props: ExerciseCardProps): React.ReactElement<Exerc
                   },
                 }}
               >
-                <Typography
+                <GameText
                   variant="caption"
-                  color="text.secondary"
+                  textVariant="secondary"
                   sx={{
                     fontWeight: 600,
                     textTransform: 'uppercase',
@@ -139,7 +124,7 @@ export function ExerciseCard(props: ExerciseCardProps): React.ReactElement<Exerc
                   }}
                 >
                   Equipment
-                </Typography>
+                </GameText>
               </Divider>
               <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
                 {equipment.map(e => (
@@ -173,9 +158,9 @@ export function ExerciseCard(props: ExerciseCardProps): React.ReactElement<Exerc
                   },
                 }}
               >
-                <Typography
+                <GameText
                   variant="caption"
-                  color="text.secondary"
+                  textVariant="secondary"
                   sx={{
                     fontWeight: 600,
                     textTransform: 'uppercase',
@@ -183,7 +168,7 @@ export function ExerciseCard(props: ExerciseCardProps): React.ReactElement<Exerc
                   }}
                 >
                   Target Muscles
-                </Typography>
+                </GameText>
               </Divider>
               <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
                 {muscles.map(m => (
@@ -203,6 +188,6 @@ export function ExerciseCard(props: ExerciseCardProps): React.ReactElement<Exerc
           )}
         </Stack>
       </CardContent>
-    </Card>
+    </GameCard>
   );
 } // end component ExerciseCard

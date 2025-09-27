@@ -1,8 +1,9 @@
-import { Box, Typography, useTheme, Tooltip } from '@mui/material';
+import { Box, useTheme, Tooltip } from '@mui/material';
 import { Ranger } from '@tanstack/ranger';
 import React, { useMemo, useRef, useEffect, useState } from 'react';
 
 import type { ProgressStatus } from '../utils/progressUtils';
+import { GameText, GameProgressBar, GAME_CLASSES } from './GameTheme';
 
 interface ProgressBarProps {
   /** Current progress value (0-100) */
@@ -356,18 +357,18 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
       }
 
       elements.push(
-        <Typography key="percentage" variant="caption" color="text.secondary">
+        <GameText key="percentage" variant="caption" textVariant="secondary">
           {percentageText}
-        </Typography>
+        </GameText>
       );
     }
 
     if (!showPercentage && showFraction && current !== undefined && total !== undefined) {
       // Show only fraction if percentage is disabled
       elements.push(
-        <Typography key="fraction" variant="caption" color="text.secondary">
+        <GameText key="fraction" variant="caption" textVariant="secondary">
           {current}/{total}
-        </Typography>
+        </GameText>
       );
     }
 
@@ -389,9 +390,9 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
       {renderProgressContent()}
       {renderTextContent()}
       {label && (
-        <Typography variant="caption" color="text.secondary" sx={{ ml: 1 }}>
+        <GameText variant="caption" textVariant="secondary" style={{ marginLeft: '8px' }}>
           {label}
-        </Typography>
+        </GameText>
       )}
     </Box>
   );

@@ -3,7 +3,7 @@ import React from 'react';
 
 import { CustomSvgIcon } from './CustomSvgIcon';
 import { GameProgressBar, GameCircularProgressBar } from './GameProgressBar';
-import { GameCard, GameSkillChip, GameText, GameTextSecondary } from './GameTheme';
+import { GameCard, GameSkillChip, GameText, GameTextSecondary, GAME_CLASSES } from './GameTheme';
 import { PerformanceRadarChart } from './PerformanceRadarChart';
 import type { UserPerformanceScores, UserPerformanceMetrics, UserTestResult } from '../api/types';
 import ProfileIcon from '../resources/profile-icon.svg';
@@ -27,62 +27,51 @@ export const AdventurerStatusCard: React.FC<AdventurerStatusCardProps> = ({
   userName = 'Raven Thornfield',
 }) => {
   return (
-    <GameCard sx={{ overflow: 'visible' }}>
+    <GameCard className={GAME_CLASSES.overflowVisible}>
       <CardHeader
         title={
-          <Box sx={{ textAlign: 'center' }}>
+          <Box className={GAME_CLASSES.textCenter}>
             <GameText
               variant="h3"
-              sx={{ fontWeight: 'bold', color: '#ffffff', textShadow: '0 0 3px #00bcd4' }}
+              textVariant="glow"
+              className={GAME_CLASSES.textBold}
             >
               STATUS
             </GameText>
           </Box>
         }
-        sx={{ textAlign: 'center' }}
+        className={GAME_CLASSES.textCenter}
       />
 
-      <CardContent sx={{ pt: 0 }}>
+      <CardContent className={GAME_CLASSES.paddingTop0}>
         {/* Profile Information - Centered under STATUS */}
         <Grid container spacing={1} mb={1} overflow="visible">
           <Grid size={12}>
             <Stack direction="column" alignItems="center">
               <Stack direction="row" alignItems="flex-start" spacing={2}>
-                <Stack direction="column" alignItems="center" sx={{ rowGap: 0 }}>
+                <Stack direction="column" alignItems="center" className={GAME_CLASSES.rowGap0}>
                   <CustomSvgIcon
                     src={ProfileIcon}
                     alt="Profile"
-                    sx={{ fontSize: 80, color: 'white' }}
+                    className={`${GAME_CLASSES.fontSize80} ${GAME_CLASSES.colorWhite}`}
                   />
                   <GameText
                     variant="h6"
-                    sx={{
-                      mt: '-16px',
-                      color: '#ffffff',
-                      textShadow: '0 0 5px #00bcd4',
-                      textTransform: 'uppercase',
-                    }}
+                    className={`${GAME_CLASSES.marginTopNegative16} ${GAME_CLASSES.textShadowGlow5} ${GAME_CLASSES.textTransformUppercase}`}
                   >
                     {userName}
                   </GameText>
                 </Stack>
-                <Stack direction="column" alignItems="center" sx={{ rowGap: 0 }}>
+                <Stack direction="column" alignItems="center" className={GAME_CLASSES.rowGap0}>
                   <GameText
                     variant="h2"
-                    sx={{
-                      fontSize: '3rem',
-                      fontWeight: 'bold',
-                      color: '#00bcd4',
-                      textShadow: '0 0 10px #00bcd4',
-                      lineHeight: 1,
-                      mt: '16px',
-                    }}
+                    className={`${GAME_CLASSES.fontSize3rem} ${GAME_CLASSES.textBold} ${GAME_CLASSES.colorCyan} ${GAME_CLASSES.lineHeight1} ${GAME_CLASSES.marginTop16}`}
                   >
                     {scores.level}
                   </GameText>
                   <GameText
                     variant="h6"
-                    sx={{ color: '#e0e0e0', textShadow: '0 0 5px #00bcd4', mt: '-10px' }}
+                    className={`${GAME_CLASSES.colorLightGray} ${GAME_CLASSES.textShadowGlow5} ${GAME_CLASSES.marginTopNegative10}`}
                   >
                     LEVEL
                   </GameText>
@@ -97,7 +86,7 @@ export const AdventurerStatusCard: React.FC<AdventurerStatusCardProps> = ({
           <Grid size="auto">
             <GameProgressBar
               icon={
-                <CustomSvgIcon src={HealthIcon} alt="HP" sx={{ fontSize: 40, color: '#00bcd4' }} />
+                <CustomSvgIcon src={HealthIcon} alt="HP" className={`${GAME_CLASSES.fontSize40} ${GAME_CLASSES.colorCyan}`} />
               }
               label="HP"
               current={Math.max(0, scores.hp - scores.hp_loss)}
@@ -112,7 +101,7 @@ export const AdventurerStatusCard: React.FC<AdventurerStatusCardProps> = ({
                 <CustomSvgIcon
                   src={MagicIcon}
                   alt="MP"
-                  sx={{ fontSize: 40, color: '#00bcd4' }}
+                  className={`${GAME_CLASSES.fontSize40} ${GAME_CLASSES.colorCyan}`}
                 />
               }
               label="MP"
@@ -141,11 +130,11 @@ export const AdventurerStatusCard: React.FC<AdventurerStatusCardProps> = ({
               <CustomSvgIcon
                 src={SkillsIcon}
                 alt="Skills"
-                sx={{ fontSize: 32, color: '#00bcd4' }}
+                className={`${GAME_CLASSES.fontSize32} ${GAME_CLASSES.colorCyan}`}
               />
               <GameText
                 variant="h6"
-                sx={{ fontWeight: 'bold', color: '#ffffff', textShadow: '0 0 3px #00bcd4' }}
+                className={`${GAME_CLASSES.textBold} ${GAME_CLASSES.textShadowGlow}`}
               >
                 Skills
               </GameText>
@@ -161,7 +150,7 @@ export const AdventurerStatusCard: React.FC<AdventurerStatusCardProps> = ({
                         <CustomSvgIcon
                           src={SkillsIcon}
                           alt="Skill"
-                          sx={{ fontSize: 16, color: '#00bcd4' }}
+                          className={`${GAME_CLASSES.fontSize16} ${GAME_CLASSES.colorCyan}`}
                         />
                       }
                     />
@@ -169,7 +158,7 @@ export const AdventurerStatusCard: React.FC<AdventurerStatusCardProps> = ({
                 ))}
               </Grid>
             ) : (
-              <GameTextSecondary variant="body2" sx={{ fontStyle: 'italic', textAlign: 'center' }}>
+              <GameTextSecondary variant="body2" className={`${GAME_CLASSES.textItalic} ${GAME_CLASSES.textCenter}`}>
                 No skills unlocked yet. Complete quests to unlock skills!
               </GameTextSecondary>
             )}

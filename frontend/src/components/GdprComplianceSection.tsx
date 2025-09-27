@@ -20,13 +20,13 @@ import {
   Radio,
   RadioGroup,
   TextField,
-  Typography,
 } from '@mui/material';
 import { useSnackbar } from 'notistack';
 import React from 'react';
 import { Link } from 'react-router';
 
 import { ConfirmationDialog } from './ConfirmationDialog';
+import { GameText, GAME_CLASSES } from './GameTheme';
 import { FormDialog } from './FormDialog';
 import { LoadingSpinner } from './LoadingSpinner';
 import { formatDate } from '../common/utils';
@@ -163,7 +163,7 @@ export function GdprComplianceSection(): React.ReactElement {
         <CardContent>
           <Box display="flex" alignItems="center" gap={2}>
             <LoadingSpinner size={24} message="" />
-            <Typography>Loading GDPR compliance status...</Typography>
+            <GameText>Loading GDPR compliance status...</GameText>
           </Box>
         </CardContent>
       </Card>
@@ -176,21 +176,21 @@ export function GdprComplianceSection(): React.ReactElement {
         <CardContent>
           <Box display="flex" alignItems="center" gap={2} mb={2}>
             <PrivacyIcon color="primary" />
-            <Typography variant="h6">Privacy & Data Protection</Typography>
+            <GameText variant="h6">Privacy & Data Protection</GameText>
           </Box>
 
-          <Typography variant="body2" color="text.secondary" paragraph>
+          <GameText variant="body2" textVariant="secondary" paragraph>
             Manage your data and privacy settings. You have the right to control how your personal
             data is processed.
-          </Typography>
+          </GameText>
 
           <Divider sx={{ my: 2 }} />
 
           {/* Consent Status */}
           <Box sx={{ mb: 3 }}>
-            <Typography variant="subtitle1" gutterBottom>
+            <GameText variant="subtitle1" gutterBottom>
               Data Processing Consent
-            </Typography>
+            </GameText>
             <Box display="flex" alignItems="center" gap={2} mb={2}>
               {userConsent?.data_processing_consent ? (
                 <Chip
@@ -203,7 +203,7 @@ export function GdprComplianceSection(): React.ReactElement {
                 <Chip icon={<CancelIcon />} label="Consent Withdrawn" color="error" size="small" />
               )}
               {userConsent?.consent_timestamp && (
-                <Typography variant="caption" color="text.secondary">
+                <GameText variant="caption" textVariant="secondary">
                   Last updated:{' '}
                   {formatDate(userConsent.consent_timestamp, {
                     year: 'numeric',
@@ -212,7 +212,7 @@ export function GdprComplianceSection(): React.ReactElement {
                     hour: '2-digit',
                     minute: '2-digit',
                   })}
-                </Typography>
+                </GameText>
               )}
             </Box>
             <Button variant="outlined" size="small" onClick={() => setConsentDialogOpen(true)}>
@@ -223,20 +223,20 @@ export function GdprComplianceSection(): React.ReactElement {
           <Divider sx={{ my: 2 }} />
 
           {/* GDPR Actions */}
-          <Typography variant="subtitle1" gutterBottom>
+          <GameText variant="subtitle1" gutterBottom>
             Your Data Rights
-          </Typography>
+          </GameText>
 
           <Box display="flex" flexDirection="column" gap={2}>
             {/* Data Export */}
             <Box display="flex" justifyContent="space-between" alignItems="center">
               <Box>
-                <Typography variant="body2" fontWeight="medium">
+                <GameText variant="body2" className={GAME_CLASSES.textMedium}>
                   Export Your Data
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
+                </GameText>
+                <GameText variant="caption" textVariant="secondary">
                   Download all your personal data in JSON format
-                </Typography>
+                </GameText>
               </Box>
               <Button
                 variant="outlined"
@@ -252,12 +252,12 @@ export function GdprComplianceSection(): React.ReactElement {
             {/* Privacy Policy */}
             <Box display="flex" justifyContent="space-between" alignItems="center">
               <Box>
-                <Typography variant="body2" fontWeight="medium">
+                <GameText variant="body2" className={GAME_CLASSES.textMedium}>
                   Privacy Policy
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
+                </GameText>
+                <GameText variant="caption" textVariant="secondary">
                   View our privacy policy and data processing information
-                </Typography>
+                </GameText>
               </Box>
               <Button
                 variant="outlined"
@@ -278,23 +278,23 @@ export function GdprComplianceSection(): React.ReactElement {
         <CardContent>
           <Box display="flex" alignItems="center" gap={2} mb={2}>
             <DeleteForeverIcon color="error" />
-            <Typography variant="h6" color="error">
+            <GameText variant="h6" textVariant="accent">
               Danger Zone
-            </Typography>
+            </GameText>
           </Box>
 
-          <Typography variant="body2" color="text.secondary" paragraph>
+          <GameText variant="body2" textVariant="secondary" paragraph>
             These actions are irreversible. Please proceed with caution.
-          </Typography>
+          </GameText>
 
           <Box display="flex" justifyContent="space-between" alignItems="center">
             <Box>
-              <Typography variant="body2" fontWeight="medium" color="error">
+              <GameText variant="body2" className={GAME_CLASSES.textMedium} textVariant="accent">
                 Delete All Data
-              </Typography>
-              <Typography variant="caption" color="text.secondary">
+              </GameText>
+              <GameText variant="caption" textVariant="secondary">
                 Permanently delete all your personal data and account
-              </Typography>
+              </GameText>
             </Box>
             <Button
               variant="contained"
@@ -375,13 +375,13 @@ export function GdprComplianceSection(): React.ReactElement {
         <DialogContentText paragraph>
           This will permanently delete your account and all associated data including:
         </DialogContentText>
-        <Typography component="ul" variant="body2" color="text.secondary">
+        <GameText component="ul" variant="body2" textVariant="secondary">
           <li>Your entire account</li>
           <li>Profile information</li>
           <li>Exercise preferences and history</li>
           <li>Workout programs and progress</li>
           <li>Account settings and preferences</li>
-        </Typography>
+        </GameText>
         <DialogContentText paragraph sx={{ mt: 2 }}>
           To confirm account deletion, please type <strong>DELETE_ALL_MY_DATA</strong> below:
         </DialogContentText>

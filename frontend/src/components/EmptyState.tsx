@@ -1,5 +1,7 @@
-import { Card, CardContent, Typography, Paper, Box } from '@mui/material';
+import { Card, CardContent, Paper, Box } from '@mui/material';
 import React from 'react';
+
+import { GameCard, GameText, GAME_CLASSES } from './GameTheme';
 
 interface EmptyStateProps {
   title: string;
@@ -26,30 +28,17 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
   variant = 'card',
   action,
 }) => {
-  const Container = variant === 'paper' ? Paper : Card;
-  const containerProps =
-    variant === 'paper'
-      ? {
-          sx: {
-            p: 6,
-            textAlign: 'center',
-            borderRadius: 3,
-            background: theme =>
-              `linear-gradient(135deg, ${theme.palette.background.paper}, ${theme.palette.background.paper})`,
-            border: theme => `1px solid ${theme.palette.divider}`,
-          },
-        }
-      : {};
+  const Container = variant === 'paper' ? Paper : GameCard;
 
   return (
-    <Container {...containerProps}>
+    <Container sx={{ textAlign: 'center' }}>
       <CardContent sx={{ textAlign: 'center', py: 4 }}>
-        <Typography variant="h6" gutterBottom>
+        <GameText variant="h6" gutterBottom>
           {title}
-        </Typography>
-        <Typography variant="body1" color="text.secondary">
+        </GameText>
+        <GameText variant="body1" textVariant="secondary">
           {message}
-        </Typography>
+        </GameText>
         {action && <Box sx={{ mt: 2 }}>{action}</Box>}
       </CardContent>
     </Container>

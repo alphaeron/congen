@@ -11,7 +11,6 @@ import {
   ListItemButton,
   ListItemIcon,
   ListItemText,
-  Typography,
   Container,
 } from '@mui/material';
 import React from 'react';
@@ -20,6 +19,7 @@ import { useNavigate, useSearchParams } from 'react-router';
 import { DashboardOverview } from './DashboardOverview';
 import { ProgramManagement } from './ProgramManagement';
 import { WorkoutsOverview } from './WorkoutsOverview';
+import { GameText, GAME_CLASSES } from './GameTheme';
 import type { User } from '../api/types';
 
 interface DashboardProps {
@@ -118,31 +118,20 @@ export const Dashboard: React.FC<DashboardProps> = ({
             height: '100%',
           }}
         >
-          <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider', flexShrink: 0 }}>
-            <Typography variant="h6" color="primary">
+          <Box className={`${GAME_CLASSES.padding2} ${GAME_CLASSES.borderBottom1} ${GAME_CLASSES.borderColorDivider} ${GAME_CLASSES.flexShrink0}`}>
+            <GameText variant="h6" textVariant="glow">
               Dashboard
-            </Typography>
+            </GameText>
           </Box>
-          <List sx={{ flex: 1, overflow: 'auto' }}>
+          <List className={`${GAME_CLASSES.flex1} ${GAME_CLASSES.overflowAuto}`}>
             {menuItems.map(item => (
               <ListItem key={item.id} disablePadding>
                 <ListItemButton
                   selected={activeSection === item.id}
                   onClick={() => handleSectionChange(item.id)}
-                  sx={{
-                    '&.Mui-selected': {
-                      backgroundColor: 'primary.main',
-                      color: 'primary.contrastText',
-                      '&:hover': {
-                        backgroundColor: 'primary.dark',
-                      },
-                      '& .MuiListItemIcon-root': {
-                        color: 'primary.contrastText',
-                      },
-                    },
-                  }}
+                  className={GAME_CLASSES.listItem}
                 >
-                  <ListItemIcon sx={{ minWidth: 40 }}>{item.icon}</ListItemIcon>
+                  <ListItemIcon className={GAME_CLASSES.minWidth40}>{item.icon}</ListItemIcon>
                   <ListItemText primary={item.label} />
                 </ListItemButton>
               </ListItem>
@@ -161,8 +150,8 @@ export const Dashboard: React.FC<DashboardProps> = ({
           maxWidth: 'calc(100% - 240px)', // Prevent overflow
         }}
       >
-        <Container maxWidth="xl" sx={{ height: '100%' }}>
-          <Box sx={{ p: 3 }}>{currentSection.component}</Box>
+        <Container maxWidth="xl" className={GAME_CLASSES.height100}>
+          <Box className={GAME_CLASSES.padding3}>{currentSection.component}</Box>
         </Container>
       </Box>
     </Box>

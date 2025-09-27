@@ -5,10 +5,11 @@ import {
   Select,
   MenuItem,
   Autocomplete,
-  Typography,
 } from '@mui/material';
 import { useField } from '@tanstack/react-form';
 import React, { useMemo } from 'react';
+
+import { GameText } from './GameTheme';
 
 interface BaseFormFieldProps {
   label: string;
@@ -130,9 +131,9 @@ export const FormField: React.FC<FormFieldProps> = props => {
           ))}
         </Select>
         {fieldHelperText && (
-          <Typography variant="caption" color={fieldError ? 'error' : 'text.secondary'}>
+          <GameText variant="caption" textVariant={fieldError ? 'error' : 'secondary'}>
             {fieldHelperText}
-          </Typography>
+          </GameText>
         )}
       </FormControl>
     );

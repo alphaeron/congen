@@ -10,12 +10,12 @@ import {
   IconButton,
   Link,
   Stack,
-  Typography,
 } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import * as React from 'react';
 
 import { useCookie } from '../contexts/CookieContext';
+import { GameText, GameCard, GameButton, GAME_CLASSES } from './GameTheme';
 
 interface CookieConsentBannerProps {
   onClose?: () => void;
@@ -35,18 +35,13 @@ export const CookieConsentBanner: React.FC<CookieConsentBannerProps> = ({ onClos
   };
 
   return (
-    <Card
+    <GameCard
       sx={{
         position: 'fixed',
         bottom: 16,
         right: 16,
         zIndex: 1300,
         width: 400,
-        boxShadow: theme => `0 8px 32px ${alpha(theme.palette.common.black, 0.12)}`,
-        borderRadius: 3,
-        border: theme => `1px solid ${alpha(theme.palette.divider, 0.5)}`,
-        bgcolor: 'background.paper',
-        backdropFilter: 'blur(20px)',
       }}
     >
       <CardContent sx={{ p: 3 }}>
@@ -60,14 +55,14 @@ export const CookieConsentBanner: React.FC<CookieConsentBannerProps> = ({ onClos
                 flexShrink: 0,
               }}
             />
-            <Typography variant="h6" component="h2">
+            <GameText variant="h6" component="h2">
               Cookie Notice
-            </Typography>
+            </GameText>
           </Box>
-          <Typography variant="caption" color="text.secondary" sx={{ mt: -1, mb: 2 }}>
+          <GameText variant="caption" textVariant="secondary" className={GAME_CLASSES.marginBottom2}>
             We use essential cookies to ensure our website functions properly, including
             authentication and security features.
-          </Typography>
+          </GameText>
 
           {/* Cookie Information */}
           <Box>
@@ -76,7 +71,7 @@ export const CookieConsentBanner: React.FC<CookieConsentBannerProps> = ({ onClos
             >
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <Chip label="Essential" size="small" color="success" variant="outlined" />
-                <Typography variant="subtitle2">Authentication Cookies</Typography>
+                <GameText variant="subtitle2">Authentication Cookies</GameText>
               </Box>
               <IconButton
                 size="small"
@@ -90,10 +85,10 @@ export const CookieConsentBanner: React.FC<CookieConsentBannerProps> = ({ onClos
               </IconButton>
             </Box>
             <Collapse in={expanded}>
-              <Typography variant="caption" color="text.secondary" sx={{ mb: 2 }}>
+              <GameText variant="caption" textVariant="secondary" className={GAME_CLASSES.marginBottom2}>
                 These cookies are essential for the website to function properly. They enable secure
                 authentication and maintain your login session.
-              </Typography>
+              </GameText>
             </Collapse>
           </Box>
 
@@ -109,15 +104,15 @@ export const CookieConsentBanner: React.FC<CookieConsentBannerProps> = ({ onClos
           </Box>
 
           {/* Footer */}
-          <Typography variant="caption" color="text.secondary" sx={{ textAlign: 'center' }}>
+          <GameText variant="caption" textVariant="secondary" className={GAME_CLASSES.textCenter}>
             By using our website, you agree to our{' '}
             <Link href="/privacy_policy" color="primary" underline="hover">
               Privacy Policy
             </Link>
             .
-          </Typography>
+          </GameText>
         </Stack>
       </CardContent>
-    </Card>
+    </GameCard>
   );
 };

@@ -1,0 +1,654 @@
+/* Game Theme Stylesheet - Centralized styling for RPG/gamified UI */
+
+/* CSS Custom Properties for easy maintenance */
+:root {
+  --game-cyan: #00bcd4;
+  --game-cyan-dark: #00acc1;
+  --game-cyan-light: rgba(0, 188, 212, 0.15);
+  --game-cyan-border: rgba(0, 188, 212, 0.3);
+  --game-cyan-hover: rgba(0, 188, 212, 0.2);
+  --game-cyan-glow: 0 0 5px #00bcd4;
+  --game-cyan-shadow: 0 0 10px rgba(0, 188, 212, 0.3);
+  
+  --game-white: #ffffff;
+  --game-white-secondary: rgba(255, 255, 255, 0.8);
+  --game-white-muted: rgba(255, 255, 255, 0.6);
+  
+  --game-border-radius: 16px;
+  --game-border-radius-small: 12px;
+  --game-border-radius-chip: 20px;
+  
+  --game-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  --game-shadow-hover: 0 20px 40px rgba(0, 188, 212, 0.15);
+  --game-backdrop-filter: blur(20px);
+  
+  --game-transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  --game-transition-slow: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Base Game Text Styles */
+.game-text {
+  color: var(--game-white) !important;
+  font-family: "Inter", "system-ui", "sans-serif" !important;
+  font-weight: 400 !important;
+}
+
+.game-text-secondary {
+  color: var(--game-white-secondary) !important;
+  font-family: "Inter", "system-ui", "sans-serif" !important;
+  font-weight: 400 !important;
+}
+
+.game-text-muted {
+  color: var(--game-white-muted) !important;
+  font-family: "Inter", "system-ui", "sans-serif" !important;
+  font-weight: 400 !important;
+}
+
+.game-text-accent {
+  color: var(--game-cyan) !important;
+  font-family: "Inter", "system-ui", "sans-serif" !important;
+  font-weight: 600 !important;
+}
+
+.game-text-glow {
+  color: var(--game-cyan) !important;
+  font-weight: bold !important;
+  text-shadow: var(--game-cyan-glow) !important;
+}
+
+/* Game Card Styles */
+.game-card {
+  background: var(--game-cyan-light) !important;
+  color: var(--game-white) !important;
+  border-radius: var(--game-border-radius) !important;
+  box-shadow: var(--game-shadow) !important;
+  backdrop-filter: var(--game-backdrop-filter) !important;
+  border: 1px solid var(--game-cyan-border) !important;
+  overflow: hidden !important;
+  transition: var(--game-transition) !important;
+}
+
+.game-card:hover {
+  background: var(--game-cyan-light) !important;
+  box-shadow: var(--game-shadow) !important;
+  transform: none !important;
+}
+
+.game-card-interactive {
+  cursor: pointer !important;
+  transition: var(--game-transition-slow) !important;
+}
+
+.game-card-interactive:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: var(--game-shadow-hover) !important;
+  border-color: var(--game-cyan-border) !important;
+}
+
+/* Game Sub Card Styles */
+.game-sub-card {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  color: var(--game-white) !important;
+  border-radius: var(--game-border-radius-small) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  transition: var(--game-transition) !important;
+}
+
+.game-sub-card:hover {
+  background-color: rgba(255, 255, 255, 0.15) !important;
+  transform: translateY(-1px) !important;
+}
+
+/* Game Status Chip Styles */
+.game-status-chip {
+  border-radius: var(--game-border-radius-chip) !important;
+  font-weight: 600 !important;
+  font-size: 0.75rem !important;
+  height: 28px !important;
+  transition: var(--game-transition) !important;
+}
+
+.game-status-chip .MuiChip-label {
+  padding: 0 12px !important;
+}
+
+.game-status-chip-pending {
+  background-color: rgba(0, 188, 212, 0.3) !important;
+  color: var(--game-white) !important;
+}
+
+.game-status-chip-completed {
+  background-color: #22c55e !important;
+  color: var(--game-white) !important;
+}
+
+.game-status-chip-info {
+  background-color: var(--game-cyan) !important;
+  color: var(--game-white) !important;
+}
+
+/* Game Skill Chip Styles */
+.game-skill-chip {
+  background-color: rgba(0, 188, 212, 0.2) !important;
+  color: var(--game-cyan) !important;
+  border: 1px solid rgba(0, 188, 212, 0.3) !important;
+  margin: 4px !important;
+  border-radius: var(--game-border-radius-chip) !important;
+  font-weight: 600 !important;
+  font-size: 0.75rem !important;
+  height: 28px !important;
+  transition: var(--game-transition) !important;
+}
+
+.game-skill-chip .MuiChip-label {
+  padding: 0 12px !important;
+}
+
+/* Game Button Styles */
+.game-button {
+  background: linear-gradient(135deg, var(--game-cyan), var(--game-cyan-dark)) !important;
+  color: var(--game-white) !important;
+  border: none !important;
+  border-radius: var(--game-border-radius-small) !important;
+  padding: 12px 24px !important;
+  font-weight: 600 !important;
+  font-size: 0.875rem !important;
+  transition: var(--game-transition) !important;
+  box-shadow: 0 4px 14px rgba(0, 188, 212, 0.4) !important;
+}
+
+.game-button:hover {
+  background: linear-gradient(135deg, var(--game-cyan-dark), #0097a7) !important;
+  box-shadow: 0 6px 20px rgba(0, 188, 212, 0.6) !important;
+  transform: translateY(-1px) !important;
+}
+
+.game-button:active {
+  transform: scale(0.98) !important;
+}
+
+/* Game Tab Styles */
+.game-tabs .MuiTab-root {
+  color: var(--game-white) !important;
+  transition: var(--game-transition) !important;
+}
+
+.game-tabs .MuiTab-root.Mui-selected {
+  color: var(--game-cyan) !important;
+}
+
+.game-tabs .MuiTabs-indicator {
+  background-color: var(--game-cyan) !important;
+}
+
+/* Game List Item Styles */
+.game-list-item {
+  transition: var(--game-transition) !important;
+}
+
+.game-list-item:hover {
+  background-color: var(--game-cyan-hover) !important;
+}
+
+.game-list-item.Mui-selected {
+  background-color: var(--game-cyan) !important;
+  color: var(--game-white) !important;
+}
+
+.game-list-item.Mui-selected:hover {
+  background-color: var(--game-cyan-dark) !important;
+}
+
+.game-list-item.Mui-selected .MuiListItemIcon-root {
+  color: var(--game-white) !important;
+}
+
+/* Game Progress Bar Styles */
+.game-progress-bar {
+  background-color: rgba(0, 188, 212, 0.2) !important;
+  border-radius: var(--game-border-radius-small) !important;
+  overflow: hidden !important;
+}
+
+.game-progress-bar .MuiLinearProgress-bar {
+  background: linear-gradient(90deg, var(--game-cyan), var(--game-cyan-dark)) !important;
+}
+
+/* Game Circular Progress Styles */
+.game-circular-progress {
+  color: var(--game-cyan) !important;
+}
+
+.game-circular-progress .MuiCircularProgress-circle {
+  stroke: var(--game-cyan) !important;
+}
+
+/* Additional Game Text Utility Classes */
+.game-text-bold {
+  font-weight: bold !important;
+}
+
+.game-text-medium {
+  font-weight: 500 !important;
+}
+
+.game-text-center {
+  text-align: center !important;
+}
+
+.game-text-italic {
+  font-style: italic !important;
+}
+
+.game-margin-bottom-1 {
+  margin-bottom: 8px !important;
+}
+
+.game-margin-bottom-2 {
+  margin-bottom: 16px !important;
+}
+
+.game-margin-bottom-3 {
+  margin-bottom: 24px !important;
+}
+
+.game-margin-top-1 {
+  margin-top: 8px !important;
+}
+
+.game-margin-top-2 {
+  margin-top: 16px !important;
+}
+
+.game-padding-2 {
+  padding: 16px !important;
+}
+
+.game-opacity-70 {
+  opacity: 0.7 !important;
+}
+
+.game-opacity-80 {
+  opacity: 0.8 !important;
+}
+
+/* Game Dialog Styles */
+.game-dialog .MuiDialog-paper {
+  background: var(--game-cyan-light);
+  border: 1px solid var(--game-cyan-border);
+  border-radius: var(--game-border-radius);
+  backdrop-filter: var(--game-backdrop-filter);
+}
+
+/* Game Text Field Styles */
+.game-text-field .MuiInputBase-root {
+  background-color: rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--game-cyan-border);
+  border-radius: var(--game-border-radius-small);
+  color: var(--game-white);
+  transition: var(--game-transition);
+}
+
+.game-text-field .MuiInputBase-root:hover {
+  border-color: var(--game-cyan);
+}
+
+.game-text-field .MuiInputBase-root.Mui-focused {
+  border-color: var(--game-cyan);
+  box-shadow: 0 0 0 3px rgba(0, 188, 212, 0.1);
+}
+
+.game-text-field .MuiInputLabel-root {
+  color: var(--game-white-secondary);
+}
+
+.game-text-field .MuiInputLabel-root.Mui-focused {
+  color: var(--game-cyan);
+}
+
+/* Game Select Styles */
+.game-select .MuiSelect-select {
+  color: var(--game-white);
+}
+
+.game-select .MuiOutlinedInput-notchedOutline {
+  border-color: var(--game-cyan-border);
+}
+
+.game-select:hover .MuiOutlinedInput-notchedOutline {
+  border-color: var(--game-cyan);
+}
+
+.game-select.Mui-focused .MuiOutlinedInput-notchedOutline {
+  border-color: var(--game-cyan);
+}
+
+/* Game Menu Item Styles */
+.game-menu-item {
+  border-radius: var(--game-border-radius-small);
+  margin: 4px 8px;
+  padding: 12px 16px;
+  font-weight: 500;
+  color: var(--game-white);
+  transition: var(--game-transition);
+}
+
+.game-menu-item:hover {
+  background-color: var(--game-cyan-hover);
+}
+
+/* Game Alert Styles */
+.game-alert {
+  background-color: rgba(0, 188, 212, 0.1);
+  border: 1px solid var(--game-cyan-border);
+  border-radius: var(--game-border-radius-small);
+  color: var(--game-white);
+}
+
+.game-alert .MuiAlert-icon {
+  color: var(--game-cyan);
+}
+
+/* Game Icon Styles */
+.game-icon {
+  color: var(--game-cyan);
+  transition: var(--game-transition);
+}
+
+.game-icon:hover {
+  color: var(--game-cyan-dark);
+  filter: drop-shadow(var(--game-cyan-glow));
+}
+
+/* Game Container Styles */
+.game-container {
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.9));
+  min-height: 100vh;
+  color: var(--game-white);
+}
+
+/* Game Sidebar Styles */
+.game-sidebar {
+  background: rgba(0, 0, 0, 0.9);
+  border-right: 1px solid var(--game-cyan-border);
+  backdrop-filter: var(--game-backdrop-filter);
+}
+
+/* Game Header Styles */
+.game-header {
+  background: rgba(0, 0, 0, 0.8);
+  border-bottom: 1px solid var(--game-cyan-border);
+  backdrop-filter: var(--game-backdrop-filter);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .game-card {
+    border-radius: var(--game-border-radius-small);
+  }
+  
+  .game-button {
+    padding: 10px 20px;
+    font-size: 0.8rem;
+  }
+  
+  .game-text-glow {
+    font-size: 0.9rem;
+  }
+}
+
+/* Animation Keyframes */
+@keyframes gameGlow {
+  0%, 100% {
+    text-shadow: var(--game-cyan-glow);
+  }
+  50% {
+    text-shadow: 0 0 10px var(--game-cyan), 0 0 20px var(--game-cyan);
+  }
+}
+
+.game-text-animated-glow {
+  animation: gameGlow 2s ease-in-out infinite;
+}
+
+/* Utility Classes */
+.game-opacity-80 {
+  opacity: 0.8;
+}
+
+.game-opacity-60 {
+  opacity: 0.6;
+}
+
+.game-margin-bottom-2 {
+  margin-bottom: 16px;
+}
+
+.game-margin-bottom-3 {
+  margin-bottom: 24px;
+}
+
+.game-padding-2 {
+  padding: 16px;
+}
+
+.game-padding-3 {
+  padding: 24px !important;
+}
+
+/* Layout Utility Classes */
+.game-overflow-visible {
+  overflow: visible !important;
+}
+
+.game-overflow-hidden {
+  overflow: hidden !important;
+}
+
+.game-overflow-auto {
+  overflow: auto !important;
+}
+
+.game-width-100 {
+  width: 100% !important;
+}
+
+.game-height-100 {
+  height: 100% !important;
+}
+
+.game-height-100vh {
+  height: 100vh !important;
+}
+
+.game-flex {
+  display: flex !important;
+}
+
+.game-flex-column {
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.game-flex-grow-1 {
+  flex-grow: 1 !important;
+}
+
+.game-flex-shrink-0 {
+  flex-shrink: 0 !important;
+}
+
+.game-flex-1 {
+  flex: 1 !important;
+}
+
+.game-position-relative {
+  position: relative !important;
+}
+
+.game-position-absolute {
+  position: absolute !important;
+}
+
+.game-top-0 {
+  top: 0 !important;
+}
+
+.game-border-bottom-1 {
+  border-bottom: 1px solid !important;
+}
+
+.game-border-color-divider {
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+.game-min-width-40 {
+  min-width: 40px !important;
+}
+
+.game-padding-bottom-0 {
+  padding-bottom: 0 !important;
+}
+
+.game-margin-top-3 {
+  margin-top: 24px !important;
+}
+
+.game-margin-bottom-3 {
+  margin-bottom: 24px !important;
+}
+
+/* Additional utility classes for specific styling */
+.game-padding-top-0 {
+  padding-top: 0 !important;
+}
+
+.game-row-gap-0 {
+  row-gap: 0 !important;
+}
+
+.game-margin-top-negative-16 {
+  margin-top: -16px !important;
+}
+
+.game-margin-top-negative-10 {
+  margin-top: -10px !important;
+}
+
+.game-font-size-80 {
+  font-size: 80px !important;
+}
+
+.game-font-size-40 {
+  font-size: 40px !important;
+}
+
+.game-font-size-32 {
+  font-size: 32px !important;
+}
+
+.game-font-size-24 {
+  font-size: 24px !important;
+}
+
+.game-font-size-16 {
+  font-size: 16px !important;
+}
+
+.game-font-size-3rem {
+  font-size: 3rem !important;
+}
+
+.game-color-white {
+  color: white !important;
+}
+
+.game-color-cyan {
+  color: #00bcd4 !important;
+}
+
+.game-color-light-gray {
+  color: #e0e0e0 !important;
+}
+
+.game-text-shadow-glow {
+  text-shadow: 0 0 3px #00bcd4 !important;
+}
+
+.game-text-shadow-glow-5 {
+  text-shadow: 0 0 5px #00bcd4 !important;
+}
+
+.game-text-transform-uppercase {
+  text-transform: uppercase !important;
+}
+
+.game-line-height-1 {
+  line-height: 1 !important;
+}
+
+.game-margin-top-16 {
+  margin-top: 16px !important;
+}
+
+.game-tooltip-background {
+  background: rgba(0, 0, 0, 0.9) !important;
+  color: white !important;
+  border-radius: 8px !important;
+  padding: 16px !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  min-width: 200px !important;
+}
+
+.game-font-size-small {
+  font-size: 0.75rem !important;
+}
+
+.game-opacity-80 {
+  opacity: 0.8 !important;
+}
+
+.game-font-style-italic {
+  font-style: italic !important;
+}
+
+.game-margin-top-1 {
+  margin-top: 8px !important;
+}
+
+.game-height-80 {
+  height: 80px !important;
+}
+
+.game-cursor-pointer {
+  cursor: pointer !important;
+}
+
+.game-hover-opacity-80:hover {
+  opacity: 0.8 !important;
+}
+
+.game-justify-center {
+  justify-content: center !important;
+}
+
+.game-background-color-cyan {
+  background-color: #00bcd4 !important;
+}
+
+.game-hover-background-color-cyan:hover {
+  background-color: #00acc1 !important;
+}
+
+.game-row-gap-0 {
+  row-gap: 0px !important;
+}
+
+.game-align-items-center {
+  align-items: center !important;
+}
+
+.game-padding-top-1 {
+  padding-top: 8px !important;
+}

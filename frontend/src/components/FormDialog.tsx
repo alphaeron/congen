@@ -4,10 +4,11 @@ import {
   DialogContent,
   DialogActions,
   Button,
-  Typography,
 } from '@mui/material';
 import { useForm } from '@tanstack/react-form';
 import React from 'react';
+
+import { GameText, GameDialog, GameButton, GAME_CLASSES } from './GameTheme';
 
 interface FormDialogProps<TFormData = unknown> {
   open: boolean;
@@ -93,12 +94,14 @@ export const FormDialog = <TFormData extends Record<string, unknown>>({
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       {useTanStackForm ? (
         <form onSubmit={handleSubmit}>
-          <DialogTitle>{title}</DialogTitle>
+          <DialogTitle>
+            <GameText variant="h6" textVariant="glow">{title}</GameText>
+          </DialogTitle>
           <DialogContent>
             {description && (
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+              <GameText variant="body2" textVariant="secondary" className={GAME_CLASSES.marginBottom2}>
                 {description}
-              </Typography>
+              </GameText>
             )}
             {typeof children === 'function'
               ? (children as (form: unknown) => React.ReactNode)(form!)
@@ -120,12 +123,14 @@ export const FormDialog = <TFormData extends Record<string, unknown>>({
         </form>
       ) : (
         <React.Fragment>
-          <DialogTitle>{title}</DialogTitle>
+          <DialogTitle>
+            <GameText variant="h6" textVariant="glow">{title}</GameText>
+          </DialogTitle>
           <DialogContent>
             {description && (
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+              <GameText variant="body2" textVariant="secondary" className={GAME_CLASSES.marginBottom2}>
                 {description}
-              </Typography>
+              </GameText>
             )}
             {typeof children === 'function'
               ? (children as (form: unknown) => React.ReactNode)(form!)

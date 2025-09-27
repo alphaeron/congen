@@ -1,5 +1,7 @@
-import { Box, Card, CardContent, Typography, Button, Divider } from '@mui/material';
+import { Box, Divider } from '@mui/material';
 import React from 'react';
+
+import { GameText, GameCard, GameButton, GAME_CLASSES } from './GameTheme';
 
 interface PreferenceSectionProps {
   title: string;
@@ -36,28 +38,28 @@ export const PreferenceSection: React.FC<PreferenceSectionProps> = ({
   hasItems,
 }) => {
   return (
-    <Card sx={{ mb: 3 }}>
+    <GameCard className={GAME_CLASSES.marginBottom3}>
       <CardContent>
         <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-          <Typography variant="h6">{title}</Typography>
-          <Button variant="outlined" size="small" onClick={onAddClick}>
+          <GameText variant="h6">{title}</GameText>
+          <GameButton variant="outlined" size="small" onClick={onAddClick}>
             {addButtonText}
-          </Button>
+          </GameButton>
         </Box>
-        <Typography variant="body2" color="text.secondary" paragraph>
+        <GameText variant="body2" textVariant="secondary" paragraph>
           {description}
-        </Typography>
+        </GameText>
 
         <Divider sx={{ mb: 2 }} />
 
         {!hasItems && emptyMessage ? (
-          <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', py: 2 }}>
+          <GameText variant="body2" textVariant="secondary" className={`${GAME_CLASSES.textCenter} ${GAME_CLASSES.padding2}`}>
             {emptyMessage}
-          </Typography>
+          </GameText>
         ) : (
           children
         )}
       </CardContent>
-    </Card>
+    </GameCard>
   );
 };

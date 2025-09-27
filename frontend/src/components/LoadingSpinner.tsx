@@ -1,5 +1,7 @@
-import { Box, Typography } from '@mui/material';
+import { Box } from '@mui/material';
 import React from 'react';
+
+import { GameText, GAME_CLASSES } from './GameTheme';
 
 interface LoadingSpinnerProps {
   message?: string;
@@ -48,7 +50,7 @@ export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
             borderRadius: '50%',
             border: `3px solid transparent`,
             borderTop: '3px solid',
-            borderTopColor: 'primary.main',
+            borderTopColor: '#00bcd4',
             animation: 'spin 1s linear infinite',
           },
           '&::after': {
@@ -61,16 +63,16 @@ export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
             borderRadius: '50%',
             border: `2px solid transparent`,
             borderTop: '2px solid',
-            borderTopColor: 'secondary.main',
+            borderTopColor: '#00acc1',
             animation: 'spin 1.5s linear infinite reverse',
           },
         }}
       />
 
       {message && (
-        <Typography
+        <GameText
           variant="h6"
-          color="text.secondary"
+          textVariant="secondary"
           sx={{
             fontWeight: 500,
             textAlign: 'center',
@@ -78,7 +80,7 @@ export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
           }}
         >
           {message}
-        </Typography>
+        </GameText>
       )}
 
       {/* CSS Animation */}

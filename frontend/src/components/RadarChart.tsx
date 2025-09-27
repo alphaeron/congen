@@ -1,5 +1,5 @@
 import { default as RadarIcon } from '@mui/icons-material/Radar';
-import { Box, Card, CardContent, Typography, useTheme, Tooltip } from '@mui/material';
+import { Box, useTheme, Tooltip } from '@mui/material';
 import { ResponsiveRadar } from '@nivo/radar';
 import React, { useMemo } from 'react';
 
@@ -9,6 +9,7 @@ import type {
   WorkoutStageWithExercises,
 } from '../api/types';
 import { createCongenNivoTheme } from '../theme/nivoTheme';
+import { GameText, GameCard, GAME_CLASSES } from './GameTheme';
 
 interface RadarChartProps {
   weekWorkouts: ProgrammedWorkoutWithStages[]; // Array of week workout data
@@ -84,7 +85,7 @@ export const RadarChart: React.FC<RadarChartProps> = ({
   }
 
   return (
-    <Card
+    <GameCard
       sx={{
         '&:hover': {
           transform: 'none',
@@ -96,7 +97,7 @@ export const RadarChart: React.FC<RadarChartProps> = ({
         <Box display="flex" alignItems="center" gap={1} sx={{ mb: 2 }}>
           <RadarIcon color="secondary" />
           <Tooltip title="Distribution of movement types across the week" arrow>
-            <Typography variant="h6">{title}</Typography>
+            <GameText variant="h6">{title}</GameText>
           </Tooltip>
         </Box>
         <Box sx={{ height }}>
@@ -126,6 +127,6 @@ export const RadarChart: React.FC<RadarChartProps> = ({
           />
         </Box>
       </CardContent>
-    </Card>
+    </GameCard>
   );
 };

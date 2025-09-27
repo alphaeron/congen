@@ -1,10 +1,10 @@
 import Box from '@mui/material/Box';
 import Container from '@mui/material/Container';
 import Stack from '@mui/material/Stack';
-import Typography from '@mui/material/Typography';
 import * as React from 'react';
 
 import { useTypewriter } from '../hooks/useTypewriter';
+import { GameText, GameContainer, GAME_CLASSES } from './GameTheme';
 
 export function Hero() {
   const headline = useTypewriter('Conjugate Method Programming, Without the Hassle', 40);
@@ -136,24 +136,21 @@ export function Hero() {
             alignItems: 'center',
           }}
         >
-          <Typography
+          <GameText
             variant="h1"
+            textVariant="glow"
             sx={{
-              background: 'linear-gradient(135deg, #0ea5e9, #f97316)',
-              backgroundClip: 'text',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
               fontWeight: 800,
               letterSpacing: '-0.03em',
               mb: 2,
             }}
           >
             {headline}
-          </Typography>
+          </GameText>
 
-          <Typography
+          <GameText
             variant="h5"
-            color="text.secondary"
+            textVariant="secondary"
             sx={{
               maxWidth: '600px',
               fontWeight: 400,
@@ -163,7 +160,7 @@ export function Hero() {
           >
             ConGen is the first of its kind conjugate workout generator. All the benefits of the
             conjugate method without the hassle of writing a program yourself.
-          </Typography>
+          </GameText>
 
           {/* Call to action buttons */}
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ mt: 3 }}>

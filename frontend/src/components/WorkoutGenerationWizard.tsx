@@ -12,13 +12,13 @@ import {
   Stepper,
   Step,
   StepLabel,
-  Typography,
 } from '@mui/material';
 import { useForm } from '@tanstack/react-form';
 import { useSnackbar } from 'notistack';
 import React, { useEffect, useState } from 'react';
 
 import { OneRepMaxInputStep } from './OneRepMaxInputStep';
+import { GameText } from './GameTheme';
 import { WizardStep } from '../api/types';
 import type {
   Program,
@@ -246,12 +246,12 @@ export const WorkoutGenerationWizard: React.FC<WorkoutGenerationWizardProps> = (
       case WizardStep.GENERATION_LOADING:
         return (
           <Box textAlign="center">
-            <Typography variant="h6" gutterBottom>
+            <GameText variant="h6" gutterBottom>
               Generating Workouts
-            </Typography>
-            <Typography variant="body2" color="text.secondary" gutterBottom>
+            </GameText>
+            <GameText variant="body2" textVariant="secondary" gutterBottom>
               This may take a few moments...
-            </Typography>
+            </GameText>
             <LinearProgress sx={{ mt: 2 }} />
           </Box>
         );
@@ -274,12 +274,12 @@ export const WorkoutGenerationWizard: React.FC<WorkoutGenerationWizardProps> = (
       case WizardStep.UPDATING_WORKOUT:
         return (
           <Box textAlign="center">
-            <Typography variant="h6" gutterBottom>
+            <GameText variant="h6" gutterBottom>
               Updating Workout
-            </Typography>
-            <Typography variant="body2" color="text.secondary" gutterBottom>
+            </GameText>
+            <GameText variant="body2" textVariant="secondary" gutterBottom>
               Updating your workout with 1RM data...
-            </Typography>
+            </GameText>
             <LinearProgress sx={{ mt: 2 }} />
           </Box>
         );
@@ -287,12 +287,12 @@ export const WorkoutGenerationWizard: React.FC<WorkoutGenerationWizardProps> = (
       case WizardStep.UPDATING_WORKOUT_WITH_1RM:
         return (
           <Box textAlign="center">
-            <Typography variant="h6" gutterBottom>
+            <GameText variant="h6" gutterBottom>
               Updating Workout
-            </Typography>
-            <Typography variant="body2" color="text.secondary" gutterBottom>
+            </GameText>
+            <GameText variant="body2" textVariant="secondary" gutterBottom>
               Updating your workout with 1RM data...
-            </Typography>
+            </GameText>
             <LinearProgress sx={{ mt: 2 }} />
           </Box>
         );
@@ -360,9 +360,9 @@ export const WorkoutGenerationWizard: React.FC<WorkoutGenerationWizardProps> = (
     >
       <DialogTitle>
         <Box>
-          <Typography variant="h6" component="div">
+          <GameText variant="h6" component="div">
             Generate Workouts
-          </Typography>
+          </GameText>
           <Box mt={2}>
             <Stepper activeStep={getActiveStep()} alternativeLabel>
               <Step>

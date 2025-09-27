@@ -18,7 +18,7 @@ import { useSnackbar } from 'notistack';
 import React, { useState } from 'react';
 
 import { CustomSvgIcon } from './CustomSvgIcon';
-import { GameCard, GameSubCard, GameText, GameTextSecondary } from './GameTheme';
+import { GameCard, GameSubCard, GameText, GameTextSecondary, GAME_CLASSES } from './GameTheme';
 import { MetricTrendChart } from './MetricTrendChart';
 import { submitPerformanceMetrics, getTestProtocols } from '../api/performanceTracking';
 import type { UserPerformanceMetrics, UserTestResult, TestProtocol } from '../api/types';
@@ -45,32 +45,32 @@ const getIconForProtocol = (testName: string) => {
         <CustomSvgIcon
           src={ExplosivenessIcon}
           alt="Explosiveness"
-          sx={{ fontSize: 24, color: '#00bcd4' }}
+          className={`${GAME_CLASSES.fontSize24} ${GAME_CLASSES.colorCyan}`}
         />
       );
     case 'vo2_max':
       return (
-        <CustomSvgIcon src={HealthIcon} alt="Stamina" sx={{ fontSize: 24, color: '#00bcd4' }} />
+        <CustomSvgIcon src={HealthIcon} alt="Stamina" className={`${GAME_CLASSES.fontSize24} ${GAME_CLASSES.colorCyan}`} />
       );
     case 'hr_recovery':
       return (
-        <CustomSvgIcon src={RecoveryIcon} alt="Recovery" sx={{ fontSize: 24, color: '#00bcd4' }} />
+        <CustomSvgIcon src={RecoveryIcon} alt="Recovery" className={`${GAME_CLASSES.fontSize24} ${GAME_CLASSES.colorCyan}`} />
       );
     case 'reflex':
       return (
         <CustomSvgIcon
           src={ReflexesIcon}
           alt="Reflexes"
-          sx={{ fontSize: 24, color: '#00bcd4' }}
+          className={`${GAME_CLASSES.fontSize24} ${GAME_CLASSES.colorCyan}`}
         />
       );
     case 'mobility':
       return (
-        <CustomSvgIcon src={DexterityIcon} alt="Dexterity" sx={{ fontSize: 24, color: '#00bcd4' }} />
+        <CustomSvgIcon src={DexterityIcon} alt="Dexterity" className={`${GAME_CLASSES.fontSize24} ${GAME_CLASSES.colorCyan}`} />
       );
     default:
       return (
-        <CustomSvgIcon src={ExplosivenessIcon} alt="Test" sx={{ fontSize: 24, color: '#00bcd4' }} />
+        <CustomSvgIcon src={ExplosivenessIcon} alt="Test" className={`${GAME_CLASSES.fontSize24} ${GAME_CLASSES.colorCyan}`} />
       );
   }
 };
@@ -81,7 +81,7 @@ const dailyMetricsConfig = [
     key: 'strain',
     label: 'Strain',
     icon: (
-      <CustomSvgIcon src={ExplosivenessIcon} alt="Strain" sx={{ fontSize: 24, color: '#00bcd4' }} />
+      <CustomSvgIcon src={ExplosivenessIcon} alt="Strain" className={`${GAME_CLASSES.fontSize24} ${GAME_CLASSES.colorCyan}`} />
     ),
     unit: '',
     description: 'Daily strain score from wearables',
@@ -90,7 +90,7 @@ const dailyMetricsConfig = [
     key: 'recovery',
     label: 'Recovery',
     icon: (
-      <CustomSvgIcon src={RecoveryIcon} alt="Recovery" sx={{ fontSize: 24, color: '#00bcd4' }} />
+      <CustomSvgIcon src={RecoveryIcon} alt="Recovery" className={`${GAME_CLASSES.fontSize24} ${GAME_CLASSES.colorCyan}`} />
     ),
     unit: '%',
     description: 'Daily recovery score percentage',
@@ -98,7 +98,7 @@ const dailyMetricsConfig = [
   {
     key: 'hrv',
     label: 'HRV',
-    icon: <CustomSvgIcon src={HealthIcon} alt="HRV" sx={{ fontSize: 24, color: '#00bcd4' }} />,
+    icon: <CustomSvgIcon src={HealthIcon} alt="HRV" className={`${GAME_CLASSES.fontSize24} ${GAME_CLASSES.colorCyan}`} />,
     unit: ' ms',
     description: 'Heart rate variability measurement',
   },
@@ -109,7 +109,7 @@ const dailyMetricsConfig = [
       <CustomSvgIcon
         src={RecoveryIcon}
         alt="Sleep Score"
-        sx={{ fontSize: 24, color: '#00bcd4' }}
+        className={`${GAME_CLASSES.fontSize24} ${GAME_CLASSES.colorCyan}`}
       />
     ),
     unit: '%',
@@ -327,27 +327,17 @@ export const CompactQuestCard: React.FC<CompactQuestCardProps> = ({
             return (
               <Grid size={{ xs: 6 }} key={index}>
                 <GameSubCard
-                  sx={{
-                    height: '80px',
-                    cursor: 'pointer',
-                    '&:hover': { opacity: 0.8 },
-                  }}
+                  className={`${GAME_CLASSES.height80} ${GAME_CLASSES.cursorPointer} ${GAME_CLASSES.hoverOpacity80}`}
                   onClick={() => handleEditDailyMetric(metric.key)}
                 >
                   <CardContent
-                    sx={{
-                      p: 1,
-                      height: '100%',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      justifyContent: 'center',
-                    }}
+                    className={`${GAME_CLASSES.padding2} ${GAME_CLASSES.height100} ${GAME_CLASSES.flex} ${GAME_CLASSES.flexColumn} ${GAME_CLASSES.justifyCenter}`}
                   >
-                    <Stack spacing={0.2} alignItems="center" sx={{ rowGap: '0px !important' }}>
-                      <Box sx={{ fontSize: 24, color: '#00bcd4', fontWeight: 'bold' }}>
+                    <Stack spacing={0.2} alignItems="center" className={GAME_CLASSES.rowGap0}>
+                      <Box className={`${GAME_CLASSES.fontSize24} ${GAME_CLASSES.colorCyan} ${GAME_CLASSES.textBold}`}>
                         {metric.icon}
                       </Box>
-                      <GameText variant="caption" sx={{ fontWeight: 'bold', textAlign: 'center' }}>
+                      <GameText variant="caption" className={`${GAME_CLASSES.textBold} ${GAME_CLASSES.textCenter}`}>
                         {metric.label}
                       </GameText>
                     </Stack>
@@ -361,8 +351,8 @@ export const CompactQuestCard: React.FC<CompactQuestCardProps> = ({
     } else {
       if (protocolsLoading) {
         return (
-          <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
-            <LinearProgress sx={{ width: '100%' }} />
+          <Box className={`${GAME_CLASSES.flex} ${GAME_CLASSES.justifyCenter} ${GAME_CLASSES.padding2}`}>
+            <LinearProgress className={GAME_CLASSES.width100} />
           </Box>
         );
       }
@@ -373,25 +363,15 @@ export const CompactQuestCard: React.FC<CompactQuestCardProps> = ({
             return (
               <Grid size={{ xs: 6 }} key={index}>
                 <GameSubCard
-                  sx={{
-                    height: '80px',
-                    cursor: 'pointer',
-                    '&:hover': { opacity: 0.8 },
-                  }}
+                  className={`${GAME_CLASSES.height80} ${GAME_CLASSES.cursorPointer} ${GAME_CLASSES.hoverOpacity80}`}
                   onClick={() => handleEditWeeklyTest(protocol)}
                 >
                   <CardContent
-                    sx={{
-                      p: 1,
-                      height: '100%',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      justifyContent: 'center',
-                    }}
+                    className={`${GAME_CLASSES.padding2} ${GAME_CLASSES.height100} ${GAME_CLASSES.flex} ${GAME_CLASSES.flexColumn} ${GAME_CLASSES.justifyCenter}`}
                   >
-                    <Stack spacing={0.2} alignItems="center" sx={{ rowGap: '0px !important' }}>
+                    <Stack spacing={0.2} alignItems="center" className={GAME_CLASSES.rowGap0}>
                       {getIconForProtocol(protocol.test_name)}
-                      <GameText variant="caption" sx={{ fontWeight: 'bold', textAlign: 'center' }}>
+                      <GameText variant="caption" className={`${GAME_CLASSES.textBold} ${GAME_CLASSES.textCenter}`}>
                         {protocol.display_name}
                       </GameText>
                     </Stack>
@@ -407,30 +387,30 @@ export const CompactQuestCard: React.FC<CompactQuestCardProps> = ({
 
   return (
     <React.Fragment>
-      <GameCard sx={{ width: '100%' }}>
+      <GameCard className={GAME_CLASSES.width100}>
         <CardHeader
-          sx={{ paddingBottom: 0 }}
+          className={GAME_CLASSES.paddingBottom0}
           title={
-            <GameText variant="h6" sx={{ fontWeight: 'bold' }}>
+            <GameText variant="h6" className={GAME_CLASSES.textBold}>
               {getTitle()}
             </GameText>
           }
           subheader={<GameTextSecondary variant="body2">{getSubtitle()}</GameTextSecondary>}
         />
-        <CardContent sx={{ pt: 1 }}>{renderCompactGrid()}</CardContent>
+        <CardContent className={GAME_CLASSES.paddingTop1}>{renderCompactGrid()}</CardContent>
       </GameCard>
 
       {/* Metric Detail Dialog */}
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="md" fullWidth>
         <DialogTitle>
-          <GameText variant="h6" sx={{ fontWeight: 'bold' }}>
+          <GameText variant="h6" className={GAME_CLASSES.textBold}>
             {type === 'daily'
               ? dailyMetricsConfig.find(m => m.key === editingMetric)?.label
               : editingProtocol?.display_name}
           </GameText>
         </DialogTitle>
         <DialogContent>
-          <Stack spacing={3} sx={{ mt: 2 }}>
+          <Stack spacing={3} className={GAME_CLASSES.marginTop2}>
             {/* 30-day Chart */}
             {type === 'daily' && editingMetric ? (
               <MetricTrendChart
@@ -476,7 +456,7 @@ export const CompactQuestCard: React.FC<CompactQuestCardProps> = ({
                         </Alert>
                       ) : (
                         <Stack spacing={2}>
-                          <GameText variant="subtitle2" sx={{ fontWeight: 'bold' }}>
+                          <GameText variant="subtitle2" className={GAME_CLASSES.textBold}>
                             Record Today&apos;s {metric.label}
                           </GameText>
                           <TextField
@@ -523,7 +503,7 @@ export const CompactQuestCard: React.FC<CompactQuestCardProps> = ({
 
                   return (
                     <Stack spacing={2}>
-                      <GameText variant="subtitle2" sx={{ fontWeight: 'bold' }}>
+                      <GameText variant="subtitle2" className={GAME_CLASSES.textBold}>
                         Record This Week&apos;s {editingProtocol.display_name}
                       </GameText>
 
@@ -572,7 +552,7 @@ export const CompactQuestCard: React.FC<CompactQuestCardProps> = ({
               onClick={type === 'daily' ? handleSubmitDailyMetric : handleSubmitTest}
               variant="contained"
               disabled={submitMetricsMutation.isPending || submitTestMutation.isPending}
-              sx={{ backgroundColor: '#00bcd4', '&:hover': { backgroundColor: '#00acc1' } }}
+              className={`${GAME_CLASSES.backgroundColorCyan} ${GAME_CLASSES.hoverBackgroundColorCyan}`}
             >
               {submitMetricsMutation.isPending || submitTestMutation.isPending
                 ? 'Saving...'

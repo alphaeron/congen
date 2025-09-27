@@ -6,7 +6,6 @@ import {
   CardContent,
   Chip,
   Grid,
-  Typography,
   Paper,
   Alert,
   Slide,
@@ -19,6 +18,7 @@ import { useNavigate, useSearchParams } from 'react-router';
 
 import { ExerciseCategoryDetails } from './ExerciseCategoryDetails';
 import { ExerciseName } from './ExerciseName';
+import { GameText } from './GameTheme';
 import { ExercisePoolPieChart } from './ExercisePoolPieChart';
 import { ExercisePoolSunburstChart } from './ExercisePoolSunburstChart';
 import { LoadingSpinner } from './LoadingSpinner';
@@ -224,13 +224,13 @@ export const ExerciseRotationVisualization: React.FC = () => {
                 >
                   <Card>
                     <CardContent>
-                      <Typography
+                      <GameText
                         variant="h6"
                         gutterBottom
                         sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
                       >
                         Available Exercises
-                      </Typography>
+                      </GameText>
                       <Grid container spacing={2}>
                         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                           <Paper
@@ -246,10 +246,10 @@ export const ExerciseRotationVisualization: React.FC = () => {
                             }}
                             onClick={() => handleCategoryClick('primary')}
                           >
-                            <Typography variant="h4" color="error.main">
+                            <GameText variant="h4" textVariant="accent">
                               {exercisePoolAnalysis.categorizedExercises.primary.length}
-                            </Typography>
-                            <Typography variant="body2">Primary Exercises</Typography>
+                            </GameText>
+                            <GameText variant="body2">Primary Exercises</GameText>
                             <Box
                               sx={{
                                 mt: 1,
@@ -304,10 +304,10 @@ export const ExerciseRotationVisualization: React.FC = () => {
                             }}
                             onClick={() => handleCategoryClick('accessory')}
                           >
-                            <Typography variant="h4" color="info.main">
+                            <GameText variant="h4" textVariant="accent">
                               {exercisePoolAnalysis.categorizedExercises.accessory.length}
-                            </Typography>
-                            <Typography variant="body2">Accessory Exercises</Typography>
+                            </GameText>
+                            <GameText variant="body2">Accessory Exercises</GameText>
                             <Box
                               sx={{
                                 mt: 1,
@@ -362,10 +362,10 @@ export const ExerciseRotationVisualization: React.FC = () => {
                             }}
                             onClick={handlePreferencesClick}
                           >
-                            <Typography variant="h4" color="success.main">
+                            <GameText variant="h4" textVariant="accent">
                               {exercisePoolAnalysis.userEquipment.length}
-                            </Typography>
-                            <Typography variant="body2">Available Equipment</Typography>
+                            </GameText>
+                            <GameText variant="body2">Available Equipment</GameText>
                             <Box
                               sx={{
                                 mt: 1,
@@ -408,13 +408,13 @@ export const ExerciseRotationVisualization: React.FC = () => {
                             }}
                             onClick={handlePreferencesClick}
                           >
-                            <Typography variant="h4" color="warning.main">
+                            <GameText variant="h4" textVariant="accent">
                               {
                                 exercisePoolAnalysis.userPreferences.filter(p => p.should_avoid)
                                   .length
                               }
-                            </Typography>
-                            <Typography variant="body2">Avoided Exercises</Typography>
+                            </GameText>
+                            <GameText variant="body2">Avoided Exercises</GameText>
                             <Box
                               sx={{
                                 mt: 1,
@@ -468,7 +468,7 @@ export const ExerciseRotationVisualization: React.FC = () => {
                     onClick={() => handleCategoryClick('recent')}
                   >
                     <CardContent>
-                      <Typography
+                      <GameText
                         variant="h6"
                         gutterBottom
                         sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
@@ -482,7 +482,7 @@ export const ExerciseRotationVisualization: React.FC = () => {
                             <InfoIcon fontSize="small" color="action" />
                           </IconButton>
                         </Tooltip>
-                      </Typography>
+                      </GameText>
                       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
                         {exercisePoolAnalysis.previouslyUsedExercises
                           .slice(0, 10)

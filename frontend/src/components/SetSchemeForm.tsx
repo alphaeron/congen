@@ -1,8 +1,9 @@
-import { Box, TextField, Typography, Divider, FormControlLabel, Switch } from '@mui/material';
+import { Box, TextField, Divider, FormControlLabel, Switch } from '@mui/material';
 import React from 'react';
 
 import type { UserWeightUnitPreference } from '../api/types';
 import { convertWeightToPounds } from '../common/utils';
+import { GameText, GAME_CLASSES } from './GameTheme';
 
 import type { useForm } from '@tanstack/react-form';
 
@@ -66,9 +67,9 @@ export const SetSchemeForm: React.FC<SetSchemeFormProps> = ({
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-      <Typography variant="subtitle2" gutterBottom>
+      <GameText variant="subtitle2" gutterBottom>
         Set Scheme Details
-      </Typography>
+      </GameText>
 
       <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
         {/* Total Sets */}
@@ -347,9 +348,9 @@ export const SetSchemeForm: React.FC<SetSchemeFormProps> = ({
       {showTempoFields && (
         <React.Fragment>
           <Divider sx={{ my: 1 }} />
-          <Typography variant="subtitle2" gutterBottom>
+          <GameText variant="subtitle2" gutterBottom>
             Tempo Settings
-          </Typography>
+          </GameText>
 
           <Box>
             <form.Field name="useTempo">
@@ -424,9 +425,9 @@ export const SetSchemeForm: React.FC<SetSchemeFormProps> = ({
       {showSetTypeFields && (
         <React.Fragment>
           <Divider sx={{ my: 1 }} />
-          <Typography variant="subtitle2" gutterBottom>
+          <GameText variant="subtitle2" gutterBottom>
             Set Type Options
-          </Typography>
+          </GameText>
 
           <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
             <form.Field name="isAmrap">

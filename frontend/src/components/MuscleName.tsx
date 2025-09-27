@@ -1,9 +1,10 @@
-import { Tooltip, Typography } from '@mui/material';
+import { Tooltip } from '@mui/material';
 import React, { useEffect, useState } from 'react';
 
 import type { Muscle } from '../api/types';
 import { capitalizeEachWord } from '../common/utils';
 import { useData } from '../contexts/DataContext';
+import { GameText, GAME_CLASSES } from './GameTheme';
 
 import type { TypographyProps } from '@mui/material';
 
@@ -74,7 +75,7 @@ export function MuscleName({
 
   return (
     <Tooltip title={tooltipContent} arrow placement="top">
-      <Typography
+      <GameText
         variant={variant}
         component={component}
         sx={{
@@ -83,7 +84,7 @@ export function MuscleName({
         }}
       >
         {children || capitalizeEachWord(muscleName)}
-      </Typography>
+      </GameText>
     </Tooltip>
   );
 }

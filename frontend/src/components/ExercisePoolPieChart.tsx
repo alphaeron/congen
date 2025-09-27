@@ -1,11 +1,12 @@
 import { default as ShowChartIcon } from '@mui/icons-material/ShowChart';
-import { Box, Card, CardContent, Typography, useTheme } from '@mui/material';
+import { Box, useTheme } from '@mui/material';
 import { ResponsivePie } from '@nivo/pie';
 import React, { useState, useMemo } from 'react';
 
 import type { UserExercisePoolResponse } from '../api/types';
 import { capitalizeEachWord } from '../common/utils';
 import { createCongenNivoTheme, congenColorSchemes } from '../theme/nivoTheme';
+import { GameText, GameCard, GAME_CLASSES } from './GameTheme';
 
 interface ExercisePoolPieChartProps {
   exercisePoolData: UserExercisePoolResponse | null;
@@ -73,15 +74,15 @@ export const ExercisePoolPieChart: React.FC<ExercisePoolPieChartProps> = ({
   }
 
   return (
-    <Card variant="outlined">
+    <GameCard>
       <CardContent>
         <Box display="flex" alignItems="center" gap={1} sx={{ mb: 2 }}>
           <ShowChartIcon color="secondary" />
-          <Typography variant="h6">{title}</Typography>
+          <GameText variant="h6">{title}</GameText>
         </Box>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+        <GameText variant="body2" textVariant="secondary" className={GAME_CLASSES.marginBottom2}>
           {description}
-        </Typography>
+        </GameText>
         <Box sx={{ height }}>
           <ResponsivePie
             data={filteredData}
@@ -136,6 +137,6 @@ export const ExercisePoolPieChart: React.FC<ExercisePoolPieChartProps> = ({
           />
         </Box>
       </CardContent>
-    </Card>
+    </GameCard>
   );
 };

@@ -3,7 +3,6 @@ import {
   Box,
   Card,
   CardContent,
-  Typography,
   Button,
   List,
   ListItem,
@@ -19,6 +18,7 @@ import { LoadingSpinner } from './LoadingSpinner';
 import { ProgressBar } from './ProgressBar';
 import { StreamChart } from './StreamChart';
 import { WorkoutGenerationWizard } from './WorkoutGenerationWizard';
+import { GameCard, GameText, GAME_CLASSES } from './GameTheme';
 import type {
   Program,
   ProgrammedWorkout,
@@ -239,17 +239,17 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user }) => {
     <React.Fragment>
       <Box sx={{ p: 3 }}>
         {!activeProgram ? (
-          <Card sx={{ mb: 3, mt: 3 }}>
+          <GameCard className={`${GAME_CLASSES.marginBottom3} ${GAME_CLASSES.marginTop3}`}>
             <CardContent>
-              <Typography variant="h6" gutterBottom={true}>
+              <GameText variant="h6" gutterBottom={true}>
                 No Active Program
-              </Typography>
-              <Typography variant="body2" color="text.secondary" paragraph>
+              </GameText>
+              <GameText variant="body2" className={GAME_CLASSES.opacity80} paragraph>
                 You need to create a program first before you can generate and view workouts. Please
                 go to the Programs section to create a program.
-              </Typography>
+              </GameText>
             </CardContent>
-          </Card>
+          </GameCard>
         ) : (
           <Box>
             {/* Top Section: Progress Bar and Export Buttons */}
@@ -287,7 +287,7 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user }) => {
             </Box>
 
             {/* Current Week Section */}
-            <Card sx={{ mb: 3 }}>
+            <GameCard className={GAME_CLASSES.marginBottom3}>
               <CardContent>
                 <Box
                   display="flex"
@@ -296,12 +296,12 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user }) => {
                   sx={{ mb: 2 }}
                 >
                   <Box>
-                    <Typography variant="h6" gutterBottom>
+                    <GameText variant="h6" gutterBottom>
                       {`Current Week: Week ${Math.max(activeProgram.program.current_week_number, 1)}`}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
+                    </GameText>
+                    <GameText variant="body2" textVariant="secondary">
                       Track your progress and generate new workout weeks
-                    </Typography>
+                    </GameText>
                   </Box>
                   <Box display="flex" gap={1}>
                     <Button
@@ -332,27 +332,27 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user }) => {
                     </Box>
                   )}
               </CardContent>
-            </Card>
+            </GameCard>
 
             {/* Training Weeks Section */}
-            <Card>
+            <GameCard>
               <CardContent>
-                <Typography variant="h6" gutterBottom>
+                <GameText variant="h6" gutterBottom>
                   Training Weeks
-                </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                </GameText>
+                <GameText variant="body2" className={`${GAME_CLASSES.opacity80} ${GAME_CLASSES.marginBottom2}`}>
                   Click on any week to view detailed workout information
-                </Typography>
+                </GameText>
                 {isLoading ? (
                   <Box display="flex" justifyContent="center" p={3}>
                     <LoadingSpinner message="Loading weeks..." size={40} />
                   </Box>
                 ) : weeks.length === 0 ? (
                   <Box sx={{ textAlign: 'center', py: 4 }}>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                    <GameText variant="body2" textVariant="secondary" className={GAME_CLASSES.marginBottom2}>
                       No workouts generated yet. Click &quot;Generate Next Week&quot; to create your
                       first workout week.
-                    </Typography>
+                    </GameText>
                   </Box>
                 ) : (
                   <List>
@@ -375,9 +375,9 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user }) => {
                         <ListItemText
                           primary={
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                              <Typography variant="subtitle1" fontWeight="medium">
+                              <GameText variant="subtitle1" className={GAME_CLASSES.textMedium}>
                                 Week {week.weekNumber}
-                              </Typography>
+                              </GameText>
                               {week.workoutCount > 0 && (
                                 <Box
                                   sx={{
@@ -399,13 +399,13 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user }) => {
                             </Box>
                           }
                           secondary={
-                            <Typography variant="body2" color="text.secondary">
+                            <GameText variant="body2" textVariant="secondary">
                               {week.workouts
                                 .map(w =>
                                   replaceUnderscoresWithSpaces(w.name || `Workout ${w.day_number}`)
                                 )
                                 .join(' • ')}
-                            </Typography>
+                            </GameText>
                           }
                         />
                       </ListItem>
@@ -413,7 +413,7 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user }) => {
                   </List>
                 )}
               </CardContent>
-            </Card>
+            </GameCard>
           </Box>
         )}
       </Box>

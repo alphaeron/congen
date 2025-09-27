@@ -2,6 +2,8 @@ import Chip from '@mui/material/Chip';
 import { alpha } from '@mui/material/styles';
 import * as React from 'react';
 
+import { GameStatusChip, GAME_CLASSES } from './GameTheme';
+
 /**
  * Props for the BinaryTag component.
  */
@@ -20,20 +22,15 @@ export function BinaryTag(props: BinaryTagProps): React.ReactElement<BinaryTagPr
   const label = isOn ? onText : offText;
 
   return (
-    <Chip
+    <GameStatusChip
       label={label}
       size="small"
       variant="outlined"
+      status={isOn ? 'COMPLETED' : 'PENDING'}
       sx={{
         borderRadius: 2,
         fontSize: '0.75rem',
         fontWeight: 500,
-        borderColor: `${color}.main`,
-        color: `${color}.main`,
-        backgroundColor: theme => alpha(theme.palette[color].main, 0.1),
-        '&:hover': {
-          backgroundColor: theme => alpha(theme.palette[color].main, 0.2),
-        },
       }}
     />
   );

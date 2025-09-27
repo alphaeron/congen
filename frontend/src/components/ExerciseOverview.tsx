@@ -8,7 +8,6 @@ import Stack from '@mui/material/Stack';
 import { alpha } from '@mui/material/styles';
 import ToggleButton from '@mui/material/ToggleButton';
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
-import Typography from '@mui/material/Typography';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import * as React from 'react';
 
@@ -16,6 +15,7 @@ import { EmptyState } from './EmptyState';
 import { ExerciseCard } from './ExerciseCard';
 import { FormField } from './FormField';
 import { LoadingSpinner } from './LoadingSpinner';
+import { GameText, GAME_CLASSES } from './GameTheme';
 import type { Equipment, Exercise, Muscle } from '../api/types';
 import { capitalizeEachWord } from '../common/utils';
 import { useData } from '../contexts/DataContext';
@@ -244,30 +244,27 @@ export function ExerciseOverview(): React.ReactElement {
       <Stack spacing={4}>
         {/* Header */}
         <Box sx={{ textAlign: 'center', mb: 2 }}>
-          <Typography
+          <GameText
             variant="h3"
             data-testid="exerciseHeader"
+            textVariant="glow"
             sx={{
               fontWeight: 700,
               mb: 2,
-              background: 'linear-gradient(135deg, #0ea5e9, #f97316)',
-              backgroundClip: 'text',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
             }}
           >
             Exercise Library
-          </Typography>
-          <Typography
+          </GameText>
+          <GameText
             variant="h6"
-            color="text.secondary"
+            textVariant="secondary"
             sx={{
               fontWeight: 400,
               opacity: 0.8,
             }}
           >
             Discover and filter exercises to build your perfect workout
-          </Typography>
+          </GameText>
         </Box>
 
         {/* Filters Section */}
@@ -282,9 +279,9 @@ export function ExerciseOverview(): React.ReactElement {
             boxShadow: theme => `0 8px 32px ${alpha(theme.palette.primary.main, 0.1)}`,
           }}
         >
-          <Typography variant="h5" sx={{ fontWeight: 600, mb: 3 }}>
+          <GameText variant="h5" className={`${GAME_CLASSES.textBold} ${GAME_CLASSES.marginBottom3}`}>
             Filters
-          </Typography>
+          </GameText>
 
           <Grid container spacing={4}>
             {/* Autocomplete Filters - Stacked Vertically */}
@@ -322,12 +319,12 @@ export function ExerciseOverview(): React.ReactElement {
               <Stack spacing={4}>
                 {/* Unilateral Filter */}
                 <Box>
-                  <Typography
+                  <GameText
                     variant="subtitle1"
                     sx={{ fontWeight: 600, mb: 2, color: 'text.primary' }}
                   >
                     Movement Pattern
-                  </Typography>
+                  </GameText>
                   <ToggleButtonGroup
                     value={isUnilateralFilter}
                     exclusive
@@ -368,12 +365,12 @@ export function ExerciseOverview(): React.ReactElement {
 
                 {/* Exercise Type Filter */}
                 <Box>
-                  <Typography
+                  <GameText
                     variant="subtitle1"
                     sx={{ fontWeight: 600, mb: 2, color: 'text.primary' }}
                   >
                     Exercise Type
-                  </Typography>
+                  </GameText>
                   <ToggleButtonGroup
                     value={isAccessoryFilter}
                     exclusive
@@ -414,12 +411,12 @@ export function ExerciseOverview(): React.ReactElement {
 
                 {/* Body Part Filter */}
                 <Box>
-                  <Typography
+                  <GameText
                     variant="subtitle1"
                     sx={{ fontWeight: 600, mb: 2, color: 'text.primary' }}
                   >
                     Body Part
-                  </Typography>
+                  </GameText>
                   <ToggleButtonGroup
                     value={isUpperFilter}
                     exclusive
@@ -464,9 +461,9 @@ export function ExerciseOverview(): React.ReactElement {
 
         {/* Results Section */}
         <Box>
-          <Typography variant="h5" sx={{ fontWeight: 600, mb: 3 }}>
+          <GameText variant="h5" className={`${GAME_CLASSES.textBold} ${GAME_CLASSES.marginBottom3}`}>
             Results ({exercisesToDisplay.length} exercises)
-          </Typography>
+          </GameText>
 
           {exercisesToDisplay.length === 0 ? (
             <EmptyState

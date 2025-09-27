@@ -1,9 +1,10 @@
 import { default as TrendingUpIcon } from '@mui/icons-material/TrendingUp';
-import { Box, Card, CardContent, Typography, useTheme, Tooltip } from '@mui/material';
+import { Box, useTheme, Tooltip } from '@mui/material';
 import { ResponsiveChord } from '@nivo/chord';
 import React, { useMemo } from 'react';
 
 import { createCongenNivoTheme } from '../theme/nivoTheme';
+import { GameText, GameCard, GAME_CLASSES } from './GameTheme';
 
 interface WorkoutStageWithExercises {
   stage: Record<string, unknown>;
@@ -114,7 +115,7 @@ export const ChordChart: React.FC<ChordChartProps> = ({
   }
 
   return (
-    <Card
+    <GameCard
       sx={{
         '&:hover': {
           transform: 'none',
@@ -126,7 +127,7 @@ export const ChordChart: React.FC<ChordChartProps> = ({
         <Box display="flex" alignItems="center" gap={1} sx={{ mb: 2 }}>
           <TrendingUpIcon color="info" />
           <Tooltip title="Exercise pairing patterns in your workouts" arrow>
-            <Typography variant="h6">{title}</Typography>
+            <GameText variant="h6">{title}</GameText>
           </Tooltip>
         </Box>
         <Box sx={{ height }}>
@@ -166,6 +167,6 @@ export const ChordChart: React.FC<ChordChartProps> = ({
           />
         </Box>
       </CardContent>
-    </Card>
+    </GameCard>
   );
 };

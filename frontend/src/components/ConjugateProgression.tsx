@@ -1,5 +1,5 @@
 import { Search as SearchIcon } from '@mui/icons-material';
-import { Box, Card, CardContent, Grid, Typography, TextField, InputAdornment } from '@mui/material';
+import { Box, Grid, TextField, InputAdornment } from '@mui/material';
 import {
   createColumnHelper,
   getCoreRowModel,
@@ -14,6 +14,7 @@ import { ExerciseName } from './ExerciseName';
 import { LineChart } from './LineChart';
 import { LoadingSpinner } from './LoadingSpinner';
 import { PieChart } from './PieChart';
+import { GameText, GameCard, GAME_CLASSES } from './GameTheme';
 import type { Exercise, UserOneRepMax } from '../api/types';
 import { useData } from '../contexts/DataContext';
 
@@ -165,27 +166,27 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = () => {
   // Show error state
   if (error) {
     return (
-      <Card>
+      <GameCard>
         <CardContent>
-          <Typography color="error">{error}</Typography>
+          <GameText textVariant="error">{error}</GameText>
         </CardContent>
-      </Card>
+      </GameCard>
     );
   }
 
   // Show message if no data
   if (!userData || !userData.training_programs || userData.training_programs.length === 0) {
     return (
-      <Card sx={{ mt: 3 }}>
+      <GameCard className={GAME_CLASSES.marginTop3}>
         <CardContent>
-          <Typography variant="h5" gutterBottom>
+          <GameText variant="h5" gutterBottom>
             Conjugate Progress Tracking
-          </Typography>
-          <Typography>
+          </GameText>
+          <GameText>
             Complete your first workout to see progress statistics and correlations.
-          </Typography>
+          </GameText>
         </CardContent>
-      </Card>
+      </GameCard>
     );
   }
 
@@ -217,8 +218,7 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = () => {
 
       {/* 1RM Table and Progress Tracking - Enhanced UX design */}
       <Grid size={{ xs: 12 }}>
-        <Card
-          variant="outlined"
+        <GameCard
           sx={{
             background:
               'linear-gradient(135deg, rgba(25, 118, 210, 0.05) 0%, rgba(156, 39, 176, 0.05) 100%)',
@@ -228,9 +228,9 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = () => {
         >
           <CardContent>
             <Box display="flex" alignItems="center" gap={1} sx={{ mb: 2 }}>
-              <Typography variant="h6" fontWeight="medium">
+              <GameText variant="h6" className={GAME_CLASSES.textMedium}>
                 Personal Records (1RM)
-              </Typography>
+              </GameText>
               <Box
                 sx={{
                   backgroundColor: 'primary.main',
@@ -248,9 +248,9 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = () => {
                 {oneRepMaxes.length}
               </Box>
             </Box>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            <GameText variant="body2" textVariant="secondary" className={GAME_CLASSES.marginBottom2}>
               Track your strength progress and personal records • Click to view details
-            </Typography>
+            </GameText>
             <TextField
               fullWidth
               size="small"
@@ -368,7 +368,7 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = () => {
               </table>
             </Box>
           </CardContent>
-        </Card>
+        </GameCard>
       </Grid>
     </Grid>
   );

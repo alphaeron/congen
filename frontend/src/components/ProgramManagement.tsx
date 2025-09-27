@@ -3,7 +3,7 @@ import { default as DeleteIcon } from '@mui/icons-material/Delete';
 import { default as EditIcon } from '@mui/icons-material/Edit';
 import { default as PauseIcon } from '@mui/icons-material/Pause';
 import { default as PlayArrowIcon } from '@mui/icons-material/PlayArrow';
-import { Box, Button, Typography, IconButton, Tooltip } from '@mui/material';
+import { Box, Button, IconButton, Tooltip } from '@mui/material';
 import { useSnackbar } from 'notistack';
 import React, { useEffect, useState } from 'react';
 
@@ -15,6 +15,7 @@ import { FormField } from './FormField';
 import { LoadingBackdrop } from './LoadingBackdrop';
 import { LoadingSpinner } from './LoadingSpinner';
 import { StatusChip } from './StatusChip';
+import { GameCard, GameText, GameButton, GAME_CLASSES } from './GameTheme';
 import { createProgram, updateProgram, deleteProgram } from '../api/program';
 import { updateProgramPreferences } from '../api/programPreferences';
 import type { User, Program, ProgramPreferences } from '../api/types';
@@ -260,7 +261,7 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
   return (
     <React.Fragment>
       <Box display="flex" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
-        <Typography variant="h5">Program Management</Typography>
+        <GameText variant="h5" textVariant="glow">Program Management</GameText>
         <Button
           variant="contained"
           startIcon={<AddIcon />}
@@ -350,9 +351,9 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
                   />
                 </Box>
 
-                <Typography variant="body2" color="text.secondary">
+                <GameText variant="body2" textVariant="secondary">
                   Created: {formatDate(program.created_at)}
-                </Typography>
+                </GameText>
               </ActionCard>
             );
           })}

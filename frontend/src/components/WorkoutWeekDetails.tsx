@@ -7,7 +7,6 @@ import {
   Box,
   Card,
   CardContent,
-  Typography,
   Grid,
   List,
   ListItem,
@@ -24,6 +23,7 @@ import { LoadingSpinner } from './LoadingSpinner';
 import { ProgressBar } from './ProgressBar';
 import { RadarChart } from './RadarChart';
 import { SunburstChart } from './SunburstChart';
+import { GameCard, GameText, GAME_CLASSES } from './GameTheme';
 import type {
   ProgramWithPreferences,
   Exercise,
@@ -252,17 +252,17 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
     <Slide direction="left" in={true} mountOnEnter unmountOnExit>
       <Box>
         {!activeProgram ? (
-          <Card>
+          <GameCard>
             <CardContent>
-              <Typography variant="h6" gutterBottom>
+              <GameText variant="h6" gutterBottom>
                 No Active Program
-              </Typography>
-              <Typography variant="body2" color="text.secondary" paragraph>
+              </GameText>
+              <GameText variant="body2" textVariant="secondary" paragraph>
                 You need to create a program first before you can generate and view workouts. Please
                 go to the Programs section to create a program.
-              </Typography>
+              </GameText>
             </CardContent>
-          </Card>
+          </GameCard>
         ) : (
           <Box sx={{ position: 'relative' }}>
             {/* Back button for week details */}
@@ -345,7 +345,7 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
                           }}
                         >
                           <FitnessCenterIcon color="primary" />
-                          <Typography variant="h6">Workouts</Typography>
+                          <GameText variant="h6">Workouts</GameText>
                           {weekWorkouts.length > 0 && (
                             <Box
                               sx={{
@@ -365,19 +365,19 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
                             </Box>
                           )}
                         </Box>
-                        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                        <GameText variant="body2" textVariant="secondary" className={GAME_CLASSES.marginBottom2}>
                           Week {weekNumber} of {activeProgram.program.current_week_number} • Click
                           any workout to view details
-                        </Typography>
+                        </GameText>
                         {isLoading ? (
                           <Box display="flex" justifyContent="center" p={3}>
                             <LoadingSpinner message="Loading workouts..." size={40} />
                           </Box>
                         ) : weekWorkouts.length === 0 ? (
                           <Box sx={{ textAlign: 'center', py: 4 }}>
-                            <Typography variant="body2" color="text.secondary">
+                            <GameText variant="body2" textVariant="secondary">
                               No workouts found for Week {weekNumber}.
-                            </Typography>
+                            </GameText>
                           </Box>
                         ) : (
                           <List>
@@ -410,9 +410,9 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
                                   <ListItemText
                                     primary={
                                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                        <Typography variant="subtitle1" fontWeight="medium">
+                                        <GameText variant="subtitle1" className={GAME_CLASSES.textMedium}>
                                           Day {weekWorkout.dayInWeek}
-                                        </Typography>
+                                        </GameText>
                                         {workoutProgress.status === 'completed' ? (
                                           <CheckCircleIcon
                                             sx={{
@@ -439,25 +439,25 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
                                     }
                                     secondary={
                                       <React.Fragment>
-                                        <Typography
+                                        <GameText
                                           variant="body2"
-                                          color="text.secondary"
+                                          textVariant="secondary"
                                           component="span"
                                         >
                                           {replaceUnderscoresWithSpaces(
                                             weekWorkout.workout.workout.name ||
                                               `Workout ${weekWorkout.workout.workout.day_number}`
                                           )}
-                                        </Typography>
-                                        <Typography
+                                        </GameText>
+                                        <GameText
                                           variant="caption"
-                                          color="text.secondary"
+                                          textVariant="secondary"
                                           component="span"
                                           sx={{ ml: 1 }}
                                         >
                                           • {workoutProgress.completedExercises}/
                                           {workoutProgress.totalExercises} exercises
-                                        </Typography>
+                                        </GameText>
                                       </React.Fragment>
                                     }
                                   />

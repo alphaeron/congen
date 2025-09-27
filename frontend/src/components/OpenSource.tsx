@@ -4,8 +4,9 @@ import Button from '@mui/material/Button';
 import Container from '@mui/material/Container';
 import Link from '@mui/material/Link';
 import { alpha } from '@mui/material/styles';
-import Typography from '@mui/material/Typography';
 import * as React from 'react';
+
+import { GameText, GameCard, GameButton, GAME_CLASSES } from './GameTheme';
 
 export function OpenSource() {
   return (
@@ -20,38 +21,28 @@ export function OpenSource() {
         gap: { xs: 4, sm: 6 },
       }}
     >
-      <Box
+      <GameCard
         sx={{
           width: { sm: '100%', md: '70%' },
           textAlign: 'center',
           p: 4,
-          borderRadius: 4,
-          background: theme =>
-            `linear-gradient(135deg, ${alpha(theme.palette.background.paper, 0.8)}, ${alpha(theme.palette.background.paper, 0.6)})`,
-          border: theme => `1px solid ${alpha(theme.palette.divider, 0.3)}`,
-          backdropFilter: 'blur(20px)',
-          boxShadow: theme => `0 8px 32px ${alpha(theme.palette.primary.main, 0.1)}`,
         }}
       >
-        <Typography
+        <GameText
           component="h2"
           variant="h3"
-          color="text.primary"
+          textVariant="glow"
           sx={{
             fontWeight: 700,
             mb: 3,
-            background: 'linear-gradient(135deg, #0ea5e9, #f97316)',
-            backgroundClip: 'text',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
           }}
         >
           ConGen is open source!
-        </Typography>
+        </GameText>
 
-        <Typography
+        <GameText
           variant="h6"
-          color="text.secondary"
+          textVariant="secondary"
           sx={{
             mb: 2,
             fontWeight: 400,
@@ -60,11 +51,11 @@ export function OpenSource() {
           }}
         >
           ConGen is open source software, meaning you can use and modify it!
-        </Typography>
+        </GameText>
 
-        <Typography
+        <GameText
           variant="body1"
-          color="text.secondary"
+          textVariant="secondary"
           sx={{
             mb: 3,
             lineHeight: 1.6,
@@ -72,7 +63,7 @@ export function OpenSource() {
           }}
         >
           That means no paying for trials, no subscriptions, and no limitations!
-        </Typography>
+        </GameText>
 
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} justifyContent="center">
           <Button
@@ -95,7 +86,7 @@ export function OpenSource() {
             View License Details
           </Button>
         </Stack>
-      </Box>
+      </GameCard>
     </Container>
   );
 }

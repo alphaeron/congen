@@ -1,178 +1,379 @@
+import React from 'react';
 import { Card, Box, Chip, Typography } from '@mui/material';
 import { styled, alpha } from '@mui/material/styles';
 
 import { brand, secondary, gray, green, warning } from '../theme';
+import '../styles/gameTheme.css';
 
 /**
  * Centralized game-themed styling for RPG-style components.
  * This promotes consistency across all gamified UI elements and aligns with Congen's design system.
+ * 
+ * All styling is now handled via CSS classes in gameTheme.css for better maintainability.
  */
 
-// Base gradient background using Congen's brand colors
-export const GAME_GRADIENT = `linear-gradient(135deg, ${brand[500]} 0%, ${brand[700]} 100%)`;
-
-// Alternative gradient using secondary colors for variety
-export const GAME_GRADIENT_SECONDARY = `linear-gradient(135deg, ${secondary[500]} 0%, ${secondary[700]} 100%)`;
-
-// Common spacing and styling values - consistent with Congen theme
-export const GAME_SPACING = {
-  cardPadding: 2,
-  borderRadius: 16, // Matches Congen's borderRadius
-  shadow: '0 8px 32px rgba(0, 0, 0, 0.12)', // Softer shadow matching Congen
-  backdropFilter: 'blur(20px)', // Matches Congen's backdrop filter
-  border: `1px solid ${alpha(brand[500], 0.2)}`, // Using brand color with alpha
-};
-
-// Status colors using Congen's color palette
-export const STATUS_COLORS = {
-  completed: green[500],
-  skipped: warning[500],
-  pending: alpha(gray[400], 0.3),
-  error: '#F44336', // Keep red for errors
-  warning: warning[500],
-  info: brand[500],
-  success: green[500],
-};
-
-// Text colors for game theme - using Congen's text colors
-export const TEXT_COLORS = {
-  primary: '#ffffff',
-  secondary: alpha('#ffffff', 0.8),
-  muted: alpha('#ffffff', 0.6),
-  accent: warning[400], // Using warning color for accent instead of gold
+// CSS class names for easy reference
+export const GAME_CLASSES = {
+  // Text classes
+  text: 'game-text',
+  textSecondary: 'game-text-secondary',
+  textMuted: 'game-text-muted',
+  textAccent: 'game-text-accent',
+  textGlow: 'game-text-glow',
+  textAnimatedGlow: 'game-text-animated-glow',
+  textBold: 'game-text-bold',
+  textMedium: 'game-text-medium',
+  textCenter: 'game-text-center',
+  textItalic: 'game-text-italic',
+  
+  // Card classes
+  card: 'game-card',
+  cardInteractive: 'game-card-interactive',
+  subCard: 'game-sub-card',
+  
+  // Chip classes
+  statusChip: 'game-status-chip',
+  statusChipPending: 'game-status-chip-pending',
+  statusChipCompleted: 'game-status-chip-completed',
+  statusChipInfo: 'game-status-chip-info',
+  skillChip: 'game-skill-chip',
+  
+  // Button classes
+  button: 'game-button',
+  
+  // Tab classes
+  tabs: 'game-tabs',
+  
+  // List item classes
+  listItem: 'game-list-item',
+  
+  // Progress classes
+  progressBar: 'game-progress-bar',
+  circularProgress: 'game-circular-progress',
+  
+  // Spacing and utility classes
+  marginBottom1: 'game-margin-bottom-1',
+  marginBottom2: 'game-margin-bottom-2',
+  marginBottom3: 'game-margin-bottom-3',
+  marginTop1: 'game-margin-top-1',
+  marginTop2: 'game-margin-top-2',
+  padding2: 'game-padding-2',
+  padding3: 'game-padding-3',
+  opacity70: 'game-opacity-70',
+  opacity80: 'game-opacity-80',
+  
+  // Dialog classes
+  dialog: 'game-dialog',
+  
+  // Form classes
+  textField: 'game-text-field',
+  select: 'game-select',
+  menuItem: 'game-menu-item',
+  
+  // Alert classes
+  alert: 'game-alert',
+  
+  // Icon classes
+  icon: 'game-icon',
+  
+  // Container classes
+  container: 'game-container',
+  sidebar: 'game-sidebar',
+  header: 'game-header',
+  
+  // Layout utility classes
+  overflowVisible: 'game-overflow-visible',
+  overflowHidden: 'game-overflow-hidden',
+  overflowAuto: 'game-overflow-auto',
+  width100: 'game-width-100',
+  height100: 'game-height-100',
+  height100vh: 'game-height-100vh',
+  flex: 'game-flex',
+  flexColumn: 'game-flex-column',
+  flexGrow1: 'game-flex-grow-1',
+  flexShrink0: 'game-flex-shrink-0',
+  flex1: 'game-flex-1',
+  positionRelative: 'game-position-relative',
+  positionAbsolute: 'game-position-absolute',
+  top0: 'game-top-0',
+  borderBottom1: 'game-border-bottom-1',
+  borderColorDivider: 'game-border-color-divider',
+  minWidth40: 'game-min-width-40',
+  paddingBottom0: 'game-padding-bottom-0',
+  marginTop3: 'game-margin-top-3',
+  
+  // Additional utility classes for specific styling
+  paddingTop0: 'game-padding-top-0',
+  rowGap0: 'game-row-gap-0',
+  marginTopNegative16: 'game-margin-top-negative-16',
+  marginTopNegative10: 'game-margin-top-negative-10',
+  fontSize80: 'game-font-size-80',
+  fontSize40: 'game-font-size-40',
+  fontSize32: 'game-font-size-32',
+  fontSize24: 'game-font-size-24',
+  fontSize16: 'game-font-size-16',
+  fontSize3rem: 'game-font-size-3rem',
+  colorWhite: 'game-color-white',
+  colorCyan: 'game-color-cyan',
+  colorLightGray: 'game-color-light-gray',
+  textShadowGlow: 'game-text-shadow-glow',
+  textShadowGlow5: 'game-text-shadow-glow-5',
+  textTransformUppercase: 'game-text-transform-uppercase',
+  lineHeight1: 'game-line-height-1',
+  marginTop16: 'game-margin-top-16',
+  tooltipBackground: 'game-tooltip-background',
+  fontSizeSmall: 'game-font-size-small',
+  fontStyleItalic: 'game-font-style-italic',
+  height80: 'game-height-80',
+  cursorPointer: 'game-cursor-pointer',
+  hoverOpacity80: 'game-hover-opacity-80',
+  justifyCenter: 'game-justify-center',
+  backgroundColorCyan: 'game-background-color-cyan',
+  hoverBackgroundColorCyan: 'game-hover-background-color-cyan',
+  alignItemsCenter: 'game-align-items-center',
+  paddingTop1: 'game-padding-top-1',
+  
+  // Utility classes (removed duplicates)
 };
 
 /**
- * Base game card with consistent styling - matches Congen's modern aesthetic
+ * Simple wrapper components that use CSS classes for styling
  */
-export const GameCard = styled(Card)(() => ({
-  background: alpha(brand[500], 0.15), // Use hover background as default
-  color: TEXT_COLORS.primary,
-  borderRadius: GAME_SPACING.borderRadius,
-  boxShadow: GAME_SPACING.shadow,
-  backdropFilter: GAME_SPACING.backdropFilter,
-  border: `1px solid ${alpha(brand[500], 0.3)}`, // More visible border
-  overflow: 'hidden',
-  // Explicitly disable hover animation
-  '&:hover': {
-    background: alpha(brand[500], 0.15), // Keep same background
-    boxShadow: GAME_SPACING.shadow, // Keep same shadow
-    transform: 'none', // No transform
-  },
-}));
 
-/**
- * Secondary card for nested content - using Congen's alpha values
- */
-export const GameSubCard = styled(Card)(() => ({
-  backgroundColor: alpha('#ffffff', 0.1),
-  color: TEXT_COLORS.primary,
-  borderRadius: 12, // Matches Congen's borderRadius
-  border: `1px solid ${alpha('#ffffff', 0.2)}`,
-  transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-  '&:hover': {
-    backgroundColor: alpha('#ffffff', 0.15),
-    transform: 'translateY(-1px)',
-  },
-}));
+// Game Card Component
+export const GameCard: React.FC<React.ComponentProps<typeof Card> & { interactive?: boolean }> = ({ 
+  className = '', 
+  interactive = false, 
+  ...props 
+}) => (
+  <Card 
+    className={`${GAME_CLASSES.card} ${interactive ? GAME_CLASSES.cardInteractive : ''} ${className}`}
+    {...props} 
+  />
+);
 
-/**
- * Status chip with consistent styling - matches Congen's chip design
- */
-export const GameStatusChip = styled(Chip)<{
-  status?: 'PENDING' | 'COMPLETED' | 'SKIPPED' | 'ERROR' | 'WARNING' | 'INFO' | 'SUCCESS';
-}>(({ status = 'PENDING' }) => {
-  const getStatusColor = () => {
+// Game Sub Card Component
+export const GameSubCard: React.FC<React.ComponentProps<typeof Card>> = ({ 
+  className = '', 
+  ...props 
+}) => (
+  <Card 
+    className={`${GAME_CLASSES.subCard} ${className}`}
+    {...props} 
+  />
+);
+
+// Game Status Chip Component
+export const GameStatusChip: React.FC<React.ComponentProps<typeof Chip> & { 
+  status?: 'PENDING' | 'COMPLETED' | 'SKIPPED' | 'ERROR' | 'WARNING' | 'INFO' | 'SUCCESS' 
+}> = ({ 
+  className = '', 
+  status = 'PENDING', 
+  ...props 
+}) => {
+  const getStatusClass = () => {
     switch (status) {
       case 'COMPLETED':
       case 'SUCCESS':
-        return { bg: STATUS_COLORS.completed, color: TEXT_COLORS.primary };
+        return GAME_CLASSES.statusChipCompleted;
       case 'SKIPPED':
       case 'WARNING':
-        return { bg: STATUS_COLORS.skipped, color: TEXT_COLORS.primary };
+        return GAME_CLASSES.statusChipPending;
       case 'ERROR':
-        return { bg: STATUS_COLORS.error, color: TEXT_COLORS.primary };
+        return GAME_CLASSES.statusChipPending;
       case 'INFO':
-        return { bg: STATUS_COLORS.info, color: TEXT_COLORS.primary };
+        return GAME_CLASSES.statusChipInfo;
       default:
-        return { bg: STATUS_COLORS.pending, color: TEXT_COLORS.primary };
+        return GAME_CLASSES.statusChipPending;
     }
   };
 
-  const colors = getStatusColor();
-  return {
-    backgroundColor: colors.bg,
-    color: colors.color,
-    fontWeight: 600, // Matches Congen's font weight
-    borderRadius: 20, // Matches Congen's chip borderRadius
-    fontSize: '0.75rem', // Matches Congen's chip fontSize
-    height: 28, // Matches Congen's chip height
-    '& .MuiChip-label': {
-      padding: '0 12px', // Matches Congen's chip label padding
-    },
+  return (
+    <Chip 
+      className={`${GAME_CLASSES.statusChip} ${getStatusClass()} ${className}`}
+      {...props} 
+    />
+  );
+};
+
+// Game Skill Chip Component
+export const GameSkillChip: React.FC<React.ComponentProps<typeof Chip>> = ({ 
+  className = '', 
+  ...props 
+}) => (
+  <Chip 
+    className={`${GAME_CLASSES.skillChip} ${className}`}
+    {...props} 
+  />
+);
+
+// Game Text Components
+export const GameText: React.FC<React.ComponentProps<typeof Typography> & { 
+  textVariant?: 'primary' | 'secondary' | 'muted' | 'accent' | 'glow' | 'animatedGlow' 
+}> = ({ 
+  className = '', 
+  textVariant = 'primary', 
+  ...props 
+}) => {
+  const getVariantClass = () => {
+    switch (textVariant) {
+      case 'secondary':
+        return GAME_CLASSES.textSecondary;
+      case 'muted':
+        return GAME_CLASSES.textMuted;
+      case 'accent':
+        return GAME_CLASSES.textAccent;
+      case 'glow':
+        return GAME_CLASSES.textGlow;
+      case 'animatedGlow':
+        return GAME_CLASSES.textAnimatedGlow;
+      default:
+        return GAME_CLASSES.text;
+    }
   };
-});
 
-/**
- * Skill chip with accent styling using Congen's warning color
- */
-export const GameSkillChip = styled(Chip)(() => ({
-  backgroundColor: alpha(warning[400], 0.2),
-  color: warning[400],
-  border: `1px solid ${alpha(warning[400], 0.3)}`,
-  margin: 4,
-  borderRadius: 20, // Matches Congen's chip borderRadius
-  fontWeight: 600,
-  fontSize: '0.75rem',
-  height: 28,
-  '& .MuiChip-label': {
-    padding: '0 12px',
-  },
-}));
+  return (
+    <Typography 
+      className={`${getVariantClass()} ${className}`}
+      {...props} 
+    />
+  );
+};
 
-/**
- * Container for status bars with consistent spacing - matches Congen's design
- */
-export const StatusBarContainer = styled(Box)(() => ({
-  display: 'flex',
-  alignItems: 'center',
-  gap: 8,
-  padding: 8,
-  transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-}));
+// Alias for secondary text
+export const GameTextSecondary: React.FC<Omit<React.ComponentProps<typeof Typography>, 'textVariant'> & { 
+  textVariant?: never 
+}> = ({ 
+  className = '', 
+  ...props 
+}) => (
+  <GameText 
+    textVariant="secondary" 
+    className={className} 
+    {...props} 
+  />
+);
 
-/**
- * Base text styling for game theme - matches Congen's typography
- */
-export const GameText = styled(Typography)(() => ({
-  color: TEXT_COLORS.primary,
-  fontFamily: '"Inter", "system-ui", "sans-serif"', // Matches Congen's font family
-  fontWeight: 400,
-}));
+// Game Button Component
+export const GameButton: React.FC<React.ComponentProps<'button'> & { 
+  variant?: 'primary' | 'secondary' 
+}> = ({ 
+  className = '', 
+  variant = 'primary', 
+  ...props 
+}) => (
+  <button 
+    className={`${GAME_CLASSES.button} ${className}`}
+    {...props} 
+  />
+);
 
-/**
- * Secondary text styling
- */
-export const GameTextSecondary = styled(Typography)(() => ({
-  color: TEXT_COLORS.secondary,
-  fontFamily: '"Inter", "system-ui", "sans-serif"',
-  fontWeight: 400,
-}));
+// Game Container Component
+export const GameContainer: React.FC<React.ComponentProps<typeof Box>> = ({ 
+  className = '', 
+  ...props 
+}) => (
+  <Box 
+    className={`${GAME_CLASSES.container} ${className}`}
+    {...props} 
+  />
+);
 
-/**
- * Muted text styling
- */
-export const GameTextMuted = styled(Typography)(() => ({
-  color: TEXT_COLORS.muted,
-  fontFamily: '"Inter", "system-ui", "sans-serif"',
-  fontWeight: 400,
-}));
+// Game Sidebar Component
+export const GameSidebar: React.FC<React.ComponentProps<typeof Box>> = ({ 
+  className = '', 
+  ...props 
+}) => (
+  <Box 
+    className={`${GAME_CLASSES.sidebar} ${className}`}
+    {...props} 
+  />
+);
 
-/**
- * Accent text styling using Congen's warning color
- */
-export const GameTextAccent = styled(Typography)(() => ({
-  color: TEXT_COLORS.accent,
-  fontFamily: '"Inter", "system-ui", "sans-serif"',
-  fontWeight: 600, // Slightly bolder for accent text
-}));
+// Game Header Component
+export const GameHeader: React.FC<React.ComponentProps<typeof Box>> = ({ 
+  className = '', 
+  ...props 
+}) => (
+  <Box 
+    className={`${GAME_CLASSES.header} ${className}`}
+    {...props} 
+  />
+);
+
+// Game Progress Bar Component
+export const GameProgressBar: React.FC<React.ComponentProps<typeof Box>> = ({ 
+  className = '', 
+  ...props 
+}) => (
+  <Box 
+    className={`${GAME_CLASSES.progressBar} ${className}`}
+    {...props} 
+  />
+);
+
+// Game Alert Component
+export const GameAlert: React.FC<React.ComponentProps<typeof Box>> = ({ 
+  className = '', 
+  ...props 
+}) => (
+  <Box 
+    className={`${GAME_CLASSES.alert} ${className}`}
+    {...props} 
+  />
+);
+
+// Game Text Field Component
+export const GameTextField: React.FC<React.ComponentProps<typeof Box>> = ({ 
+  className = '', 
+  ...props 
+}) => (
+  <Box 
+    className={`${GAME_CLASSES.textField} ${className}`}
+    {...props} 
+  />
+);
+
+// Game Select Component
+export const GameSelect: React.FC<React.ComponentProps<typeof Box>> = ({ 
+  className = '', 
+  ...props 
+}) => (
+  <Box 
+    className={`${GAME_CLASSES.select} ${className}`}
+    {...props} 
+  />
+);
+
+// Game Menu Item Component
+export const GameMenuItem: React.FC<React.ComponentProps<typeof Box>> = ({ 
+  className = '', 
+  ...props 
+}) => (
+  <Box 
+    className={`${GAME_CLASSES.menuItem} ${className}`}
+    {...props} 
+  />
+);
+
+// Game Dialog Component
+export const GameDialog: React.FC<React.ComponentProps<typeof Box>> = ({ 
+  className = '', 
+  ...props 
+}) => (
+  <Box 
+    className={`${GAME_CLASSES.dialog} ${className}`}
+    {...props} 
+  />
+);
+
+// Game Icon Component
+export const GameIcon: React.FC<React.ComponentProps<typeof Box>> = ({ 
+  className = '', 
+  ...props 
+}) => (
+  <Box 
+    className={`${GAME_CLASSES.icon} ${className}`}
+    {...props} 
+  />
+);

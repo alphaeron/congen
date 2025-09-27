@@ -1,11 +1,12 @@
 import { default as ShowChartIcon } from '@mui/icons-material/ShowChart';
-import { Box, Card, CardContent, Typography, useTheme } from '@mui/material';
+import { Box, useTheme } from '@mui/material';
 import { ResponsiveRadialBar } from '@nivo/radial-bar';
 import React, { useState, useMemo } from 'react';
 
 import type { UserExercisePoolResponse, Exercise } from '../api/types';
 import { capitalizeEachWord } from '../common/utils';
 import { createCongenNivoTheme } from '../theme/nivoTheme';
+import { GameText, GameCard, GAME_CLASSES } from './GameTheme';
 
 interface RadialBarChartProps {
   exercisePoolData: UserExercisePoolResponse | null;
@@ -90,15 +91,15 @@ export const RadialBarChart: React.FC<RadialBarChartProps> = ({
   }
 
   return (
-    <Card variant="outlined">
+    <GameCard>
       <CardContent>
         <Box display="flex" alignItems="center" gap={1} sx={{ mb: 2 }}>
           <ShowChartIcon color="secondary" />
-          <Typography variant="h6">{title}</Typography>
+          <GameText variant="h6">{title}</GameText>
         </Box>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+        <GameText variant="body2" textVariant="secondary" className={GAME_CLASSES.marginBottom2}>
           {description}
-        </Typography>
+        </GameText>
         <Box sx={{ height }}>
           <ResponsiveRadialBar
             data={filteredData}
@@ -162,6 +163,6 @@ export const RadialBarChart: React.FC<RadialBarChartProps> = ({
           />
         </Box>
       </CardContent>
-    </Card>
+    </GameCard>
   );
 };
