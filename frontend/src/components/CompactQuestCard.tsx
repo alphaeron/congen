@@ -611,7 +611,7 @@ export const CompactQuestCard: React.FC<CompactQuestCardProps> = ({
               );
             }
 
-            // Determine if we can submit
+            // Determine if we can submit - unified logic for both daily and weekly
             let canSubmit = false;
             let isPending = false;
             let onSubmit = () => {};
@@ -632,11 +632,8 @@ export const CompactQuestCard: React.FC<CompactQuestCardProps> = ({
                 return createdDate === todayString || updatedDate === todayString;
               })();
               
-              // Only show submit button if not already recorded today and has a value
-              const currentValue = formData[editingMetric as keyof typeof formData];
-              const hasValidValue = currentValue && currentValue !== '';
-              
-              canSubmit = !isRecordedToday && !!hasValidValue;
+              // Can submit if not already recorded today (regardless of current value)
+              canSubmit = !isRecordedToday;
               isPending = submitMetricsMutation.isPending;
               onSubmit = handleSubmitDailyMetric;
             } else if (type === 'weekly' && editingProtocol) {
