@@ -28,6 +28,8 @@ import RecoveryIcon from '../resources/recovery-icon.svg';
 import DexterityIcon from '../resources/dexterity-icon.svg';
 import ExplosivenessIcon from '../resources/explosiveness-icon.svg';
 import HealthIcon from '../resources/health-icon.svg';
+import StaminaIcon from '../resources/stamina-icon.svg';
+import StrainIcon from '../resources/strain-icon.svg';
 import ReflexesIcon from '../resources/reflexes-icon.svg';
 
 interface CompactQuestCardProps {
@@ -45,32 +47,28 @@ const getIconForProtocol = (testName: string) => {
         <CustomSvgIcon
           src={ExplosivenessIcon}
           alt="Explosiveness"
-          className={`${GAME_CLASSES.fontSize24} ${GAME_CLASSES.colorCyan}`}
+          className={`${GAME_CLASSES.fontSize32} ${GAME_CLASSES.colorCyan}`}
         />
-      );
-    case 'vo2_max':
-      return (
-        <CustomSvgIcon src={HealthIcon} alt="Stamina" className={`${GAME_CLASSES.fontSize24} ${GAME_CLASSES.colorCyan}`} />
       );
     case 'hr_recovery':
       return (
-        <CustomSvgIcon src={RecoveryIcon} alt="Recovery" className={`${GAME_CLASSES.fontSize24} ${GAME_CLASSES.colorCyan}`} />
+        <CustomSvgIcon src={RecoveryIcon} alt="Recovery" className={`${GAME_CLASSES.fontSize32} ${GAME_CLASSES.colorCyan}`} />
       );
     case 'reflex':
       return (
         <CustomSvgIcon
           src={ReflexesIcon}
           alt="Reflexes"
-          className={`${GAME_CLASSES.fontSize24} ${GAME_CLASSES.colorCyan}`}
+          className={`${GAME_CLASSES.fontSize32} ${GAME_CLASSES.colorCyan}`}
         />
       );
     case 'mobility':
       return (
-        <CustomSvgIcon src={DexterityIcon} alt="Dexterity" className={`${GAME_CLASSES.fontSize24} ${GAME_CLASSES.colorCyan}`} />
+        <CustomSvgIcon src={DexterityIcon} alt="Dexterity" className={`${GAME_CLASSES.fontSize32} ${GAME_CLASSES.colorCyan}`} />
       );
     default:
       return (
-        <CustomSvgIcon src={ExplosivenessIcon} alt="Test" className={`${GAME_CLASSES.fontSize24} ${GAME_CLASSES.colorCyan}`} />
+        <CustomSvgIcon src={ExplosivenessIcon} alt="Test" className={`${GAME_CLASSES.fontSize32} ${GAME_CLASSES.colorCyan}`} />
       );
   }
 };
@@ -81,7 +79,7 @@ const dailyMetricsConfig = [
     key: 'strain',
     label: 'Strain',
     icon: (
-      <CustomSvgIcon src={ExplosivenessIcon} alt="Strain" className={`${GAME_CLASSES.fontSize24} ${GAME_CLASSES.colorCyan}`} />
+      <CustomSvgIcon src={StrainIcon} alt="Strain" className={`${GAME_CLASSES.fontSize32} ${GAME_CLASSES.colorCyan}`} />
     ),
     unit: '',
     description: 'Daily strain score from wearables',
@@ -90,7 +88,7 @@ const dailyMetricsConfig = [
     key: 'recovery',
     label: 'Recovery',
     icon: (
-      <CustomSvgIcon src={RecoveryIcon} alt="Recovery" className={`${GAME_CLASSES.fontSize24} ${GAME_CLASSES.colorCyan}`} />
+      <CustomSvgIcon src={RecoveryIcon} alt="Recovery" className={`${GAME_CLASSES.fontSize32} ${GAME_CLASSES.colorCyan}`} />
     ),
     unit: '%',
     description: 'Daily recovery score percentage',
@@ -98,7 +96,7 @@ const dailyMetricsConfig = [
   {
     key: 'hrv',
     label: 'HRV',
-    icon: <CustomSvgIcon src={HealthIcon} alt="HRV" className={`${GAME_CLASSES.fontSize24} ${GAME_CLASSES.colorCyan}`} />,
+    icon: <CustomSvgIcon src={HealthIcon} alt="HRV" className={`${GAME_CLASSES.fontSize32} ${GAME_CLASSES.colorCyan}`} />,
     unit: ' ms',
     description: 'Heart rate variability measurement',
   },
@@ -109,11 +107,24 @@ const dailyMetricsConfig = [
       <CustomSvgIcon
         src={RecoveryIcon}
         alt="Sleep Score"
-        className={`${GAME_CLASSES.fontSize24} ${GAME_CLASSES.colorCyan}`}
+        className={`${GAME_CLASSES.fontSize32} ${GAME_CLASSES.colorCyan}`}
       />
     ),
     unit: '%',
     description: 'Overall sleep quality score',
+  },
+  {
+    key: 'vo2_max',
+    label: 'VO₂ Max',
+    icon: (
+      <CustomSvgIcon
+        src={StaminaIcon}
+        alt="VO₂ Max"
+        className={`${GAME_CLASSES.fontSize32} ${GAME_CLASSES.colorCyan}`}
+      />
+    ),
+    unit: ' ml/kg/min',
+    description: 'Maximum oxygen consumption during exercise',
   },
 ];
 
@@ -140,6 +151,7 @@ export const CompactQuestCard: React.FC<CompactQuestCardProps> = ({
     recovery: currentMetrics?.recovery?.toString() || '',
     hrv: currentMetrics?.hrv?.toString() || '',
     sleep_score: currentMetrics?.sleep_score?.toString() || '',
+    vo2_max: currentMetrics?.vo2_max?.toString() || '',
     rem_sleep_minutes: currentMetrics?.rem_sleep_minutes?.toString() || '',
     deep_sleep_minutes: currentMetrics?.deep_sleep_minutes?.toString() || '',
     subjective_tiredness: currentMetrics?.subjective_tiredness?.toString() || '',
@@ -305,6 +317,7 @@ export const CompactQuestCard: React.FC<CompactQuestCardProps> = ({
       recovery: formData.recovery ? parseFloat(formData.recovery) : undefined,
       hrv: formData.hrv ? parseFloat(formData.hrv) : undefined,
       sleep_score: formData.sleep_score ? parseFloat(formData.sleep_score) : undefined,
+      vo2_max: formData.vo2_max ? parseFloat(formData.vo2_max) : undefined,
       rem_sleep_minutes: formData.rem_sleep_minutes
         ? parseFloat(formData.rem_sleep_minutes)
         : undefined,
@@ -325,7 +338,7 @@ export const CompactQuestCard: React.FC<CompactQuestCardProps> = ({
         <Grid container spacing={1} sx={{ height: '100%' }}>
           {dailyMetricsConfig.map((metric, index) => {
             return (
-              <Grid size={{ xs: 6 }} key={index} sx={{ height: '50%' }}>
+              <Grid size={{ xs: 6, sm: 4 }} key={index} sx={{ height: '50%' }}>
                 <GameSubCard
                   className={`${GAME_CLASSES.cursorPointer} ${GAME_CLASSES.hoverOpacity80}`}
                   onClick={() => handleEditDailyMetric(metric.key)}
@@ -334,8 +347,8 @@ export const CompactQuestCard: React.FC<CompactQuestCardProps> = ({
                   <CardContent
                     className={`${GAME_CLASSES.padding2} ${GAME_CLASSES.height100} ${GAME_CLASSES.flex} ${GAME_CLASSES.flexColumn} ${GAME_CLASSES.justifyCenter}`}
                   >
-                    <Stack spacing={0.2} alignItems="center" className={GAME_CLASSES.rowGap0}>
-                      <Box className={`${GAME_CLASSES.fontSize24} ${GAME_CLASSES.colorCyan} ${GAME_CLASSES.textBold}`}>
+                    <Stack spacing={0.1} alignItems="center" className={GAME_CLASSES.rowGap0}>
+                      <Box className={`${GAME_CLASSES.fontSize32} ${GAME_CLASSES.colorCyan} ${GAME_CLASSES.textBold}`}>
                         {metric.icon}
                       </Box>
                       <GameText 
@@ -345,7 +358,8 @@ export const CompactQuestCard: React.FC<CompactQuestCardProps> = ({
                           wordBreak: 'break-word',
                           hyphens: 'auto',
                           lineHeight: 1.2,
-                          fontSize: '0.75rem'
+                          fontSize: '0.75rem',
+                          marginTop: 0
                         }}
                       >
                         {metric.label}
@@ -380,8 +394,8 @@ export const CompactQuestCard: React.FC<CompactQuestCardProps> = ({
                   <CardContent
                     className={`${GAME_CLASSES.padding2} ${GAME_CLASSES.height100} ${GAME_CLASSES.flex} ${GAME_CLASSES.flexColumn} ${GAME_CLASSES.justifyCenter}`}
                   >
-                    <Stack spacing={0.2} alignItems="center" className={GAME_CLASSES.rowGap0}>
-                      <Box className={`${GAME_CLASSES.fontSize24} ${GAME_CLASSES.colorCyan} ${GAME_CLASSES.textBold}`}>
+                    <Stack spacing={0.1} alignItems="center" className={GAME_CLASSES.rowGap0}>
+                      <Box className={`${GAME_CLASSES.fontSize32} ${GAME_CLASSES.colorCyan} ${GAME_CLASSES.textBold}`}>
                         {getIconForProtocol(protocol.test_name)}
                       </Box>
                       <GameText 
@@ -391,7 +405,8 @@ export const CompactQuestCard: React.FC<CompactQuestCardProps> = ({
                           wordBreak: 'break-word',
                           hyphens: 'auto',
                           lineHeight: 1.2,
-                          fontSize: '0.75rem'
+                          fontSize: '0.75rem',
+                          marginTop: 0
                         }}
                       >
                         {protocol.display_name}

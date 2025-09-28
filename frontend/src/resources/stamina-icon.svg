@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Stamina Icon - Sustained Energy Bars -->
+<svg fill="#000000" width="800px" height="800px" viewBox="0 0 32 32" version="1.1" xmlns="http://www.w3.org/2000/svg">
+<title>stamina</title>
+<!-- Base of the stamina curve -->
+<rect x="6" y="22" width="20" height="4" fill="currentColor"/>
+<!-- Stamina curve (concave, closer to base) -->
+<path d="M6 16 Q16 22 26 12" fill="none" stroke="currentColor" stroke-width="3"/>
+</svg>

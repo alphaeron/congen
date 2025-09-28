@@ -10,7 +10,7 @@ import RecoveryIcon from '../resources/recovery-icon.svg';
 import DexterityIcon from '../resources/dexterity-icon.svg';
 import ExplosivenessIcon from '../resources/explosiveness-icon.svg';
 import StrengthIcon from '../resources/strength-icon.svg';
-import HealthIcon from '../resources/health-icon.svg';
+import StaminaIcon from '../resources/stamina-icon.svg';
 import ReflexesIcon from '../resources/reflexes-icon.svg';
 import { createCongenNivoTheme } from '../theme/nivoTheme';
 
@@ -57,7 +57,7 @@ const getMetricData = (
         ? `${metrics.vo2_max.toFixed(1)} ml/kg/min`
         : 'VO₂ max test required',
       color: '#45B7D1',
-      icon: <CustomSvgIcon src={HealthIcon} alt="Stamina" className={`${GAME_CLASSES.fontSize32} ${GAME_CLASSES.colorCyan}`} />,
+      icon: <CustomSvgIcon src={StaminaIcon} alt="Stamina" className={`${GAME_CLASSES.fontSize32} ${GAME_CLASSES.colorCyan}`} />,
     },
     {
       metric: 'Recovery',
