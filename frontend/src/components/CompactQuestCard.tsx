@@ -441,11 +441,11 @@ export const CompactQuestCard: React.FC<CompactQuestCardProps> = ({
       {/* Metric Detail Dialog */}
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="md" fullWidth>
         <DialogTitle>
-          <GameText variant="h6" className={GAME_CLASSES.textBold}>
+          <span className={`${GAME_CLASSES.textBold} ${GAME_CLASSES.text}`}>
             {type === 'daily'
               ? dailyMetricsConfig.find(m => m.key === editingMetric)?.label
               : editingProtocol?.display_name}
-          </GameText>
+          </span>
         </DialogTitle>
         <DialogContent>
           <Stack spacing={3} className={GAME_CLASSES.marginTop2}>
@@ -480,7 +480,24 @@ export const CompactQuestCard: React.FC<CompactQuestCardProps> = ({
                   if (!metric) return null;
 
                   const currentValue = formData[editingMetric as keyof typeof formData];
-                  const hasValue = currentValue && currentValue !== '';
+                  
+                  // Check if the metric was recorded today by comparing dates
+                  const isRecordedToday = (() => {
+                    if (!currentMetrics?.created_at && !currentMetrics?.updated_at) {
+                      return false;
+                    }
+                    
+                    const today = new Date();
+                    const todayString = today.toISOString().split('T')[0]; // YYYY-MM-DD format
+                    
+                    // Check if created_at or updated_at is today
+                    const createdDate = currentMetrics.created_at ? new Date(currentMetrics.created_at).toISOString().split('T')[0] : null;
+                    const updatedDate = currentMetrics.updated_at ? new Date(currentMetrics.updated_at).toISOString().split('T')[0] : null;
+                    
+                    return createdDate === todayString || updatedDate === todayString;
+                  })();
+                  
+                  const hasValue = currentValue && currentValue !== '' && isRecordedToday;
 
                   return (
                     <Stack spacing={2}>
@@ -561,7 +578,9 @@ export const CompactQuestCard: React.FC<CompactQuestCardProps> = ({
                           label={`Result (${editingProtocol.unit})`}
                           type="number"
                           value={testValue}
-                          onChange={e => setTestValue(e.target.value)}
+                          onChange={e => {
+                            setTestValue(e.target.value);
+                          }}
                           placeholder={`Enter your ${editingProtocol.test_name.toLowerCase()} result`}
                         />
                       )}
@@ -573,30 +592,93 @@ export const CompactQuestCard: React.FC<CompactQuestCardProps> = ({
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button
-            onClick={() => {
-              setDialogOpen(false);
-              setEditingMetric(null);
-              setEditingProtocol(null);
-            }}
-          >
-            Close
-          </Button>
-          {((type === 'daily' &&
-            editingMetric &&
-            !formData[editingMetric as keyof typeof formData]) ||
-            (type === 'weekly' && editingProtocol && testValue)) && (
-            <Button
-              onClick={type === 'daily' ? handleSubmitDailyMetric : handleSubmitTest}
-              variant="contained"
-              disabled={submitMetricsMutation.isPending || submitTestMutation.isPending}
-              className={`${GAME_CLASSES.backgroundColorCyan} ${GAME_CLASSES.hoverBackgroundColorCyan}`}
-            >
-              {submitMetricsMutation.isPending || submitTestMutation.isPending
-                ? 'Saving...'
-                : 'Confirm'}
-            </Button>
-          )}
+          {(() => {
+            // Shared logic for determining if we should show submit/cancel buttons
+            const isEditing = (type === 'daily' && editingMetric) || (type === 'weekly' && editingProtocol);
+            
+            if (!isEditing) {
+              // Default: Just close button
+              return (
+                <Button
+                  onClick={() => {
+                    setDialogOpen(false);
+                    setEditingMetric(null);
+                    setEditingProtocol(null);
+                  }}
+                >
+                  Close
+                </Button>
+              );
+            }
+
+            // Determine if we can submit
+            let canSubmit = false;
+            let isPending = false;
+            let onSubmit = () => {};
+
+            if (type === 'daily' && editingMetric) {
+              // Check if the metric was recorded today
+              const isRecordedToday = (() => {
+                if (!currentMetrics?.created_at && !currentMetrics?.updated_at) {
+                  return false;
+                }
+                
+                const today = new Date();
+                const todayString = today.toISOString().split('T')[0];
+                
+                const createdDate = currentMetrics.created_at ? new Date(currentMetrics.created_at).toISOString().split('T')[0] : null;
+                const updatedDate = currentMetrics.updated_at ? new Date(currentMetrics.updated_at).toISOString().split('T')[0] : null;
+                
+                return createdDate === todayString || updatedDate === todayString;
+              })();
+              
+              // Only show submit button if not already recorded today and has a value
+              const currentValue = formData[editingMetric as keyof typeof formData];
+              const hasValidValue = currentValue && currentValue !== '';
+              
+              canSubmit = !isRecordedToday && !!hasValidValue;
+              isPending = submitMetricsMutation.isPending;
+              onSubmit = handleSubmitDailyMetric;
+            } else if (type === 'weekly' && editingProtocol) {
+              // Check if the test has already been completed this week
+              const testResult = currentWeekTests.find(
+                test => test.test_name === editingProtocol.test_name
+              );
+              const hasValue = testResult?.status === 'COMPLETED' && testResult?.result_value;
+              
+              // Can submit if the test hasn't been completed yet (regardless of testValue)
+              canSubmit = !hasValue;
+              isPending = submitTestMutation.isPending;
+              onSubmit = handleSubmitTest;
+            }
+
+            // Show cancel and submit buttons
+            return (
+              <React.Fragment>
+                <Button
+                  onClick={() => {
+                    setDialogOpen(false);
+                    setEditingMetric(null);
+                    setEditingProtocol(null);
+                  }}
+                  variant="outlined"
+                  className={GAME_CLASSES.colorCyan}
+                >
+                  Cancel
+                </Button>
+                {canSubmit && (
+                  <Button
+                    onClick={onSubmit}
+                    variant="contained"
+                    disabled={isPending}
+                    className={`${GAME_CLASSES.backgroundColorCyan} ${GAME_CLASSES.hoverBackgroundColorCyan}`}
+                  >
+                    {isPending ? 'Saving...' : 'Submit'}
+                  </Button>
+                )}
+              </React.Fragment>
+            );
+          })()}
         </DialogActions>
       </Dialog>
     </React.Fragment>
