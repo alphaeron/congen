@@ -285,8 +285,7 @@ export const CompactQuestCard: React.FC<CompactQuestCardProps> = ({
 
         const data = await loadPerformanceMetricsInRange(startDateStr, endDate);
         setHistoricalMetrics(data);
-      } catch (error) {
-        console.error('Failed to load historical data:', error);
+      } catch {
         setHistoricalMetrics([]);
       } finally {
         setIsLoadingHistorical(false);

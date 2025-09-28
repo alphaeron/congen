@@ -1,5 +1,5 @@
 import { default as ShowChartIcon } from '@mui/icons-material/ShowChart';
-import { Box, useTheme } from '@mui/material';
+import { Box, useTheme, CardContent } from '@mui/material';
 import { ResponsivePie } from '@nivo/pie';
 import React, { useState, useMemo } from 'react';
 

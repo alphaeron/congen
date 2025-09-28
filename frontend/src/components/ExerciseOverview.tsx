@@ -1,23 +1,21 @@
 import Alert from '@mui/material/Alert';
 import AlertTitle from '@mui/material/AlertTitle';
 import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
+import Chip from '@mui/material/Chip';
 import Container from '@mui/material/Container';
 import Grid from '@mui/material/Grid';
-import Paper from '@mui/material/Paper';
 import Stack from '@mui/material/Stack';
-import { alpha } from '@mui/material/styles';
-import ToggleButton from '@mui/material/ToggleButton';
-import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import * as React from 'react';
+import { useSearchParams } from 'react-router';
 
 import { EmptyState } from './EmptyState';
 import { ExerciseCard } from './ExerciseCard';
-import { FormField } from './FormField';
+import { ExerciseSearchDrawer } from './ExerciseSearchDrawer';
 import { LoadingSpinner } from './LoadingSpinner';
 import { GameText, GAME_CLASSES } from './GameTheme';
 import type { Equipment, Exercise, Muscle } from '../api/types';
-import { capitalizeEachWord } from '../common/utils';
 import { useData } from '../contexts/DataContext';
 
 import '../styles/Form.css';
@@ -28,190 +26,219 @@ import '../styles/Form.css';
  * @return The exercise overview component.
  */
 export function ExerciseOverview(): React.ReactElement {
-  const [movementTypes, setMovementTypes] = React.useState<string[]>([]);
-
-  const [movementTypeFilter, setMovementTypeFilter] = React.useState<string | null>(null);
-  const [exerciseEquipmentFilter, setExerciseEquipmentFilter] = React.useState<string | null>(null);
-  const [exerciseMuscleFilter, setExerciseMuscleFilter] = React.useState<string | null>(null);
-
-  const [isUnilateralFilter, setIsUnilateralFilter] = React.useState<string>('Both');
-  const [isAccessoryFilter, setIsAccessoryFilter] = React.useState<string>('Both');
-  const [isUpperFilter, setIsUpperFilter] = React.useState<string>('Both');
-
   const [exercisesToDisplay, setExercisesToDisplay] = React.useState<Exercise[]>([]);
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Helper functions for URL query parameters
+  const parseArrayParam = (param: string | null): string[] => {
+    return param ? param.split(',').filter(Boolean) : [];
+  };
+
+  const parseBooleanParam = (param: string | null): boolean | null => {
+    if (param === 'true') return true;
+    if (param === 'false') return false;
+    return null;
+  };
+
+  const serializeFiltersToURL = (filters: typeof appliedFilters) => {
+    const params = new URLSearchParams();
+    
+    if (filters.selectedExercises.length > 0) {
+      params.set('exercises', filters.selectedExercises.join(','));
+    }
+    if (filters.movementTypes.length > 0) {
+      params.set('movementTypes', filters.movementTypes.join(','));
+    }
+    if (filters.equipment.length > 0) {
+      params.set('equipment', filters.equipment.join(','));
+    }
+    if (filters.targetMuscles.length > 0) {
+      params.set('targetMuscles', filters.targetMuscles.join(','));
+    }
+    if (filters.isUnilateral !== null) {
+      params.set('isUnilateral', filters.isUnilateral.toString());
+    }
+    if (filters.isAccessory !== null) {
+      params.set('isAccessory', filters.isAccessory.toString());
+    }
+    if (filters.isUpper !== null) {
+      params.set('isUpper', filters.isUpper.toString());
+    }
+
+    setSearchParams(params);
+  };
+
+  // Single source of truth: derive filters from URL parameters
+  const appliedFilters = React.useMemo(() => ({
+    selectedExercises: parseArrayParam(searchParams.get('exercises')),
+    movementTypes: parseArrayParam(searchParams.get('movementTypes')),
+    equipment: parseArrayParam(searchParams.get('equipment')),
+    targetMuscles: parseArrayParam(searchParams.get('targetMuscles')),
+    isUnilateral: parseBooleanParam(searchParams.get('isUnilateral')),
+    isAccessory: parseBooleanParam(searchParams.get('isAccessory')),
+    isUpper: parseBooleanParam(searchParams.get('isUpper')),
+  }), [searchParams]);
+
+  // Check if there are any active filters
+  const hasActiveFilters = React.useMemo(() => {
+    return (
+      appliedFilters.selectedExercises.length > 0 ||
+      appliedFilters.movementTypes.length > 0 ||
+      appliedFilters.equipment.length > 0 ||
+      appliedFilters.targetMuscles.length > 0 ||
+      appliedFilters.isUnilateral !== null ||
+      appliedFilters.isAccessory !== null ||
+      appliedFilters.isUpper !== null
+    );
+  }, [appliedFilters]);
+
+  // Single function to update filters by updating URL
+  const updateFilters = React.useCallback((newFilters: typeof appliedFilters) => {
+    serializeFiltersToURL(newFilters);
+  }, []);
 
   // Virtualization setup
   const parentRef = React.useRef<HTMLDivElement>(null);
   const itemsPerRow = 4; // Number of items per row in the grid
-  const rowHeight = 300; // Approximate height of each exercise card row
+  const rowHeight = 300; // Approximate height of each exercise card row with spacing
 
   const {
     loadAllExercises,
     loadAllEquipment,
     loadAllMuscles,
+    loadAllExerciseMuscleData,
+    loadAllExerciseEquipmentData,
     exerciseMuscleData,
     exerciseEquipmentData,
+    allExercises,
+    allEquipment,
+    allMuscles,
     error: dataError,
+    isLoadingSpecific,
+    getErrorForDataType,
   } = useData();
-  const [exercises, setExercises] = React.useState<Exercise[]>([]);
-  const [equipment, setEquipment] = React.useState<Equipment[]>([]);
-  const [muscles, setMuscles] = React.useState<Muscle[]>([]);
-  const [isLocalLoading, setIsLocalLoading] = React.useState(true);
 
   // Load data on mount
   React.useEffect(() => {
     const loadData = async () => {
-      setIsLocalLoading(true);
-      try {
-        const [exercisesData, equipmentData, musclesData] = await Promise.all([
-          loadAllExercises(),
-          loadAllEquipment(),
-          loadAllMuscles(),
-        ]);
-        setExercises(exercisesData);
-        setEquipment(equipmentData);
-        setMuscles(musclesData);
-      } finally {
-        setIsLocalLoading(false);
-      }
+      // Load all data including mappings
+      await Promise.all([
+        loadAllExercises(),
+        loadAllEquipment(),
+        loadAllMuscles(),
+        loadAllExerciseMuscleData(),
+        loadAllExerciseEquipmentData(),
+      ]);
     };
 
     loadData();
-  }, [loadAllExercises, loadAllEquipment, loadAllMuscles]);
+  }, [loadAllExercises, loadAllEquipment, loadAllMuscles, loadAllExerciseMuscleData, loadAllExerciseEquipmentData]);
 
-  // Load exercise equipment map from DataContext
-  React.useEffect(() => {
-    if (exerciseEquipmentData.size > 0) {
-      const map = getExerciseEquipmentMap();
-      setExerciseEquipmentMap(map);
-      setIsExerciseEquipmentLoading(false);
-      setIsExerciseEquipmentError(false);
-    }
-  }, [exerciseEquipmentData]);
-
-  // Load exercise muscle map from DataContext
-  React.useEffect(() => {
-    if (exerciseMuscleData.size > 0) {
-      const map = getExerciseMuscleMap();
-      setExerciseMuscleMap(map);
-      setIsExerciseMuscleLoading(false);
-      setIsExerciseMuscleError(false);
-    }
-  }, [exerciseMuscleData]);
-
-  const isExercisesLoading = isLocalLoading;
-  const isEquipmentLoading = isLocalLoading;
-  const isMusclesLoading = isLocalLoading;
   const isExercisesError = !!dataError;
   const isEquipmentError = !!dataError;
   const isMusclesError = !!dataError;
+  const isExerciseMuscleError = !!getErrorForDataType('exerciseMuscleData');
+  const isExerciseEquipmentError = !!getErrorForDataType('exerciseEquipmentData');
 
-  const getExerciseEquipmentMap = (): Map<string, Set<string>> => {
+
+  // Convert DataContext data to the expected format
+  const exerciseEquipmentMap = React.useMemo(() => {
     const mapping = new Map<string, Set<string>>();
     // Convert DataContext exerciseEquipmentData to the expected format
-    for (const [exerciseName, equipmentList] of exerciseEquipmentData.entries()) {
-      mapping.set(exerciseName, new Set(equipmentList.map(eq => eq.equipment_name)));
+    for (const [exerciseName, equipmentList] of Array.from(exerciseEquipmentData.entries())) {
+      mapping.set(exerciseName, new Set(equipmentList.map((eq: any) => eq.equipment_name)));
     }
     return mapping;
-  };
+  }, [exerciseEquipmentData]);
 
-  const [exerciseEquipmentMap, setExerciseEquipmentMap] = React.useState<Map<string, Set<string>>>(
-    new Map()
-  );
-  const [isExerciseEquipmentLoading, setIsExerciseEquipmentLoading] = React.useState(true);
-  const [isExerciseEquipmentError, setIsExerciseEquipmentError] = React.useState(false);
-
-  const getExerciseMuscleMap = (): Map<string, Set<string>> => {
+  const exerciseMuscleMap = React.useMemo(() => {
     const mapping = new Map<string, Set<string>>();
     // Convert DataContext exerciseMuscleData to the expected format
-    for (const [exerciseName, muscleList] of exerciseMuscleData.entries()) {
+    for (const [exerciseName, muscleList] of Array.from(exerciseMuscleData.entries())) {
       mapping.set(exerciseName, new Set(muscleList));
     }
     return mapping;
-  };
+  }, [exerciseMuscleData]);
 
-  const [exerciseMuscleMap, setExerciseMuscleMap] = React.useState<Map<string, Set<string>>>(
-    new Map()
-  );
-  const [isExerciseMuscleLoading, setIsExerciseMuscleLoading] = React.useState(true);
-  const [isExerciseMuscleError, setIsExerciseMuscleError] = React.useState(false);
-
+  // Enhanced filtering with search drawer
   React.useEffect(() => {
-    if (exercises) {
-      const types = Array.from(new Set(exercises.map(e => e.movement_type)));
-      setMovementTypes(types);
+    if (!allExercises || allExercises.length === 0) return;
+    
+    // Don't run equipment/muscle filters if mapping data isn't loaded yet
+    const needsEquipmentData = appliedFilters.equipment.length > 0;
+    const needsMuscleData = appliedFilters.targetMuscles.length > 0;
+    
+    if (needsEquipmentData && exerciseEquipmentMap.size === 0) {
+      return;
     }
-  }, [exercises]);
-
-  React.useEffect(() => {
-    if (!exercises) return;
-
-    let filtered = exercises;
-
-    if (movementTypeFilter) {
-      filtered = filtered.filter(e => e.movement_type === movementTypeFilter);
+    if (needsMuscleData && exerciseMuscleMap.size === 0) {
+      return;
     }
 
-    if (exerciseEquipmentFilter) {
+    let filtered = allExercises;
+
+    // Selected exercises filter
+    if (appliedFilters.selectedExercises.length > 0) {
+      filtered = filtered.filter(e => 
+        appliedFilters.selectedExercises.includes(e.name)
+      );
+    }
+
+    // Movement type filters
+    if (appliedFilters.movementTypes.length > 0) {
+      filtered = filtered.filter(e => appliedFilters.movementTypes.includes(e.movement_type));
+    }
+
+    // Equipment filters
+    if (appliedFilters.equipment.length > 0) {
       filtered = filtered.filter(e => {
         const equipmentSet = exerciseEquipmentMap?.get(e.name);
-        return equipmentSet?.has(exerciseEquipmentFilter);
+        return appliedFilters.equipment.some(eq => equipmentSet?.has(eq));
       });
     }
 
-    if (exerciseMuscleFilter) {
+    // Target muscle filters
+    if (appliedFilters.targetMuscles.length > 0) {
       filtered = filtered.filter(e => {
         const muscleSet = exerciseMuscleMap?.get(e.name);
-        return muscleSet?.has(exerciseMuscleFilter);
+        return appliedFilters.targetMuscles.some(muscle => muscleSet?.has(muscle));
       });
     }
 
-    if (isUnilateralFilter !== 'Both') {
-      const isUnilateral = isUnilateralFilter === 'Unilateral';
-      filtered = filtered.filter(e => e.is_unilateral === isUnilateral);
+    // Advanced filters
+    if (appliedFilters.isUnilateral !== null) {
+      filtered = filtered.filter(e => e.is_unilateral === appliedFilters.isUnilateral);
     }
 
-    if (isAccessoryFilter !== 'Both') {
-      const isAccessory = isAccessoryFilter === 'Accessory';
-      filtered = filtered.filter(e => e.is_accessory === isAccessory);
+    if (appliedFilters.isAccessory !== null) {
+      filtered = filtered.filter(e => e.is_accessory === appliedFilters.isAccessory);
     }
 
-    if (isUpperFilter !== 'Both') {
-      const isUpper = isUpperFilter === 'Upper';
-      filtered = filtered.filter(e => e.is_upper === isUpper);
+    if (appliedFilters.isUpper !== null) {
+      filtered = filtered.filter(e => e.is_upper === appliedFilters.isUpper);
     }
 
     setExercisesToDisplay(filtered);
   }, [
-    exercises,
-    movementTypeFilter,
-    exerciseEquipmentFilter,
-    exerciseMuscleFilter,
-    isUnilateralFilter,
-    isAccessoryFilter,
-    isUpperFilter,
+    allExercises,
+    appliedFilters,
     exerciseEquipmentMap,
     exerciseMuscleMap,
   ]);
 
   const isLoading =
-    isExercisesLoading ||
-    isEquipmentLoading ||
-    isMusclesLoading ||
-    isExerciseEquipmentLoading ||
-    isExerciseMuscleLoading ||
-    exercises === undefined ||
-    equipment === undefined ||
-    muscles === undefined ||
-    exerciseEquipmentMap === undefined ||
-    exerciseMuscleMap === undefined;
+    isLoadingSpecific('exercises') ||
+    isLoadingSpecific('equipment') ||
+    isLoadingSpecific('muscles') ||
+    isLoadingSpecific('exerciseMuscleData') ||
+    isLoadingSpecific('exerciseEquipmentData');
 
   const hasError =
     isExercisesError ||
     isEquipmentError ||
     isMusclesError ||
-    isExerciseEquipmentError ||
-    isExerciseMuscleError;
+    isExerciseMuscleError ||
+    isExerciseEquipmentError;
 
   // Calculate virtual rows for grid layout
   const totalRows = Math.ceil(exercisesToDisplay.length / itemsPerRow);
@@ -240,224 +267,155 @@ export function ExerciseOverview(): React.ReactElement {
   }
 
   return (
-    <Container maxWidth="xl" sx={{ py: 4 }}>
-      <Stack spacing={4}>
-        {/* Header */}
-        <Box sx={{ textAlign: 'center', mb: 2 }}>
-          <GameText
-            variant="h3"
-            data-testid="exerciseHeader"
-            textVariant="glow"
-            sx={{
-              fontWeight: 700,
-              mb: 2,
-            }}
-          >
-            Exercise Library
-          </GameText>
-          <GameText
-            variant="h6"
-            textVariant="secondary"
-            sx={{
-              fontWeight: 400,
-              opacity: 0.8,
-            }}
-          >
-            Discover and filter exercises to build your perfect workout
-          </GameText>
-        </Box>
+    <Box
+      sx={{
+        display: 'flex',
+        height: 'calc(100vh - 64px)', // Account for app bar height
+        position: 'fixed',
+        top: 64, // Start below the app bar
+        left: 0,
+        right: 0,
+        bottom: 0,
+        overflow: 'hidden', // Prevent overflow
+        zIndex: 1,
+      }}
+    >
+      {/* Search Drawer */}
+      <ExerciseSearchDrawer
+        exercises={allExercises || []}
+        equipment={allEquipment || []}
+        muscles={allMuscles || []}
+        onFiltersChange={updateFilters}
+        appliedFilters={appliedFilters}
+      />
 
-        {/* Filters Section */}
-        <Paper
-          sx={{
-            p: 4,
-            borderRadius: 3,
-            background: theme =>
-              `linear-gradient(135deg, ${alpha(theme.palette.background.paper, 0.8)}, ${alpha(theme.palette.background.paper, 0.6)})`,
-            border: theme => `1px solid ${alpha(theme.palette.divider, 0.3)}`,
-            backdropFilter: 'blur(20px)',
-            boxShadow: theme => `0 8px 32px ${alpha(theme.palette.primary.main, 0.1)}`,
-          }}
-        >
-          <GameText variant="h5" className={`${GAME_CLASSES.textBold} ${GAME_CLASSES.marginBottom3}`}>
-            Filters
-          </GameText>
-
-          <Grid container spacing={4}>
-            {/* Autocomplete Filters - Stacked Vertically */}
-            <Grid size={{ xs: 12, md: 6 }}>
-              <Stack spacing={3}>
-                <FormField
-                  type="autocomplete"
-                  label="Movement Type"
-                  value={movementTypeFilter}
-                  onChange={setMovementTypeFilter}
-                  options={movementTypes}
-                  getOptionLabel={option => capitalizeEachWord(option)}
+      {/* Main Content */}
+      <Box
+        component="main"
+        sx={{
+          flexGrow: 1,
+          height: '100%',
+          overflow: 'auto', // Allow content to scroll if needed
+          maxWidth: 'calc(100% - 240px)', // Prevent overflow
+        }}
+      >
+        <Container maxWidth="xl" sx={{ py: 3 }}>
+          <Stack spacing={4}>
+        {/* Applied Filters */}
+        {hasActiveFilters && (
+          <Box sx={{ mb: 3 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+              <GameText variant="h6" textVariant="secondary">
+                Applied Filters
+              </GameText>
+              <Button
+                size="small"
+                onClick={() => updateFilters({
+                  selectedExercises: [],
+                  movementTypes: [],
+                  equipment: [],
+                  targetMuscles: [],
+                  isUnilateral: null,
+                  isAccessory: null,
+                  isUpper: null,
+                })}
+                sx={{ minWidth: 'auto', p: 0.5 }}
+              >
+                Clear All
+              </Button>
+            </Box>
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+              {appliedFilters.selectedExercises.map(exercise => (
+                <Chip
+                  key={exercise}
+                  label={exercise}
+                  size="small"
+                  onDelete={() => updateFilters({
+                    ...appliedFilters,
+                    selectedExercises: appliedFilters.selectedExercises.filter(e => e !== exercise)
+                  })}
+                  color="primary"
+                  variant="outlined"
                 />
-
-                <FormField
-                  type="autocomplete"
-                  label="Equipment"
-                  value={exerciseEquipmentFilter}
-                  onChange={setExerciseEquipmentFilter}
-                  options={equipment?.map(e => e.name) || []}
+              ))}
+              {appliedFilters.movementTypes.map(type => (
+                <Chip
+                  key={type}
+                  label={type}
+                  size="small"
+                  onDelete={() => updateFilters({
+                    ...appliedFilters,
+                    movementTypes: appliedFilters.movementTypes.filter(t => t !== type)
+                  })}
+                  color="primary"
+                  variant="outlined"
                 />
-
-                <FormField
-                  type="autocomplete"
-                  label="Target Muscle"
-                  value={exerciseMuscleFilter}
-                  onChange={setExerciseMuscleFilter}
-                  options={muscles?.map(m => m.name) || []}
+              ))}
+              {appliedFilters.equipment.map(eq => (
+                <Chip
+                  key={eq}
+                  label={eq}
+                  size="small"
+                  onDelete={() => updateFilters({
+                    ...appliedFilters,
+                    equipment: appliedFilters.equipment.filter(e => e !== eq)
+                  })}
+                  color="primary"
+                  variant="outlined"
                 />
-              </Stack>
-            </Grid>
-
-            {/* Toggle Button Filters - Modern Design */}
-            <Grid size={{ xs: 12, md: 6 }}>
-              <Stack spacing={4}>
-                {/* Unilateral Filter */}
-                <Box>
-                  <GameText
-                    variant="subtitle1"
-                    sx={{ fontWeight: 600, mb: 2, color: 'text.primary' }}
-                  >
-                    Movement Pattern
-                  </GameText>
-                  <ToggleButtonGroup
-                    value={isUnilateralFilter}
-                    exclusive
-                    onChange={(_, newValue) => newValue && setIsUnilateralFilter(newValue)}
-                    aria-label="movement pattern"
-                    sx={{
-                      '& .MuiToggleButton-root': {
-                        textTransform: 'none',
-                        fontWeight: 500,
-                        borderRadius: 2,
-                        border: theme => `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
-                        '&.Mui-selected': {
-                          background: theme =>
-                            `linear-gradient(135deg, ${theme.palette.primary.main}, ${alpha(theme.palette.primary.main, 0.8)})`,
-                          color: 'white',
-                          '&:hover': {
-                            background: theme =>
-                              `linear-gradient(135deg, ${theme.palette.primary.main}, ${alpha(theme.palette.primary.main, 0.9)})`,
-                          },
-                        },
-                        '&:hover': {
-                          background: theme => alpha(theme.palette.primary.main, 0.1),
-                        },
-                      },
-                    }}
-                  >
-                    <ToggleButton value="Both" aria-label="both">
-                      Both
-                    </ToggleButton>
-                    <ToggleButton value="Unilateral" aria-label="unilateral">
-                      Unilateral
-                    </ToggleButton>
-                    <ToggleButton value="Bilateral" aria-label="bilateral">
-                      Bilateral
-                    </ToggleButton>
-                  </ToggleButtonGroup>
-                </Box>
-
-                {/* Exercise Type Filter */}
-                <Box>
-                  <GameText
-                    variant="subtitle1"
-                    sx={{ fontWeight: 600, mb: 2, color: 'text.primary' }}
-                  >
-                    Exercise Type
-                  </GameText>
-                  <ToggleButtonGroup
-                    value={isAccessoryFilter}
-                    exclusive
-                    onChange={(_, newValue) => newValue && setIsAccessoryFilter(newValue)}
-                    aria-label="exercise type"
-                    sx={{
-                      '& .MuiToggleButton-root': {
-                        textTransform: 'none',
-                        fontWeight: 500,
-                        borderRadius: 2,
-                        border: theme => `1px solid ${alpha(theme.palette.secondary.main, 0.2)}`,
-                        '&.Mui-selected': {
-                          background: theme =>
-                            `linear-gradient(135deg, ${theme.palette.secondary.main}, ${alpha(theme.palette.secondary.main, 0.8)})`,
-                          color: 'white',
-                          '&:hover': {
-                            background: theme =>
-                              `linear-gradient(135deg, ${theme.palette.secondary.main}, ${alpha(theme.palette.secondary.main, 0.9)})`,
-                          },
-                        },
-                        '&:hover': {
-                          background: theme => alpha(theme.palette.secondary.main, 0.1),
-                        },
-                      },
-                    }}
-                  >
-                    <ToggleButton value="Both" aria-label="both">
-                      Both
-                    </ToggleButton>
-                    <ToggleButton value="Primary" aria-label="primary">
-                      Primary
-                    </ToggleButton>
-                    <ToggleButton value="Accessory" aria-label="accessory">
-                      Accessory
-                    </ToggleButton>
-                  </ToggleButtonGroup>
-                </Box>
-
-                {/* Body Part Filter */}
-                <Box>
-                  <GameText
-                    variant="subtitle1"
-                    sx={{ fontWeight: 600, mb: 2, color: 'text.primary' }}
-                  >
-                    Body Part
-                  </GameText>
-                  <ToggleButtonGroup
-                    value={isUpperFilter}
-                    exclusive
-                    onChange={(_, newValue) => newValue && setIsUpperFilter(newValue)}
-                    aria-label="body part"
-                    sx={{
-                      '& .MuiToggleButton-root': {
-                        textTransform: 'none',
-                        fontWeight: 500,
-                        borderRadius: 2,
-                        border: theme => `1px solid ${alpha(theme.palette.success.main, 0.2)}`,
-                        '&.Mui-selected': {
-                          background: theme =>
-                            `linear-gradient(135deg, ${theme.palette.success.main}, ${alpha(theme.palette.success.main, 0.8)})`,
-                          color: 'white',
-                          '&:hover': {
-                            background: theme =>
-                              `linear-gradient(135deg, ${theme.palette.success.main}, ${alpha(theme.palette.success.main, 0.9)})`,
-                          },
-                        },
-                        '&:hover': {
-                          background: theme => alpha(theme.palette.success.main, 0.1),
-                        },
-                      },
-                    }}
-                  >
-                    <ToggleButton value="Both" aria-label="both">
-                      Both
-                    </ToggleButton>
-                    <ToggleButton value="Upper" aria-label="upper">
-                      Upper Body
-                    </ToggleButton>
-                    <ToggleButton value="Lower" aria-label="lower">
-                      Lower Body
-                    </ToggleButton>
-                  </ToggleButtonGroup>
-                </Box>
-              </Stack>
-            </Grid>
-          </Grid>
-        </Paper>
+              ))}
+              {appliedFilters.targetMuscles.map(muscle => (
+                <Chip
+                  key={muscle}
+                  label={muscle}
+                  size="small"
+                  onDelete={() => updateFilters({
+                    ...appliedFilters,
+                    targetMuscles: appliedFilters.targetMuscles.filter(m => m !== muscle)
+                  })}
+                  color="primary"
+                  variant="outlined"
+                />
+              ))}
+              {appliedFilters.isUnilateral !== null && (
+                <Chip
+                  label={appliedFilters.isUnilateral ? 'Unilateral' : 'Bilateral'}
+                  size="small"
+                  onDelete={() => updateFilters({
+                    ...appliedFilters,
+                    isUnilateral: null
+                  })}
+                  color="primary"
+                  variant="outlined"
+                />
+              )}
+              {appliedFilters.isAccessory !== null && (
+                <Chip
+                  label={appliedFilters.isAccessory ? 'Accessory' : 'Primary'}
+                  size="small"
+                  onDelete={() => updateFilters({
+                    ...appliedFilters,
+                    isAccessory: null
+                  })}
+                  color="secondary"
+                  variant="outlined"
+                />
+              )}
+              {appliedFilters.isUpper !== null && (
+                <Chip
+                  label={appliedFilters.isUpper ? 'Upper Body' : 'Lower Body'}
+                  size="small"
+                  onDelete={() => updateFilters({
+                    ...appliedFilters,
+                    isUpper: null
+                  })}
+                  color="success"
+                  variant="outlined"
+                />
+              )}
+            </Box>
+          </Box>
+        )}
 
         {/* Results Section */}
         <Box>
@@ -475,8 +433,7 @@ export function ExerciseOverview(): React.ReactElement {
             <Box
               ref={parentRef}
               sx={{
-                height: '600px', // Fixed height for virtualization
-                overflow: 'auto',
+                minHeight: '400px', // Minimum height for virtualization
                 width: '100%',
               }}
             >
@@ -504,9 +461,9 @@ export function ExerciseOverview(): React.ReactElement {
                         transform: `translateY(${virtualRow.start}px)`,
                       }}
                     >
-                      <Grid container spacing={3} sx={{ height: '100%' }}>
+                      <Grid container spacing={2} sx={{ height: '100%' }}>
                         {rowExercises.map(exercise => (
-                          <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={exercise.name}>
+                          <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={exercise.name} sx={{ pb: 2 }}>
                             <ExerciseCard exercise={exercise} />
                           </Grid>
                         ))}
@@ -526,7 +483,9 @@ export function ExerciseOverview(): React.ReactElement {
             </Box>
           )}
         </Box>
-      </Stack>
-    </Container>
+          </Stack>
+        </Container>
+      </Box>
+    </Box>
   );
 }

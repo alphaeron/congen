@@ -14,6 +14,7 @@ import {
   getExercises,
 } from '../api/exercise';
 import { getExerciseMuscle } from '../api/exerciseMuscle';
+import { getExerciseEquipment as getExerciseEquipmentBulk } from '../api/exerciseEquipment';
 import { getUserDataExport } from '../api/gdpr';
 import {
   getConsentStatus,
@@ -114,6 +115,8 @@ interface DataContextType {
   loadAllExercises: () => Promise<Exercise[]>;
   loadAllMuscles: () => Promise<Muscle[]>;
   loadAllEquipment: () => Promise<Equipment[]>;
+  loadAllExerciseMuscleData: () => Promise<Map<string, string[]>>;
+  loadAllExerciseEquipmentData: () => Promise<Map<string, ExerciseEquipment[]>>;
   // User-specific data loading functions
   loadUserEquipment: () => Promise<UserEquipment[]>;
   loadUserWeakMuscles: () => Promise<UserWeakMuscle[]>;
@@ -544,6 +547,70 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
       setLoadingState('equipment', false);
     }
   }, [allEquipment, isCacheValid, setLoadingState]);
+
+  const loadAllExerciseMuscleData = useCallback(
+    async (): Promise<Map<string, string[]>> => {
+      if (exerciseMuscleData.size > 0 && isCacheValid('exerciseMuscleData')) {
+        return exerciseMuscleData;
+      }
+
+      try {
+        setLoadingState('exerciseMuscleData', true);
+        const exerciseMuscleDataRaw = await getExerciseMuscle();
+        
+        // Convert to Map format
+        const muscleMap = new Map<string, string[]>();
+        exerciseMuscleDataRaw.forEach((item: ExerciseMuscle) => {
+          const existing = muscleMap.get(item.exercise_name) || [];
+          existing.push(item.muscle_name);
+          muscleMap.set(item.exercise_name, existing);
+        });
+        
+        setExerciseMuscleData(muscleMap);
+        setCacheTimestamps(prev => new Map(prev).set('exerciseMuscleData', Date.now()));
+        return muscleMap;
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'Failed to load exercise muscle data';
+        setError(errorMessage);
+        return new Map();
+      } finally {
+        setLoadingState('exerciseMuscleData', false);
+      }
+    },
+    [exerciseMuscleData, isCacheValid, setLoadingState]
+  );
+
+  const loadAllExerciseEquipmentData = useCallback(
+    async (): Promise<Map<string, ExerciseEquipment[]>> => {
+      if (exerciseEquipmentData.size > 0 && isCacheValid('exerciseEquipmentData')) {
+        return exerciseEquipmentData;
+      }
+
+      try {
+        setLoadingState('exerciseEquipmentData', true);
+        const exerciseEquipmentDataRaw = await getExerciseEquipmentBulk();
+        
+        // Convert to Map format
+        const equipmentMap = new Map<string, ExerciseEquipment[]>();
+        exerciseEquipmentDataRaw.forEach((item: ExerciseEquipment) => {
+          const existing = equipmentMap.get(item.exercise_name) || [];
+          existing.push(item);
+          equipmentMap.set(item.exercise_name, existing);
+        });
+        
+        setExerciseEquipmentData(equipmentMap);
+        setCacheTimestamps(prev => new Map(prev).set('exerciseEquipmentData', Date.now()));
+        return equipmentMap;
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'Failed to load exercise equipment data';
+        setError(errorMessage);
+        return new Map();
+      } finally {
+        setLoadingState('exerciseEquipmentData', false);
+      }
+    },
+    [exerciseEquipmentData, isCacheValid, setLoadingState]
+  );
 
   // User-specific data loading functions
   const loadUserEquipment = useCallback(async (): Promise<UserEquipment[]> => {
@@ -1247,6 +1314,8 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
       loadAllExercises,
       loadAllMuscles,
       loadAllEquipment,
+      loadAllExerciseMuscleData,
+      loadAllExerciseEquipmentData,
       loadProgramPreferences,
       loadProgrammedWorkouts,
       loadUserEquipment,
@@ -1332,6 +1401,8 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
       loadAllExercises,
       loadAllMuscles,
       loadAllEquipment,
+      loadAllExerciseMuscleData,
+      loadAllExerciseEquipmentData,
       loadUserEquipment,
       loadUserWeakMuscles,
       loadUserExercisePreferences,
@@ -1401,6 +1472,8 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
       loadAllExercises,
       loadAllMuscles,
       loadAllEquipment,
+      loadAllExerciseMuscleData,
+      loadAllExerciseEquipmentData,
       loadUserEquipment,
       loadUserWeakMuscles,
       loadUserExercisePreferences,

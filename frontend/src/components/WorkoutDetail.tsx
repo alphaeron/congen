@@ -20,11 +20,6 @@ import {
   DialogContent,
   DialogActions,
   Autocomplete,
-  TextField,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
 } from '@mui/material';
 import { useForm } from '@tanstack/react-form';
 
@@ -47,7 +42,7 @@ import { RichTextEditor } from './RichTextEditor';
 import { SetSchemeEditor } from './SetSchemeEditor';
 import { SetSchemeForm } from './SetSchemeForm';
 import { SunburstChart } from './SunburstChart';
-import { GameCard, GameText, GAME_CLASSES } from './GameTheme';
+import { GameCard, GameText, GameTextField, GameFormControl, GameInputLabel, GameSelect, GameMenuItem, GAME_CLASSES } from './GameTheme';
 import type {
   Exercise,
   ProgramWithWorkouts,
@@ -723,8 +718,8 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
                     position: 'sticky',
                     top: 0,
                     zIndex: 999,
-                    backgroundColor: theme.palette.background.paper,
-                    borderBottom: 'none',
+                    backgroundColor: 'rgba(0, 188, 212, 0.1)',
+                    borderBottom: '2px solid rgba(0, 188, 212, 0.3)',
                   }}
                 >
                   {table.getHeaderGroups().map(headerGroup => (
@@ -736,9 +731,9 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
                             padding: '12px 8px',
                             textAlign: 'left',
                             fontWeight: 'bold',
-                            borderBottom: `1px solid ${theme.palette.divider}`,
-                            backgroundColor: theme.palette.background.paper,
-                            color: theme.palette.text.primary,
+                            borderBottom: '1px solid rgba(0, 188, 212, 0.3)',
+                            backgroundColor: 'rgba(0, 188, 212, 0.1)',
+                            color: '#00bcd4',
                             width: `${(header.getSize() / 860) * 100}%`,
                             minWidth: `${((header.column.columnDef.minSize || 50) / 860) * 100}%`,
                           }}
@@ -758,11 +753,10 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
                       style={{
                         backgroundColor:
                           row.original.type === 'stage'
-                            ? theme.palette.mode === 'dark'
-                              ? theme.palette.grey[800]
-                              : theme.palette.grey[100]
-                            : theme.palette.background.paper,
-                        borderBottom: `1px solid ${theme.palette.divider}`,
+                            ? 'rgba(0, 188, 212, 0.15)'
+                            : 'transparent',
+                        borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+                        color: '#ffffff',
                       }}
                     >
                       {row.original.type === 'stage' ? (
@@ -773,12 +767,9 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
                             padding: '12px 16px',
                             textAlign: 'left',
                             fontWeight: 'bold',
-                            color: theme.palette.primary.main,
-                            backgroundColor:
-                              theme.palette.mode === 'dark'
-                                ? theme.palette.grey[800]
-                                : theme.palette.grey[100],
-                            borderBottom: `1px solid ${theme.palette.divider}`,
+                            color: '#00bcd4',
+                            backgroundColor: 'rgba(0, 188, 212, 0.15)',
+                            borderBottom: '1px solid rgba(0, 188, 212, 0.3)',
                             cursor: 'pointer',
                           }}
                           onClick={() => row.original.stageId && toggleStage(row.original.stageId)}
@@ -795,7 +786,7 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
                                   toggleStage(row.original.stageId);
                                 }
                               }}
-                              sx={{ color: theme.palette.primary.main }}
+                              sx={{ color: '#00bcd4' }}
                             >
                               {row.original.stageId && collapsedStages.has(row.original.stageId) ? (
                                 <ExpandMoreIcon />
@@ -932,13 +923,14 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             {/* Exercise Selection */}
             <Autocomplete
+              id="workout-exercise-autocomplete"
               options={availableExercises}
               value={selectedExercise}
               onChange={(_, newValue) => setSelectedExercise(newValue)}
               getOptionLabel={option => option.name}
               loading={loadingExercises}
               renderInput={params => (
-                <TextField
+                <GameTextField
                   {...params}
                   label="Exercise"
                   placeholder="Search for an exercise..."
@@ -959,20 +951,20 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
             />
 
             {/* Stage Selection */}
-            <FormControl fullWidth required>
-              <InputLabel>Stage</InputLabel>
-              <Select
+            <GameFormControl fullWidth required>
+              <GameInputLabel>Stage</GameInputLabel>
+              <GameSelect
                 value={selectedStageId}
                 onChange={e => setSelectedStageId(e.target.value as number)}
                 label="Stage"
               >
                 {workoutData?.stages.map(stageData => (
-                  <MenuItem key={stageData.stage.id} value={stageData.stage.id}>
+                  <GameMenuItem key={stageData.stage.id} value={stageData.stage.id}>
                     {stageData.stage.name}
-                  </MenuItem>
+                  </GameMenuItem>
                 ))}
-              </Select>
-            </FormControl>
+              </GameSelect>
+            </GameFormControl>
 
             {/* Set Scheme Details */}
             <SetSchemeForm

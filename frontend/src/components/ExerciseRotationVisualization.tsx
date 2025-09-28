@@ -6,7 +6,6 @@ import {
   CardContent,
   Chip,
   Grid,
-  Paper,
   Alert,
   Slide,
   Tooltip,
@@ -18,7 +17,7 @@ import { useNavigate, useSearchParams } from 'react-router';
 
 import { ExerciseCategoryDetails } from './ExerciseCategoryDetails';
 import { ExerciseName } from './ExerciseName';
-import { GameText } from './GameTheme';
+import { GameText, GameCard, GameSubCard } from './GameTheme';
 import { ExercisePoolPieChart } from './ExercisePoolPieChart';
 import { ExercisePoolSunburstChart } from './ExercisePoolSunburstChart';
 import { LoadingSpinner } from './LoadingSpinner';
@@ -222,7 +221,7 @@ export const ExerciseRotationVisualization: React.FC = () => {
                       : { xs: 12 }
                   }
                 >
-                  <Card>
+                  <GameCard>
                     <CardContent>
                       <GameText
                         variant="h6"
@@ -233,7 +232,7 @@ export const ExerciseRotationVisualization: React.FC = () => {
                       </GameText>
                       <Grid container spacing={2}>
                         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                          <Paper
+                          <GameSubCard
                             sx={{
                               p: 2,
                               textAlign: 'center',
@@ -272,7 +271,7 @@ export const ExerciseRotationVisualization: React.FC = () => {
                                     }
                                     size="small"
                                     variant="outlined"
-                                    color="error"
+                                    color="info"
                                     clickable
                                     onClick={e => {
                                       e.stopPropagation();
@@ -288,10 +287,10 @@ export const ExerciseRotationVisualization: React.FC = () => {
                                 />
                               )}
                             </Box>
-                          </Paper>
+                          </GameSubCard>
                         </Grid>
                         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                          <Paper
+                          <GameSubCard
                             sx={{
                               p: 2,
                               textAlign: 'center',
@@ -346,10 +345,10 @@ export const ExerciseRotationVisualization: React.FC = () => {
                                 />
                               )}
                             </Box>
-                          </Paper>
+                          </GameSubCard>
                         </Grid>
                         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                          <Paper
+                          <GameSubCard
                             sx={{
                               p: 2,
                               textAlign: 'center',
@@ -392,10 +391,10 @@ export const ExerciseRotationVisualization: React.FC = () => {
                                 />
                               )}
                             </Box>
-                          </Paper>
+                          </GameSubCard>
                         </Grid>
                         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                          <Paper
+                          <GameSubCard
                             sx={{
                               p: 2,
                               textAlign: 'center',
@@ -445,18 +444,18 @@ export const ExerciseRotationVisualization: React.FC = () => {
                                 />
                               )}
                             </Box>
-                          </Paper>
+                          </GameSubCard>
                         </Grid>
                       </Grid>
                     </CardContent>
-                  </Card>
+                  </GameCard>
                 </Grid>
               )}
 
               {/* Recent Exercises - Right side */}
               {exercisePoolAnalysis && exercisePoolAnalysis.previouslyUsedExercises.length > 0 && (
                 <Grid size={{ xs: 12, md: 6 }}>
-                  <Card
+                  <GameCard
                     sx={{
                       cursor: 'pointer',
                       transition: 'all 0.2s ease-in-out',
@@ -491,7 +490,7 @@ export const ExerciseRotationVisualization: React.FC = () => {
                               key={exerciseName}
                               label={<ExerciseName exerciseName={exerciseName} variant="caption" />}
                               variant="outlined"
-                              color="warning"
+                              color="info"
                               size="small"
                               clickable
                               onClick={e => {
@@ -509,7 +508,7 @@ export const ExerciseRotationVisualization: React.FC = () => {
                         )}
                       </Box>
                     </CardContent>
-                  </Card>
+                  </GameCard>
                 </Grid>
               )}
             </Grid>

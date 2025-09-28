@@ -500,9 +500,7 @@ function AppContent(): React.ReactElement {
               path="/exercises"
               element={
                 <ProtectedRoute>
-                  <Container maxWidth="xl" sx={{ py: 2 }}>
-                    <ExerciseOverviewPage />
-                  </Container>
+                  <ExerciseOverviewPage />
                 </ProtectedRoute>
               }
             />

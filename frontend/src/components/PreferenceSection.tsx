@@ -1,4 +1,4 @@
-import { Box, Divider } from '@mui/material';
+import { Box, Divider, CardContent } from '@mui/material';
 import React from 'react';
 
 import { GameText, GameCard, GameButton, GAME_CLASSES } from './GameTheme';

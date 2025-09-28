@@ -1,5 +1,5 @@
 import { default as RadarIcon } from '@mui/icons-material/Radar';
-import { Box, useTheme, Tooltip } from '@mui/material';
+import { Box, useTheme, Tooltip, CardContent } from '@mui/material';
 import { ResponsiveRadar } from '@nivo/radar';
 import React, { useMemo } from 'react';
 

@@ -1,5 +1,5 @@
 import { Search as SearchIcon } from '@mui/icons-material';
-import { Box, Grid, TextField, InputAdornment } from '@mui/material';
+import { Box, Grid, InputAdornment, CardContent } from '@mui/material';
 import {
   createColumnHelper,
   getCoreRowModel,
@@ -14,7 +14,7 @@ import { ExerciseName } from './ExerciseName';
 import { LineChart } from './LineChart';
 import { LoadingSpinner } from './LoadingSpinner';
 import { PieChart } from './PieChart';
-import { GameText, GameCard, GAME_CLASSES } from './GameTheme';
+import { GameText, GameCard, GameTextField, GAME_CLASSES } from './GameTheme';
 import type { Exercise, UserOneRepMax } from '../api/types';
 import { useData } from '../contexts/DataContext';
 
@@ -251,7 +251,7 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = () => {
             <GameText variant="body2" textVariant="secondary" className={GAME_CLASSES.marginBottom2}>
               Track your strength progress and personal records • Click to view details
             </GameText>
-            <TextField
+            <GameTextField
               fullWidth
               size="small"
               placeholder="Search exercises..."
@@ -264,15 +264,7 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = () => {
                   </InputAdornment>
                 ),
               }}
-              sx={{
-                mb: 2,
-                '& .MuiOutlinedInput-root': {
-                  backgroundColor: 'background.paper',
-                  '&:hover': {
-                    backgroundColor: 'action.hover',
-                  },
-                },
-              }}
+              sx={{ mb: 2 }}
             />
             <Box
               ref={tableParentRef}
@@ -280,10 +272,10 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = () => {
                 maxHeight: 400,
                 overflow: 'auto',
                 height: '400px',
-                borderRadius: 1,
-                border: 1,
-                borderColor: 'divider',
-                backgroundColor: 'background.paper',
+                borderRadius: 2,
+                border: '1px solid rgba(0, 188, 212, 0.3)',
+                backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                backdropFilter: 'blur(20px)',
               }}
             >
               <table
@@ -302,10 +294,10 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = () => {
                           style={{
                             textAlign: 'left',
                             padding: '12px 16px',
-                            borderBottom: '2px solid #e0e0e0',
+                            borderBottom: '2px solid rgba(0, 188, 212, 0.3)',
                             fontWeight: '600',
-                            backgroundColor: '#f8f9fa',
-                            color: '#495057',
+                            backgroundColor: 'rgba(0, 188, 212, 0.1)',
+                            color: '#00bcd4',
                             fontSize: '0.875rem',
                             textTransform: 'uppercase',
                             letterSpacing: '0.5px',
@@ -347,12 +339,13 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = () => {
                             key={cell.id}
                             style={{
                               padding: '12px 16px',
-                              borderBottom: '1px solid #f0f0f0',
+                              borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
                               fontSize: '0.875rem',
+                              color: '#ffffff',
                               transition: 'background-color 0.2s ease',
                             }}
                             onMouseEnter={e => {
-                              e.currentTarget.style.backgroundColor = '#f8f9fa';
+                              e.currentTarget.style.backgroundColor = 'rgba(0, 188, 212, 0.15)';
                             }}
                             onMouseLeave={e => {
                               e.currentTarget.style.backgroundColor = 'transparent';
