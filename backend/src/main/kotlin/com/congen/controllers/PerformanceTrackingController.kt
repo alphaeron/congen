@@ -4,6 +4,7 @@ import com.congen.exceptions.DatabaseException
 import com.congen.exceptions.NoResultsFoundException
 import com.congen.exceptions.ValidationException
 import com.congen.model.TestProtocol
+import com.congen.model.TestStatus
 import com.congen.model.UserPerformanceMetrics
 import com.congen.model.UserPerformanceScores
 import com.congen.model.UserTestResult
@@ -105,27 +106,44 @@ class PerformanceTrackingController(
         ]
     )
     fun submitPerformanceMetrics(
-        @RequestBody metrics: UserPerformanceMetrics
+        @RequestParam("vo2_max") vo2Max: Double?,
+        @RequestParam("strain") strain: Double?,
+        @RequestParam("recovery") recovery: Double?,
+        @RequestParam("hrv") hrv: Double?,
+        @RequestParam("sleep_score") sleepScore: Double?,
+        @RequestParam("rem_sleep_minutes") remSleepMinutes: Double?,
+        @RequestParam("deep_sleep_minutes") deepSleepMinutes: Double?,
+        @RequestParam("subjective_tiredness") subjectiveTiredness: Int?
     ): Mono<ResponseEntity<UserPerformanceScores>> {
         return keycloakUtil.getCurrentUserId().zipWith(keycloakUtil.getCurrentUserRoles()) { currentUserId, roles ->
             Pair(currentUserId, roles)
         }.flatMap { (currentUserId, roles) ->
             val isAdminOrService = roles.contains("admin") || roles.contains("service")
-            if (isAdminOrService || currentUserId == metrics.keycloakId) {
-                val consentUserIdMono =
-                    if (isAdminOrService) {
-                        Mono.just(metrics.keycloakId)
-                    } else {
-                        Mono.just(currentUserId)
-                    }
-                consentUserIdMono.flatMap { ownerId ->
-                    gdprComplianceService.withUserConsent(ownerId) {
-                        performanceTrackingService.submitPerformanceMetrics(metrics)
-                            .map { ResponseEntity.ok(it) }
-                    }
+            val consentUserIdMono =
+                if (isAdminOrService) {
+                    Mono.just(currentUserId)
+                } else {
+                    Mono.just(currentUserId)
                 }
-            } else {
-                Mono.error(AccessDeniedException("Access denied: User can only submit metrics for themselves"))
+            consentUserIdMono.flatMap { ownerId ->
+                gdprComplianceService.withUserConsent(ownerId) {
+                    // Create the full metrics object with the authenticated user's keycloak_id
+                    val fullMetrics = UserPerformanceMetrics(
+                        keycloakId = ownerId,
+                        vo2Max = vo2Max,
+                        strain = strain,
+                        recovery = recovery,
+                        hrv = hrv,
+                        sleepScore = sleepScore,
+                        remSleepMinutes = remSleepMinutes,
+                        deepSleepMinutes = deepSleepMinutes,
+                        subjectiveTiredness = subjectiveTiredness,
+                        createdAt = Instant.now(),
+                        updatedAt = Instant.now()
+                    )
+                    performanceTrackingService.submitPerformanceMetrics(fullMetrics)
+                        .map { ResponseEntity.ok(it) }
+                }
             }
         }
     }
@@ -264,33 +282,37 @@ class PerformanceTrackingController(
         ]
     )
     fun submitWeeklyTest(
-        @RequestBody testResults: List<UserTestResult>
+        @RequestParam("week_start_timestamp") weekStartTimestamp: Instant,
+        @RequestParam("test_name") testName: String,
+        @RequestParam("status") status: TestStatus,
+        @RequestParam("result_value") resultValue: Double?
     ): Mono<ResponseEntity<List<UserTestResult>>> {
-        if (testResults.isEmpty()) {
-            return Mono.just(ResponseEntity.badRequest().build())
-        }
-
-        val keycloakId = testResults.first().keycloakId
-
         return keycloakUtil.getCurrentUserId().zipWith(keycloakUtil.getCurrentUserRoles()) { currentUserId, roles ->
             Pair(currentUserId, roles)
         }.flatMap { (currentUserId, roles) ->
             val isAdminOrService = roles.contains("admin") || roles.contains("service")
-            if (isAdminOrService || currentUserId == keycloakId) {
-                val consentUserIdMono =
-                    if (isAdminOrService) {
-                        Mono.just(keycloakId)
-                    } else {
-                        Mono.just(currentUserId)
-                    }
-                consentUserIdMono.flatMap { ownerId ->
-                    gdprComplianceService.withUserConsent(ownerId) {
-                        performanceTrackingService.submitWeeklyTest(testResults)
-                            .map { ResponseEntity.ok(it) }
-                    }
+            val consentUserIdMono =
+                if (isAdminOrService) {
+                    Mono.just(currentUserId)
+                } else {
+                    Mono.just(currentUserId)
                 }
-            } else {
-                Mono.error(AccessDeniedException("Access denied: User can only submit test results for themselves"))
+            consentUserIdMono.flatMap { ownerId ->
+                gdprComplianceService.withUserConsent(ownerId) {
+                    // Create the test result with the authenticated user's keycloak_id
+                    val testResult = UserTestResult(
+                        id = null,
+                        keycloakId = ownerId,
+                        weekStartTimestamp = weekStartTimestamp,
+                        testName = testName,
+                        status = status,
+                        resultValue = resultValue,
+                        createdAt = Instant.now(),
+                        updatedAt = Instant.now()
+                    )
+                    performanceTrackingService.submitWeeklyTest(listOf(testResult))
+                        .map { ResponseEntity.ok(it) }
+                }
             }
         }
     }

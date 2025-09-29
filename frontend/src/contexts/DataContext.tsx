@@ -27,6 +27,7 @@ import {
   getCurrentPerformanceScores,
   getCurrentPerformanceMetrics,
   getWeeklyTestsInRange,
+  submitPerformanceMetrics as submitPerformanceMetricsAPI,
   submitWeeklyTest as submitWeeklyTestAPI,
   getWilksScore,
   getTestProtocols,
@@ -151,8 +152,11 @@ interface DataContextType {
     tests: UserTestResult[];
   }>;
   // Performance tracking mutation functions
+  submitPerformanceMetrics: (
+    metrics: Omit<UserPerformanceMetrics, 'keycloak_id' | 'created_at' | 'updated_at'>
+  ) => Promise<UserPerformanceScores>;
   submitWeeklyTest: (
-    testResults: Omit<UserTestResult, 'id' | 'keycloak_id' | 'created_at' | 'updated_at'>[]
+    testResult: Omit<UserTestResult, 'id' | 'keycloak_id' | 'created_at' | 'updated_at'>
   ) => Promise<UserTestResult[]>;
   // GDPR functions
   exportUserData: () => Promise<UserDataExport>;
@@ -920,8 +924,20 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
   const getCurrentWeekTest = useCallback((): UserTestResult[] | null => {
     if (!weeklyTests || weeklyTests.length === 0) return null;
 
-    // Get the most recent weekly test results (assuming they're sorted by date)
-    return weeklyTests;
+    // Calculate current week start (Monday)
+    const now = new Date();
+    const dayOfWeek = now.getDay();
+    const daysToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek; // Sunday = 0, Monday = 1
+    const currentWeekStart = new Date(now);
+    currentWeekStart.setDate(now.getDate() + daysToMonday);
+    currentWeekStart.setHours(0, 0, 0, 0);
+
+    // Filter tests for the current week
+    return weeklyTests.filter(test => {
+      const testWeekStart = new Date(test.week_start_timestamp);
+      testWeekStart.setHours(0, 0, 0, 0);
+      return testWeekStart.getTime() === currentWeekStart.getTime();
+    });
   }, [weeklyTests]);
 
   const getPerformanceDataForDateRange = useCallback(
@@ -962,16 +978,40 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
   );
 
   // Performance tracking mutation functions
+  const submitPerformanceMetrics = useCallback(
+    async (
+      metrics: Omit<UserPerformanceMetrics, 'keycloak_id' | 'created_at' | 'updated_at'>
+    ): Promise<UserPerformanceScores> => {
+      if (!user?.keycloak_id) {
+        throw new Error('User not authenticated');
+      }
+
+      try {
+        const result = await submitPerformanceMetricsAPI(metrics);
+
+        // Refresh performance data after successful submission
+        await refreshPerformanceData();
+
+        return result;
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'Failed to submit performance metrics';
+        setError(errorMessage);
+        throw err;
+      }
+    },
+    [user?.keycloak_id, refreshPerformanceData]
+  );
+
   const submitWeeklyTest = useCallback(
     async (
-      testResults: Omit<UserTestResult, 'id' | 'keycloak_id' | 'created_at' | 'updated_at'>[]
+      testResult: Omit<UserTestResult, 'id' | 'keycloak_id' | 'created_at' | 'updated_at'>
     ): Promise<UserTestResult[]> => {
       if (!user?.keycloak_id) {
         throw new Error('User not authenticated');
       }
 
       try {
-        const result = await submitWeeklyTestAPI(testResults);
+        const result = await submitWeeklyTestAPI(testResult);
 
         // Refresh performance data after successful submission
         await refreshPerformanceData();
@@ -1421,6 +1461,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
       refreshPerformanceData,
       getCurrentWeekTest,
       getPerformanceDataForDateRange,
+      submitPerformanceMetrics,
       submitWeeklyTest,
       updateUserConsent,
       exportUserData,
@@ -1492,6 +1533,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
       refreshPerformanceData,
       getCurrentWeekTest,
       getPerformanceDataForDateRange,
+      submitPerformanceMetrics,
       submitWeeklyTest,
       updateUserConsent,
       exportUserData,

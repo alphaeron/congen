@@ -35,7 +35,30 @@ export function replaceUnderscoresWithSpaces(str: string): string {
 }
 
 /**
- * Safely formats a Date object to a readable format in the local timezone.
+ * Get the browser's preferred locale for date formatting.
+ * 
+ * @returns The browser's locale string
+ */
+function getBrowserLocale(): string {
+  // Modern browsers support navigator.languages, which provides an array of preferred languages.
+  if (navigator.languages && navigator.languages.length > 0) {
+    return navigator.languages[0]; // Returns the most preferred language
+  } 
+  // Fallback for older browsers or if navigator.languages is not available.
+  // navigator.language is generally supported by most browsers.
+  else if (navigator.language) {
+    return navigator.language;
+  } 
+  // Older Internet Explorer versions might use navigator.userLanguage.
+  else if ((navigator as any).userLanguage) {
+    return (navigator as any).userLanguage;
+  }
+  // Default to 'en' if no language information is found.
+  return 'en'; 
+}
+
+/**
+ * Safely formats a Date object to a readable format in the browser's timezone.
  *
  * @param dateInput The date to format (can be null, undefined, or Date object)
  * @param options Optional formatting options for toLocaleDateString
@@ -53,8 +76,22 @@ export function formatDate(
     return 'N/A';
   }
 
-  // Display the date in the local timezone
-  return dateInput.toLocaleDateString('en-US', options);
+  // Display the date in the browser's timezone using the browser's locale
+  return dateInput.toLocaleDateString(getBrowserLocale(), options);
+}
+
+/**
+ * Get a date in YYYY-MM-DD format using the browser's timezone.
+ * This is for display purposes only - backend should always receive UTC.
+ *
+ * @param dateInput The date to format
+ * @returns Date string in YYYY-MM-DD format in browser's timezone
+ */
+export function getDateInBrowserTimezone(dateInput: Date): string {
+  const year = dateInput.getFullYear();
+  const month = String(dateInput.getMonth() + 1).padStart(2, '0');
+  const day = String(dateInput.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 }
 
 /**

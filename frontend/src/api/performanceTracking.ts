@@ -13,10 +13,37 @@ export const submitPerformanceMetrics = async (
   metrics: Omit<UserPerformanceMetrics, 'keycloak_id' | 'created_at' | 'updated_at'>,
   options: { forceRefresh?: boolean } = {}
 ): Promise<UserPerformanceScores> => {
+  const params = new URLSearchParams();
+  
+  // Add only non-null/undefined values as query parameters
+  if (metrics.vo2_max !== undefined && metrics.vo2_max !== null) {
+    params.append('vo2_max', metrics.vo2_max.toString());
+  }
+  if (metrics.strain !== undefined && metrics.strain !== null) {
+    params.append('strain', metrics.strain.toString());
+  }
+  if (metrics.recovery !== undefined && metrics.recovery !== null) {
+    params.append('recovery', metrics.recovery.toString());
+  }
+  if (metrics.hrv !== undefined && metrics.hrv !== null) {
+    params.append('hrv', metrics.hrv.toString());
+  }
+  if (metrics.sleep_score !== undefined && metrics.sleep_score !== null) {
+    params.append('sleep_score', metrics.sleep_score.toString());
+  }
+  if (metrics.rem_sleep_minutes !== undefined && metrics.rem_sleep_minutes !== null) {
+    params.append('rem_sleep_minutes', metrics.rem_sleep_minutes.toString());
+  }
+  if (metrics.deep_sleep_minutes !== undefined && metrics.deep_sleep_minutes !== null) {
+    params.append('deep_sleep_minutes', metrics.deep_sleep_minutes.toString());
+  }
+  if (metrics.subjective_tiredness !== undefined && metrics.subjective_tiredness !== null) {
+    params.append('subjective_tiredness', metrics.subjective_tiredness.toString());
+  }
+
   return REQUEST<UserPerformanceScores>({
     method: 'PUT',
-    url: '/performance/metrics',
-    data: metrics,
+    url: `/performance/metrics?${params.toString()}`,
     ...options,
   });
 };
@@ -51,13 +78,21 @@ export const getCurrentPerformanceMetrics = async (
  * Submit weekly test results for the current user.
  */
 export const submitWeeklyTest = async (
-  testResults: Omit<UserTestResult, 'id' | 'keycloak_id' | 'created_at' | 'updated_at'>[],
+  testResult: Omit<UserTestResult, 'id' | 'keycloak_id' | 'created_at' | 'updated_at'>,
   options: { forceRefresh?: boolean } = {}
 ): Promise<UserTestResult[]> => {
+  const params = new URLSearchParams();
+  
+  params.append('week_start_timestamp', testResult.week_start_timestamp.toISOString());
+  params.append('test_name', testResult.test_name);
+  params.append('status', testResult.status);
+  if (testResult.result_value !== undefined && testResult.result_value !== null) {
+    params.append('result_value', testResult.result_value.toString());
+  }
+
   return REQUEST<UserTestResult[]>({
     method: 'PUT',
-    url: '/performance/weekly_test',
-    data: testResults,
+    url: `/performance/weekly_test?${params.toString()}`,
     ...options,
   });
 };

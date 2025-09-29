@@ -3,6 +3,7 @@ import { ResponsiveLine } from '@nivo/line';
 import React, { useMemo } from 'react';
 
 import type { UserPerformanceMetrics } from '../api/types';
+import { getDateInBrowserTimezone } from '../common/utils';
 import { createCongenNivoTheme, congenColorSchemes } from '../theme/nivoTheme';
 
 interface MetricTrendChartProps {
@@ -40,6 +41,8 @@ export const MetricTrendChart: React.FC<MetricTrendChartProps> = ({
   // Get metric value from UserPerformanceMetrics object
   const getMetricValue = (metrics: UserPerformanceMetrics, key: string): number | null => {
     switch (key) {
+      case 'vo2_max':
+        return metrics.vo2_max || null;
       case 'strain':
         return metrics.strain || null;
       case 'recovery':
@@ -77,7 +80,7 @@ export const MetricTrendChart: React.FC<MetricTrendChartProps> = ({
         if (value === null || value === undefined) return null;
 
         return {
-          x: new Date(metrics.created_at).toISOString().split('T')[0], // YYYY-MM-DD format
+          x: getDateInBrowserTimezone(new Date(metrics.created_at)), // YYYY-MM-DD format in browser's timezone
           y: Math.round(value * 10) / 10, // Round to 1 decimal place
         };
       })
@@ -118,10 +121,10 @@ export const MetricTrendChart: React.FC<MetricTrendChartProps> = ({
   }
 
   return (
-    <Box sx={{ height, width: '100%' }}>
+    <Box sx={{ height, width: '100%', overflow: 'visible' }}>
       <ResponsiveLine
         data={chartData}
-        margin={{ top: 20, right: 20, bottom: 50, left: 60 }}
+        margin={{ top: 20, right: 40, bottom: 50, left: 60 }}
         xScale={{ type: 'time', format: '%Y-%m-%d', useUTC: false }}
         xFormat="time:%Y-%m-%d"
         yScale={{ type: 'linear', min: 'auto', max: 'auto' }}

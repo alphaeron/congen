@@ -118,18 +118,18 @@ class PerformanceTrackingService(
 
         val now = Instant.now()
 
-        // Create default metrics with minimal values
+        // Create default metrics with null values (no defaults to avoid confusion)
         val defaultMetrics =
             UserPerformanceMetrics(
                 keycloakId = keycloakId,
-                vo2Max = 30.0,
-                strain = 0.0,
-                recovery = 50.0,
-                hrv = 30.0,
-                sleepScore = 50.0,
-                remSleepMinutes = 90.0,
-                deepSleepMinutes = 60.0,
-                subjectiveTiredness = 3,
+                vo2Max = null,
+                strain = null,
+                recovery = null,
+                hrv = null,
+                sleepScore = null,
+                remSleepMinutes = null,
+                deepSleepMinutes = null,
+                subjectiveTiredness = null,
                 createdAt = now,
                 updatedAt = now
             )
@@ -205,14 +205,14 @@ class PerformanceTrackingService(
         val defaultMetrics =
             UserPerformanceMetrics(
                 keycloakId = keycloakId,
-                vo2Max = 30.0,
-                strain = 0.0,
-                recovery = 50.0,
-                hrv = 30.0,
-                sleepScore = 50.0,
-                remSleepMinutes = 90.0,
-                deepSleepMinutes = 60.0,
-                subjectiveTiredness = 3,
+                vo2Max = null,
+                strain = null,
+                recovery = null,
+                hrv = null,
+                sleepScore = null,
+                remSleepMinutes = null,
+                deepSleepMinutes = null,
+                subjectiveTiredness = null,
                 createdAt = now,
                 updatedAt = now
             )

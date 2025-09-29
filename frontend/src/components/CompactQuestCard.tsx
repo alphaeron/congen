@@ -11,18 +11,16 @@ import {
   Grid,
   Stack,
   Alert,
-  LinearProgress,
 } from '@mui/material';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
 import { useSnackbar } from 'notistack';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 import { CustomSvgIcon } from './CustomSvgIcon';
 import { GameCard, GameSubCard, GameText, GameTextSecondary, GAME_CLASSES } from './GameTheme';
 import { MetricTrendChart } from './MetricTrendChart';
-import { submitPerformanceMetrics, getTestProtocols } from '../api/performanceTracking';
 import type { UserPerformanceMetrics, UserTestResult, TestProtocol } from '../api/types';
-import { formatDate } from '../common/utils';
+import { formatDate, getDateInBrowserTimezone } from '../common/utils';
 import { useData } from '../contexts/DataContext';
 import RecoveryIcon from '../resources/recovery-icon.svg';
 import DexterityIcon from '../resources/dexterity-icon.svg';
@@ -126,6 +124,45 @@ const dailyMetricsConfig = [
     unit: ' ml/kg/min',
     description: 'Maximum oxygen consumption during exercise',
   },
+  {
+    key: 'rem_sleep_minutes',
+    label: 'REM Sleep',
+    icon: (
+      <CustomSvgIcon
+        src={RecoveryIcon}
+        alt="REM Sleep"
+        className={`${GAME_CLASSES.fontSize32} ${GAME_CLASSES.colorCyan}`}
+      />
+    ),
+    unit: ' min',
+    description: 'REM sleep duration in minutes',
+  },
+  {
+    key: 'deep_sleep_minutes',
+    label: 'Deep Sleep',
+    icon: (
+      <CustomSvgIcon
+        src={RecoveryIcon}
+        alt="Deep Sleep"
+        className={`${GAME_CLASSES.fontSize32} ${GAME_CLASSES.colorCyan}`}
+      />
+    ),
+    unit: ' min',
+    description: 'Deep sleep duration in minutes',
+  },
+  {
+    key: 'subjective_tiredness',
+    label: 'Tiredness',
+    icon: (
+      <CustomSvgIcon
+        src={HealthIcon}
+        alt="Tiredness"
+        className={`${GAME_CLASSES.fontSize32} ${GAME_CLASSES.colorCyan}`}
+      />
+    ),
+    unit: '/5',
+    description: 'Subjective tiredness rating (1-5 scale)',
+  },
 ];
 
 export const CompactQuestCard: React.FC<CompactQuestCardProps> = ({
@@ -135,10 +172,12 @@ export const CompactQuestCard: React.FC<CompactQuestCardProps> = ({
   onTestUpdate,
 }) => {
   const {
-    refreshPerformanceData,
+    submitPerformanceMetrics: submitPerformanceMetricsData,
     submitWeeklyTest: submitWeeklyTestData,
     getCurrentWeekTest,
     loadPerformanceMetricsInRange,
+    loadTestProtocols,
+    testProtocols,
   } = useData();
   const { enqueueSnackbar } = useSnackbar();
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -164,24 +203,22 @@ export const CompactQuestCard: React.FC<CompactQuestCardProps> = ({
   const [editingMetric, setEditingMetric] = useState<string | null>(null);
   const [editingProtocol, setEditingProtocol] = useState<TestProtocol | null>(null);
 
-  // Fetch test protocols from backend
-  const { data: testProtocols = [], isLoading: protocolsLoading } = useQuery({
-    queryKey: ['testProtocols'],
-    queryFn: () => getTestProtocols(),
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    enabled: type === 'weekly',
-  });
+  // Load test protocols for weekly quests
+  useEffect(() => {
+    if (type === 'weekly' && testProtocols.length === 0) {
+      loadTestProtocols();
+    }
+  }, [type, testProtocols.length, loadTestProtocols]);
 
   // Get current week test results
   const currentWeekTests = type === 'weekly' ? getCurrentWeekTest() || weeklyTests : [];
 
-  // Daily metrics mutation
+  // Daily metrics mutation - uses DataContext function
   const submitMetricsMutation = useMutation({
     mutationFn: (
       metrics: Omit<UserPerformanceMetrics, 'keycloak_id' | 'created_at' | 'updated_at'>
-    ) => submitPerformanceMetrics(metrics),
-    onSuccess: async () => {
-      await refreshPerformanceData();
+    ) => submitPerformanceMetricsData(metrics),
+    onSuccess: () => {
       setDialogOpen(false);
       enqueueSnackbar('Daily metrics updated successfully!', { variant: 'success' });
     },
@@ -190,15 +227,15 @@ export const CompactQuestCard: React.FC<CompactQuestCardProps> = ({
     },
   });
 
-  // Weekly test mutation
+  // Weekly test mutation - uses DataContext function
   const submitTestMutation = useMutation({
     mutationFn: (
-      testResults: Omit<UserTestResult, 'id' | 'keycloak_id' | 'created_at' | 'updated_at'>[]
-    ) => submitWeeklyTestData(testResults),
-    onSuccess: async () => {
-      await refreshPerformanceData();
+      testResult: Omit<UserTestResult, 'id' | 'keycloak_id' | 'created_at' | 'updated_at'>
+    ) => submitWeeklyTestData(testResult),
+    onSuccess: () => {
       onTestUpdate?.();
       setDialogOpen(false);
+      enqueueSnackbar('Weekly test updated successfully!', { variant: 'success' });
     },
     onError: () => {
       enqueueSnackbar('Failed to submit weekly test', { variant: 'error' });
@@ -222,22 +259,7 @@ export const CompactQuestCard: React.FC<CompactQuestCardProps> = ({
       result_value: Number(testValue),
     };
 
-    const updatedTestResults = testProtocols.map(protocol => {
-      if (protocol.test_name === editingProtocol.test_name) {
-        return updatedTestResult;
-      }
-      const existingResult = currentWeekTests.find(test => test.test_name === protocol.test_name);
-      return (
-        existingResult || {
-          week_start_timestamp: updatedTestResult.week_start_timestamp,
-          test_name: protocol.test_name,
-          status: 'PENDING' as const,
-          result_value: undefined,
-        }
-      );
-    });
-
-    submitTestMutation.mutate(updatedTestResults);
+    submitTestMutation.mutate(updatedTestResult);
   };
 
   const getCurrentWeekStart = () => {
@@ -255,7 +277,7 @@ export const CompactQuestCard: React.FC<CompactQuestCardProps> = ({
   const getTitle = () => (type === 'daily' ? 'Daily Quests' : 'Weekly Quests');
   const getSubtitle = () => {
     if (type === 'daily') {
-      return new Date().toLocaleDateString('en-US', {
+      return formatDate(new Date(), {
         weekday: 'long',
         year: 'numeric',
         month: 'long',
@@ -337,7 +359,7 @@ export const CompactQuestCard: React.FC<CompactQuestCardProps> = ({
         <Grid container spacing={1} sx={{ height: '100%' }}>
           {dailyMetricsConfig.map((metric, index) => {
             return (
-              <Grid size={{ xs: 6, sm: 4 }} key={index} sx={{ height: '50%' }}>
+              <Grid size={{ xs: 6 }} key={index} sx={{ height: '50%' }}>
                 <GameSubCard
                   className={`${GAME_CLASSES.cursorPointer} ${GAME_CLASSES.hoverOpacity80}`}
                   onClick={() => handleEditDailyMetric(metric.key)}
@@ -372,14 +394,6 @@ export const CompactQuestCard: React.FC<CompactQuestCardProps> = ({
         </Grid>
       );
     } else {
-      if (protocolsLoading) {
-        return (
-          <Box className={`${GAME_CLASSES.flex} ${GAME_CLASSES.justifyCenter} ${GAME_CLASSES.padding2}`}>
-            <LinearProgress className={GAME_CLASSES.width100} />
-          </Box>
-        );
-      }
-
       return (
         <Grid container spacing={1} sx={{ height: '100%' }}>
           {testProtocols.slice(0, 4).map((protocol, index) => {
@@ -421,6 +435,19 @@ export const CompactQuestCard: React.FC<CompactQuestCardProps> = ({
     }
   };
 
+  // Centralized logic for determining if data was already recorded
+  const today = new Date();
+  const recordedDate = currentMetrics?.updated_at ? 
+    new Date(currentMetrics.updated_at.getFullYear(), currentMetrics.updated_at.getMonth(), currentMetrics.updated_at.getDate()) : null;
+  const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const isRecordedToday = recordedDate ? recordedDate.getTime() === todayDate.getTime() : false;
+  
+  // Centralized logic for weekly tests
+  const testResult = editingProtocol ? currentWeekTests.find(
+    test => test.test_name === editingProtocol.test_name
+  ) : null;
+  const isRecordedThisWeek = testResult?.status === 'COMPLETED' && testResult?.result_value;
+
   return (
     <React.Fragment>
       <GameCard className={GAME_CLASSES.width100} sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -439,7 +466,7 @@ export const CompactQuestCard: React.FC<CompactQuestCardProps> = ({
       </GameCard>
 
       {/* Metric Detail Dialog */}
-      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="md" fullWidth>
+      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="md" fullWidth sx={{ '& .MuiDialog-paper': { overflow: 'visible' } }}>
         <DialogTitle>
           <span className={`${GAME_CLASSES.textBold} ${GAME_CLASSES.text}`}>
             {type === 'daily'
@@ -447,8 +474,8 @@ export const CompactQuestCard: React.FC<CompactQuestCardProps> = ({
               : editingProtocol?.display_name}
           </span>
         </DialogTitle>
-        <DialogContent>
-          <Stack spacing={3} className={GAME_CLASSES.marginTop2}>
+        <DialogContent sx={{ overflow: 'visible' }}>
+          <Stack spacing={3} className={GAME_CLASSES.marginTop2} sx={{ overflow: 'visible' }}>
             {/* 30-day Chart */}
             {type === 'daily' && editingMetric ? (
               <MetricTrendChart
@@ -481,31 +508,20 @@ export const CompactQuestCard: React.FC<CompactQuestCardProps> = ({
 
                   const currentValue = formData[editingMetric as keyof typeof formData];
                   
-                  // Check if the metric was recorded today by comparing dates
-                  const isRecordedToday = (() => {
-                    if (!currentMetrics?.created_at && !currentMetrics?.updated_at) {
-                      return false;
-                    }
-                    
-                    const today = new Date();
-                    const todayString = today.toISOString().split('T')[0]; // YYYY-MM-DD format
-                    
-                    // Check if created_at or updated_at is today
-                    const createdDate = currentMetrics.created_at ? new Date(currentMetrics.created_at).toISOString().split('T')[0] : null;
-                    const updatedDate = currentMetrics.updated_at ? new Date(currentMetrics.updated_at).toISOString().split('T')[0] : null;
-                    
-                    return createdDate === todayString || updatedDate === todayString;
-                  })();
+                  // Get the actual database value for this specific metric
+                  const databaseValue = currentMetrics?.[editingMetric as keyof UserPerformanceMetrics];
                   
-                  const hasValue = currentValue && currentValue !== '' && isRecordedToday;
-
+                  // Format the database value for display (only show numeric values, not dates)
+                  const displayValue = typeof databaseValue === 'number' ? databaseValue : 
+                    (typeof databaseValue === 'string' ? databaseValue : '');
+                  
                   return (
                     <Stack spacing={2}>
-                      {hasValue ? (
+                      {isRecordedToday ? (
                         <Alert severity="info">
                           <GameText variant="body2">
                             Today&apos;s {metric.label.toLowerCase()} has already been recorded (
-                            {currentValue}
+                            {displayValue}
                             {metric.unit}). Check back tomorrow to record your next result!
                           </GameText>
                         </Alert>
@@ -528,13 +544,17 @@ export const CompactQuestCard: React.FC<CompactQuestCardProps> = ({
                                   ? 0
                                   : metric.key === 'subjective_tiredness'
                                     ? 1
-                                    : 0,
+                                    : metric.key === 'rem_sleep_minutes' || metric.key === 'deep_sleep_minutes'
+                                      ? 0
+                                      : 0,
                               max:
                                 metric.key === 'strain'
                                   ? 21
                                   : metric.key === 'subjective_tiredness'
                                     ? 5
-                                    : undefined,
+                                    : metric.key === 'rem_sleep_minutes' || metric.key === 'deep_sleep_minutes'
+                                      ? 300
+                                      : undefined,
                               step: metric.key === 'strain' || metric.key === 'hrv' ? 0.1 : 1,
                             }}
                             helperText={metric.description}
@@ -554,17 +574,10 @@ export const CompactQuestCard: React.FC<CompactQuestCardProps> = ({
                     test => test.test_name === editingProtocol.test_name
                   );
                   const result = testResult?.result_value;
-                  const hasValue = testResult?.status === 'COMPLETED' && result;
 
                   return (
                     <Stack spacing={2}>
-                      <GameText variant="subtitle2" className={GAME_CLASSES.textBold}>
-                        Record This Week&apos;s {editingProtocol.display_name}
-                      </GameText>
-
-                      <Alert severity="info">{editingProtocol.description}</Alert>
-
-                      {hasValue ? (
+                      {isRecordedThisWeek ? (
                         <Alert severity="info">
                           <GameText variant="body2">
                             This week&apos;s {editingProtocol.display_name.toLowerCase()} has
@@ -573,16 +586,24 @@ export const CompactQuestCard: React.FC<CompactQuestCardProps> = ({
                           </GameText>
                         </Alert>
                       ) : (
-                        <TextField
-                          fullWidth
-                          label={`Result (${editingProtocol.unit})`}
-                          type="number"
-                          value={testValue}
-                          onChange={e => {
-                            setTestValue(e.target.value);
-                          }}
-                          placeholder={`Enter your ${editingProtocol.test_name.toLowerCase()} result`}
-                        />
+                        <Stack spacing={2}>
+                          <GameText variant="subtitle2" className={GAME_CLASSES.textBold}>
+                            Record This Week&apos;s {editingProtocol.display_name}
+                          </GameText>
+
+                          <Alert severity="info">{editingProtocol.description}</Alert>
+
+                          <TextField
+                            fullWidth
+                            label={`Result (${editingProtocol.unit})`}
+                            type="number"
+                            value={testValue}
+                            onChange={e => {
+                              setTestValue(e.target.value);
+                            }}
+                            placeholder={`Enter your ${editingProtocol.test_name.toLowerCase()} result`}
+                          />
+                        </Stack>
                       )}
                     </Stack>
                   );
@@ -617,34 +638,13 @@ export const CompactQuestCard: React.FC<CompactQuestCardProps> = ({
             let onSubmit = () => {};
 
             if (type === 'daily' && editingMetric) {
-              // Check if the metric was recorded today
-              const isRecordedToday = (() => {
-                if (!currentMetrics?.created_at && !currentMetrics?.updated_at) {
-                  return false;
-                }
-                
-                const today = new Date();
-                const todayString = today.toISOString().split('T')[0];
-                
-                const createdDate = currentMetrics.created_at ? new Date(currentMetrics.created_at).toISOString().split('T')[0] : null;
-                const updatedDate = currentMetrics.updated_at ? new Date(currentMetrics.updated_at).toISOString().split('T')[0] : null;
-                
-                return createdDate === todayString || updatedDate === todayString;
-              })();
-              
-              // Can submit if not already recorded today (regardless of current value)
+              // Always show submit button, but disable if already recorded today
               canSubmit = !isRecordedToday;
               isPending = submitMetricsMutation.isPending;
               onSubmit = handleSubmitDailyMetric;
             } else if (type === 'weekly' && editingProtocol) {
-              // Check if the test has already been completed this week
-              const testResult = currentWeekTests.find(
-                test => test.test_name === editingProtocol.test_name
-              );
-              const hasValue = testResult?.status === 'COMPLETED' && testResult?.result_value;
-              
               // Can submit if the test hasn't been completed yet (regardless of testValue)
-              canSubmit = !hasValue;
+              canSubmit = !isRecordedThisWeek;
               isPending = submitTestMutation.isPending;
               onSubmit = handleSubmitTest;
             }
@@ -663,16 +663,14 @@ export const CompactQuestCard: React.FC<CompactQuestCardProps> = ({
                 >
                   Cancel
                 </Button>
-                {canSubmit && (
-                  <Button
-                    onClick={onSubmit}
-                    variant="contained"
-                    disabled={isPending}
-                    className={`${GAME_CLASSES.backgroundColorCyan} ${GAME_CLASSES.hoverBackgroundColorCyan}`}
-                  >
-                    {isPending ? 'Saving...' : 'Submit'}
-                  </Button>
-                )}
+                <Button
+                  onClick={onSubmit}
+                  variant="contained"
+                  disabled={!canSubmit || isPending}
+                  className={`${GAME_CLASSES.backgroundColorCyan} ${GAME_CLASSES.hoverBackgroundColorCyan}`}
+                >
+                  Submit
+                </Button>
               </React.Fragment>
             );
           })()}

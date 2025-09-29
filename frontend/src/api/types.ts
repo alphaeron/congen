@@ -19,8 +19,8 @@ export interface UserPerformanceMetrics {
   rem_sleep_minutes?: number;
   deep_sleep_minutes?: number;
   subjective_tiredness?: number;
-  created_at: string;
-  updated_at: string;
+  created_at: Date;
+  updated_at: Date;
 }
 
 /**
@@ -41,8 +41,8 @@ export interface UserPerformanceScores {
   fatigue: number;
   fatigue_loss: number;
   skills: string[];
-  created_at: string;
-  updated_at: string;
+  created_at: Date;
+  updated_at: Date;
 }
 
 /**
@@ -55,8 +55,8 @@ export interface UserTestResult {
   test_name: string;
   status: 'PENDING' | 'COMPLETED' | 'SKIPPED';
   result_value?: number;
-  created_at: string;
-  updated_at: string;
+  created_at: Date;
+  updated_at: Date;
 }
 
 /**
