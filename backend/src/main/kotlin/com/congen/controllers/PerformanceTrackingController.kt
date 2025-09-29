@@ -106,14 +106,14 @@ class PerformanceTrackingController(
         ]
     )
     fun submitPerformanceMetrics(
-        @RequestParam("vo2_max") vo2Max: Double?,
-        @RequestParam("strain") strain: Double?,
-        @RequestParam("recovery") recovery: Double?,
-        @RequestParam("hrv") hrv: Double?,
-        @RequestParam("sleep_score") sleepScore: Double?,
-        @RequestParam("rem_sleep_minutes") remSleepMinutes: Double?,
-        @RequestParam("deep_sleep_minutes") deepSleepMinutes: Double?,
-        @RequestParam("subjective_tiredness") subjectiveTiredness: Int?
+        @RequestParam(value = "vo2_max", required = false) vo2Max: Double?,
+        @RequestParam(value = "strain", required = false) strain: Double?,
+        @RequestParam(value = "recovery", required = false) recovery: Double?,
+        @RequestParam(value = "hrv", required = false) hrv: Double?,
+        @RequestParam(value = "sleep_score", required = false) sleepScore: Double?,
+        @RequestParam(value = "rem_sleep_minutes", required = false) remSleepMinutes: Double?,
+        @RequestParam(value = "deep_sleep_minutes", required = false) deepSleepMinutes: Double?,
+        @RequestParam(value = "subjective_tiredness", required = false) subjectiveTiredness: Int?
     ): Mono<ResponseEntity<UserPerformanceScores>> {
         return keycloakUtil.getCurrentUserId().zipWith(keycloakUtil.getCurrentUserRoles()) { currentUserId, roles ->
             Pair(currentUserId, roles)
@@ -127,7 +127,7 @@ class PerformanceTrackingController(
                 }
             consentUserIdMono.flatMap { ownerId ->
                 gdprComplianceService.withUserConsent(ownerId) {
-                    // Create the full metrics object with the authenticated user's keycloak_id
+                    // Create metrics object with only the provided fields
                     val fullMetrics = UserPerformanceMetrics(
                         keycloakId = ownerId,
                         vo2Max = vo2Max,

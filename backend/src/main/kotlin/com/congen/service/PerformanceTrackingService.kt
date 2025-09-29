@@ -278,8 +278,34 @@ class PerformanceTrackingService(
     fun submitPerformanceMetrics(metrics: UserPerformanceMetrics): Mono<UserPerformanceScores> {
         logger.debug("Submitting performance metrics for user: ${metrics.keycloakId}")
 
-        // Upsert metrics (insert or update)
-        return userPerformanceMetricsDAL.upsertUserPerformanceMetrics(metrics)
+        // Get existing metrics and merge with new ones
+        return userPerformanceMetricsDAL.getLatestUserPerformanceMetrics(metrics.keycloakId)
+            .map { existingMetrics ->
+                // Merge existing metrics with new ones (new values override existing ones)
+                existingMetrics.copy(
+                    vo2Max = metrics.vo2Max ?: existingMetrics.vo2Max,
+                    strain = metrics.strain ?: existingMetrics.strain,
+                    recovery = metrics.recovery ?: existingMetrics.recovery,
+                    hrv = metrics.hrv ?: existingMetrics.hrv,
+                    sleepScore = metrics.sleepScore ?: existingMetrics.sleepScore,
+                    remSleepMinutes = metrics.remSleepMinutes ?: existingMetrics.remSleepMinutes,
+                    deepSleepMinutes = metrics.deepSleepMinutes ?: existingMetrics.deepSleepMinutes,
+                    subjectiveTiredness = metrics.subjectiveTiredness ?: existingMetrics.subjectiveTiredness,
+                    updatedAt = Instant.now()
+                )
+            }
+            .onErrorResume { throwable ->
+                if (throwable is NoResultsFoundException) {
+                    // No existing metrics, use the provided metrics as-is
+                    Mono.just(metrics)
+                } else {
+                    Mono.error(throwable)
+                }
+            }
+            .flatMap { mergedMetrics ->
+                // Upsert the merged metrics
+                userPerformanceMetricsDAL.upsertUserPerformanceMetrics(mergedMetrics)
+            }
             .flatMap { updatedMetrics ->
                 // Calculate new scores
                 Mono.fromCallable {

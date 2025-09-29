@@ -98,7 +98,7 @@ class UserPerformanceMetricsDAL(
             .then(
                 // First, check if there's already a record for today
                 getLatestUserPerformanceMetrics(metrics.keycloakId)
-                    .flatMap { existingMetrics ->
+                    .flatMap { existingMetrics: UserPerformanceMetrics ->
                         val existingDate = existingMetrics.createdAt.atZone(ZoneOffset.UTC).toLocalDate()
                         val newDate = now.atZone(ZoneOffset.UTC).toLocalDate()
 
@@ -152,7 +152,7 @@ class UserPerformanceMetricsDAL(
                             )
                         }
                     }
-                    .onErrorResume { throwable ->
+                    .onErrorResume { throwable: Throwable ->
                         if (throwable is NoResultsFoundException) {
                             // No existing record, insert new one
                             postgresClient.update<UserPerformanceMetrics>(
@@ -176,7 +176,7 @@ class UserPerformanceMetricsDAL(
                                 metricsWithTimestamps.subjectiveTiredness
                             )
                         } else {
-                            Mono.error(throwable)
+                            Mono.error<UserPerformanceMetrics>(throwable)
                         }
                     }
             )

@@ -20,7 +20,7 @@ import { CustomSvgIcon } from './CustomSvgIcon';
 import { GameCard, GameSubCard, GameText, GameTextSecondary, GAME_CLASSES } from './GameTheme';
 import { MetricTrendChart } from './MetricTrendChart';
 import type { UserPerformanceMetrics, UserTestResult, TestProtocol } from '../api/types';
-import { formatDate, getDateInBrowserTimezone } from '../common/utils';
+import { formatDate } from '../common/utils';
 import { useData } from '../contexts/DataContext';
 import RecoveryIcon from '../resources/recovery-icon.svg';
 import DexterityIcon from '../resources/dexterity-icon.svg';
@@ -178,9 +178,11 @@ export const CompactQuestCard: React.FC<CompactQuestCardProps> = ({
     loadPerformanceMetricsInRange,
     loadTestProtocols,
     testProtocols,
+    refreshData,
   } = useData();
   const { enqueueSnackbar } = useSnackbar();
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [confirmClearOpen, setConfirmClearOpen] = useState(false);
   const [historicalMetrics, setHistoricalMetrics] = useState<UserPerformanceMetrics[]>([]);
   const [isLoadingHistorical, setIsLoadingHistorical] = useState(false);
 
@@ -195,6 +197,20 @@ export const CompactQuestCard: React.FC<CompactQuestCardProps> = ({
     deep_sleep_minutes: currentMetrics?.deep_sleep_minutes?.toString() || '',
     subjective_tiredness: currentMetrics?.subjective_tiredness?.toString() || '',
   });
+
+  // Update form data when currentMetrics changes
+  useEffect(() => {
+    setFormData({
+      strain: currentMetrics?.strain?.toString() || '',
+      recovery: currentMetrics?.recovery?.toString() || '',
+      hrv: currentMetrics?.hrv?.toString() || '',
+      sleep_score: currentMetrics?.sleep_score?.toString() || '',
+      vo2_max: currentMetrics?.vo2_max?.toString() || '',
+      rem_sleep_minutes: currentMetrics?.rem_sleep_minutes?.toString() || '',
+      deep_sleep_minutes: currentMetrics?.deep_sleep_minutes?.toString() || '',
+      subjective_tiredness: currentMetrics?.subjective_tiredness?.toString() || '',
+    });
+  }, [currentMetrics]);
 
   // Weekly test state
   const [testValue, setTestValue] = useState<string>('');
@@ -259,7 +275,16 @@ export const CompactQuestCard: React.FC<CompactQuestCardProps> = ({
       result_value: Number(testValue),
     };
 
-    submitTestMutation.mutate(updatedTestResult);
+    submitTestMutation.mutate(updatedTestResult, {
+      onSuccess: async () => {
+        // Refresh the data after successful submission
+        await refreshData();
+        // Keep dialog open to show updated data
+      },
+      onError: () => {
+        enqueueSnackbar('Failed to submit test. Please try again.', { variant: 'error' });
+      }
+    });
   };
 
   const getCurrentWeekStart = () => {
@@ -329,28 +354,150 @@ export const CompactQuestCard: React.FC<CompactQuestCardProps> = ({
   const handleSubmitDailyMetric = () => {
     if (!editingMetric) return;
 
-    // Create updated metrics with the new value
+    // Create updated metrics with only the metric being edited
     const updatedMetrics: Omit<
       UserPerformanceMetrics,
       'keycloak_id' | 'created_at' | 'updated_at'
-    > = {
-      strain: formData.strain ? parseFloat(formData.strain) : undefined,
-      recovery: formData.recovery ? parseFloat(formData.recovery) : undefined,
-      hrv: formData.hrv ? parseFloat(formData.hrv) : undefined,
-      sleep_score: formData.sleep_score ? parseFloat(formData.sleep_score) : undefined,
-      vo2_max: formData.vo2_max ? parseFloat(formData.vo2_max) : undefined,
-      rem_sleep_minutes: formData.rem_sleep_minutes
-        ? parseFloat(formData.rem_sleep_minutes)
-        : undefined,
-      deep_sleep_minutes: formData.deep_sleep_minutes
-        ? parseFloat(formData.deep_sleep_minutes)
-        : undefined,
-      subjective_tiredness: formData.subjective_tiredness
-        ? parseInt(formData.subjective_tiredness)
-        : undefined,
-    };
+    > = {};
 
-    submitMetricsMutation.mutate(updatedMetrics);
+    // Only include the metric that was actually edited
+    switch (editingMetric) {
+      case 'strain':
+        if (formData.strain === '') {
+          updatedMetrics.strain = undefined;
+        } else if (formData.strain) {
+          updatedMetrics.strain = parseFloat(formData.strain);
+        } else {
+          updatedMetrics.strain = undefined;
+        }
+        break;
+      case 'recovery':
+        if (formData.recovery === '') {
+          updatedMetrics.recovery = undefined;
+        } else if (formData.recovery) {
+          updatedMetrics.recovery = parseFloat(formData.recovery);
+        } else {
+          updatedMetrics.recovery = undefined;
+        }
+        break;
+      case 'hrv':
+        if (formData.hrv === '') {
+          updatedMetrics.hrv = undefined;
+        } else if (formData.hrv) {
+          updatedMetrics.hrv = parseFloat(formData.hrv);
+        } else {
+          updatedMetrics.hrv = undefined;
+        }
+        break;
+      case 'sleep_score':
+        if (formData.sleep_score === '') {
+          updatedMetrics.sleep_score = undefined;
+        } else if (formData.sleep_score) {
+          updatedMetrics.sleep_score = parseFloat(formData.sleep_score);
+        } else {
+          updatedMetrics.sleep_score = undefined;
+        }
+        break;
+      case 'vo2_max':
+        if (formData.vo2_max === '') {
+          updatedMetrics.vo2_max = undefined;
+        } else if (formData.vo2_max) {
+          updatedMetrics.vo2_max = parseFloat(formData.vo2_max);
+        } else {
+          updatedMetrics.vo2_max = undefined;
+        }
+        break;
+      case 'rem_sleep_minutes':
+        if (formData.rem_sleep_minutes === '') {
+          updatedMetrics.rem_sleep_minutes = undefined;
+        } else if (formData.rem_sleep_minutes) {
+          updatedMetrics.rem_sleep_minutes = parseFloat(formData.rem_sleep_minutes);
+        } else {
+          updatedMetrics.rem_sleep_minutes = undefined;
+        }
+        break;
+      case 'deep_sleep_minutes':
+        if (formData.deep_sleep_minutes === '') {
+          updatedMetrics.deep_sleep_minutes = undefined;
+        } else if (formData.deep_sleep_minutes) {
+          updatedMetrics.deep_sleep_minutes = parseFloat(formData.deep_sleep_minutes);
+        } else {
+          updatedMetrics.deep_sleep_minutes = undefined;
+        }
+        break;
+      case 'subjective_tiredness':
+        if (formData.subjective_tiredness === '') {
+          updatedMetrics.subjective_tiredness = undefined;
+        } else if (formData.subjective_tiredness) {
+          updatedMetrics.subjective_tiredness = parseInt(formData.subjective_tiredness);
+        } else {
+          updatedMetrics.subjective_tiredness = undefined;
+        }
+        break;
+    }
+
+    submitMetricsMutation.mutate(updatedMetrics, {
+      onSuccess: async () => {
+        // Refresh the data after successful submission
+        await refreshData();
+        // Keep dialog open to show updated data
+      },
+      onError: () => {
+        enqueueSnackbar('Failed to submit metric. Please try again.', { variant: 'error' });
+      }
+    });
+  };
+
+  const handleClearMetric = () => {
+    if (!editingMetric) return;
+
+    // Create updated metrics with only the metric being cleared
+    const updatedMetrics: Omit<
+      UserPerformanceMetrics,
+      'keycloak_id' | 'created_at' | 'updated_at'
+    > = {};
+
+    // Set the metric to undefined to clear it
+    switch (editingMetric) {
+      case 'strain':
+        updatedMetrics.strain = undefined;
+        break;
+      case 'recovery':
+        updatedMetrics.recovery = undefined;
+        break;
+      case 'hrv':
+        updatedMetrics.hrv = undefined;
+        break;
+      case 'sleep_score':
+        updatedMetrics.sleep_score = undefined;
+        break;
+      case 'vo2_max':
+        updatedMetrics.vo2_max = undefined;
+        break;
+      case 'rem_sleep_minutes':
+        updatedMetrics.rem_sleep_minutes = undefined;
+        break;
+      case 'deep_sleep_minutes':
+        updatedMetrics.deep_sleep_minutes = undefined;
+        break;
+      case 'subjective_tiredness':
+        updatedMetrics.subjective_tiredness = undefined;
+        break;
+    }
+
+    submitMetricsMutation.mutate(updatedMetrics, {
+      onSuccess: () => {
+        // Refresh the data after successful clear
+        refreshData();
+        setConfirmClearOpen(false);
+        setDialogOpen(false);
+        setEditingMetric(null);
+      },
+      onError: (error) => {
+        enqueueSnackbar('Failed to clear metric. Please try again.', { variant: 'error' });
+        setConfirmClearOpen(false);
+      }
+    });
   };
 
   const renderCompactGrid = () => {
@@ -442,6 +589,14 @@ export const CompactQuestCard: React.FC<CompactQuestCardProps> = ({
   const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
   const isRecordedToday = recordedDate ? recordedDate.getTime() === todayDate.getTime() : false;
   
+  // Helper function to check if a specific metric was recorded today
+  const isMetricRecordedToday = (metricKey: string): boolean => {
+    if (!isRecordedToday) return false;
+    
+    const metricValue = currentMetrics?.[metricKey as keyof typeof currentMetrics];
+    return metricValue !== null && metricValue !== undefined;
+  };
+  
   // Centralized logic for weekly tests
   const testResult = editingProtocol ? currentWeekTests.find(
     test => test.test_name === editingProtocol.test_name
@@ -517,7 +672,7 @@ export const CompactQuestCard: React.FC<CompactQuestCardProps> = ({
                   
                   return (
                     <Stack spacing={2}>
-                      {isRecordedToday ? (
+                      {isMetricRecordedToday(metric.key) ? (
                         <Alert severity="info">
                           <GameText variant="body2">
                             Today&apos;s {metric.label.toLowerCase()} has already been recorded (
@@ -639,7 +794,7 @@ export const CompactQuestCard: React.FC<CompactQuestCardProps> = ({
 
             if (type === 'daily' && editingMetric) {
               // Always show submit button, but disable if already recorded today
-              canSubmit = !isRecordedToday;
+              canSubmit = !isMetricRecordedToday(editingMetric);
               isPending = submitMetricsMutation.isPending;
               onSubmit = handleSubmitDailyMetric;
             } else if (type === 'weekly' && editingProtocol) {
@@ -649,31 +804,78 @@ export const CompactQuestCard: React.FC<CompactQuestCardProps> = ({
               onSubmit = handleSubmitTest;
             }
 
-            // Show cancel and submit buttons
+            // Show clear button on left, cancel/submit buttons on right
             return (
-              <React.Fragment>
-                <Button
-                  onClick={() => {
-                    setDialogOpen(false);
-                    setEditingMetric(null);
-                    setEditingProtocol(null);
-                  }}
-                  variant="outlined"
-                  className={GAME_CLASSES.colorCyan}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={onSubmit}
-                  variant="contained"
-                  disabled={!canSubmit || isPending}
-                  className={`${GAME_CLASSES.backgroundColorCyan} ${GAME_CLASSES.hoverBackgroundColorCyan}`}
-                >
-                  Submit
-                </Button>
-              </React.Fragment>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
+                <Box>
+                  {type === 'daily' && editingMetric && isMetricRecordedToday(editingMetric) && (
+                    <Button
+                      onClick={() => setConfirmClearOpen(true)}
+                      variant="contained"
+                      color="error"
+                      disabled={isPending}
+                    >
+                      Clear
+                    </Button>
+                  )}
+                </Box>
+                <Box sx={{ display: 'flex', gap: 1 }}>
+                  <Button
+                    onClick={() => {
+                      setDialogOpen(false);
+                      setEditingMetric(null);
+                      setEditingProtocol(null);
+                    }}
+                    variant="outlined"
+                    className={GAME_CLASSES.colorCyan}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={onSubmit}
+                    variant="contained"
+                    disabled={!canSubmit || isPending}
+                    className={`${GAME_CLASSES.backgroundColorCyan} ${GAME_CLASSES.hoverBackgroundColorCyan}`}
+                  >
+                    Submit
+                  </Button>
+                </Box>
+              </Box>
             );
           })()}
+        </DialogActions>
+      </Dialog>
+
+      {/* Clear Confirmation Dialog */}
+      <Dialog open={confirmClearOpen} onClose={() => setConfirmClearOpen(false)}>
+        <DialogTitle>
+          <span className={`${GAME_CLASSES.textBold} ${GAME_CLASSES.text}`}>
+            Clear {dailyMetricsConfig.find(m => m.key === editingMetric)?.label}?
+          </span>
+        </DialogTitle>
+        <DialogContent>
+          <GameText variant="body1">
+            Are you sure you want to clear the recorded value for{' '}
+            {dailyMetricsConfig.find(m => m.key === editingMetric)?.label.toLowerCase()}?
+            This action cannot be undone.
+          </GameText>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => setConfirmClearOpen(false)}
+            variant="outlined"
+            className={GAME_CLASSES.colorCyan}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleClearMetric}
+            variant="contained"
+            color="error"
+            disabled={submitMetricsMutation.isPending}
+          >
+            Clear
+          </Button>
         </DialogActions>
       </Dialog>
     </React.Fragment>
