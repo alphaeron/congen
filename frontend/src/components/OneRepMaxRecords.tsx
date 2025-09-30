@@ -462,14 +462,21 @@ export const OneRepMaxRecords: React.FC<OneRepMaxRecordsProps> = () => {
           // Handle exercise field changes
           React.useEffect(() => {
             const exerciseName = exerciseField.state.value as string;
+            console.log('=== EXERCISE FIELD CHANGED ===', exerciseName);
+            
             if (exerciseName && typeof exerciseName === 'string') {
-              console.log('=== EXERCISE FIELD CHANGED ===', exerciseName);
               setSelectedExercise(exerciseName);
               // Pre-populate with existing 1RM value if available, otherwise set to 0
               const existingValue = getExistingOneRepMax(exerciseName);
               console.log('Setting 1RM value to:', existingValue !== null ? existingValue : 0);
               form.setFieldValue('one_rep_max', existingValue !== null ? existingValue : 0);
               console.log('Form field updated');
+            } else {
+              // Field was cleared, reset both exercise and 1RM
+              console.log('Exercise field cleared, resetting values');
+              setSelectedExercise('');
+              form.setFieldValue('one_rep_max', 0);
+              console.log('Form fields reset');
             }
           }, [exerciseField.state.value, form]);
 
