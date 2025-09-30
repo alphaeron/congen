@@ -7,6 +7,7 @@ import { FormField } from './FormField';
 import { GameText, GameCard, GameButton, GAME_CLASSES } from './GameTheme';
 import { updateUserProfile, getCurrentUser } from '../api/user';
 import { useAuth } from '../contexts/AuthContext';
+import { useData } from '../contexts/DataContext';
 
 /**
  * Physical attributes section component for user profile.
@@ -25,6 +26,7 @@ interface PhysicalAttributesFormData {
 
 export function PhysicalAttributesSection(): React.ReactElement {
   const { user } = useAuth();
+  const { refreshData } = useData();
   const { enqueueSnackbar } = useSnackbar();
 
   const form = useForm({
@@ -54,7 +56,9 @@ export function PhysicalAttributesSection(): React.ReactElement {
       },
     },
     onSubmit: async ({ value }: { value: PhysicalAttributesFormData }) => {
+      console.log('Form submitted with values:', value);
       if (!user) {
+        console.log('No user found');
         enqueueSnackbar('User not found', { variant: 'error' });
         return;
       }
@@ -68,16 +72,22 @@ export function PhysicalAttributesSection(): React.ReactElement {
           gender: value.gender || undefined,
         };
 
+        console.log('Updating profile with data:', updateData);
         await updateUserProfile(updateData);
+        console.log('Profile updated successfully');
+        
         // Refresh user data to get the updated information
         const updatedUser = await getCurrentUser();
+        console.log('Updated user data:', updatedUser);
+        
         // Update the form data with the fresh user data
         form.setFieldValue('age', updatedUser.age || '');
         form.setFieldValue('weight', updatedUser.weight || '');
         form.setFieldValue('height', updatedUser.height || '');
         form.setFieldValue('gender', updatedUser.gender || '');
         enqueueSnackbar('Profile updated successfully', { variant: 'success' });
-      } catch {
+      } catch (error) {
+        console.error('Failed to update profile:', error);
         enqueueSnackbar('Failed to update profile', { variant: 'error' });
       }
     },
@@ -99,6 +109,7 @@ export function PhysicalAttributesSection(): React.ReactElement {
             onSubmit={e => {
               e.preventDefault();
               e.stopPropagation();
+              console.log('Form onSubmit triggered');
               form.handleSubmit();
             }}
           >
@@ -116,21 +127,21 @@ export function PhysicalAttributesSection(): React.ReactElement {
               <Grid size={{ xs: 12, sm: 6 }}>
                 <FormField
                   type="number"
-                  label="Weight"
+                  label="Weight (lbs)"
                   name="weight"
                   form={form}
                   inputProps={{ min: 1, max: 1000 }}
-                  helperText="Your weight in pounds (lbs)"
+                  helperText="Your weight in pounds"
                 />
               </Grid>
               <Grid size={{ xs: 12, sm: 6 }}>
                 <FormField
                   type="number"
-                  label="Height"
+                  label="Height (cm)"
                   name="height"
                   form={form}
-                  inputProps={{ min: 1, max: 120 }}
-                  helperText="Your height in inches (in)"
+                  inputProps={{ min: 50, max: 300 }}
+                  helperText="Your height in centimeters"
                 />
               </Grid>
               <Grid size={{ xs: 12, sm: 6 }}>
@@ -151,10 +162,49 @@ export function PhysicalAttributesSection(): React.ReactElement {
 
             <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end' }}>
               <Button
-                type="submit"
+                type="button"
                 variant="contained"
-                disabled={form.state.isSubmitting || !form.state.isValid}
+                disabled={form.state.isSubmitting}
                 startIcon={form.state.isSubmitting ? <CircularProgress size={20} /> : null}
+                onClick={async () => {
+                  console.log('Save button clicked');
+                  console.log('Form state:', form.state);
+                  console.log('Form values:', form.state.values);
+                  
+                  // Call the onSubmit function directly
+                  const formData = form.state.values as PhysicalAttributesFormData;
+                  console.log('Calling onSubmit with:', formData);
+                  
+                  if (!user) {
+                    console.log('No user found');
+                    enqueueSnackbar('User not found', { variant: 'error' });
+                    return;
+                  }
+
+                  try {
+                    const updateData = {
+                      name: user.name,
+                      age: formData.age ? Number(formData.age) : undefined,
+                      weight: formData.weight ? Number(formData.weight) : undefined,
+                      height: formData.height ? Number(formData.height) : undefined,
+                      gender: formData.gender || undefined,
+                    };
+
+                    console.log('Updating profile with data:', updateData);
+                    await updateUserProfile(updateData);
+                    console.log('Profile updated successfully');
+                    
+                    // Refresh all data in DataContext (including Wilks score)
+                    console.log('Refreshing DataContext...');
+                    await refreshData();
+                    console.log('DataContext refreshed');
+                    
+                    enqueueSnackbar('Profile updated successfully', { variant: 'success' });
+                  } catch (error) {
+                    console.error('Failed to update profile:', error);
+                    enqueueSnackbar('Failed to update profile', { variant: 'error' });
+                  }
+                }}
               >
                 {form.state.isSubmitting ? 'Saving...' : 'Save Changes'}
               </Button>
