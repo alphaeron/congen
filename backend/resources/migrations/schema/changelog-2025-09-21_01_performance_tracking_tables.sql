@@ -21,15 +21,18 @@ CREATE TABLE user_performance_metrics (
   CONSTRAINT fk_user_performance_metrics_user FOREIGN KEY(keycloak_id) REFERENCES "user"(keycloak_id) ON DELETE CASCADE
 );
 
--- Create user_performance_scores table for storing calculated scores
+-- Create user_performance_scores table for storing historical performance score changes
+-- Each record represents a score calculation event, maintaining full history
 CREATE TABLE user_performance_scores (
-  keycloak_id VARCHAR(255) PRIMARY KEY NOT NULL,
+  id SERIAL PRIMARY KEY,
+  keycloak_id VARCHAR(255) NOT NULL,
   explosiveness_score NUMERIC(5,2) CHECK (explosiveness_score >= 0 AND explosiveness_score <= 100),
   aerobic_capacity_score NUMERIC(5,2) CHECK (aerobic_capacity_score >= 0 AND aerobic_capacity_score <= 100),
   recovery_score NUMERIC(5,2) CHECK (recovery_score >= 0 AND recovery_score <= 100),
   reaction_time_score NUMERIC(5,2) CHECK (reaction_time_score >= 0 AND reaction_time_score <= 100),
   mobility_score NUMERIC(5,2) CHECK (mobility_score >= 0 AND mobility_score <= 100),
   level INTEGER NOT NULL CHECK (level >= 1 AND level <= 100),
+  level_change_reason VARCHAR(100), -- Reason for score calculation (e.g., 'weekly_test_completed', 'daily_metrics_updated')
   hp NUMERIC(5,2) NOT NULL CHECK (hp >= 0 AND hp <= 100),
   hp_loss NUMERIC(5,2) NOT NULL CHECK (hp_loss >= 0 AND hp_loss <= 100),
   mp NUMERIC(5,2) NOT NULL CHECK (mp >= 0 AND mp <= 100),
@@ -38,7 +41,6 @@ CREATE TABLE user_performance_scores (
   fatigue_loss NUMERIC(5,2) NOT NULL CHECK (fatigue_loss >= 0 AND fatigue_loss <= 100),
   skills TEXT[], -- Array of skill strings
   created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT fk_user_performance_scores_user FOREIGN KEY(keycloak_id) REFERENCES "user"(keycloak_id) ON DELETE CASCADE
 );
 
@@ -81,7 +83,12 @@ CREATE INDEX idx_user_performance_metrics_user_date ON user_performance_metrics(
 
 CREATE INDEX idx_user_performance_scores_keycloak_id ON user_performance_scores(keycloak_id);
 CREATE INDEX idx_user_performance_scores_level ON user_performance_scores(level);
-CREATE INDEX idx_user_performance_scores_updated_at ON user_performance_scores(updated_at);
+CREATE INDEX idx_user_performance_scores_created_at ON user_performance_scores(created_at);
+CREATE INDEX idx_user_performance_scores_level_change ON user_performance_scores(level_change_reason);
+-- Composite index for user progression queries (get latest scores)
+CREATE INDEX idx_user_performance_scores_user_date ON user_performance_scores(keycloak_id, created_at DESC);
+-- Composite index for level progression tracking
+CREATE INDEX idx_user_performance_scores_user_level ON user_performance_scores(keycloak_id, level, created_at);
 
 CREATE INDEX idx_test_protocol_config_test_name ON test_protocol_config(test_name);
 CREATE INDEX idx_test_protocol_config_is_required ON test_protocol_config(is_required);

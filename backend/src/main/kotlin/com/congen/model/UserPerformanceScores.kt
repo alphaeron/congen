@@ -13,25 +13,36 @@ import java.time.Instant
  *
  * This model contains all the calculated scores derived from performance metrics,
  * including individual metric scores, HP/MP/Fatigue values, athleticism level,
- * and generated skills. It provides the core data for the RPG-style dashboard.
+ * and generated skills. Each record represents a score calculation event,
+ * maintaining full historical tracking of performance progression.
  *
  * ## Score Components
  *
  * - **Individual Scores**: Each performance metric scored 0-100
  * - **Athleticism Score**: Overall fitness level (1-100)
- * - **Level**: Derived level based on athleticism score (1-20+)
+ * - **Level**: Derived level based on athleticism score (1-100)
  * - **HP**: Health Points - physical resilience
  * - **MP**: Magic Points - neural readiness
  * - **Fatigue**: Current fatigue level (0-100)
  * - **Skills**: Auto-generated skills based on metric thresholds
  *
- * @property keycloakId Unique Keycloak identifier for the user (primary key)
+ * ## Historical Tracking
+ *
+ * Each score calculation creates a new record, allowing for:
+ * - Level progression tracking over time
+ * - Performance trend analysis
+ * - Achievement milestone recognition
+ * - Historical context for current scores
+ *
+ * @property id Unique identifier for this score calculation record
+ * @property keycloakId Unique Keycloak identifier for the user
  * @property explosivenessScore Individual explosiveness score (0-100)
  * @property aerobicCapacityScore Individual aerobic capacity score (0-100)
  * @property recoveryScore Individual recovery score (0-100)
  * @property reactionTimeScore Individual reaction time score (0-100)
  * @property mobilityScore Individual mobility score (0-100)
  * @property level Athleticism level with tanh scaling (1-100)
+ * @property levelChangeReason Reason for this score calculation (e.g., 'weekly_test_completed', 'daily_metrics_updated')
  * @property hp Health Points - physical resilience (0-100)
  * @property hpLoss HP Loss - current HP reduction from daily stress factors (0-100)
  * @property mp Magic Points - neural readiness (0-100)
@@ -40,7 +51,6 @@ import java.time.Instant
  * @property fatigueLoss Fatigue Loss - current fatigue increase from daily stress factors (0-100)
  * @property skills List of auto-generated skills
  * @property createdAt Timestamp when the scores were calculated
- * @property updatedAt Timestamp when the scores were last updated
  *
  * @author Congen Development Team
  * @since 1.0.0
@@ -55,11 +65,17 @@ import java.time.Instant
             "athleticismScore=73.5, level=12, hp=82.0, mp=76.0, fatigue=42.0)"
 )
 data class UserPerformanceScores(
-    /** Unique Keycloak identifier for the user (primary key). */
+    /** Unique identifier for this score calculation record. */
+    @Schema(
+        description = "Unique identifier for this score calculation record",
+        example = "1",
+        readOnly = true
+    )
+    @param:JsonProperty("id") val id: Int? = null,
+    /** Unique Keycloak identifier for the user. */
     @Schema(
         description = "Unique Keycloak identifier for the user",
-        example = "123e4567-e89b-12d3-a456-426614174000",
-        readOnly = true
+        example = "123e4567-e89b-12d3-a456-426614174000"
     )
     @param:JsonProperty("keycloak_id") val keycloakId: String,
     /** Individual explosiveness score (0-100). */
@@ -110,6 +126,13 @@ data class UserPerformanceScores(
         maximum = "100"
     )
     @param:JsonProperty("level") val level: Int,
+    /** Reason for this score calculation. */
+    @Schema(
+        description = "Reason for this score calculation",
+        example = "weekly_test_completed",
+        allowableValues = ["weekly_test_completed", "daily_metrics_updated", "initial_calculation"]
+    )
+    @param:JsonProperty("level_change_reason") val levelChangeReason: String?,
     /** Health Points - physical resilience (0-100). */
     @Schema(
         description = "Health Points - physical resilience (0-100)",
@@ -170,12 +193,5 @@ data class UserPerformanceScores(
         example = "2023-01-15T08:30:00Z",
         readOnly = true
     )
-    @param:JsonProperty("created_at") val createdAt: Instant,
-    /** Timestamp when the scores were last updated. */
-    @Schema(
-        description = "Timestamp when the scores were last updated",
-        example = "2023-08-09T09:45:30Z",
-        readOnly = true
-    )
-    @param:JsonProperty("updated_at") val updatedAt: Instant
+    @param:JsonProperty("created_at") val createdAt: Instant
 )

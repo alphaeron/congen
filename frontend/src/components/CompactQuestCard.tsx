@@ -176,6 +176,7 @@ export const CompactQuestCard: React.FC<CompactQuestCardProps> = ({
     submitWeeklyTest: submitWeeklyTestData,
     getCurrentWeekTest,
     loadPerformanceMetricsInRange,
+    loadWeeklyTests,
     loadTestProtocols,
     testProtocols,
     refreshData,
@@ -185,6 +186,8 @@ export const CompactQuestCard: React.FC<CompactQuestCardProps> = ({
   const [confirmClearOpen, setConfirmClearOpen] = useState(false);
   const [historicalMetrics, setHistoricalMetrics] = useState<UserPerformanceMetrics[]>([]);
   const [isLoadingHistorical, setIsLoadingHistorical] = useState(false);
+  const [allHistoricalWeeklyTests, setAllHistoricalWeeklyTests] = useState<UserTestResult[]>([]);
+  const [isLoadingHistoricalWeekly, setIsLoadingHistoricalWeekly] = useState(false);
 
   // Daily metrics state
   const [formData, setFormData] = useState({
@@ -288,14 +291,10 @@ export const CompactQuestCard: React.FC<CompactQuestCardProps> = ({
   };
 
   const getCurrentWeekStart = () => {
-    // Calculate current week start (Monday)
     const now = new Date();
-    const dayOfWeek = now.getDay();
-    const daysToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek; // Sunday = 0, Monday = 1
     const monday = new Date(now);
-    monday.setDate(now.getDate() + daysToMonday);
+    monday.setDate(now.getDate() - now.getDay() + 1);
     monday.setHours(0, 0, 0, 0);
-
     return monday.toISOString();
   };
 
@@ -337,6 +336,22 @@ export const CompactQuestCard: React.FC<CompactQuestCardProps> = ({
       } finally {
         setIsLoadingHistorical(false);
       }
+    } else if (type === 'weekly' && editingProtocol) {
+      setIsLoadingHistoricalWeekly(true);
+      try {
+        const endDate = new Date().toISOString();
+        const startDate = new Date();
+        startDate.setDate(startDate.getDate() - 30);
+        const startDateStr = startDate.toISOString();
+
+        const data = await loadWeeklyTests(startDateStr, endDate);
+        // Store all historical data, we'll filter dynamically in the chart
+        setAllHistoricalWeeklyTests(data);
+      } catch {
+        setAllHistoricalWeeklyTests([]);
+      } finally {
+        setIsLoadingHistoricalWeekly(false);
+      }
     }
   };
 
@@ -348,7 +363,22 @@ export const CompactQuestCard: React.FC<CompactQuestCardProps> = ({
 
   const handleEditWeeklyTest = (protocol: TestProtocol) => {
     setEditingProtocol(protocol);
+    
+    // Clear previous historical data
+    setAllHistoricalWeeklyTests([]);
+    
+    // Check if this test already has a recorded value for the current week
+    const existingTest = currentWeekTests.find(test => test.test_name === protocol.test_name);
+    if (existingTest && existingTest.status === 'COMPLETED' && existingTest.result_value) {
+      // Prepopulate with existing value
+      setTestValue(existingTest.result_value.toString());
+    } else {
+      // Clear the value for new entry
+      setTestValue('');
+    }
+    
     setDialogOpen(true);
+    loadHistoricalData();
   };
 
   const handleSubmitDailyMetric = () => {
@@ -486,15 +516,47 @@ export const CompactQuestCard: React.FC<CompactQuestCardProps> = ({
     }
 
     submitMetricsMutation.mutate(updatedMetrics, {
-      onSuccess: () => {
+      onSuccess: async () => {
         // Refresh the data after successful clear
-        refreshData();
+        await refreshData();
         setConfirmClearOpen(false);
         setDialogOpen(false);
         setEditingMetric(null);
       },
       onError: (error) => {
         enqueueSnackbar('Failed to clear metric. Please try again.', { variant: 'error' });
+        setConfirmClearOpen(false);
+      }
+    });
+  };
+
+  const handleClearTest = () => {
+    if (!editingProtocol) return;
+
+    // Create updated test result with PENDING status and no result value
+    const updatedTestResult: Omit<
+      UserTestResult,
+      'id' | 'keycloak_id' | 'created_at' | 'updated_at'
+    > = {
+      week_start_timestamp: new Date(getCurrentWeekStart()),
+      test_name: editingProtocol.test_name,
+      status: 'PENDING',
+      result_value: undefined,
+    };
+
+    submitTestMutation.mutate(updatedTestResult, {
+      onSuccess: async () => {
+        // Refresh the data after successful clear
+        await refreshData();
+        setConfirmClearOpen(false);
+        // Clear the test value since the test was cleared
+        setTestValue('');
+        // Keep dialog open to allow re-entry
+        // setDialogOpen(false);
+        // setEditingProtocol(null);
+      },
+      onError: (error) => {
+        enqueueSnackbar('Failed to clear test. Please try again.', { variant: 'error' });
         setConfirmClearOpen(false);
       }
     });
@@ -594,6 +656,8 @@ export const CompactQuestCard: React.FC<CompactQuestCardProps> = ({
     if (!isRecordedToday) return false;
     
     const metricValue = currentMetrics?.[metricKey as keyof typeof currentMetrics];
+    // A metric is considered "recorded" if it has a non-null, non-undefined value
+    // If it was cleared (null/undefined), it's not considered recorded and can be re-entered
     return metricValue !== null && metricValue !== undefined;
   };
   
@@ -634,22 +698,46 @@ export const CompactQuestCard: React.FC<CompactQuestCardProps> = ({
             {/* 30-day Chart */}
             {type === 'daily' && editingMetric ? (
               <MetricTrendChart
-                metricKey={editingMetric}
                 metricLabel={
                   dailyMetricsConfig.find(m => m.key === editingMetric)?.label || editingMetric
                 }
                 metricUnit={dailyMetricsConfig.find(m => m.key === editingMetric)?.unit || ''}
-                historicalData={historicalMetrics}
+                data={historicalMetrics
+                  .map((metric) => {
+                    const value = metric[editingMetric as keyof UserPerformanceMetrics] as number;
+                    if (value !== undefined && value !== null) {
+                      return {
+                        date: metric.created_at,
+                        value: value,
+                      };
+                    }
+                    return null;
+                  })
+                  .filter((item): item is { date: Date; value: number } => item !== null)}
                 isLoading={isLoadingHistorical}
                 height={200}
               />
             ) : type === 'weekly' && editingProtocol ? (
               <MetricTrendChart
-                metricKey={editingProtocol.test_name}
                 metricLabel={editingProtocol.display_name}
                 metricUnit={editingProtocol.unit}
-                historicalData={[]} // TODO: Add weekly test historical data
-                isLoading={false}
+                data={[
+                  // Include current week's data if it exists
+                  ...currentWeekTests
+                    .filter(test => test.test_name === editingProtocol.test_name && test.status === 'COMPLETED' && test.result_value !== undefined)
+                    .map((test) => ({
+                      date: test.week_start_timestamp,
+                      value: test.result_value!,
+                    })),
+                  // Include historical data (filter dynamically for the specific test protocol)
+                  ...allHistoricalWeeklyTests
+                    .filter(test => test.test_name === editingProtocol.test_name && test.status === 'COMPLETED' && test.result_value !== undefined)
+                    .map((test) => ({
+                      date: test.week_start_timestamp,
+                      value: test.result_value!,
+                    }))
+                ]}
+                isLoading={isLoadingHistoricalWeekly}
                 height={200}
               />
             ) : null}
@@ -775,15 +863,16 @@ export const CompactQuestCard: React.FC<CompactQuestCardProps> = ({
             if (!isEditing) {
               // Default: Just close button
               return (
-                <Button
-                  onClick={() => {
-                    setDialogOpen(false);
-                    setEditingMetric(null);
-                    setEditingProtocol(null);
-                  }}
-                >
-                  Close
-                </Button>
+                  <Button
+                    onClick={() => {
+                      setDialogOpen(false);
+                      setEditingMetric(null);
+                      setEditingProtocol(null);
+                      setTestValue(''); // Clear test value when closing dialog
+                    }}
+                  >
+                    Close
+                  </Button>
               );
             }
 
@@ -818,6 +907,16 @@ export const CompactQuestCard: React.FC<CompactQuestCardProps> = ({
                       Clear
                     </Button>
                   )}
+                  {type === 'weekly' && editingProtocol && isRecordedThisWeek && (
+                    <Button
+                      onClick={() => setConfirmClearOpen(true)}
+                      variant="contained"
+                      color="error"
+                      disabled={isPending}
+                    >
+                      Clear
+                    </Button>
+                  )}
                 </Box>
                 <Box sx={{ display: 'flex', gap: 1 }}>
                   <Button
@@ -825,6 +924,7 @@ export const CompactQuestCard: React.FC<CompactQuestCardProps> = ({
                       setDialogOpen(false);
                       setEditingMetric(null);
                       setEditingProtocol(null);
+                      setTestValue(''); // Clear test value when canceling
                     }}
                     variant="outlined"
                     className={GAME_CLASSES.colorCyan}
@@ -850,13 +950,17 @@ export const CompactQuestCard: React.FC<CompactQuestCardProps> = ({
       <Dialog open={confirmClearOpen} onClose={() => setConfirmClearOpen(false)}>
         <DialogTitle>
           <span className={`${GAME_CLASSES.textBold} ${GAME_CLASSES.text}`}>
-            Clear {dailyMetricsConfig.find(m => m.key === editingMetric)?.label}?
+            Clear {type === 'daily' 
+              ? dailyMetricsConfig.find(m => m.key === editingMetric)?.label
+              : editingProtocol?.display_name}?
           </span>
         </DialogTitle>
         <DialogContent>
           <GameText variant="body1">
             Are you sure you want to clear the recorded value for{' '}
-            {dailyMetricsConfig.find(m => m.key === editingMetric)?.label.toLowerCase()}?
+            {type === 'daily' 
+              ? dailyMetricsConfig.find(m => m.key === editingMetric)?.label.toLowerCase()
+              : editingProtocol?.display_name.toLowerCase()}?
             This action cannot be undone.
           </GameText>
         </DialogContent>
@@ -869,10 +973,10 @@ export const CompactQuestCard: React.FC<CompactQuestCardProps> = ({
             Cancel
           </Button>
           <Button
-            onClick={handleClearMetric}
+            onClick={type === 'daily' ? handleClearMetric : handleClearTest}
             variant="contained"
             color="error"
-            disabled={submitMetricsMutation.isPending}
+            disabled={type === 'daily' ? submitMetricsMutation.isPending : submitTestMutation.isPending}
           >
             Clear
           </Button>

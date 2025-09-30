@@ -49,7 +49,8 @@ module.exports = merge(common, {
     client: {
       overlay: {
         errors: true,
-        warnings: false, // Don't overlay warnings
+        warnings: false,
+        runtimeErrors: true,
       },
       progress: true,
     },
@@ -119,6 +120,8 @@ module.exports = merge(common, {
     },
     // Keep runtime in a separate chunk
     runtimeChunk: 'single',
+    // Better error handling in development
+    emitOnErrors: false,
   },
 
   // Development-specific performance settings
@@ -133,6 +136,16 @@ module.exports = merge(common, {
     alias: {
       ...common.resolve.alias,
       // Add any development-specific aliases here
+    },
+    // Modern webpack 5 fallbacks for Node.js modules
+    fallback: {
+      "path": false,
+      "fs": false,
+      "crypto": false,
+      "stream": false,
+      "util": false,
+      "buffer": false,
+      "process": require.resolve("process/browser.js"),
     },
   },
 

@@ -7,6 +7,7 @@ import com.congen.model.User
 import com.congen.model.UserConsent
 import com.congen.util.KeycloakUtil
 import com.congen.util.UnitConverter
+import com.congen.service.PerformanceTrackingService
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -52,7 +53,8 @@ class UserServiceTest {
         keycloakClient = mock()
         keycloakUtil = mock()
         gdprComplianceService = mock()
-        userService = UserService(userDAL, unitConverter, keycloakClient, keycloakUtil, gdprComplianceService)
+        val performanceTrackingService = mock<PerformanceTrackingService>()
+        userService = UserService(userDAL, unitConverter, keycloakClient, keycloakUtil, gdprComplianceService, performanceTrackingService)
     }
 
     @Test

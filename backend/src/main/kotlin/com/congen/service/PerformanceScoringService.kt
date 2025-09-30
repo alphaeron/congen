@@ -55,15 +55,16 @@ class PerformanceScoringService {
      */
     fun calculatePerformanceScores(
         dailyMetrics: UserPerformanceMetrics,
-        weeklyTest: UserWeeklyTest? = null
+        weeklyTest: UserWeeklyTest? = null,
+        levelChangeReason: String = "daily_metrics_updated"
     ): UserPerformanceScores {
         logger.debug("Calculating performance scores for user: ${dailyMetrics.keycloakId}")
 
         // Calculate individual metric scores from weekly test data and daily metrics
         val explosivenessScore = calculateExplosivenessScore(weeklyTest?.verticalJumpResult)
         val aerobicCapacityScore = calculateAerobicCapacityScore(dailyMetrics.vo2Max)
-        val recoveryScore = calculateRecoveryScore(weeklyTest?.hrRecoveryResult?.toDouble())
-        val reactionTimeScore = calculateReactionTimeScore(weeklyTest?.reflexResult?.toDouble())
+        val recoveryScore = calculateRecoveryScore(weeklyTest?.hrRecoveryResult)
+        val reactionTimeScore = calculateReactionTimeScore(weeklyTest?.reflexResult)
         val mobilityScore = calculateMobilityScore(weeklyTest?.mobilityResult)
 
         // Calculate average score
@@ -98,7 +99,7 @@ class PerformanceScoringService {
                 mobilityScore
             )
 
-        return UserPerformanceScores(
+        val result = UserPerformanceScores(
             keycloakId = dailyMetrics.keycloakId,
             explosivenessScore = explosivenessScore,
             aerobicCapacityScore = aerobicCapacityScore,
@@ -106,6 +107,7 @@ class PerformanceScoringService {
             reactionTimeScore = reactionTimeScore,
             mobilityScore = mobilityScore,
             level = level,
+            levelChangeReason = levelChangeReason,
             hp = hp,
             hpLoss = hpLoss,
             mp = mp,
@@ -113,9 +115,10 @@ class PerformanceScoringService {
             fatigue = fatigue,
             fatigueLoss = fatigueLoss,
             skills = skills,
-            createdAt = dailyMetrics.createdAt,
-            updatedAt = dailyMetrics.updatedAt
+            createdAt = dailyMetrics.createdAt
         )
+
+        return result
     }
 
     /**
@@ -123,17 +126,21 @@ class PerformanceScoringService {
      * Typical range: 30cm (low) to 70cm (elite) vertical jump.
      */
     private fun calculateExplosivenessScore(jumpCm: Double?): Double? {
-        if (jumpCm == null || jumpCm <= 0) return null
-        return max(0.0, min(100.0, 25.0 * log10(jumpCm / 30.0)))
+        if (jumpCm == null || jumpCm <= 0) {
+            return null
+        }
+        val score = max(0.0, min(100.0, 25.0 * log10(jumpCm / 30.0)))
+        return score
     }
 
     /**
-     * Calculates aerobic capacity score using logarithmic scaling.
-     * Typical range: 35 (average) to 70+ (elite) VO₂ max.
+     * Calculates aerobic capacity score using linear scaling.
+     * Typical range: 30-40 (poor), 40-50 (average), 50-60 (good), 60+ (excellent) VO₂ max.
      */
     private fun calculateAerobicCapacityScore(vo2Max: Double?): Double? {
         if (vo2Max == null || vo2Max <= 0) return null
-        return max(0.0, min(100.0, 25.0 * log10(vo2Max / 35.0)))
+        // More reasonable scaling: 30-40 = poor, 40-50 = average, 50-60 = good, 60+ = excellent
+        return max(0.0, min(100.0, (vo2Max - 20.0) * 2.5))
     }
 
     /**
@@ -183,7 +190,11 @@ class PerformanceScoringService {
     ): Double {
         // HP is based on physical resilience metrics from weekly tests and daily metrics
         val vo2MaxScore = calculateAerobicCapacityScore(metrics.vo2Max)
-        val recoveryScore = calculateRecoveryScore(weeklyTest?.hrRecoveryResult?.toDouble())
+        
+        // Use daily recovery metric if available, otherwise fall back to weekly test data
+        val dailyRecoveryScore = metrics.recovery?.let { calculateRecoveryScore(it) }
+        val weeklyRecoveryScore = calculateRecoveryScore(weeklyTest?.hrRecoveryResult)
+        val recoveryScore = dailyRecoveryScore ?: weeklyRecoveryScore
 
         // Average the physical resilience scores
         val scores = listOfNotNull(vo2MaxScore, recoveryScore)
@@ -327,7 +338,7 @@ class PerformanceScoringService {
     ): Double {
         // MP is based on neurological readiness metrics
         val hrvScore = calculateHrvScore(metrics.hrv)
-        val reactionTimeScore = calculateReactionTimeScore(weeklyTest?.reflexResult?.toDouble())
+        val reactionTimeScore = calculateReactionTimeScore(weeklyTest?.reflexResult)
         val explosivenessScore = calculateExplosivenessScore(weeklyTest?.verticalJumpResult)
 
         // Average the neurological readiness scores

@@ -11,6 +11,7 @@ import com.congen.model.TestStatus
 import com.congen.model.UserPerformanceMetrics
 import com.congen.model.UserPerformanceScores
 import com.congen.model.UserTestResult
+import com.congen.model.UserWeeklyTest
 import com.congen.util.KeycloakUtil
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -66,43 +67,53 @@ class PerformanceTrackingService(
 
     /**
      * Retrieves current performance scores for the authenticated user.
-     * If no scores exist, creates default scores for new users.
      *
      * @return Mono containing the user's current performance scores
+     * @throws NoResultsFoundException if no performance scores exist for the user
      */
     fun getCurrentPerformanceScores(keycloakId: String): Mono<UserPerformanceScores> {
         logger.debug("Retrieving current performance scores for user: $keycloakId")
 
         return userPerformanceScoresDAL.selectUserPerformanceScores(keycloakId)
+            .doOnError { throwable ->
+                logger.error("Error retrieving performance scores for user $keycloakId", throwable)
+            }
+    }
+
+    /**
+     * Retrieves historical performance scores for a user within a date range.
+     *
+     * @param keycloakId The user's Keycloak identifier
+     * @param startTimestamp Optional start timestamp of the range
+     * @param endTimestamp Optional end timestamp of the range
+     * @return Mono containing list of historical performance scores
+     */
+    fun getPerformanceScoresHistory(
+        keycloakId: String,
+        startTimestamp: Instant? = null,
+        endTimestamp: Instant? = null
+    ): Mono<List<UserPerformanceScores>> {
+        logger.debug("Retrieving performance scores history for user: $keycloakId, range: $startTimestamp to $endTimestamp")
+
+        return userPerformanceScoresDAL.selectUserPerformanceScoresInRange(keycloakId, startTimestamp, endTimestamp)
             .onErrorResume { throwable ->
-                if (throwable is NoResultsFoundException) {
-                    logger.info("No performance scores found for user $keycloakId, creating default scores")
-                    createDefaultPerformanceData(keycloakId)
-                } else {
-                    logger.error("Error retrieving performance scores for user $keycloakId", throwable)
-                    Mono.error(throwable)
-                }
+                logger.error("Error retrieving performance scores history for user $keycloakId", throwable)
+                Mono.error(throwable)
             }
     }
 
     /**
      * Retrieves current performance metrics for the authenticated user.
-     * If no metrics exist, creates default metrics for new users.
      *
      * @return Mono containing the user's current performance metrics
+     * @throws NoResultsFoundException if no performance metrics exist for the user
      */
     fun getCurrentPerformanceMetrics(keycloakId: String): Mono<UserPerformanceMetrics> {
         logger.debug("Retrieving current performance metrics for user: $keycloakId")
 
         return userPerformanceMetricsDAL.selectUserPerformanceMetrics(keycloakId)
-            .onErrorResume { throwable ->
-                if (throwable is NoResultsFoundException) {
-                    logger.info("No performance metrics found for user $keycloakId, creating default metrics")
-                    createDefaultPerformanceMetrics(keycloakId)
-                } else {
-                    logger.error("Error retrieving performance metrics for user $keycloakId", throwable)
-                    Mono.error(throwable)
-                }
+            .doOnError { throwable ->
+                logger.error("Error retrieving performance metrics for user $keycloakId", throwable)
             }
     }
 
@@ -113,7 +124,7 @@ class PerformanceTrackingService(
      * @param keycloakId The user's Keycloak identifier
      * @return Mono containing the created performance scores
      */
-    private fun createDefaultPerformanceData(keycloakId: String): Mono<UserPerformanceScores> {
+    fun createDefaultPerformanceData(keycloakId: String): Mono<UserPerformanceScores> {
         logger.info("Creating default performance data for new user: $keycloakId")
 
         val now = Instant.now()
@@ -143,11 +154,11 @@ class PerformanceTrackingService(
             .then(
                 Mono.fromCallable {
                     // For new users, we'll create default scores without test results
-                    performanceScoringService.calculatePerformanceScores(defaultMetrics, null)
+                    performanceScoringService.calculatePerformanceScores(defaultMetrics, null, "account_creation")
                 }
             )
             .flatMap { defaultScores ->
-                userPerformanceScoresDAL.upsertUserPerformanceScores(defaultScores)
+                userPerformanceScoresDAL.insertUserPerformanceScores(defaultScores)
                     .then(Mono.just(defaultScores))
             }
     }
@@ -242,8 +253,8 @@ class PerformanceTrackingService(
                 userTestResultDAL.getUserTestResultsInRange(keycloakId, startTimestamp, endTimestamp)
             }
             else -> {
-                // Get test results for the current week if no range specified
-                userTestResultDAL.getUserTestResultsForWeek(keycloakId, getCurrentWeekStart())
+                // Get all test results for the user (not just current week) to ensure we find all data
+                userTestResultDAL.getUserTestResultsInRange(keycloakId, null, null)
             }
         }
     }
@@ -307,12 +318,17 @@ class PerformanceTrackingService(
                 userPerformanceMetricsDAL.upsertUserPerformanceMetrics(mergedMetrics)
             }
             .flatMap { updatedMetrics ->
-                // Calculate new scores
-                Mono.fromCallable {
-                    performanceScoringService.calculatePerformanceScores(updatedMetrics)
-                }.flatMap { scores ->
-                    // Upsert scores (insert or update)
-                    userPerformanceScoresDAL.upsertUserPerformanceScores(scores)
+                // Get weekly test data and calculate new scores
+                getWeeklyTests(updatedMetrics.keycloakId)
+                    .flatMap { testResults ->
+                        // Convert test results to weekly test data for scoring
+                        val weeklyTest = convertTestResultsToWeeklyTest(testResults)
+                        Mono.fromCallable {
+                            performanceScoringService.calculatePerformanceScores(updatedMetrics, weeklyTest, "daily_metrics_updated")
+                        }
+                    }.flatMap { scores ->
+                    // Insert new scores (historical tracking)
+                    userPerformanceScoresDAL.insertUserPerformanceScores(scores)
                 }
             }
     }
@@ -355,6 +371,24 @@ class PerformanceTrackingService(
         return reactor.core.publisher.Flux.fromIterable(testResults)
             .flatMap { testResult -> userTestResultDAL.upsertUserTestResult(testResult) }
             .collectList()
+            .flatMap { updatedTestResults ->
+                // Get current daily metrics and calculate new scores
+                userPerformanceMetricsDAL.selectUserPerformanceMetrics(keycloakId)
+                    .flatMap { dailyMetrics ->
+                        // Get ALL test results for the user to ensure we find all data
+                        userTestResultDAL.getUserTestResultsInRange(keycloakId, null, null)
+                            .flatMap { allTestResults ->
+                                // Convert test results to weekly test data for scoring
+                                val weeklyTest = convertTestResultsToWeeklyTest(allTestResults)
+                                Mono.fromCallable {
+                                    performanceScoringService.calculatePerformanceScores(dailyMetrics, weeklyTest, "weekly_test_updated")
+                                }
+                            }
+                    }.flatMap { scores ->
+                        // Insert new scores (historical tracking)
+                        userPerformanceScoresDAL.insertUserPerformanceScores(scores)
+                    }.then(Mono.just(updatedTestResults))
+            }
     }
 
     /**
@@ -385,5 +419,78 @@ class PerformanceTrackingService(
             .doOnError { error ->
                 logger.error("Failed to retrieve test protocols from database", error)
             }
+    }
+
+    /**
+     * Converts a list of UserTestResult to a UserWeeklyTest object for scoring.
+     * 
+     * Implements fallback logic: for each metric, iterates from newest to oldest
+     * test results to find the most recent non-null value. If no non-null value
+     * is found across all historical results, the metric remains null.
+     *
+     * @param testResults List of test results for the week (should be ordered newest to oldest)
+     * @return UserWeeklyTest object or null if no results
+     */
+    private fun convertTestResultsToWeeklyTest(testResults: List<UserTestResult>): UserWeeklyTest? {
+        if (testResults.isEmpty()) return null
+
+        logger.info("convertTestResultsToWeeklyTest called with ${testResults.size} results:")
+        testResults.forEach { result ->
+            logger.info("  ${result.testName}: status=${result.status}, resultValue=${result.resultValue}, weekStart=${result.weekStartTimestamp}")
+        }
+
+        val firstResult = testResults.first()
+        val keycloakId = firstResult.keycloakId
+        val weekStartTimestamp = firstResult.weekStartTimestamp
+
+        // Group test results by test name for efficient lookup
+        val testResultsByType = testResults.groupBy { it.testName }
+
+        // Helper function to find the most recent non-null value for a test type
+        fun findMostRecentNonNullValue(testName: String): Pair<TestStatus, Double?> {
+            val results = testResultsByType[testName]
+            if (results == null) {
+                logger.info("No test results found for testName: $testName")
+                return Pair(TestStatus.PENDING, null)
+            }
+            
+            // Results are already ordered newest to oldest, so find first non-null
+            for (result in results) {
+                if (result.resultValue != null) {
+                    logger.info("Found non-null result for $testName: ${result.resultValue}")
+                    return Pair(result.status, result.resultValue)
+                }
+            }
+            
+            // If no non-null value found, return the status from the most recent result
+            val mostRecentResult = results.first()
+            logger.info("No non-null result found for $testName, returning status: ${mostRecentResult.status}")
+            return Pair(mostRecentResult.status, null)
+        }
+
+        // Get the most recent non-null values for each test type
+        val (verticalJumpStatus, verticalJumpResult) = findMostRecentNonNullValue("vertical_jump")
+        val (hrRecoveryStatus, hrRecoveryResult) = findMostRecentNonNullValue("hr_recovery")
+        val (reflexStatus, reflexResult) = findMostRecentNonNullValue("reflex")
+        val (mobilityStatus, mobilityResult) = findMostRecentNonNullValue("mobility")
+
+        logger.debug("Weekly test fallback results for user $keycloakId: " +
+            "vertical_jump=$verticalJumpResult, hr_recovery=$hrRecoveryResult, " +
+            "reflex=$reflexResult, mobility=$mobilityResult")
+
+        return UserWeeklyTest(
+            keycloakId = keycloakId,
+            weekStartTimestamp = weekStartTimestamp,
+            verticalJumpStatus = verticalJumpStatus,
+            verticalJumpResult = verticalJumpResult,
+            hrRecoveryStatus = hrRecoveryStatus,
+            hrRecoveryResult = hrRecoveryResult,
+            reflexStatus = reflexStatus,
+            reflexResult = reflexResult,
+            mobilityStatus = mobilityStatus,
+            mobilityResult = mobilityResult,
+            createdAt = firstResult.createdAt,
+            updatedAt = firstResult.updatedAt
+        )
     }
 }

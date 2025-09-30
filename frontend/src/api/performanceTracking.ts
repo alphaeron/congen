@@ -62,6 +62,33 @@ export const getCurrentPerformanceScores = async (
 };
 
 /**
+ * Get historical performance scores for the authenticated user within a date range.
+ */
+export const getPerformanceScoresHistory = async (
+  startDate?: Date,
+  endDate?: Date,
+  options: { forceRefresh?: boolean } = {}
+): Promise<UserPerformanceScores[]> => {
+  const params = new URLSearchParams();
+  
+  if (startDate) {
+    params.append('start_date', startDate.toISOString());
+  }
+  if (endDate) {
+    params.append('end_date', endDate.toISOString());
+  }
+
+  const queryString = params.toString();
+  const url = queryString ? `/performance/scores/history?${queryString}` : '/performance/scores/history';
+
+  return REQUEST<UserPerformanceScores[]>({
+    method: 'GET',
+    url,
+    ...options,
+  });
+};
+
+/**
  * Get current performance metrics for the authenticated user.
  */
 export const getCurrentPerformanceMetrics = async (
@@ -101,19 +128,30 @@ export const submitWeeklyTest = async (
  * Get weekly tests for the authenticated user within a date range.
  */
 export const getWeeklyTestsInRange = async (
-  startDate: string,
-  endDate: string,
+  startDate?: string,
+  endDate?: string,
   options: { forceRefresh?: boolean } = {}
 ): Promise<UserTestResult[]> => {
-  return REQUEST<UserTestResult[]>({
+  const params: Record<string, string> = {};
+  if (startDate) {
+    params.startTimestamp = startDate;
+  }
+  if (endDate) {
+    params.endTimestamp = endDate;
+  }
+
+  // Only include params in the request if we have any
+  const requestConfig: any = {
     method: 'GET',
     url: '/performance/weekly_test',
-    params: {
-      startTimestamp: startDate,
-      endTimestamp: endDate,
-    },
     ...options,
-  });
+  };
+
+  if (Object.keys(params).length > 0) {
+    requestConfig.params = params;
+  }
+
+  return REQUEST<UserTestResult[]>(requestConfig);
 };
 
 /**

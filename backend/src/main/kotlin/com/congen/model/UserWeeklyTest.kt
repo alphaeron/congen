@@ -94,10 +94,10 @@ data class UserWeeklyTest(
     /** Result in bpm drop (if completed). */
     @Schema(
         description = "Result in bpm drop (if completed)",
-        example = "38",
+        example = "38.5",
         minimum = "0"
     )
-    @param:JsonProperty("hr_recovery_result") val hrRecoveryResult: Int?,
+    @param:JsonProperty("hr_recovery_result") val hrRecoveryResult: Double?,
     /** Status of reflex test. */
     @Schema(
         description = "Status of reflex test",
@@ -108,10 +108,10 @@ data class UserWeeklyTest(
     /** Result in milliseconds (if completed). */
     @Schema(
         description = "Result in milliseconds (if completed)",
-        example = "312",
+        example = "312.5",
         minimum = "0"
     )
-    @param:JsonProperty("reflex_result") val reflexResult: Int?,
+    @param:JsonProperty("reflex_result") val reflexResult: Double?,
     /** Status of mobility test. */
     @Schema(
         description = "Status of mobility test",

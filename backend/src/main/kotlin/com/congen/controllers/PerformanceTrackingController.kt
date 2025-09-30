@@ -196,6 +196,59 @@ class PerformanceTrackingController(
     }
 
     /**
+     * Retrieves historical performance scores for the authenticated user within a date range.
+     *
+     * This endpoint provides access to the complete history of performance score calculations,
+     * allowing for trend analysis, level progression tracking, and achievement milestone recognition.
+     *
+     * @param startDate Optional start date for the range (ISO 8601 format)
+     * @param endDate Optional end date for the range (ISO 8601 format)
+     * @return List of historical performance scores
+     */
+    @GetMapping("/scores/history")
+    @PreAuthorize("isAuthenticated()")
+    @Operation(
+        summary = "Get historical performance scores",
+        description = "Retrieve historical performance scores within a date range for trend analysis and progression tracking."
+    )
+    @ApiResponses(
+        value = [
+            ApiResponse(
+                responseCode = "200",
+                description = "Historical performance scores retrieved successfully",
+                content = [Content(schema = Schema(implementation = Array<UserPerformanceScores>::class))]
+            ),
+            ApiResponse(
+                responseCode = "401",
+                description = "Unauthorized - user not authenticated"
+            ),
+            ApiResponse(
+                responseCode = "400",
+                description = "Bad request - invalid date format"
+            ),
+            ApiResponse(
+                responseCode = "500",
+                description = "Internal server error"
+            )
+        ]
+    )
+    fun getPerformanceScoresHistory(
+        @RequestParam(value = "start_date", required = false) startDate: String?,
+        @RequestParam(value = "end_date", required = false) endDate: String?
+    ): Mono<ResponseEntity<List<UserPerformanceScores>>> {
+        return keycloakUtil.getCurrentUserId()
+            .flatMap { keycloakId ->
+                gdprComplianceService.withUserConsent(keycloakId) {
+                    val startTimestamp = startDate?.let { Instant.parse(it) }
+                    val endTimestamp = endDate?.let { Instant.parse(it) }
+                    
+                    performanceTrackingService.getPerformanceScoresHistory(keycloakId, startTimestamp, endTimestamp)
+                        .map { ResponseEntity.ok(it) }
+                }
+            }
+    }
+
+    /**
      * Retrieves current performance metrics for the authenticated user.
      *
      * This endpoint returns the raw performance data including test results
@@ -355,8 +408,8 @@ class PerformanceTrackingController(
         ]
     )
     fun getWeeklyTestsInRange(
-        @RequestParam startTimestamp: Instant,
-        @RequestParam endTimestamp: Instant
+        @RequestParam(required = false) startTimestamp: Instant? = null,
+        @RequestParam(required = false) endTimestamp: Instant? = null,
     ): Mono<ResponseEntity<List<UserTestResult>>> {
         return keycloakUtil.getCurrentUserId()
             .flatMap { keycloakId ->

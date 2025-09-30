@@ -138,7 +138,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
     };
 
-    syncUserProfile();
+    syncUserProfile().catch(() => {
+      // Handle any unhandled promise rejections
+    });
   }, [oidcAuth.isAuthenticated, oidcAuth.user]);
 
   // Handle OIDC errors

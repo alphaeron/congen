@@ -56,7 +56,7 @@ class UserTestResultDAL(
             "SELECT id, keycloak_id, week_start_timestamp, test_name, status, result_value, created_at, updated_at " +
                 "FROM user_test_results " +
                 "WHERE keycloak_id = $1 AND week_start_timestamp = $2 " +
-                "ORDER BY test_name",
+                "ORDER BY created_at DESC, test_name",
             keycloakId,
             LocalDateTime.ofInstant(weekStartTimestamp, ZoneOffset.UTC)
         )
@@ -77,20 +77,33 @@ class UserTestResultDAL(
     )
     fun getUserTestResultsInRange(
         keycloakId: String,
-        startTimestamp: Instant,
-        endTimestamp: Instant
+        startTimestamp: Instant?,
+        endTimestamp: Instant?
     ): Mono<List<UserTestResult>> {
         logger.debug("Retrieving test results for user: $keycloakId, range: $startTimestamp to $endTimestamp")
 
-        return postgresClient.select(
-            "SELECT id, keycloak_id, week_start_timestamp, test_name, status, result_value, created_at, updated_at " +
-                "FROM user_test_results " +
-                "WHERE keycloak_id = $1 AND week_start_timestamp >= $2 AND week_start_timestamp <= $3 " +
-                "ORDER BY week_start_timestamp, test_name",
-            keycloakId,
-            LocalDateTime.ofInstant(startTimestamp, ZoneOffset.UTC),
-            LocalDateTime.ofInstant(endTimestamp, ZoneOffset.UTC)
-        )
+        return when {
+            startTimestamp != null && endTimestamp != null -> {
+                postgresClient.select(
+                    "SELECT id, keycloak_id, week_start_timestamp, test_name, status, result_value, created_at, updated_at " +
+                        "FROM user_test_results " +
+                        "WHERE keycloak_id = $1 AND week_start_timestamp >= $2 AND week_start_timestamp <= $3 " +
+                        "ORDER BY created_at DESC, test_name",
+                    keycloakId,
+                    LocalDateTime.ofInstant(startTimestamp, ZoneOffset.UTC),
+                    LocalDateTime.ofInstant(endTimestamp, ZoneOffset.UTC)
+                )
+            }
+            else -> {
+                postgresClient.select(
+                    "SELECT id, keycloak_id, week_start_timestamp, test_name, status, result_value, created_at, updated_at " +
+                        "FROM user_test_results " +
+                        "WHERE keycloak_id = $1 " +
+                        "ORDER BY created_at DESC, test_name",
+                    keycloakId
+                )
+            }
+        }
     }
 
     /**

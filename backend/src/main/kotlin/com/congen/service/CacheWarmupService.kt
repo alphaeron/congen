@@ -22,8 +22,8 @@ import com.congen.dal.UserWeightUnitPreferenceDAL
 import com.congen.dal.WorkoutStageDAL
 import com.congen.dal.WorkoutStageTypeDAL
 import org.slf4j.LoggerFactory
-import org.springframework.boot.ApplicationArguments
-import org.springframework.boot.ApplicationRunner
+import org.springframework.boot.context.event.ApplicationReadyEvent
+import org.springframework.context.event.EventListener
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
@@ -62,19 +62,20 @@ class CacheWarmupService(
     private val programmedExerciseDAL: ProgrammedExerciseDAL,
     private val setSchemeDAL: SetSchemeDAL,
     private val cacheWarmupConfig: CacheWarmupConfig
-) : ApplicationRunner {
+) {
     private val logger = LoggerFactory.getLogger(CacheWarmupService::class.java)
 
     /**
      * Executes the cache warmup process on application startup.
      *
-     * This method is called by Spring Boot after the application context is initialized
-     * but before the application starts serving requests. It builds a chain of warmup
-     * operations based on configuration and executes them sequentially.
+     * This method is called by Spring Boot after the application is ready to serve requests.
+     * It builds a chain of warmup operations based on configuration and executes them
+     * reactively without blocking the main thread.
      *
-     * @param args Application arguments (unused)
+     * @param event Application ready event
      */
-    override fun run(args: ApplicationArguments) {
+    @EventListener(ApplicationReadyEvent::class)
+    fun onApplicationReady(event: ApplicationReadyEvent) {
         if (!cacheWarmupConfig.enabled) {
             logger.info("Cache warmup is disabled, skipping warmup process")
             return

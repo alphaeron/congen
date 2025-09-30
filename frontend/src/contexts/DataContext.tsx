@@ -32,6 +32,7 @@ import {
   getWilksScore,
   getTestProtocols,
   getPerformanceMetricsInRange,
+  getPerformanceScoresHistory,
 } from '../api/performanceTracking';
 import { getProgram as getProgramAPI, getProgramsWithPreferences } from '../api/program';
 import {
@@ -98,6 +99,7 @@ interface DataContextType {
   dashboardStats: DashboardStats | null;
   // Performance tracking data
   performanceScores: UserPerformanceScores | null;
+  performanceScoresHistory: UserPerformanceScores[];
   performanceMetrics: UserPerformanceMetrics | null;
   weeklyTests: UserTestResult[];
   testProtocols: TestProtocol[];
@@ -207,7 +209,7 @@ interface DataProviderProps {
 }
 
 export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
-  const { user } = useAuth();
+  const { user, isLoading: authIsLoading } = useAuth();
   const [userData, setUserData] = useState<UserDataExport | null>(null);
   const [exerciseMuscleData, setExerciseMuscleData] = useState<Map<string, string[]>>(new Map());
   const [weightUnitPreferences, setWeightUnitPreferences] = useState<UserWeightUnitPreference[]>(
@@ -239,6 +241,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
   const [dashboardStats, setDashboardStats] = useState<DashboardStats | null>(null);
   // Performance tracking data
   const [performanceScores, setPerformanceScores] = useState<UserPerformanceScores | null>(null);
+  const [performanceScoresHistory, setPerformanceScoresHistory] = useState<UserPerformanceScores[]>([]);
   const [performanceMetrics, setPerformanceMetrics] = useState<UserPerformanceMetrics | null>(null);
   const [weeklyTests, setWeeklyTests] = useState<UserTestResult[]>([]);
   const [testProtocols, setTestProtocols] = useState<TestProtocol[]>([]);
@@ -290,25 +293,31 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
         setError(null);
 
         // Load all data in parallel to minimize API calls
-        const [
-          dataExport,
-          exerciseMuscleData,
-          weightUnitPreferencesData,
-          performanceScoresData,
-          performanceMetricsData,
-          weeklyTestsData,
-        ] = await Promise.all([
+        const results = await Promise.allSettled([
           getUserDataExport({ forceRefresh }),
           getExerciseMuscle({ forceRefresh }),
           getUserWeightUnitPreferences(user.keycloak_id, { forceRefresh }),
-          getCurrentPerformanceScores({ forceRefresh }).catch(() => null),
-          getCurrentPerformanceMetrics({ forceRefresh }).catch(() => null),
-          getWeeklyTestsInRange(
-            new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days ago
-            new Date().toISOString(), // today
+          getCurrentPerformanceScores({ forceRefresh }),
+          getPerformanceScoresHistory(
+            undefined, // No start date - get all history
+            undefined, // No end date - get all history
             { forceRefresh }
-          ).catch(() => []),
+          ),
+          getCurrentPerformanceMetrics({ forceRefresh }),
+          getWeeklyTestsInRange(
+            undefined, // No start date - get all history
+            undefined, // No end date - get all history
+            { forceRefresh }
+          ),
         ]);
+
+        const dataExport = results[0].status === 'fulfilled' ? results[0].value : null;
+        const exerciseMuscleData = results[1].status === 'fulfilled' ? results[1].value : [];
+        const weightUnitPreferencesData = results[2].status === 'fulfilled' ? results[2].value : [];
+        const performanceScoresData = results[3].status === 'fulfilled' ? results[3].value : null;
+        const performanceScoresHistoryData = results[4].status === 'fulfilled' ? results[4].value : [];
+        const performanceMetricsData = results[5].status === 'fulfilled' ? results[5].value : null;
+        const weeklyTestsData = results[6].status === 'fulfilled' ? results[6].value : [];
 
         // Convert exercise muscle data to Map for efficient lookup
         const muscleMap = new Map<string, string[]>();
@@ -322,6 +331,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
         setExerciseMuscleData(muscleMap);
         setWeightUnitPreferences(weightUnitPreferencesData || []);
         setPerformanceScores(performanceScoresData);
+        setPerformanceScoresHistory(performanceScoresHistoryData);
         setPerformanceMetrics(performanceMetricsData);
         setWeeklyTests(weeklyTestsData);
 
@@ -1388,17 +1398,17 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
 
   // Load data on mount and when user changes
   useEffect(() => {
-    if (user?.keycloak_id) {
+    if (user?.keycloak_id && !authIsLoading) {
       loadData();
     }
-  }, [user?.keycloak_id, loadData]);
+  }, [user?.keycloak_id, authIsLoading, loadData]);
 
   // Auto-refresh stale data when components request it
   useEffect(() => {
-    if (isDataStale && userData) {
+    if (isDataStale && userData && !authIsLoading) {
       loadData(true);
     }
-  }, [isDataStale, userData, loadData]);
+  }, [isDataStale, userData, authIsLoading, loadData]);
 
   // Memoize the context value to prevent unnecessary re-renders
   const value: DataContextType = useMemo(
@@ -1424,6 +1434,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
       userExercisePool,
       dashboardStats,
       performanceScores,
+      performanceScoresHistory,
       performanceMetrics,
       weeklyTests,
       testProtocols,

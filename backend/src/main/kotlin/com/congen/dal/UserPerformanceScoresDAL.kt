@@ -12,6 +12,8 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Mono
 import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneOffset
 
 /**
  * Data Access Layer for UserPerformanceScores entity operations.
@@ -55,10 +57,10 @@ class UserPerformanceScoresDAL(
     }
 
     /**
-     * Retrieves performance scores for a user by their Keycloak ID.
+     * Retrieves the latest performance scores for a user.
      *
      * @param keycloakId The user's Keycloak identifier
-     * @return Mono containing the performance scores, or empty if not found
+     * @return Mono containing the latest performance scores
      */
     @Cacheable(
         ttl = CacheTTL.USER_DATA,
@@ -66,125 +68,112 @@ class UserPerformanceScoresDAL(
         entityName = "user_performance_scores"
     )
     fun selectUserPerformanceScores(keycloakId: String): Mono<UserPerformanceScores> {
-        logger.debug("Selecting performance scores for user: $keycloakId")
+        logger.debug("Selecting latest performance scores for user: $keycloakId")
 
-        return auditService.logDataAccess("user_performance_scores", "SELECT", keycloakId)
+        return auditService.logDataAccess("user_performance_scores", "SELECT_LATEST", keycloakId)
             .then(
                 postgresClient.selectIndividual(
-                    "SELECT * FROM user_performance_scores WHERE keycloak_id = $1",
+                    "SELECT * FROM user_performance_scores WHERE keycloak_id = $1 ORDER BY created_at DESC LIMIT 1",
                     keycloakId
                 )
             )
     }
 
     /**
-     * Upserts performance scores for a user (insert or update).
+     * Retrieves performance scores history for a user within a date range.
      *
-     * @param scores The performance scores to upsert
-     * @return Mono containing the upserted performance scores
+     * @param keycloakId The user's Keycloak identifier
+     * @param startTimestamp Optional start timestamp of the range
+     * @param endTimestamp Optional end timestamp of the range
+     * @return Mono containing list of performance scores
+     */
+    @Cacheable(
+        ttl = CacheTTL.USER_DATA,
+        keyStrategy = CacheKeyStrategy.USER_SPECIFIC,
+        entityName = "user_performance_scores"
+    )
+    fun selectUserPerformanceScoresInRange(
+        keycloakId: String,
+        startTimestamp: Instant? = null,
+        endTimestamp: Instant? = null
+    ): Mono<List<UserPerformanceScores>> {
+        logger.debug("Selecting performance scores history for user: $keycloakId, range: $startTimestamp to $endTimestamp")
+
+        return when {
+            startTimestamp != null && endTimestamp != null -> {
+                auditService.logDataAccess("user_performance_scores", "SELECT_RANGE", keycloakId)
+                    .then(
+                        postgresClient.select(
+                            """
+                            SELECT * FROM user_performance_scores
+                            WHERE keycloak_id = $1 AND created_at BETWEEN $2 AND $3
+                            ORDER BY created_at DESC
+                            """,
+                            keycloakId,
+                            LocalDateTime.ofInstant(startTimestamp, ZoneOffset.UTC),
+                            LocalDateTime.ofInstant(endTimestamp, ZoneOffset.UTC)
+                        )
+                    )
+            }
+            else -> {
+                auditService.logDataAccess("user_performance_scores", "SELECT_ALL", keycloakId)
+                    .then(
+                        postgresClient.select(
+                            "SELECT * FROM user_performance_scores WHERE keycloak_id = $1 ORDER BY created_at DESC",
+                            keycloakId
+                        )
+                    )
+            }
+        }
+    }
+
+    /**
+     * Inserts new performance scores for a user (historical tracking).
+     * Each score calculation creates a new record to maintain full history.
+     *
+     * @param scores The performance scores to insert
+     * @return Mono containing the inserted performance scores
      */
     @CacheEvict(
         invalidationStrategy = CacheInvalidationStrategy.USER_DATA,
         entityName = "user_performance_scores"
     )
-    fun upsertUserPerformanceScores(scores: UserPerformanceScores): Mono<UserPerformanceScores> {
-        logger.debug("Upserting performance scores for user: ${scores.keycloakId}")
+    fun insertUserPerformanceScores(scores: UserPerformanceScores): Mono<UserPerformanceScores> {
+        logger.debug("Inserting performance scores for user: ${scores.keycloakId}")
 
         val now = Instant.now()
-        val scoresWithTimestamps =
-            scores.copy(
-                createdAt = now,
-                updatedAt = now
-            )
+        val scoresWithTimestamps = scores.copy(createdAt = now)
 
-        return auditService.logDataAccess("user_performance_scores", "UPSERT", scores.keycloakId)
+        return auditService.logDataAccess("user_performance_scores", "INSERT", scores.keycloakId)
             .then(
                 postgresClient.update(
                     """
                     INSERT INTO user_performance_scores (
-                        keycloak_id, explosiveness_score, aerobic_capacity_score,
-                        recovery_score, reaction_time_score,
-                        level, hp, hp_loss, mp, mp_loss, fatigue, fatigue_loss, skills, created_at, updated_at
+                        keycloak_id, explosiveness_score, aerobic_capacity_score, recovery_score,
+                        reaction_time_score, mobility_score, level, level_change_reason,
+                        hp, hp_loss, mp, mp_loss, fatigue, fatigue_loss, skills, created_at
                     ) VALUES (
-                        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, NOW(), NOW()
+                        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16
                     )
-                    ON CONFLICT (keycloak_id) DO UPDATE SET
-                        explosiveness_score = CASE
-                            WHEN DATE(user_performance_scores.created_at) = DATE(NOW())
-                            THEN EXCLUDED.explosiveness_score
-                            ELSE user_performance_scores.explosiveness_score
-                        END,
-                        aerobic_capacity_score = CASE
-                            WHEN DATE(user_performance_scores.created_at) = DATE(NOW())
-                            THEN EXCLUDED.aerobic_capacity_score
-                            ELSE user_performance_scores.aerobic_capacity_score
-                        END,
-                        recovery_score = CASE
-                            WHEN DATE(user_performance_scores.created_at) = DATE(NOW())
-                            THEN EXCLUDED.recovery_score
-                            ELSE user_performance_scores.recovery_score
-                        END,
-                        reaction_time_score = CASE
-                            WHEN DATE(user_performance_scores.created_at) = DATE(NOW())
-                            THEN EXCLUDED.reaction_time_score
-                            ELSE user_performance_scores.reaction_time_score
-                        END,
-                        level = CASE
-                            WHEN DATE(user_performance_scores.created_at) = DATE(NOW())
-                            THEN EXCLUDED.level
-                            ELSE user_performance_scores.level
-                        END,
-                        hp = CASE
-                            WHEN DATE(user_performance_scores.created_at) = DATE(NOW())
-                            THEN EXCLUDED.hp
-                            ELSE user_performance_scores.hp
-                        END,
-                        hp_loss = CASE
-                            WHEN DATE(user_performance_scores.created_at) = DATE(NOW())
-                            THEN EXCLUDED.hp_loss
-                            ELSE user_performance_scores.hp_loss
-                        END,
-                        mp = CASE
-                            WHEN DATE(user_performance_scores.created_at) = DATE(NOW())
-                            THEN EXCLUDED.mp
-                            ELSE user_performance_scores.mp
-                        END,
-                        mp_loss = CASE
-                            WHEN DATE(user_performance_scores.created_at) = DATE(NOW())
-                            THEN EXCLUDED.mp_loss
-                            ELSE user_performance_scores.mp_loss
-                        END,
-                        fatigue = CASE
-                            WHEN DATE(user_performance_scores.created_at) = DATE(NOW())
-                            THEN EXCLUDED.fatigue
-                            ELSE user_performance_scores.fatigue
-                        END,
-                        fatigue_loss = CASE
-                            WHEN DATE(user_performance_scores.created_at) = DATE(NOW())
-                            THEN EXCLUDED.fatigue_loss
-                            ELSE user_performance_scores.fatigue_loss
-                        END,
-                        skills = CASE
-                            WHEN DATE(user_performance_scores.created_at) = DATE(NOW())
-                            THEN EXCLUDED.skills
-                            ELSE user_performance_scores.skills
-                        END,
-                        updated_at = NOW()
                     """,
                     scoresWithTimestamps.keycloakId,
                     scoresWithTimestamps.explosivenessScore,
                     scoresWithTimestamps.aerobicCapacityScore,
                     scoresWithTimestamps.recoveryScore,
                     scoresWithTimestamps.reactionTimeScore,
+                    scoresWithTimestamps.mobilityScore,
                     scoresWithTimestamps.level,
+                    scoresWithTimestamps.levelChangeReason,
                     scoresWithTimestamps.hp,
                     scoresWithTimestamps.hpLoss,
                     scoresWithTimestamps.mp,
                     scoresWithTimestamps.mpLoss,
                     scoresWithTimestamps.fatigue,
                     scoresWithTimestamps.fatigueLoss,
-                    scoresWithTimestamps.skills.toTypedArray()
+                    scoresWithTimestamps.skills.toTypedArray(),
+                    LocalDateTime.ofInstant(scoresWithTimestamps.createdAt, ZoneOffset.UTC)
                 )
             )
+            .then(Mono.just(scoresWithTimestamps))
     }
 }

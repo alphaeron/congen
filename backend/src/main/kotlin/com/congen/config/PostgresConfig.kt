@@ -5,7 +5,6 @@ import io.vertx.pgclient.PgBuilder
 import io.vertx.pgclient.PgConnectOptions
 import io.vertx.sqlclient.PoolOptions
 import io.vertx.sqlclient.SqlClient
-import jakarta.annotation.PreDestroy
 import org.slf4j.LoggerFactory
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.boot.context.properties.EnableConfigurationProperties
@@ -88,8 +87,6 @@ class PostgresConfig(
         private val CONNECTION_POOL_COUNT_WRITER = 10
     }
 
-    /** Shared Vert.x instance for all database connections. */
-    private val vertx: Vertx = Vertx.vertx()
 
     /**
      * Creates and configures the PostgreSQL writer connection pool.
@@ -101,10 +98,10 @@ class PostgresConfig(
      * @throws Exception if the connection cannot be established
      */
     @Bean("postgresDBWriter")
-    fun postgresDBWriter(): SqlClient {
+    fun postgresDBWriter(vertx: Vertx): SqlClient {
         logger.info("Initializing PostgreSQL writer connection on port {}", props.port)
         return try {
-            buildSqlClient(props.writer.host, CONNECTION_POOL_COUNT_WRITER)
+            buildSqlClient(vertx, props.writer.host, CONNECTION_POOL_COUNT_WRITER)
         } catch (e: Exception) {
             logger.error("Failed to initialize PostgreSQL writer connection", e)
             throw e
@@ -121,10 +118,10 @@ class PostgresConfig(
      * @throws Exception if the connection cannot be established
      */
     @Bean("postgresDBReader")
-    fun postgresDBReader(): SqlClient {
+    fun postgresDBReader(vertx: Vertx): SqlClient {
         logger.info("Initializing PostgreSQL reader connection on port {}", props.port)
         return try {
-            buildSqlClient(props.reader.host, CONNECTION_POOL_COUNT_READER)
+            buildSqlClient(vertx, props.reader.host, CONNECTION_POOL_COUNT_READER)
         } catch (e: Exception) {
             logger.error("Failed to initialize PostgreSQL reader connection", e)
             throw e
@@ -142,6 +139,7 @@ class PostgresConfig(
      * @return Configured SqlClient instance
      */
     private fun buildSqlClient(
+        vertx: Vertx,
         host: String,
         poolSize: Int,
     ): SqlClient {
@@ -174,14 +172,5 @@ class PostgresConfig(
             .with(poolOptions)
             .using(vertx)
             .build()
-    }
-
-    /**
-     * Cleanup method to properly close the Vert.x instance when the application shuts down.
-     */
-    @PreDestroy
-    fun cleanup() {
-        logger.info("Shutting down Vert.x instance")
-        vertx.close()
     }
 }

@@ -116,7 +116,12 @@ class UserPerformanceMetricsDAL(
                                     deep_sleep_minutes = $8,
                                     subjective_tiredness = $9,
                                     updated_at = NOW()
-                                WHERE keycloak_id = $1 AND DATE(created_at) = DATE(NOW())
+                                WHERE id = (
+                                    SELECT id FROM user_performance_metrics 
+                                    WHERE keycloak_id = $1 AND DATE(created_at) = DATE(NOW())
+                                    ORDER BY created_at DESC
+                                    LIMIT 1
+                                )
                                 """,
                                 metricsWithTimestamps.keycloakId,
                                 metricsWithTimestamps.vo2Max,

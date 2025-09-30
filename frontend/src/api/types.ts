@@ -24,9 +24,11 @@ export interface UserPerformanceMetrics {
 }
 
 /**
- * User performance scores for gamified tracking.
+ * User performance scores for gamified tracking with historical tracking.
+ * Each record represents a score calculation event, maintaining full history.
  */
 export interface UserPerformanceScores {
+  id?: number;
   keycloak_id: string;
   explosiveness_score?: number;
   aerobic_capacity_score?: number;
@@ -34,6 +36,7 @@ export interface UserPerformanceScores {
   reaction_time_score?: number;
   mobility_score?: number;
   level: number;
+  level_change_reason?: string;
   hp: number;
   hp_loss: number;
   mp: number;
@@ -42,7 +45,6 @@ export interface UserPerformanceScores {
   fatigue_loss: number;
   skills: string[];
   created_at: Date;
-  updated_at: Date;
 }
 
 /**
