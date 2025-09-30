@@ -69,7 +69,7 @@ import type {
 } from '../api/types';
 import { getUserEquipment } from '../api/userEquipment';
 import { getUserExercisePreferences } from '../api/userExercisePreference';
-import { getUserOneRepMaxes } from '../api/userOneRepMax';
+import { getUserOneRepMaxes, upsertUserOneRepMax as upsertUserOneRepMaxAPI } from '../api/userOneRepMax';
 import { getUserWeakMuscles } from '../api/userWeakMuscle';
 import { getUserWeightUnitPreferences } from '../api/userWeightUnitPreference';
 
@@ -127,6 +127,11 @@ interface DataContextType {
   loadProgramPreferences: () => Promise<ProgramWithPreferences[]>;
   loadProgrammedWorkouts: () => Promise<ProgrammedWorkout[]>;
   loadUserOneRepMaxes: () => Promise<UserOneRepMax[]>;
+  upsertUserOneRepMax: (
+    exerciseName: string,
+    oneRepMax: number,
+    unit: string
+  ) => Promise<UserOneRepMax>;
   // New data loading functions
   loadUserConsent: () => Promise<UserConsent | null>;
   loadUserExercisePool: () => Promise<UserExercisePoolResponse | null>;
@@ -719,6 +724,37 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
       return [];
     }
   }, [user?.keycloak_id, userOneRepMaxes]);
+
+  const upsertUserOneRepMax = useCallback(
+    async (
+      exerciseName: string,
+      oneRepMax: number,
+      unit: string
+    ): Promise<UserOneRepMax> => {
+      if (!user?.keycloak_id) {
+        throw new Error('User not authenticated');
+      }
+
+      try {
+        const result = await upsertUserOneRepMaxAPI(
+          user.keycloak_id,
+          exerciseName,
+          oneRepMax,
+          unit
+        );
+
+        // Refresh data to ensure all components have the latest data
+        await loadData(true);
+        return result;
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : 'Failed to save one rep max';
+        setError(errorMessage);
+        throw err;
+      }
+    },
+    [user?.keycloak_id, loadData]
+  );
 
   // New data loading functions
   const loadUserConsent = useCallback(async (): Promise<UserConsent | null> => {
@@ -1460,6 +1496,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
       loadProgramPreferences,
       loadProgrammedWorkouts,
       loadUserOneRepMaxes,
+      upsertUserOneRepMax,
       loadUserConsent,
       loadUserExercisePool,
       loadDashboardStats,
@@ -1532,6 +1569,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
       loadProgramPreferences,
       loadProgrammedWorkouts,
       loadUserOneRepMaxes,
+      upsertUserOneRepMax,
       loadUserConsent,
       loadUserExercisePool,
       loadDashboardStats,

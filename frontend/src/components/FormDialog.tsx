@@ -95,7 +95,7 @@ export const FormDialog = <TFormData extends Record<string, unknown>>({
       {useTanStackForm ? (
         <form onSubmit={handleSubmit}>
           <DialogTitle>
-            <GameText variant="h6" textVariant="glow">{title}</GameText>
+            <GameText variant="body1" sx={{ fontSize: '1.25rem', fontWeight: 600 }}>{title}</GameText>
           </DialogTitle>
           <DialogContent>
             {description && (
@@ -124,7 +124,7 @@ export const FormDialog = <TFormData extends Record<string, unknown>>({
       ) : (
         <React.Fragment>
           <DialogTitle>
-            <GameText variant="h6" textVariant="glow">{title}</GameText>
+            <GameText variant="body1" sx={{ fontSize: '1.25rem', fontWeight: 600 }}>{title}</GameText>
           </DialogTitle>
           <DialogContent>
             {description && (

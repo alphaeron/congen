@@ -32,7 +32,6 @@ import { exportProgramToPDF } from '../utils/exportUtils';
 import { calculateProgramProgress } from '../utils/progressUtils';
 
 interface WorkoutsProps {
-  user: User;
   selectedWorkout?: string | null;
 }
 
@@ -46,11 +45,10 @@ interface WorkoutsProps {
  * - Auto-refresh functionality after workout generation
  * - URL query parameters for week and workout selection
  *
- * @param user The current user object
  * @param selectedWorkout The selected workout ID (from URL)
  * @returns Workouts component
  */
-export const Workouts: React.FC<WorkoutsProps> = ({ user }) => {
+export const Workouts: React.FC<WorkoutsProps> = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { enqueueSnackbar } = useSnackbar();
@@ -120,7 +118,7 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user }) => {
     };
 
     loadAdditionalData();
-  }, [userData, user.keycloak_id, enqueueSnackbar, loadProgramPreferences, getExercise]);
+  }, [userData, enqueueSnackbar, loadProgramPreferences, getExercise]);
 
   // Get active program data consistently from userData
   const activeProgramData = useMemo(() => {

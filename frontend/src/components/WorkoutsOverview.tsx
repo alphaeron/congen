@@ -2,6 +2,7 @@ import {
   Add as AddIcon,
   Tune as TuneIcon,
   RotateRight as RotateRightIcon,
+  FitnessCenter as FitnessCenterIcon,
 } from '@mui/icons-material';
 import { Box, Tabs, Tab, Slide } from '@mui/material';
 import React, { useState, useEffect } from 'react';
@@ -9,6 +10,7 @@ import { useSearchParams, useNavigate } from 'react-router';
 
 import { ConjugateProgression } from './ConjugateProgression';
 import { ExerciseRotationVisualization } from './ExerciseRotationVisualization';
+import { OneRepMaxRecords } from './OneRepMaxRecords';
 import { WorkoutDetail } from './WorkoutDetail';
 import { WorkoutPreferencesSection } from './WorkoutPreferencesSection';
 import { Workouts } from './Workouts';
@@ -100,6 +102,12 @@ export const WorkoutsOverview: React.FC<WorkoutsOverviewProps> = ({ user, select
         // Keep category and exercise if they exist
         break;
       case 3:
+        // 1RM Records
+        newSearchParams.set('subsection', 'records');
+        newSearchParams.delete('category');
+        newSearchParams.delete('exercise');
+        break;
+      case 4:
         // Workout Preferences
         newSearchParams.set('subsection', 'preferences');
         newSearchParams.delete('category');
@@ -122,8 +130,11 @@ export const WorkoutsOverview: React.FC<WorkoutsOverviewProps> = ({ user, select
       case 'rotation':
         newTabIndex = 2;
         break;
-      case 'preferences':
+      case 'records':
         newTabIndex = 3;
+        break;
+      case 'preferences':
+        newTabIndex = 4;
         break;
       default:
         newTabIndex = 0;
@@ -172,11 +183,18 @@ export const WorkoutsOverview: React.FC<WorkoutsOverviewProps> = ({ user, select
             aria-controls="workout-tabpanel-2"
           />
           <Tab
-            label="Workout Preferences"
-            icon={<TuneIcon />}
+            label="1RM Records"
+            icon={<FitnessCenterIcon />}
             iconPosition="start"
             id="workout-tab-3"
             aria-controls="workout-tabpanel-3"
+          />
+          <Tab
+            label="Workout Preferences"
+            icon={<TuneIcon />}
+            iconPosition="start"
+            id="workout-tab-4"
+            aria-controls="workout-tabpanel-4"
           />
         </Tabs>
       </Box>
@@ -228,7 +246,6 @@ export const WorkoutsOverview: React.FC<WorkoutsOverviewProps> = ({ user, select
               >
                 <Box>
                   <WorkoutWeekDetails
-                    user={user}
                     selectedWorkout={selectedWorkoutId}
                     weekNumber={parseInt(selectedWeek)}
                     showBackButton={true}
@@ -268,7 +285,7 @@ export const WorkoutsOverview: React.FC<WorkoutsOverviewProps> = ({ user, select
               unmountOnExit
             >
               <Box>
-                <Workouts user={user} selectedWorkout={selectedWorkout} />
+                <Workouts selectedWorkout={selectedWorkout} />
               </Box>
             </Slide>
           );
@@ -276,7 +293,7 @@ export const WorkoutsOverview: React.FC<WorkoutsOverviewProps> = ({ user, select
       </TabPanel>
 
       <TabPanel value={activeTab} index={1}>
-        <ConjugateProgression user={user} />
+        <ConjugateProgression />
       </TabPanel>
 
       <TabPanel value={activeTab} index={2}>
@@ -294,6 +311,20 @@ export const WorkoutsOverview: React.FC<WorkoutsOverviewProps> = ({ user, select
       </TabPanel>
 
       <TabPanel value={activeTab} index={3}>
+        <Slide
+          key={`1rm-records-${slideDirection}`}
+          direction={slideDirection}
+          in={true}
+          mountOnEnter
+          unmountOnExit
+        >
+          <Box>
+            <OneRepMaxRecords />
+          </Box>
+        </Slide>
+      </TabPanel>
+
+      <TabPanel value={activeTab} index={4}>
         <Slide
           key={`workout-preferences-${slideDirection}`}
           direction={slideDirection}
