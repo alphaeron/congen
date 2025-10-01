@@ -1,16 +1,4 @@
-Create a script that will allow me to start port forwarding for the congen minikube deployment, and enable storage from the postgres container to a local directory for backing up the data.
-
-I don't want to always have the application running, I want a script so I can start/stop it, and have the data persisted by mounting a local directory for postgres to use to store data.
-
 https://medium.com/the-bug-shots/visualizing-your-git-repository-history-with-gource-b4702a86fa3d
-
-
-strength (wilkes score), endurance (vo2 max), nutrition, ..., make a radar chart.
-make levels based on your stats.
-add achievements, quests, titles
-your really level up in real life!!!
-it's a game now!!!
-
 
 
 "how it works" on root spa with workout generation algorithm flowchart
@@ -26,6 +14,10 @@ include gamification, algorithm, and an additional category as well, update the 
 
 
 assets, and object storage for assets
+
+
+
+nutrition
 
 
 

@@ -4,6 +4,98 @@ This directory contains utility scripts for the Congen project.
 
 ## Scripts
 
+### `start-minikube-local.sh`
+
+**Purpose**: Start the Congen minikube deployment with persistent storage for local development.
+
+**Prerequisites**:
+- [minikube](https://minikube.sigs.k8s.io/docs/start/) installed and configured
+- [kubectl](https://kubernetes.io/docs/tasks/tools/) installed
+- [curl](https://curl.se/) for health checks
+- [netcat](https://nmap.org/ncat/) for port checking
+- Gradle wrapper (`gradlew`) in project root
+
+**What it does**:
+
+1. **Checks prerequisites** - Validates all required tools are available
+2. **Creates persistent storage** - Sets up local data directories for PostgreSQL
+3. **Deploys PostgreSQL** - Creates custom PostgreSQL deployment with hostPath mounting
+4. **Deploys application** - Uses `./gradlew deployAll -Penvironment=local` for full deployment
+5. **Updates backend config** - Patches backend to use local PostgreSQL
+6. **Sets up port forwarding** - Makes all services accessible on localhost
+7. **Verifies services** - Quick health checks for all services
+
+**Usage**:
+
+```bash
+# Use default data directory (~/.congen/minikube-data)
+./scripts/start-minikube-local.sh
+
+# Use custom data directory
+./scripts/start-minikube-local.sh -d /path/to/custom/data
+
+# Use temporary data directory
+./scripts/start-minikube-local.sh --data-dir /tmp/congen-data
+
+# Show help
+./scripts/start-minikube-local.sh --help
+```
+
+**Command Line Options**:
+- `-d, --data-dir DIR`: Data directory for persistent storage (default: ~/.congen/minikube-data)
+- `--help, -h`: Show help message
+
+**Service Access**:
+- Frontend: http://localhost:3000
+- Backend API: http://localhost:8888
+- Keycloak: http://localhost:8080
+- PostgreSQL: localhost:5432
+
+**Data Storage**:
+- PostgreSQL data: `{data-dir}/postgres/`
+- All data persists between restarts
+- Default location: `~/.congen/minikube-data/`
+
+### `stop-minikube-local.sh`
+
+**Purpose**: Stop the Congen minikube deployment and clean up port forwarding.
+
+**Prerequisites**:
+- [kubectl](https://kubernetes.io/docs/tasks/tools/) installed (for deployment cleanup)
+
+**What it does**:
+
+1. **Stops port forwarding** - Kills all port forward processes and cleans up PID files
+2. **Stops deployments** - Deletes all application deployments and services
+3. **Preserves data** - Data remains in the directory used when starting
+4. **Optionally stops minikube** - Can stop minikube to save system resources
+
+**Usage**:
+
+```bash
+# Stop application and port forwarding, keep minikube running
+./scripts/stop-minikube-local.sh
+
+# Stop everything including minikube (saves system resources)
+./scripts/stop-minikube-local.sh --stop-minikube
+
+# Show help
+./scripts/stop-minikube-local.sh --help
+```
+
+**Command Line Options**:
+- `--stop-minikube`: Also stop the minikube profile (saves resources)
+- `--help, -h`: Show help message
+
+**Data Preservation**:
+- Data is preserved in the directory used when starting the application
+- To start fresh, manually delete the data directory before restarting
+
+**Integration**:
+- Works with the existing Gradle deployment system
+- Complements `./gradlew deployAll -Penvironment=local`
+- Can be used alongside manual Gradle deployments
+
 ### `update-k8s-secrets.sh`
 
 **Purpose**: Updates Kubernetes secrets with real values from Terraform outputs, replacing dummy values deployed in Stage 2.

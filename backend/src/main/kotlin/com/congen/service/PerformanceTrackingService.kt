@@ -430,11 +430,6 @@ class PerformanceTrackingService(
     internal fun convertTestResultsToWeeklyTest(testResults: List<UserTestResult>): UserWeeklyTest? {
         if (testResults.isEmpty()) return null
 
-        logger.info("convertTestResultsToWeeklyTest called with ${testResults.size} results:")
-        testResults.forEach { result ->
-            logger.info("  ${result.testName}: status=${result.status}, resultValue=${result.resultValue}, weekStart=${result.weekStartTimestamp}")
-        }
-
         val firstResult = testResults.first()
         val keycloakId = firstResult.keycloakId
         val weekStartTimestamp = firstResult.weekStartTimestamp
@@ -446,7 +441,6 @@ class PerformanceTrackingService(
         fun findMostRecentNonNullValue(testName: String): Pair<TestStatus, Double?> {
             val results = testResultsByType[testName]
             if (results == null) {
-                logger.info("No test results found for testName: $testName")
                 return Pair(TestStatus.PENDING, null)
             }
             

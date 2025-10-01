@@ -74,10 +74,6 @@ export const OneRepMaxRecords: React.FC<OneRepMaxRecordsProps> = () => {
 
   // Get existing 1RM value for an exercise
   const getExistingOneRepMax = (exerciseName: string): number | null => {
-    // Use DataContext data directly
-    console.log('Looking for exercise:', exerciseName, 'Available records:', userOneRepMaxes);
-    console.log('userOneRepMaxes type:', typeof userOneRepMaxes, 'isArray:', Array.isArray(userOneRepMaxes));
-    
     // Handle both array and object formats
     let records: UserOneRepMax[] = [];
     if (Array.isArray(userOneRepMaxes)) {
@@ -87,11 +83,9 @@ export const OneRepMaxRecords: React.FC<OneRepMaxRecordsProps> = () => {
       records = Object.values(userOneRepMaxes);
     }
     
-    console.log('Processed records:', records);
     const existingRecord = records.find(
       record => record.exercise_name === exerciseName
     );
-    console.log('Found record:', existingRecord);
     return existingRecord ? existingRecord.one_rep_max : null;
   };
 
@@ -118,24 +112,18 @@ export const OneRepMaxRecords: React.FC<OneRepMaxRecordsProps> = () => {
     const loadData = async () => {
       if (!userData) return;
 
-      console.log('Loading 1RM data...');
       setIsLoading(true);
       setError(null);
       try {
         // Load exercises if not already loaded
         if (allExercises.length === 0) {
-          console.log('Loading all exercises...');
           await loadAllExercises();
         }
         
         // Load user one rep maxes if not already loaded
         if (userOneRepMaxes.length === 0) {
-          console.log('Loading user one rep maxes...');
           await loadUserOneRepMaxes();
         }
-        
-        console.log('DataContext userOneRepMaxes:', userOneRepMaxes);
-        console.log('userData.user_one_rep_max:', userData.user_one_rep_max);
         
         // Extract one rep maxes from userData as fallback
         let fallbackData: UserOneRepMax[] = [];
@@ -462,21 +450,16 @@ export const OneRepMaxRecords: React.FC<OneRepMaxRecordsProps> = () => {
           // Handle exercise field changes
           React.useEffect(() => {
             const exerciseName = exerciseField.state.value as string;
-            console.log('=== EXERCISE FIELD CHANGED ===', exerciseName);
             
             if (exerciseName && typeof exerciseName === 'string') {
               setSelectedExercise(exerciseName);
               // Pre-populate with existing 1RM value if available, otherwise set to 0
               const existingValue = getExistingOneRepMax(exerciseName);
-              console.log('Setting 1RM value to:', existingValue !== null ? existingValue : 0);
               form.setFieldValue('one_rep_max', existingValue !== null ? existingValue : 0);
-              console.log('Form field updated');
             } else {
               // Field was cleared, reset both exercise and 1RM
-              console.log('Exercise field cleared, resetting values');
               setSelectedExercise('');
               form.setFieldValue('one_rep_max', 0);
-              console.log('Form fields reset');
             }
           }, [exerciseField.state.value, form]);
 

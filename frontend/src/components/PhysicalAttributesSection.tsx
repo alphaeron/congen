@@ -57,9 +57,7 @@ export function PhysicalAttributesSection(): React.ReactElement {
       },
     },
     onSubmit: async ({ value }: { value: PhysicalAttributesFormData }) => {
-      console.log('Form submitted with values:', value);
       if (!user) {
-        console.log('No user found');
         enqueueSnackbar('User not found', { variant: 'error' });
         return;
       }
@@ -73,13 +71,10 @@ export function PhysicalAttributesSection(): React.ReactElement {
           gender: value.gender || undefined,
         };
 
-        console.log('Updating profile with data:', updateData);
         await updateUserProfile(updateData);
-        console.log('Profile updated successfully');
         
         // Refresh user data to get the updated information
         const updatedUser = await getCurrentUser();
-        console.log('Updated user data:', updatedUser);
         
         // Update the form data with the fresh user data
         form.setFieldValue('age', updatedUser.age || '');
@@ -87,8 +82,7 @@ export function PhysicalAttributesSection(): React.ReactElement {
         form.setFieldValue('height', updatedUser.height || '');
         form.setFieldValue('gender', updatedUser.gender || '');
         enqueueSnackbar('Profile updated successfully', { variant: 'success' });
-      } catch (error) {
-        console.error('Failed to update profile:', error);
+      } catch {
         enqueueSnackbar('Failed to update profile', { variant: 'error' });
       }
     },
@@ -114,7 +108,6 @@ export function PhysicalAttributesSection(): React.ReactElement {
             onSubmit={e => {
               e.preventDefault();
               e.stopPropagation();
-              console.log('Form onSubmit triggered');
               form.handleSubmit();
             }}
           >
@@ -172,16 +165,10 @@ export function PhysicalAttributesSection(): React.ReactElement {
                 disabled={form.state.isSubmitting}
                 startIcon={form.state.isSubmitting ? <CircularProgress size={20} /> : null}
                 onClick={async () => {
-                  console.log('Save button clicked');
-                  console.log('Form state:', form.state);
-                  console.log('Form values:', form.state.values);
-                  
                   // Call the onSubmit function directly
                   const formData = form.state.values as PhysicalAttributesFormData;
-                  console.log('Calling onSubmit with:', formData);
                   
                   if (!user) {
-                    console.log('No user found');
                     enqueueSnackbar('User not found', { variant: 'error' });
                     return;
                   }
@@ -195,18 +182,13 @@ export function PhysicalAttributesSection(): React.ReactElement {
                       gender: formData.gender || undefined,
                     };
 
-                    console.log('Updating profile with data:', updateData);
                     await updateUserProfile(updateData);
-                    console.log('Profile updated successfully');
                     
                     // Refresh all data in DataContext (including Wilks score)
-                    console.log('Refreshing DataContext...');
                     await refreshData();
-                    console.log('DataContext refreshed');
                     
                     enqueueSnackbar('Profile updated successfully', { variant: 'success' });
                   } catch (error) {
-                    console.error('Failed to update profile:', error);
                     enqueueSnackbar('Failed to update profile', { variant: 'error' });
                   }
                 }}
