@@ -4,6 +4,7 @@ import * as React from 'react';
 
 import { Features } from '../components/Features';
 import { Hero } from '../components/Hero';
+import { HowItWorks } from '../components/HowItWorks';
 import { OpenSource } from '../components/OpenSource';
 
 /**
@@ -17,6 +18,8 @@ export function RootPage(): React.ReactElement {
       <Hero />
       <Box sx={{ bgcolor: 'background.default' }}>
         <Features />
+        <Divider />
+        <HowItWorks />
         <Divider />
         <OpenSource />
         <Divider />

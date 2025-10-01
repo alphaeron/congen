@@ -29,7 +29,6 @@ export function OpenSource() {
         }}
       >
         <GameText
-          component="h2"
           variant="h3"
           textVariant="glow"
           sx={{
@@ -50,7 +49,7 @@ export function OpenSource() {
             opacity: 0.9,
           }}
         >
-          ConGen is open source software, meaning you can use and modify it!
+          Built with transparency and community in mind - ConGen is completely open source!
         </GameText>
 
         <GameText
@@ -62,7 +61,8 @@ export function OpenSource() {
             opacity: 0.8,
           }}
         >
-          That means no paying for trials, no subscriptions, and no limitations!
+          No subscriptions, no hidden costs, no vendor lock-in. Use it, modify it, and contribute to 
+          the future of fitness technology. Your data stays yours, and the code is yours to explore.
         </GameText>
 
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} justifyContent="center">

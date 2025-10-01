@@ -158,8 +158,9 @@ export function Hero() {
               opacity: 0.9,
             }}
           >
-            ConGen is the first of its kind conjugate workout generator. All the benefits of the
-            conjugate method without the hassle of writing a program yourself.
+            The world's first algorithmic conjugate method workout generator. Experience personalized 
+            powerlifting programming with RPG-style gamification, automatic exercise rotation, and 
+            comprehensive performance tracking - all without the complexity of manual programming.
           </GameText>
 
           {/* Call to action buttons */}

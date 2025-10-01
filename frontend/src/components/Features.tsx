@@ -1,6 +1,9 @@
 import AutoFixHighRoundedIcon from '@mui/icons-material/AutoFixHighRounded';
 import ConstructionRoundedIcon from '@mui/icons-material/ConstructionRounded';
 import QueryStatsRoundedIcon from '@mui/icons-material/QueryStatsRounded';
+import PsychologyRoundedIcon from '@mui/icons-material/PsychologyRounded';
+import SportsEsportsRoundedIcon from '@mui/icons-material/SportsEsportsRounded';
+import TrendingUpRoundedIcon from '@mui/icons-material/TrendingUpRounded';
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import Container from '@mui/material/Container';
@@ -14,24 +17,45 @@ import { GameText, GameCard, GAME_CLASSES } from './GameTheme';
 export const FEATURE_ITEMS = [
   {
     icon: <ConstructionRoundedIcon />,
-    title: 'Programming without the hassle',
+    title: 'Algorithmic Workout Generation',
     description:
-      'ConGen builds your workout, selecting exercises targeting the specific muscles you give it.',
+      'Advanced algorithms automatically generate personalized conjugate method workouts based on your equipment, goals, and performance data.',
     color: 'primary',
   },
   {
     icon: <AutoFixHighRoundedIcon />,
-    title: 'Automatically cycle your exercises',
+    title: 'Intelligent Exercise Rotation',
     description:
-      'ConGen alters your exercises automatically, ensuring you progress and preventing staleness.',
+      'Prevents accommodation and plateaus by automatically rotating exercises every 1-3 weeks using scientific periodization principles.',
     color: 'secondary',
   },
   {
-    icon: <QueryStatsRoundedIcon />,
-    title: 'View progression over time',
+    icon: <SportsEsportsRoundedIcon />,
+    title: 'RPG-Style Gamification',
     description:
-      'View your previous workouts and track progress to make sure you are achieving your goals.',
+      'Level up your character, unlock skills, and progress through ranks with our comprehensive fitness RPG system featuring HP/MP/Fatigue mechanics.',
     color: 'success',
+  },
+  {
+    icon: <PsychologyRoundedIcon />,
+    title: 'Performance Analytics',
+    description:
+      'Track 6 core performance domains (Strength, Power, Endurance, Recovery, Stamina, Speed) with detailed analytics and insights.',
+    color: 'warning',
+  },
+  {
+    icon: <TrendingUpRoundedIcon />,
+    title: 'Adaptive Programming',
+    description:
+      'Your program evolves with you - automatic weight progression, exercise substitutions, and program adjustments based on your performance.',
+    color: 'info',
+  },
+  {
+    icon: <QueryStatsRoundedIcon />,
+    title: 'Comprehensive Tracking',
+    description:
+      'Monitor everything from one-rep maxes to recovery metrics, with detailed workout history and progress visualization.',
+    color: 'error',
   },
 ];
 
@@ -56,7 +80,6 @@ export function Features() {
         }}
       >
         <GameText
-          component="h2"
           variant="h3"
           textVariant="glow"
           sx={{
@@ -97,19 +120,50 @@ export function Features() {
                     width: 64,
                     height: 64,
                     borderRadius: 2,
-                    background: theme =>
-                      `linear-gradient(135deg, ${alpha(theme.palette[item.color as keyof typeof theme.palette]?.main || theme.palette.primary.main, 0.1)}, ${alpha(theme.palette[item.color as keyof typeof theme.palette]?.main || theme.palette.primary.main, 0.05)})`,
-                    border: theme =>
-                      `1px solid ${alpha(theme.palette[item.color as keyof typeof theme.palette]?.main || theme.palette.primary.main, 0.2)}`,
-                    color: theme =>
-                      theme.palette[item.color as keyof typeof theme.palette]?.main ||
-                      theme.palette.primary.main,
+                    background: theme => {
+                      const colorValue = item.color === 'primary' ? theme.palette.primary.main :
+                                       item.color === 'secondary' ? theme.palette.secondary.main :
+                                       item.color === 'success' ? '#22c55e' :
+                                       item.color === 'warning' ? '#f59e0b' :
+                                       item.color === 'info' ? '#3b82f6' :
+                                       item.color === 'error' ? '#ef4444' :
+                                       theme.palette.primary.main;
+                      return `linear-gradient(135deg, ${alpha(colorValue, 0.1)}, ${alpha(colorValue, 0.05)})`;
+                    },
+                    border: theme => {
+                      const colorValue = item.color === 'primary' ? theme.palette.primary.main :
+                                       item.color === 'secondary' ? theme.palette.secondary.main :
+                                       item.color === 'success' ? '#22c55e' :
+                                       item.color === 'warning' ? '#f59e0b' :
+                                       item.color === 'info' ? '#3b82f6' :
+                                       item.color === 'error' ? '#ef4444' :
+                                       theme.palette.primary.main;
+                      return `1px solid ${alpha(colorValue, 0.2)}`;
+                    },
+                    color: theme => {
+                      const colorValue = item.color === 'primary' ? theme.palette.primary.main :
+                                       item.color === 'secondary' ? theme.palette.secondary.main :
+                                       item.color === 'success' ? '#22c55e' :
+                                       item.color === 'warning' ? '#f59e0b' :
+                                       item.color === 'info' ? '#3b82f6' :
+                                       item.color === 'error' ? '#ef4444' :
+                                       theme.palette.primary.main;
+                      return colorValue;
+                    },
                     fontSize: '2rem',
                     transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                     '&:hover': {
                       transform: 'scale(1.1)',
-                      background: theme =>
-                        `linear-gradient(135deg, ${alpha(theme.palette[item.color as keyof typeof theme.palette]?.main || theme.palette.primary.main, 0.2)}, ${alpha(theme.palette[item.color as keyof typeof theme.palette]?.main || theme.palette.primary.main, 0.1)})`,
+                      background: theme => {
+                        const colorValue = item.color === 'primary' ? theme.palette.primary.main :
+                                         item.color === 'secondary' ? theme.palette.secondary.main :
+                                         item.color === 'success' ? '#22c55e' :
+                                         item.color === 'warning' ? '#f59e0b' :
+                                         item.color === 'info' ? '#3b82f6' :
+                                         item.color === 'error' ? '#ef4444' :
+                                         theme.palette.primary.main;
+                        return `linear-gradient(135deg, ${alpha(colorValue, 0.2)}, ${alpha(colorValue, 0.1)})`;
+                      },
                     },
                   }}
                 >
