@@ -29,7 +29,6 @@ import {
   getWeeklyTestsInRange,
   submitPerformanceMetrics as submitPerformanceMetricsAPI,
   submitWeeklyTest as submitWeeklyTestAPI,
-  getWilksScore,
   getTestProtocols,
   getPerformanceMetricsInRange,
   getPerformanceScoresHistory,
@@ -103,11 +102,11 @@ interface DataContextType {
   performanceMetrics: UserPerformanceMetrics | null;
   weeklyTests: UserTestResult[];
   testProtocols: TestProtocol[];
-  wilksScore: number | null;
   isLoading: boolean;
   error: string | null;
   refreshData: () => Promise<void>;
   isDataStale: boolean;
+  isReady: boolean;
   getExercise: (exerciseName: string) => Promise<Exercise | null>;
   getExerciseMuscles: (exerciseName: string) => Promise<ExerciseMuscle[] | null>;
   getExerciseEquipmentData: (exerciseName: string) => Promise<ExerciseEquipment[] | null>;
@@ -146,7 +145,6 @@ interface DataContextType {
   ) => Promise<UserPerformanceMetrics[]>;
   loadWeeklyTests: (startDate?: string, endDate?: string) => Promise<UserTestResult[]>;
   loadTestProtocols: () => Promise<TestProtocol[]>;
-  loadWilksScore: () => Promise<number | null>;
   refreshPerformanceData: () => Promise<void>;
   // Performance tracking utility functions
   getCurrentWeekTest: () => UserTestResult[] | null;
@@ -214,7 +212,7 @@ interface DataProviderProps {
 }
 
 export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
-  const { user, isLoading: authIsLoading } = useAuth();
+  const { user, isLoading: authIsLoading, isAuthenticated } = useAuth();
   const [userData, setUserData] = useState<UserDataExport | null>(null);
   const [exerciseMuscleData, setExerciseMuscleData] = useState<Map<string, string[]>>(new Map());
   const [weightUnitPreferences, setWeightUnitPreferences] = useState<UserWeightUnitPreference[]>(
@@ -250,7 +248,6 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
   const [performanceMetrics, setPerformanceMetrics] = useState<UserPerformanceMetrics | null>(null);
   const [weeklyTests, setWeeklyTests] = useState<UserTestResult[]>([]);
   const [testProtocols, setTestProtocols] = useState<TestProtocol[]>([]);
-  const [wilksScore, setWilksScore] = useState<number | null>(null);
   // Additional data caches
   // Centralized exercise data cache for components
   const [allExercisesMap, setAllExercisesMap] = useState<Map<string, Exercise>>(new Map());
@@ -339,22 +336,6 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
         setPerformanceScoresHistory(performanceScoresHistoryData);
         setPerformanceMetrics(performanceMetricsData);
         setWeeklyTests(weeklyTestsData);
-
-        // Load Wilks score if user has weight and gender data
-        if (dataExport?.weight && dataExport?.gender) {
-          try {
-            const wilksScoreData = await getWilksScore(
-              dataExport.weight,
-              dataExport.gender.toLowerCase() === 'male',
-              { forceRefresh }
-            );
-            setWilksScore(wilksScoreData);
-          } catch {
-            setWilksScore(null);
-          }
-        } else {
-          setWilksScore(null);
-        }
 
         setLastFetchTime(Date.now());
       } catch (err) {
@@ -916,25 +897,6 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
     }
   }, [testProtocols]);
 
-  const loadWilksScore = useCallback(async (): Promise<number | null> => {
-    if (!user?.keycloak_id || !userData?.weight || !userData?.gender) return null;
-
-    if (wilksScore !== null) {
-      return wilksScore;
-    }
-
-    try {
-      const score = await getWilksScore(userData.weight, userData.gender.toLowerCase() === 'male');
-      setWilksScore(score);
-      setCacheTimestamps(prev => new Map(prev).set('wilksScore', Date.now()));
-      return score;
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to load Wilks score';
-      setError(errorMessage);
-      return null;
-    }
-  }, [user?.keycloak_id, userData?.weight, userData?.gender, wilksScore]);
-
   const refreshPerformanceData = useCallback(async (): Promise<void> => {
     if (!user?.keycloak_id) return;
 
@@ -1436,6 +1398,36 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
   useEffect(() => {
     if (user?.keycloak_id && !authIsLoading) {
       loadData();
+    } else if (!user?.keycloak_id && !authIsLoading) {
+      // Clear data when user is not authenticated
+      setUserData(null);
+      setExerciseMuscleData(new Map());
+      setWeightUnitPreferences([]);
+      setExerciseData(new Map());
+      setExerciseEquipmentData(new Map());
+      setMuscleData(new Map());
+      setEquipmentData(new Map());
+      setProgramData(new Map());
+      setAllExercises([]);
+      setAllMuscles([]);
+      setAllEquipment([]);
+      setUserEquipment([]);
+      setUserWeakMuscles([]);
+      setUserExercisePreferences([]);
+      setProgramPreferences([]);
+      setProgrammedWorkouts([]);
+      setUserOneRepMaxes([]);
+      setUserConsent(null);
+      setUserExercisePool(null);
+      setDashboardStats(null);
+      setPerformanceScores(null);
+      setPerformanceScoresHistory([]);
+      setPerformanceMetrics(null);
+      setWeeklyTests([]);
+      setTestProtocols([]);
+      setAllExercisesMap(new Map());
+      setError(null);
+      setIsLoading(false);
     }
   }, [user?.keycloak_id, authIsLoading, loadData]);
 
@@ -1474,11 +1466,11 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
       performanceMetrics,
       weeklyTests,
       testProtocols,
-      wilksScore,
       isLoading,
       error,
       refreshData,
       isDataStale,
+      isReady: isAuthenticated && !!user?.keycloak_id && !authIsLoading,
       getExercise,
       getExerciseMuscles: getExerciseMusclesData,
       getExerciseEquipmentData,
@@ -1505,7 +1497,6 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
       loadPerformanceMetricsInRange,
       loadWeeklyTests,
       loadTestProtocols,
-      loadWilksScore,
       refreshPerformanceData,
       getCurrentWeekTest,
       getPerformanceDataForDateRange,
@@ -1552,6 +1543,9 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
       error,
       refreshData,
       isDataStale,
+      isAuthenticated,
+      user?.keycloak_id,
+      authIsLoading,
       getExercise,
       getExerciseMusclesData,
       getExerciseEquipmentData,
@@ -1578,7 +1572,6 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
       loadPerformanceMetricsInRange,
       loadWeeklyTests,
       loadTestProtocols,
-      loadWilksScore,
       refreshPerformanceData,
       getCurrentWeekTest,
       getPerformanceDataForDateRange,

@@ -15,7 +15,6 @@ interface AdventurerStatusCardProps {
   scores: UserPerformanceScores;
   metrics?: UserPerformanceMetrics | null;
   weeklyTests?: UserTestResult[] | null;
-  wilksScore?: number | null;
   userName?: string;
 }
 
@@ -23,7 +22,6 @@ export const AdventurerStatusCard: React.FC<AdventurerStatusCardProps> = ({
   scores,
   metrics,
   weeklyTests,
-  wilksScore,
   userName = 'Raven Thornfield',
 }) => {
   return (
@@ -171,7 +169,6 @@ export const AdventurerStatusCard: React.FC<AdventurerStatusCardProps> = ({
               scores={scores}
               metrics={metrics}
               weeklyTests={weeklyTests}
-              wilksScore={wilksScore}
               title=""
               height={300}
             />

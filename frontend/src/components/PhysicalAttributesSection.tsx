@@ -5,6 +5,7 @@ import React from 'react';
 
 import { FormField } from './FormField';
 import { GameText, GameCard, GameButton, GAME_CLASSES } from './GameTheme';
+import { LoadingSpinner } from './LoadingSpinner';
 import { updateUserProfile, getCurrentUser } from '../api/user';
 import { useAuth } from '../contexts/AuthContext';
 import { useData } from '../contexts/DataContext';
@@ -26,7 +27,7 @@ interface PhysicalAttributesFormData {
 
 export function PhysicalAttributesSection(): React.ReactElement {
   const { user } = useAuth();
-  const { refreshData } = useData();
+  const { refreshData, isReady } = useData();
   const { enqueueSnackbar } = useSnackbar();
 
   const form = useForm({
@@ -92,6 +93,10 @@ export function PhysicalAttributesSection(): React.ReactElement {
       }
     },
   });
+
+  if (!isReady) {
+    return <LoadingSpinner message="Loading profile..." fullHeight={false} />;
+  }
 
   return (
     <Box>

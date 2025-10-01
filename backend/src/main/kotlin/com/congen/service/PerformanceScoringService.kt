@@ -1,10 +1,16 @@
 package com.congen.service
 
+import com.congen.dal.UserDAL
+import com.congen.model.User
 import com.congen.model.UserPerformanceMetrics
 import com.congen.model.UserPerformanceScores
 import com.congen.model.UserWeeklyTest
+import com.congen.model.WeightUnit
+import com.congen.service.WilksCalculationService
+import com.congen.util.UnitConverter
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import reactor.core.publisher.Mono
 import kotlin.math.log10
 import kotlin.math.max
 import kotlin.math.min
@@ -41,7 +47,11 @@ import kotlin.math.tanh
  * @since 1.0.0
  */
 @Service
-class PerformanceScoringService {
+class PerformanceScoringService(
+    private val wilksCalculationService: WilksCalculationService,
+    private val userDAL: UserDAL,
+    private val unitConverter: UnitConverter
+) {
     companion object {
         private val logger = LoggerFactory.getLogger(PerformanceScoringService::class.java)
     }
@@ -57,7 +67,7 @@ class PerformanceScoringService {
         dailyMetrics: UserPerformanceMetrics,
         weeklyTest: UserWeeklyTest? = null,
         levelChangeReason: String = "daily_metrics_updated"
-    ): UserPerformanceScores {
+    ): Mono<UserPerformanceScores> {
         logger.debug("Calculating performance scores for user: ${dailyMetrics.keycloakId}")
 
         // Calculate individual metric scores from weekly test data and daily metrics
@@ -66,59 +76,68 @@ class PerformanceScoringService {
         val recoveryScore = calculateRecoveryScore(weeklyTest?.hrRecoveryResult)
         val reactionTimeScore = calculateReactionTimeScore(weeklyTest?.reflexResult)
         val mobilityScore = calculateMobilityScore(weeklyTest?.mobilityResult)
+        
+        // Calculate strength score and raw Wilks score reactively
+        return calculateStrengthData(dailyMetrics)
+            .map { strengthData: Pair<Double, Double> ->
+                val strengthScore = strengthData.first
+                val wilksScore = strengthData.second
 
-        // Calculate average score
-        val scores =
-            listOfNotNull(
-                explosivenessScore,
-                aerobicCapacityScore,
-                recoveryScore,
-                reactionTimeScore,
-                mobilityScore
-            )
-        val averageScore = if (scores.isNotEmpty()) scores.average() else 0.0
+                // Calculate average score including strength
+                val scores =
+                    listOfNotNull(
+                        explosivenessScore,
+                        aerobicCapacityScore,
+                        recoveryScore,
+                        reactionTimeScore,
+                        mobilityScore,
+                        strengthScore
+                    )
+                val averageScore = if (scores.isNotEmpty()) scores.average() else 0.0
 
-        // Level is the tanh-scaled athleticism score (1-100)
-        val level = max(1, applyTanhScaling(averageScore).toInt())
+                // Level is the tanh-scaled athleticism score (1-100)
+                val level = max(1, applyTanhScaling(averageScore).toInt())
 
-        // Calculate HP/MP/Fatigue from daily metrics and weekly test data
-        val hp = calculateHpScore(dailyMetrics, weeklyTest)
-        val hpLoss = calculateHpLoss(dailyMetrics)
-        val mp = calculateMpScore(dailyMetrics, weeklyTest)
-        val mpLoss = calculateMpLoss(dailyMetrics)
-        val fatigue = calculateFatigueScore(dailyMetrics)
-        val fatigueLoss = calculateFatigueLoss(dailyMetrics)
+                // Calculate HP/MP/Fatigue from daily metrics and weekly test data
+                val hp = calculateHpScore(dailyMetrics, weeklyTest)
+                val hpLoss = calculateHpLoss(dailyMetrics)
+                val mp = calculateMpScore(dailyMetrics, weeklyTest)
+                val mpLoss = calculateMpLoss(dailyMetrics)
+                val fatigue = calculateFatigueScore(dailyMetrics)
+                val fatigueLoss = calculateFatigueLoss(dailyMetrics)
 
-        // Generate skills based on metric thresholds
-        val skills =
-            generateSkills(
-                explosivenessScore,
-                aerobicCapacityScore,
-                recoveryScore,
-                reactionTimeScore,
-                mobilityScore
-            )
+                // Generate skills based on metric thresholds
+                val skills =
+                    generateSkills(
+                        explosivenessScore,
+                        aerobicCapacityScore,
+                        recoveryScore,
+                        reactionTimeScore,
+                        mobilityScore,
+                        strengthScore
+                    )
 
-        val result = UserPerformanceScores(
-            keycloakId = dailyMetrics.keycloakId,
-            explosivenessScore = explosivenessScore,
-            aerobicCapacityScore = aerobicCapacityScore,
-            recoveryScore = recoveryScore,
-            reactionTimeScore = reactionTimeScore,
-            mobilityScore = mobilityScore,
-            level = level,
-            levelChangeReason = levelChangeReason,
-            hp = hp,
-            hpLoss = hpLoss,
-            mp = mp,
-            mpLoss = mpLoss,
-            fatigue = fatigue,
-            fatigueLoss = fatigueLoss,
-            skills = skills,
-            createdAt = dailyMetrics.createdAt
-        )
-
-        return result
+                UserPerformanceScores(
+                    keycloakId = dailyMetrics.keycloakId,
+                    explosivenessScore = explosivenessScore,
+                    aerobicCapacityScore = aerobicCapacityScore,
+                    recoveryScore = recoveryScore,
+                    reactionTimeScore = reactionTimeScore,
+                    mobilityScore = mobilityScore,
+                    strengthScore = strengthScore,
+                    wilksScore = wilksScore,
+                    level = level,
+                    levelChangeReason = levelChangeReason,
+                    hp = hp,
+                    hpLoss = hpLoss,
+                    mp = mp,
+                    mpLoss = mpLoss,
+                    fatigue = fatigue,
+                    fatigueLoss = fatigueLoss,
+                    skills = skills,
+                    createdAt = dailyMetrics.createdAt
+                )
+            }
     }
 
     /**
@@ -412,7 +431,8 @@ class PerformanceScoringService {
         aerobicScore: Double?,
         recoveryScore: Double?,
         reactionScore: Double?,
-        mobilityScore: Double?
+        mobilityScore: Double?,
+        strengthScore: Double?
     ): List<String> {
         val skills = mutableListOf<String>()
 
@@ -451,6 +471,68 @@ class PerformanceScoringService {
             skills.add("Agile Movement")
         }
 
+        // Strength-based skills
+        if (strengthScore != null && strengthScore >= 80) {
+            skills.add("Powerhouse")
+        } else if (strengthScore != null && strengthScore >= 60) {
+            skills.add("Strong Lifter")
+        }
+
         return skills
     }
+
+    /**
+     * Calculates strength score and raw Wilks score.
+     * 
+     * Returns a Mono<Pair<Double, Double>> where:
+     * - strengthScore: 0-100 scale using logarithmic scaling
+     * - wilksScore: raw Wilks score
+     * 
+     * Strength score scaling (500+ Wilks = 100 score):
+     * - 200 Wilks ≈ 15 score (beginner)
+     * - 300 Wilks ≈ 40 score (intermediate)  
+     * - 400 Wilks ≈ 65 score (advanced)
+     * - 500+ Wilks = 100 score (elite/world class)
+     */
+    private fun calculateStrengthData(dailyMetrics: UserPerformanceMetrics): Mono<Pair<Double, Double>> {
+        return userDAL.selectUserByKeycloakId(dailyMetrics.keycloakId)
+            .flatMap { user ->
+                if (user.weight == null || user.gender == null) {
+                    logger.debug("Cannot calculate strength score: missing weight or gender data for user: ${dailyMetrics.keycloakId}")
+                    return@flatMap Mono.just(Pair(0.0, 0.0))
+                }
+
+                // Convert weight from pounds to kg (User.weight is in pounds)
+                val weightInKg = unitConverter.toKg(
+                    user.weight.toBigDecimal(), 
+                    WeightUnit.LBS
+                ).toDouble()
+
+                logger.debug("User weight: {} lbs = {} kg, gender: {}", user.weight, weightInKg, user.gender)
+
+                // Use the existing WilksCalculationService to get the Wilks score
+                wilksCalculationService.calculateWilksScore(
+                    dailyMetrics.keycloakId,
+                    weightInKg,
+                    user.gender.lowercase() == "male"
+                ).map { wilksScore ->
+                    if (wilksScore == null) {
+                        logger.debug("Cannot calculate strength score: WilksCalculationService returned null")
+                        return@map Pair(0.0, 0.0)
+                    }
+
+                    // Convert Wilks score to 0-100 scale using logarithmic scaling
+                    // Formula: 100 * log10(wilksScore / 100) / log10(5) to achieve 500+ Wilks = 100 score
+                    val strengthScore = min(100.0, max(0.0, 100 * log10(wilksScore / 100) / log10(5.0)))
+
+                    logger.debug("Strength score calculation: Wilks=$wilksScore, Strength=$strengthScore")
+                    Pair(strengthScore, wilksScore)
+                }
+            }
+            .onErrorResume { e ->
+                logger.warn("Failed to calculate strength score: ${e.message}")
+                Mono.just(Pair(0.0, 0.0))
+            }
+    }
+
 }

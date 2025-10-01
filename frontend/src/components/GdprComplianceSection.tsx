@@ -59,6 +59,7 @@ export function GdprComplianceSection(): React.ReactElement {
     exportUserData,
     deleteAllPersonalData,
     isLoading,
+    isReady,
   } = useData();
   const [operationLoading, setOperationLoading] = React.useState<string | null>(null);
 
@@ -155,7 +156,7 @@ export function GdprComplianceSection(): React.ReactElement {
     }
   };
 
-  if (isLoading) {
+  if (!isReady || isLoading) {
     return (
       <GameCard>
         <Box className={GAME_CLASSES.padding2}>

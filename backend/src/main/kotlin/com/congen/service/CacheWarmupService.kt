@@ -16,7 +16,7 @@ import com.congen.dal.SetSchemeDAL
 import com.congen.dal.UserDAL
 import com.congen.dal.UserEquipmentDAL
 import com.congen.dal.UserExercisePreferenceDAL
-import com.congen.dal.UserOneRepMaxDAL
+import com.congen.service.UserOneRepMaxService
 import com.congen.dal.UserWeakMuscleDAL
 import com.congen.dal.UserWeightUnitPreferenceDAL
 import com.congen.dal.WorkoutStageDAL
@@ -52,7 +52,7 @@ class CacheWarmupService(
     private val userDAL: UserDAL,
     private val userEquipmentDAL: UserEquipmentDAL,
     private val userExercisePreferenceDAL: UserExercisePreferenceDAL,
-    private val userOneRepMaxDAL: UserOneRepMaxDAL,
+    private val userOneRepMaxService: UserOneRepMaxService,
     private val userWeakMuscleDAL: UserWeakMuscleDAL,
     private val programPreferencesDAL: ProgramPreferencesDAL,
     private val userWeightUnitPreferenceDAL: UserWeightUnitPreferenceDAL,
@@ -289,7 +289,7 @@ class CacheWarmupService(
                 .doOnError { logger.warn("Failed to warm up user exercise preferences for: {}", userId, it) }
                 .onErrorComplete(),
             // User one rep maxes
-            userOneRepMaxDAL.selectUserOneRepMaxByUser(userId)
+            userOneRepMaxService.selectUserOneRepMaxByUser(userId)
                 .doOnSuccess { logger.debug("Warmed up user one rep maxes for: {}", userId) }
                 .doOnError { logger.warn("Failed to warm up user one rep maxes for: {}", userId, it) }
                 .onErrorComplete(),

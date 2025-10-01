@@ -37,7 +37,7 @@ interface ProgramManagementProps {
  */
 export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) => {
   const { enqueueSnackbar } = useSnackbar();
-  const { userData, refreshData, isLoading, getProgramPreferencesById } = useData();
+  const { userData, refreshData, isLoading, getProgramPreferencesById, isReady } = useData();
   const [programPreferences, setProgramPreferences] = useState<Map<number, ProgramPreferences>>(
     new Map()
   );
@@ -254,7 +254,7 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
     return programData?.workouts || [];
   };
 
-  if (isLoading || isLoadingPreferences) {
+  if (!isReady || isLoading || isLoadingPreferences) {
     return <LoadingSpinner message="Loading programs..." fullHeight={false} />;
   }
 

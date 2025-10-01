@@ -16,7 +16,7 @@ import com.congen.dal.SetSchemeDAL
 import com.congen.dal.UserDAL
 import com.congen.dal.UserEquipmentDAL
 import com.congen.dal.UserExercisePreferenceDAL
-import com.congen.dal.UserOneRepMaxDAL
+import com.congen.service.UserOneRepMaxService
 import com.congen.dal.UserWeakMuscleDAL
 import com.congen.dal.UserWeightUnitPreferenceDAL
 import com.congen.dal.WorkoutStageDAL
@@ -70,7 +70,7 @@ class CacheWarmupServiceTest {
 
     @Mock private lateinit var userExercisePreferenceDAL: UserExercisePreferenceDAL
 
-    @Mock private lateinit var userOneRepMaxDAL: UserOneRepMaxDAL
+    @Mock private lateinit var userOneRepMaxService: UserOneRepMaxService
 
     @Mock private lateinit var userWeakMuscleDAL: UserWeakMuscleDAL
 
@@ -109,7 +109,7 @@ class CacheWarmupServiceTest {
                 userDAL,
                 userEquipmentDAL,
                 userExercisePreferenceDAL,
-                userOneRepMaxDAL,
+                userOneRepMaxService,
                 userWeakMuscleDAL,
                 programPreferencesDAL,
                 userWeightUnitPreferenceDAL,
@@ -438,7 +438,7 @@ class CacheWarmupServiceTest {
         whenever(userDAL.selectUserByKeycloakId("user1")).thenReturn(Mono.just(mockUser))
         whenever(userEquipmentDAL.selectUserEquipmentByUser("user1")).thenReturn(Mono.just(listOf()))
         whenever(userExercisePreferenceDAL.selectUserExercisePreferencesByUser("user1")).thenReturn(Mono.just(listOf()))
-        whenever(userOneRepMaxDAL.selectUserOneRepMaxByUser("user1")).thenReturn(Mono.just(listOf()))
+        whenever(userOneRepMaxService.selectUserOneRepMaxByUser("user1")).thenReturn(Mono.just(listOf()))
         whenever(userWeakMuscleDAL.selectUserWeakMusclesByUser("user1")).thenReturn(Mono.just(listOf()))
         whenever(userWeightUnitPreferenceDAL.selectUserWeightUnitPreferencesByUser("user1")).thenReturn(Mono.just(listOf()))
         whenever(gdprComplianceDAL.hasUserConsent("user1")).thenReturn(Mono.just(true))

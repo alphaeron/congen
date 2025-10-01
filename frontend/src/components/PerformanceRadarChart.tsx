@@ -18,7 +18,6 @@ interface PerformanceRadarChartProps {
   scores: UserPerformanceScores;
   metrics?: UserPerformanceMetrics | null;
   weeklyTests?: UserTestResult[] | null;
-  wilksScore?: number | null;
   title?: string;
   height?: number;
 }
@@ -26,11 +25,10 @@ interface PerformanceRadarChartProps {
 const getMetricData = (
   scores: UserPerformanceScores,
   metrics?: UserPerformanceMetrics | null,
-  weeklyTests?: UserTestResult[] | null,
-  wilksScore?: number | null
+  weeklyTests?: UserTestResult[] | null
 ) => {
-  // Calculate strength score from Wilks score (scale 0-100)
-  const strengthScore = wilksScore ? Math.max(1, Math.min(100, wilksScore / 5.0)) : null; // Rough scaling: 500 Wilks = 100 score
+  // Use strength score from backend (already calculated and scaled 0-100)
+  const strengthScore = scores.strength_score;
 
   const data = [
     {
@@ -89,9 +87,9 @@ const getMetricData = (
     },
     {
       metric: 'Strength',
-      value: strengthScore || 1, // Use calculated strength score for radar chart
+      value: strengthScore || 1, // Use strength score from backend (already scaled 0-100)
       description: 'Relative strength based on Wilks score',
-      rawValue: wilksScore ? `${wilksScore.toFixed(1)} Wilks` : '1RM data required',
+      rawValue: scores.wilks_score ? `${scores.wilks_score.toFixed(1)} Wilks` : '1RM data required',
       color: '#FF6B6B',
       icon: <CustomSvgIcon src={StrengthIcon} alt="Strength" className={`${GAME_CLASSES.fontSize32} ${GAME_CLASSES.colorCyan}`} />,
     },
@@ -116,13 +114,12 @@ export const PerformanceRadarChart: React.FC<PerformanceRadarChartProps> = ({
   scores,
   metrics,
   weeklyTests,
-  wilksScore,
   title = 'Performance Metrics',
   height = 400,
 }) => {
   const theme = useTheme();
 
-  const metricData = getMetricData(scores, metrics, weeklyTests, wilksScore);
+  const metricData = getMetricData(scores, metrics, weeklyTests);
 
   // Ensure we have valid data to prevent NaN errors
   const validMetricData = metricData.map(item => ({
@@ -130,10 +127,16 @@ export const PerformanceRadarChart: React.FC<PerformanceRadarChartProps> = ({
     value: (() => {
       const val = item.value;
       if (val === null || val === undefined || isNaN(val) || !isFinite(val)) {
-        return 1; // Use 1 instead of 0 to prevent division by zero
+        return 0; // Use 0 for missing data
       }
-      return Math.max(1, Math.min(100, val)); // Clamp between 1-100
+      return Math.max(0, Math.min(100, val)); // Clamp between 0-100
     })(),
+  }));
+
+  // Convert to Nivo radar chart format - each metric becomes a data point
+  const radarData = validMetricData.map(item => ({
+    metric: item.metric,
+    value: item.value,
   }));
 
   // Custom tooltip component following Nivo example
@@ -263,7 +266,7 @@ export const PerformanceRadarChart: React.FC<PerformanceRadarChartProps> = ({
         }}
       >
         <ResponsiveRadar
-          data={validMetricData}
+          data={radarData}
           keys={['value']}
           indexBy="metric"
           margin={{ top: 60, right: 60, bottom: 60, left: 60 }}

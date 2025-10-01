@@ -155,25 +155,6 @@ export const getWeeklyTestsInRange = async (
 };
 
 /**
- * Get Wilks score for the authenticated user.
- */
-export const getWilksScore = async (
-  bodyWeightKg: number,
-  isMale: boolean,
-  options: { forceRefresh?: boolean } = {}
-): Promise<number | null> => {
-  return REQUEST<number | null>({
-    method: 'GET',
-    url: '/performance/wilks',
-    params: {
-      body_weight_kg: bodyWeightKg,
-      is_male: isMale,
-    },
-    ...options,
-  });
-};
-
-/**
  * Get performance metrics for the authenticated user within a date range.
  */
 export const getPerformanceMetricsInRange = async (

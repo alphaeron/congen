@@ -150,16 +150,16 @@ class PerformanceTrackingService(
 
         // Save metrics first, then create default test results
         return userPerformanceMetricsDAL.upsertUserPerformanceMetrics(defaultMetrics)
-            .then(createDefaultTestResults(keycloakId, weekStart))
-            .then(
-                Mono.fromCallable {
-                    // For new users, we'll create default scores without test results
-                    performanceScoringService.calculatePerformanceScores(defaultMetrics, null, "account_creation")
-                }
-            )
+            .flatMap { 
+                createDefaultTestResults(keycloakId, weekStart)
+                    .flatMap {
+                        // For new users, we'll create default scores without test results
+                        performanceScoringService.calculatePerformanceScores(defaultMetrics, null, "account_creation")
+                    }
+            }
             .flatMap { defaultScores ->
                 userPerformanceScoresDAL.insertUserPerformanceScores(defaultScores)
-                    .then(Mono.just(defaultScores))
+                    .map { defaultScores }
             }
     }
 
@@ -323,9 +323,7 @@ class PerformanceTrackingService(
                     .flatMap { testResults ->
                         // Convert test results to weekly test data for scoring
                         val weeklyTest = convertTestResultsToWeeklyTest(testResults)
-                        Mono.fromCallable {
-                            performanceScoringService.calculatePerformanceScores(updatedMetrics, weeklyTest, "daily_metrics_updated")
-                        }
+                        performanceScoringService.calculatePerformanceScores(updatedMetrics, weeklyTest, "daily_metrics_updated")
                     }.flatMap { scores ->
                     // Insert new scores (historical tracking)
                     userPerformanceScoresDAL.insertUserPerformanceScores(scores)
@@ -380,9 +378,7 @@ class PerformanceTrackingService(
                             .flatMap { allTestResults ->
                                 // Convert test results to weekly test data for scoring
                                 val weeklyTest = convertTestResultsToWeeklyTest(allTestResults)
-                                Mono.fromCallable {
-                                    performanceScoringService.calculatePerformanceScores(dailyMetrics, weeklyTest, "weekly_test_updated")
-                                }
+                                performanceScoringService.calculatePerformanceScores(dailyMetrics, weeklyTest, "weekly_test_updated")
                             }
                     }.flatMap { scores ->
                         // Insert new scores (historical tracking)
@@ -431,7 +427,7 @@ class PerformanceTrackingService(
      * @param testResults List of test results for the week (should be ordered newest to oldest)
      * @return UserWeeklyTest object or null if no results
      */
-    private fun convertTestResultsToWeeklyTest(testResults: List<UserTestResult>): UserWeeklyTest? {
+    internal fun convertTestResultsToWeeklyTest(testResults: List<UserTestResult>): UserWeeklyTest? {
         if (testResults.isEmpty()) return null
 
         logger.info("convertTestResultsToWeeklyTest called with ${testResults.size} results:")

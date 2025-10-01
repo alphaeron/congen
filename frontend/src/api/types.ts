@@ -35,6 +35,8 @@ export interface UserPerformanceScores {
   recovery_score?: number;
   reaction_time_score?: number;
   mobility_score?: number;
+  strength_score?: number;
+  wilks_score?: number;
   level: number;
   level_change_reason?: string;
   hp: number;

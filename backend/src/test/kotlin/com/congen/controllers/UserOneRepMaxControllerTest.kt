@@ -1,7 +1,6 @@
 package com.congen.controllers
 
 import com.congen.createGdprComplianceServiceSpy
-import com.congen.dal.UserOneRepMaxDAL
 import com.congen.exceptions.DatabaseException
 import com.congen.model.UserOneRepMax
 import com.congen.service.GdprComplianceService
@@ -38,7 +37,6 @@ import java.time.Instant
     properties = ["spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration"]
 )
 class UserOneRepMaxControllerTest {
-    private lateinit var userOneRepMaxDAL: UserOneRepMaxDAL
     private lateinit var userOneRepMaxService: UserOneRepMaxService
     private lateinit var validationUtil: ValidationUtil
     private lateinit var keycloakUtil: KeycloakUtil
@@ -60,14 +58,12 @@ class UserOneRepMaxControllerTest {
 
     @BeforeEach
     fun setUp() {
-        userOneRepMaxDAL = mock()
         userOneRepMaxService = mock()
         validationUtil = mock()
         keycloakUtil = mock()
         gdprComplianceService = createGdprComplianceServiceSpy()
         userOneRepMaxController =
             UserOneRepMaxController(
-                userOneRepMaxDAL,
                 userOneRepMaxService,
                 validationUtil,
                 keycloakUtil,

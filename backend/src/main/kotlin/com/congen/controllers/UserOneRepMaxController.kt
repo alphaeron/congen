@@ -1,6 +1,5 @@
 package com.congen.controllers
 
-import com.congen.dal.UserOneRepMaxDAL
 import com.congen.model.UserOneRepMax
 import com.congen.service.GdprComplianceService
 import com.congen.service.UserOneRepMaxService
@@ -49,7 +48,6 @@ import java.math.BigDecimal
  * - **422 Unprocessable Entity**: When validation fails
  * - **500 Internal Server Error**: When database operations fail
  *
- * @param userOneRepMaxDAL Data access layer for user one rep max operations
  * @param userOneRepMaxService Service for user one rep max operations
  * @param validationUtil Utility for validation operations
  * @param keycloakUtil Utility for Keycloak operations
@@ -61,7 +59,6 @@ import java.math.BigDecimal
 @RestController
 @RequestMapping("/user_one_rep_max")
 class UserOneRepMaxController(
-    private val userOneRepMaxDAL: UserOneRepMaxDAL,
     private val userOneRepMaxService: UserOneRepMaxService,
     private val validationUtil: ValidationUtil,
     private val keycloakUtil: KeycloakUtil,
@@ -95,7 +92,7 @@ class UserOneRepMaxController(
                     }
                 consentUserIdMono.flatMap { ownerId ->
                     gdprComplianceService.withUserConsent(ownerId) {
-                        userOneRepMaxService.selectUserOneRepMaxByUser(userId, unit)
+                        userOneRepMaxService.selectUserOneRepMaxByUser(userId)
                             .map { ResponseEntity.ok(it) }
                     }
                 }
@@ -133,7 +130,7 @@ class UserOneRepMaxController(
                     }
                 consentUserIdMono.flatMap { ownerId ->
                     gdprComplianceService.withUserConsent(ownerId) {
-                        userOneRepMaxService.selectUserOneRepMax(userId, exerciseName, unit)
+                        userOneRepMaxService.selectUserOneRepMax(userId, exerciseName)
                             .map { ResponseEntity.ok(it) }
                     }
                 }
@@ -212,7 +209,7 @@ class UserOneRepMaxController(
     ): Mono<ResponseEntity<UserOneRepMax>> {
         return keycloakUtil.getCurrentUserId().zipWith(keycloakUtil.getCurrentUserRoles()) { currentUserId, roles ->
             Pair(currentUserId, roles)
-        }.flatMap { (currentUserId, roles) ->
+        }.flatMap { (currentUserId, roles): Pair<String, Set<String>> ->
             val isAdminOrService = roles.contains("admin") || roles.contains("service")
             if (isAdminOrService || currentUserId == userId) {
                 val consentUserIdMono =
@@ -225,14 +222,6 @@ class UserOneRepMaxController(
                     gdprComplianceService.withUserConsent(ownerId) {
                         userOneRepMaxService.deleteUserOneRepMax(userId, exerciseName)
                             .map { ResponseEntity.ok(it) }
-                            .doOnError { e ->
-                                logger.error(
-                                    "Error deleting user one rep max: userId={}, exerciseName={}",
-                                    userId,
-                                    exerciseName,
-                                    e
-                                )
-                            }
                     }
                 }
             } else {

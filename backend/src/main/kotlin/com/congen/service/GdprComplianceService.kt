@@ -8,7 +8,7 @@ import com.congen.dal.ProgramPreferencesDAL
 import com.congen.dal.UserDAL
 import com.congen.dal.UserEquipmentDAL
 import com.congen.dal.UserExercisePreferenceDAL
-import com.congen.dal.UserOneRepMaxDAL
+import com.congen.service.UserOneRepMaxService
 import com.congen.dal.UserWeightUnitPreferenceDAL
 import com.congen.model.ProgramWithWorkouts
 import com.congen.model.UserConsent
@@ -70,7 +70,7 @@ class GdprComplianceService(
     private val userEquipmentDAL: UserEquipmentDAL,
     private val userExercisePreferenceDAL: UserExercisePreferenceDAL,
     private val programPreferencesDAL: ProgramPreferencesDAL,
-    private val userOneRepMaxDAL: UserOneRepMaxDAL,
+    private val userOneRepMaxService: UserOneRepMaxService,
     private val userWeightUnitPreferenceDAL: UserWeightUnitPreferenceDAL,
     private val programDAL: ProgramDAL,
     private val auditService: AuditService,
@@ -152,7 +152,7 @@ class GdprComplianceService(
             val userConsentMono = gdprComplianceDAL.getUserConsent(keycloakId)
             val userEquipmentMono = userEquipmentDAL.selectUserEquipmentByUser(keycloakId)
             val userExercisePreferencesMono = userExercisePreferenceDAL.selectUserExercisePreferencesByUser(keycloakId)
-            val userOneRepMaxMono = userOneRepMaxDAL.selectUserOneRepMaxByUser(keycloakId)
+            val userOneRepMaxMono = userOneRepMaxService.selectUserOneRepMaxByUser(keycloakId)
             val userWeightUnitPreferencesMono = userWeightUnitPreferenceDAL.selectUserWeightUnitPreferencesByUser(keycloakId)
             val auditLogsMono = gdprComplianceDAL.getUserAuditLogs(keycloakId)
             val dataRetentionPoliciesMono = gdprComplianceDAL.getDataRetentionPolicies()

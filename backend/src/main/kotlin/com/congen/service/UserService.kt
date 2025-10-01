@@ -55,8 +55,10 @@ class UserService(
                                 .flatMap { user ->
                                     // Automatically create consent record for basic service provision
                                     gdprComplianceService.updateUserConsent(keycloakId, true)
-                                        .then(performanceTrackingService.createDefaultPerformanceData(keycloakId))
-                                        .thenReturn(user)
+                                        .flatMap { 
+                                            performanceTrackingService.createDefaultPerformanceData(keycloakId)
+                                                .map { user }
+                                        }
                                 }
                                 .doOnSuccess { logger.debug("Created user profile with Keycloak ID: {}", it.keycloakId) }
                                 .doOnError { e -> logger.error("Error creating user profile: {}", name, e) }

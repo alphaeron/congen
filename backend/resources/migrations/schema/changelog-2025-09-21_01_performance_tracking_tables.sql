@@ -31,6 +31,8 @@ CREATE TABLE user_performance_scores (
   recovery_score NUMERIC(5,2) CHECK (recovery_score >= 0 AND recovery_score <= 100),
   reaction_time_score NUMERIC(5,2) CHECK (reaction_time_score >= 0 AND reaction_time_score <= 100),
   mobility_score NUMERIC(5,2) CHECK (mobility_score >= 0 AND mobility_score <= 100),
+  strength_score NUMERIC(5,2) CHECK (strength_score >= 0 AND strength_score <= 100),
+  wilks_score NUMERIC(8,2) CHECK (wilks_score >= 0),
   level INTEGER NOT NULL CHECK (level >= 1 AND level <= 100),
   level_change_reason VARCHAR(100), -- Reason for score calculation (e.g., 'weekly_test_completed', 'daily_metrics_updated')
   hp NUMERIC(5,2) NOT NULL CHECK (hp >= 0 AND hp <= 100),

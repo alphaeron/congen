@@ -1,4 +1,6 @@
-nivo theme matches game style
+Create a script that will allow me to start port forwarding for the congen minikube deployment, and enable storage from the postgres container to a local directory for backing up the data.
+
+I don't want to always have the application running, I want a script so I can start/stop it, and have the data persisted by mounting a local directory for postgres to use to store data.
 
 https://medium.com/the-bug-shots/visualizing-your-git-repository-history-with-gource-b4702a86fa3d
 

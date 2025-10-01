@@ -7,7 +7,7 @@ import com.congen.dal.ProgramPreferencesDAL
 import com.congen.dal.UserDAL
 import com.congen.dal.UserEquipmentDAL
 import com.congen.dal.UserExercisePreferenceDAL
-import com.congen.dal.UserOneRepMaxDAL
+import com.congen.service.UserOneRepMaxService
 import com.congen.dal.UserWeightUnitPreferenceDAL
 import com.congen.generator.DayTemplate
 import com.congen.generator.PrilepinGuidelines
@@ -515,7 +515,7 @@ fun createGdprComplianceServiceSpy(): GdprComplianceService {
     val userEquipmentDAL = mock<UserEquipmentDAL>()
     val userExercisePreferenceDAL = mock<UserExercisePreferenceDAL>()
     val programPreferencesDAL = mock<ProgramPreferencesDAL>()
-    val userOneRepMaxDAL = mock<UserOneRepMaxDAL>()
+    val userOneRepMaxService = mock<UserOneRepMaxService>()
     val userWeightUnitPreferenceDAL = mock<UserWeightUnitPreferenceDAL>()
     val programDAL = mock<ProgramDAL>()
     val auditService = mock<AuditService>()
@@ -528,7 +528,7 @@ fun createGdprComplianceServiceSpy(): GdprComplianceService {
             userEquipmentDAL = userEquipmentDAL,
             userExercisePreferenceDAL = userExercisePreferenceDAL,
             programPreferencesDAL = programPreferencesDAL,
-            userOneRepMaxDAL = userOneRepMaxDAL,
+            userOneRepMaxService = userOneRepMaxService,
             userWeightUnitPreferenceDAL = userWeightUnitPreferenceDAL,
             programDAL = programDAL,
             auditService = auditService,

@@ -4,6 +4,7 @@ import io.vertx.core.Vertx
 import io.vertx.core.json.jackson.DatabindCodec
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.Primary
 
 /**
  * Configuration class for Vert.x instance setup.
@@ -24,6 +25,7 @@ class VertxConfig {
      * @return A configured Vert.x instance
      */
     @Bean
+    @Primary
     fun vertx(): Vertx {
         val vertx = Vertx.vertx()
         val mapper = DatabindCodec.mapper()

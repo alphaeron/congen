@@ -10,7 +10,7 @@ import com.congen.dal.ProgrammedWorkoutDAL
 import com.congen.dal.SetSchemeDAL
 import com.congen.dal.UserEquipmentDAL
 import com.congen.dal.UserExercisePreferenceDAL
-import com.congen.dal.UserOneRepMaxDAL
+import com.congen.service.UserOneRepMaxService
 import com.congen.dal.UserWeakMuscleDAL
 import com.congen.dal.UserWeightUnitPreferenceDAL
 import com.congen.model.Program
@@ -39,7 +39,7 @@ import java.time.Instant
  */
 class ConjugateWorkoutGeneratorServiceTest {
     private lateinit var conjugateWorkoutGeneratorService: ConjugateWorkoutGeneratorService
-    private lateinit var userOneRepMaxDAL: UserOneRepMaxDAL
+    private lateinit var userOneRepMaxService: UserOneRepMaxService
     private lateinit var programPreferencesDAL: ProgramPreferencesDAL
     private lateinit var programService: ProgramService
     private lateinit var programmedWorkoutDAL: ProgrammedWorkoutDAL
@@ -66,7 +66,7 @@ class ConjugateWorkoutGeneratorServiceTest {
 
     @BeforeEach
     fun setUp() {
-        userOneRepMaxDAL = mock()
+        userOneRepMaxService = mock()
         programPreferencesDAL = mock()
         programService = mock()
         programmedWorkoutDAL = mock()
@@ -88,7 +88,7 @@ class ConjugateWorkoutGeneratorServiceTest {
 
         conjugateWorkoutGeneratorService =
             ConjugateWorkoutGeneratorService(
-                userOneRepMaxDAL = userOneRepMaxDAL,
+                userOneRepMaxService = userOneRepMaxService,
                 programPreferencesDAL = programPreferencesDAL,
                 programService = programService,
                 programmedWorkoutDAL = programmedWorkoutDAL,
@@ -126,7 +126,7 @@ class ConjugateWorkoutGeneratorServiceTest {
         println("Debug: template = $template")
 
         whenever(programService.selectProgramById(any())).thenReturn(Mono.just(program))
-        whenever(userOneRepMaxDAL.selectUserOneRepMaxByUser(any())).thenReturn(Mono.just(oneRepMaxes))
+        whenever(userOneRepMaxService.selectUserOneRepMaxByUser(any())).thenReturn(Mono.just(oneRepMaxes))
         whenever(programPreferencesDAL.selectProgramPreferences(any())).thenReturn(Mono.just(programPreferences))
         whenever(userWeakMuscleDAL.selectUserWeakMusclesByUser(any())).thenReturn(Mono.just(userWeakMuscles))
         whenever(conjugateTemplates.selectTemplate(any())).thenReturn(template)
@@ -163,7 +163,7 @@ class ConjugateWorkoutGeneratorServiceTest {
             .verifyComplete()
 
         verify(programService).selectProgramById(PROGRAM_ID)
-        verify(userOneRepMaxDAL).selectUserOneRepMaxByUser(USER_ID)
+        verify(userOneRepMaxService).selectUserOneRepMaxByUser(USER_ID)
         verify(programPreferencesDAL).selectProgramPreferences(PROGRAM_ID)
         verify(userWeakMuscleDAL).selectUserWeakMusclesByUser(USER_ID)
         verify(conjugateTemplates).selectTemplate(4)
@@ -179,7 +179,7 @@ class ConjugateWorkoutGeneratorServiceTest {
         val template = createSampleTemplate()
 
         whenever(programService.selectProgramById(PROGRAM_ID)).thenReturn(Mono.just(program))
-        whenever(userOneRepMaxDAL.selectUserOneRepMaxByUser(USER_ID)).thenReturn(Mono.just(oneRepMaxes))
+        whenever(userOneRepMaxService.selectUserOneRepMaxByUser(USER_ID)).thenReturn(Mono.just(oneRepMaxes))
         whenever(programPreferencesDAL.selectProgramPreferences(PROGRAM_ID)).thenReturn(Mono.just(programPreferences))
         whenever(userWeakMuscleDAL.selectUserWeakMusclesByUser(USER_ID)).thenReturn(Mono.just(emptyUserWeakMuscles))
         whenever(conjugateTemplates.selectTemplate(4)).thenReturn(template)
@@ -230,7 +230,7 @@ class ConjugateWorkoutGeneratorServiceTest {
         val program = createSampleProgram()
 
         whenever(programService.selectProgramById(PROGRAM_ID)).thenReturn(Mono.just(program))
-        whenever(userOneRepMaxDAL.selectUserOneRepMaxByUser(USER_ID)).thenReturn(Mono.error(RuntimeException("Database error")))
+        whenever(userOneRepMaxService.selectUserOneRepMaxByUser(USER_ID)).thenReturn(Mono.error(RuntimeException("Database error")))
 
         val result = conjugateWorkoutGeneratorService.generateNextWeek(PROGRAM_ID)
 
@@ -245,7 +245,7 @@ class ConjugateWorkoutGeneratorServiceTest {
         val oneRepMaxes = createSampleOneRepMaxes()
 
         whenever(programService.selectProgramById(PROGRAM_ID)).thenReturn(Mono.just(program))
-        whenever(userOneRepMaxDAL.selectUserOneRepMaxByUser(USER_ID)).thenReturn(Mono.just(oneRepMaxes))
+        whenever(userOneRepMaxService.selectUserOneRepMaxByUser(USER_ID)).thenReturn(Mono.just(oneRepMaxes))
         whenever(programPreferencesDAL.selectProgramPreferences(PROGRAM_ID)).thenReturn(Mono.error(RuntimeException("Database error")))
 
         val result = conjugateWorkoutGeneratorService.generateNextWeek(PROGRAM_ID)
@@ -262,7 +262,7 @@ class ConjugateWorkoutGeneratorServiceTest {
         val programPreferences = createSampleProgramPreferences()
 
         whenever(programService.selectProgramById(PROGRAM_ID)).thenReturn(Mono.just(program))
-        whenever(userOneRepMaxDAL.selectUserOneRepMaxByUser(USER_ID)).thenReturn(Mono.just(oneRepMaxes))
+        whenever(userOneRepMaxService.selectUserOneRepMaxByUser(USER_ID)).thenReturn(Mono.just(oneRepMaxes))
         whenever(programPreferencesDAL.selectProgramPreferences(PROGRAM_ID)).thenReturn(Mono.just(programPreferences))
         whenever(userWeakMuscleDAL.selectUserWeakMusclesByUser(USER_ID)).thenReturn(Mono.error(RuntimeException("Database error")))
 
@@ -282,7 +282,7 @@ class ConjugateWorkoutGeneratorServiceTest {
         val template = createSampleTemplate()
 
         whenever(programService.selectProgramById(PROGRAM_ID)).thenReturn(Mono.just(program))
-        whenever(userOneRepMaxDAL.selectUserOneRepMaxByUser(USER_ID)).thenReturn(Mono.just(oneRepMaxes))
+        whenever(userOneRepMaxService.selectUserOneRepMaxByUser(USER_ID)).thenReturn(Mono.just(oneRepMaxes))
         whenever(programPreferencesDAL.selectProgramPreferences(PROGRAM_ID)).thenReturn(Mono.just(programPreferences))
         whenever(userWeakMuscleDAL.selectUserWeakMusclesByUser(USER_ID)).thenReturn(Mono.just(userWeakMuscles))
         whenever(conjugateTemplates.selectTemplate(4)).thenReturn(template)
@@ -304,7 +304,7 @@ class ConjugateWorkoutGeneratorServiceTest {
         val template = createSampleTemplate()
 
         whenever(programService.selectProgramById(PROGRAM_ID)).thenReturn(Mono.just(program))
-        whenever(userOneRepMaxDAL.selectUserOneRepMaxByUser(USER_ID)).thenReturn(Mono.just(oneRepMaxes))
+        whenever(userOneRepMaxService.selectUserOneRepMaxByUser(USER_ID)).thenReturn(Mono.just(oneRepMaxes))
         whenever(programPreferencesDAL.selectProgramPreferences(PROGRAM_ID)).thenReturn(Mono.just(programPreferences))
         whenever(userWeakMuscleDAL.selectUserWeakMusclesByUser(USER_ID)).thenReturn(Mono.just(userWeakMuscles))
         whenever(conjugateTemplates.selectTemplate(4)).thenReturn(template)
@@ -333,7 +333,7 @@ class ConjugateWorkoutGeneratorServiceTest {
         val template = createSampleTemplate()
 
         whenever(programService.selectProgramById(PROGRAM_ID)).thenReturn(Mono.just(program))
-        whenever(userOneRepMaxDAL.selectUserOneRepMaxByUser(USER_ID)).thenReturn(Mono.just(oneRepMaxes))
+        whenever(userOneRepMaxService.selectUserOneRepMaxByUser(USER_ID)).thenReturn(Mono.just(oneRepMaxes))
         whenever(programPreferencesDAL.selectProgramPreferences(PROGRAM_ID)).thenReturn(Mono.just(programPreferences))
         whenever(userWeakMuscleDAL.selectUserWeakMusclesByUser(USER_ID)).thenReturn(Mono.just(userWeakMuscles))
         whenever(conjugateTemplates.selectTemplate(4)).thenReturn(template)
@@ -364,7 +364,7 @@ class ConjugateWorkoutGeneratorServiceTest {
         val template = createSampleTemplate()
 
         whenever(programService.selectProgramById(PROGRAM_ID)).thenReturn(Mono.just(program))
-        whenever(userOneRepMaxDAL.selectUserOneRepMaxByUser(USER_ID)).thenReturn(Mono.just(oneRepMaxes))
+        whenever(userOneRepMaxService.selectUserOneRepMaxByUser(USER_ID)).thenReturn(Mono.just(oneRepMaxes))
         whenever(programPreferencesDAL.selectProgramPreferences(PROGRAM_ID)).thenReturn(Mono.just(programPreferences))
         whenever(userWeakMuscleDAL.selectUserWeakMusclesByUser(USER_ID)).thenReturn(Mono.just(userWeakMuscles))
         whenever(conjugateTemplates.selectTemplate(3)).thenReturn(template)

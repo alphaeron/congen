@@ -1,47 +1,25 @@
 package com.congen.service
 
 import com.congen.dal.UserOneRepMaxDAL
+import com.congen.dal.UserPerformanceMetricsDAL
+import com.congen.dal.UserPerformanceScoresDAL
 import com.congen.dal.UserWeightUnitPreferenceDAL
-import com.congen.exceptions.NoResultsFoundException
 import com.congen.model.UserOneRepMax
+import com.congen.model.UserPerformanceMetrics
+import com.congen.model.UserPerformanceScores
 import com.congen.model.WeightUnit
 import com.congen.util.UnitConverter
-import com.congen.util.ValidationUtil
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Mono
 import java.math.BigDecimal
 
 /**
- * Service for managing user one rep max operations.
- *
- * This service handles all business logic related to user one rep max values,
- * including unit conversions, validation, and preference management. It provides
- * a clean separation between the controller layer and the data access layer.
- *
- * ## Features
- *
- * - **Unit Conversion**: Automatically converts weights between kg and lbs
- * - **Preference Management**: Uses user's preferred units per exercise
- * - **Validation**: Validates weight values and units
- * - **Error Handling**: Provides meaningful error messages
- *
- * ## Usage
- *
- * ```kotlin
- * // Create or update a one rep max
- * val oneRepMax = userOneRepMaxService.upsertUserOneRepMax(userId, exerciseName, weight, unit)
- *
- * // Get all one rep maxes for a user
- * val oneRepMaxes = userOneRepMaxService.selectUserOneRepMaxByUser(userId, unit)
- *
- * // Get specific one rep max
- * val oneRepMax = userOneRepMaxService.selectUserOneRepMax(userId, exerciseName, unit)
- * ```
- *
- * @param userOneRepMaxDAL Data access layer for user one rep max operations
- * @param userWeightUnitPreferenceDAL Data access layer for user weight unit preferences
- * @param unitConverter Utility for unit conversions
+ * Service for managing user one rep max records.
+ * 
+ * This service acts as a thin wrapper around UserOneRepMaxDAL and provides
+ * additional business logic such as triggering performance score recalculation
+ * when 1RM data changes.
  *
  * @author Congen Development Team
  * @since 1.0.0
@@ -49,6 +27,10 @@ import java.math.BigDecimal
 @Service
 class UserOneRepMaxService(
     private val userOneRepMaxDAL: UserOneRepMaxDAL,
+    private val performanceScoringService: PerformanceScoringService,
+    private val performanceTrackingService: PerformanceTrackingService,
+    private val userPerformanceMetricsDAL: UserPerformanceMetricsDAL,
+    private val userPerformanceScoresDAL: UserPerformanceScoresDAL,
     private val userWeightUnitPreferenceDAL: UserWeightUnitPreferenceDAL,
     private val unitConverter: UnitConverter
 ) {
@@ -57,170 +39,117 @@ class UserOneRepMaxService(
     }
 
     /**
-     * Creates or updates a user's one rep max for a specific exercise.
+     * Retrieves all one rep max records for a specific user.
      *
-     * This method handles the creation or update of a user's one rep max value for a specific exercise.
-     * The weight is converted to kg for storage, regardless of the input unit. The method validates
-     * the input parameters and ensures the weight is within acceptable ranges.
+     * @param userId The Keycloak identifier of the user
+     * @param unit Optional unit to convert weights to (kg or lbs)
+     * @return Mono containing a list of user one rep max records
+     */
+    fun selectUserOneRepMaxByUser(userId: String): Mono<List<UserOneRepMax>> = userOneRepMaxDAL.selectUserOneRepMaxByUser(userId)
+
+    /**
+     * Retrieves a specific one rep max record for a user and exercise.
      *
-     * @param userId The Keycloak user ID
+     * @param userId The Keycloak identifier of the user
+     * @param exerciseName The name of the exercise
+     * @param unit Optional unit to convert weight to (kg or lbs)
+     * @return Mono containing the user one rep max record
+     */
+    fun selectUserOneRepMax(userId: String, exerciseName: String): Mono<UserOneRepMax> = userOneRepMaxDAL.selectUserOneRepMax(userId, exerciseName)
+
+    /**
+     * Creates a new user one rep max record.
+     * Note: This method assumes the weight is already in kg. Use upsertUserOneRepMax for unit conversion.
+     *
+     * @param userId The Keycloak identifier of the user
+     * @param exerciseName The name of the exercise
+     * @param oneRepMax The one rep max weight value (in kg)
+     * @return Mono containing the created user one rep max record
+     */
+    fun insertUserOneRepMax(userId: String, exerciseName: String, oneRepMax: BigDecimal): Mono<UserOneRepMax> = userOneRepMaxDAL.insertUserOneRepMax(userId, exerciseName, oneRepMax)
+
+    /**
+     * Updates an existing user one rep max record.
+     * Note: This method assumes the weight is already in kg. Use upsertUserOneRepMax for unit conversion.
+     *
+     * @param userId The Keycloak identifier of the user
+     * @param exerciseName The name of the exercise
+     * @param oneRepMax The one rep max weight value (in kg)
+     * @return Mono containing the updated user one rep max record
+     */
+    fun updateUserOneRepMax(userId: String, exerciseName: String, oneRepMax: BigDecimal): Mono<UserOneRepMax> = userOneRepMaxDAL.updateUserOneRepMax(userId, exerciseName, oneRepMax)
+
+    /**
+     * Creates or updates a user one rep max record (upsert operation).
+     *
+     * @param userId The Keycloak identifier of the user
      * @param exerciseName The name of the exercise
      * @param oneRepMax The one rep max weight value
-     * @param unit The unit of the weight (KG or LBS). If null, defaults to KG
-     * @return Mono containing the created or updated user one rep max (stored in kg)
+     * @param unit The weight unit (kg or lbs)
+     * @return Mono containing the created or updated user one rep max record
      */
-    fun upsertUserOneRepMax(
-        userId: String,
-        exerciseName: String,
-        oneRepMax: BigDecimal,
-        unit: String?
-    ): Mono<UserOneRepMax> {
-        logger.info("Upserting user one rep max: {} - {} - {} - {}", userId, exerciseName, oneRepMax, unit)
-
-        // Determine the unit to use
+    fun upsertUserOneRepMax(userId: String, exerciseName: String, oneRepMax: BigDecimal, unit: String): Mono<UserOneRepMax> {
+        logger.debug("Upserting one rep max for user: {} exercise: {} value: {} unit: {}", userId, exerciseName, oneRepMax, unit)
+        
+        // Convert weight to kg for storage
         val weightUnit = WeightUnit.fromString(unit)
-
-        // Convert to kg for storage and validate
-        val weightInKg = ValidationUtil.validateOneRepMaxWithUnit(oneRepMax, weightUnit, unitConverter)
-        logger.debug("Converted {} {} to {} kg for storage", oneRepMax, weightUnit, weightInKg)
-
-        return userOneRepMaxDAL.upsertUserOneRepMax(userId, exerciseName, weightInKg)
+        val oneRepMaxInKg = unitConverter.toKg(oneRepMax, weightUnit)
+        
+        logger.debug("Converted {} {} to {} kg for storage", oneRepMax, unit, oneRepMaxInKg)
+        
+        return userOneRepMaxDAL.upsertUserOneRepMax(userId, exerciseName, oneRepMaxInKg)
+            .doOnSuccess { 
+                logger.info("Successfully upserted 1RM for user {} exercise {}: {} {} (stored as {} kg)", 
+                    userId, exerciseName, oneRepMax, unit, oneRepMaxInKg)
+                // Trigger performance score recalculation
+                triggerPerformanceScoreRecalculation(userId)
+            }
     }
 
     /**
-     * Retrieves all one rep max values for a specific user.
+     * Deletes a user one rep max record.
      *
-     * This method fetches all one rep max values that are associated with the specified user,
-     * returning a list of user-exercise 1RM relationships. Weights are converted to the user's
-     * preferred units for each exercise, or displayed in kg if no preference is set.
-     *
-     * @param userId The Keycloak user ID
-     * @param unit Optional unit to convert all weights to (KG or LBS). If not specified, uses each exercise's preferred unit
-     * @return Mono containing a list of user one rep max values in preferred units
+     * @param userId The Keycloak identifier of the user
+     * @param exerciseName The name of the exercise
+     * @return Mono that completes when the deletion is done
      */
-    fun selectUserOneRepMaxByUser(
-        userId: String,
-        unit: String?
-    ): Mono<List<UserOneRepMax>> {
-        return userOneRepMaxDAL.selectUserOneRepMaxByUser(userId)
-            .flatMap { oneRepMaxes ->
-                // Get user's weight unit preferences
-                userWeightUnitPreferenceDAL.selectUserWeightUnitPreferencesByUser(userId)
-                    .map { preferences ->
-                        val preferenceMap = preferences.associateBy { it.exerciseName }
+    fun deleteUserOneRepMax(userId: String, exerciseName: String): Mono<UserOneRepMax> = userOneRepMaxDAL.deleteUserOneRepMax(userId, exerciseName)
 
-                        // Convert weights to preferred units
-                        oneRepMaxes.map { oneRepMax ->
-                            val preferredUnit =
-                                if (unit != null) {
-                                    try {
-                                        WeightUnit.valueOf(unit.uppercase())
-                                    } catch (e: IllegalArgumentException) {
-                                        logger.warn("Invalid unit parameter: {}, using exercise preference", unit)
-                                        preferenceMap[oneRepMax.exerciseName]?.preferredUnit ?: WeightUnit.KG
-                                    }
-                                } else {
-                                    preferenceMap[oneRepMax.exerciseName]?.preferredUnit ?: WeightUnit.KG
-                                }
-
-                            val convertedWeight = unitConverter.fromKg(oneRepMax.oneRepMax, preferredUnit)
-                            oneRepMax.copy(oneRepMax = convertedWeight)
-                        }
+    /**
+     * Triggers performance score recalculation when 1RM data changes.
+     * This ensures that strength scores and overall levels are updated.
+     */
+    private fun triggerPerformanceScoreRecalculation(userId: String) {
+        logger.debug("Triggering performance score recalculation for user: {}", userId)
+        
+        // Get the user's latest performance metrics and weekly test data
+        userPerformanceMetricsDAL.getLatestUserPerformanceMetrics(userId)
+            .flatMap { performanceMetrics ->
+                // Get the latest weekly test data using PerformanceTrackingService
+                performanceTrackingService.getWeeklyTests(userId)
+                    .flatMap { weeklyTestResults ->
+                        // Convert test results to UserWeeklyTest format using PerformanceTrackingService
+                        val weeklyTest = performanceTrackingService.convertTestResultsToWeeklyTest(weeklyTestResults)
+                        
+                        // Recalculate performance scores with updated 1RM data and weekly test data
+                        performanceScoringService.calculatePerformanceScores(
+                            performanceMetrics,
+                            weeklyTest,
+                            "one_rep_max_updated"
+                        )
                     }
             }
-            .doOnSuccess { oneRepMaxes ->
-                logger.debug("Found {} one rep max values for user: {}", oneRepMaxes.size, userId)
+            .flatMap { scores: UserPerformanceScores ->
+                // Upsert the scores with day-based logic
+                userPerformanceScoresDAL.upsertUserPerformanceScores(scores)
             }
-            .doOnError { e ->
-                logger.error("Error getting one rep max values for user: {}", userId, e)
+            .doOnSuccess { 
+                logger.info("Successfully recalculated and upserted performance scores for user: {}", userId)
             }
-    }
-
-    /**
-     * Retrieves a specific one rep max for a user and exercise.
-     *
-     * This method fetches the one rep max value for the specified user and exercise.
-     * The weight is converted to the user's preferred unit for this exercise, or displayed
-     * in kg if no preference is set. If no 1RM exists, a NoResultsFoundException will be thrown.
-     *
-     * @param userId The Keycloak user ID
-     * @param exerciseName The name of the exercise
-     * @param unit Optional unit to convert the weight to (KG or LBS). If not specified, uses exercise's preferred unit
-     * @return Mono containing the user one rep max if found
-     * @throws NoResultsFoundException if the one rep max is not found
-     */
-    fun selectUserOneRepMax(
-        userId: String,
-        exerciseName: String,
-        unit: String?
-    ): Mono<UserOneRepMax> {
-        return userOneRepMaxDAL.selectUserOneRepMax(userId, exerciseName)
-            .flatMap { oneRepMax ->
-                // Get user's weight unit preference for this exercise
-                val preferredUnitMono =
-                    if (unit != null) {
-                        try {
-                            Mono.just(WeightUnit.valueOf(unit.uppercase()))
-                        } catch (e: IllegalArgumentException) {
-                            logger.warn("Invalid unit parameter: {}, using exercise preference", unit)
-                            userWeightUnitPreferenceDAL.selectUserWeightUnitPreference(userId, exerciseName)
-                                .map { it.preferredUnit }
-                                .onErrorResume(NoResultsFoundException::class.java) {
-                                    logger.debug(
-                                        "No weight unit preference found for user {} and exercise {}, using KG",
-                                        userId,
-                                        exerciseName
-                                    )
-                                    Mono.just(WeightUnit.KG)
-                                }
-                        }
-                    } else {
-                        userWeightUnitPreferenceDAL.selectUserWeightUnitPreference(userId, exerciseName)
-                            .map { it.preferredUnit }
-                            .onErrorResume(NoResultsFoundException::class.java) {
-                                logger.debug("No weight unit preference found for user {} and exercise {}, using KG", userId, exerciseName)
-                                Mono.just(WeightUnit.KG)
-                            }
-                    }
-
-                preferredUnitMono.map { preferredUnit ->
-                    val convertedWeight = unitConverter.fromKg(oneRepMax.oneRepMax, preferredUnit)
-                    val convertedOneRepMax = oneRepMax.copy(oneRepMax = convertedWeight)
-
-                    logger.debug(
-                        "Found one rep max for user: {} and exercise: {} (converted to {} {})",
-                        userId,
-                        exerciseName,
-                        convertedWeight,
-                        preferredUnit
-                    )
-                    convertedOneRepMax
-                }
+            .doOnError { error ->
+                logger.warn("Failed to recalculate performance scores for user: {} - {}", userId, error.message)
             }
-            .doOnError { e ->
-                logger.error("Error getting one rep max for user: {} and exercise: {}", userId, exerciseName, e)
-            }
-    }
-
-    /**
-     * Deletes a user one rep max by user ID and exercise name.
-     *
-     * This method removes the one rep max for the specified user and exercise.
-     * If no 1RM exists, a NoResultsFoundException will be thrown.
-     *
-     * @param userId The Keycloak user ID
-     * @param exerciseName The name of the exercise
-     * @return Mono containing the deleted user one rep max
-     * @throws NoResultsFoundException if the one rep max is not found
-     */
-    fun deleteUserOneRepMax(
-        userId: String,
-        exerciseName: String
-    ): Mono<UserOneRepMax> {
-        logger.info("Deleting user one rep max: {} - {}", userId, exerciseName)
-        return userOneRepMaxDAL.deleteUserOneRepMax(userId, exerciseName)
-            .doOnError { e ->
-                logger.error("Error deleting one rep max for user: {} and exercise: {}", userId, exerciseName, e)
-            }
+            .onErrorComplete() // Don't fail the 1RM operation if performance recalculation fails
+            .subscribe() // Fire and forget - don't block the 1RM operation
     }
 }

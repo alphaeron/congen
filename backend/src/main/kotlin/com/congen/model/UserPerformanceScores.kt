@@ -118,6 +118,21 @@ data class UserPerformanceScores(
         maximum = "100"
     )
     @param:JsonProperty("mobility_score") val mobilityScore: Double?,
+    /** Individual strength score (0-100) based on Wilks score. */
+    @Schema(
+        description = "Individual strength score (0-100) based on Wilks score",
+        example = "75.2",
+        minimum = "0",
+        maximum = "100"
+    )
+    @param:JsonProperty("strength_score") val strengthScore: Double?,
+    /** Raw Wilks score calculated from big three lifts and body weight. */
+    @Schema(
+        description = "Raw Wilks score calculated from big three lifts and body weight",
+        example = "312.5",
+        minimum = "0"
+    )
+    @param:JsonProperty("wilks_score") val wilksScore: Double?,
     /** Athleticism level with tanh scaling (1-100). */
     @Schema(
         description = "Athleticism level with tanh scaling (1-100)",

@@ -147,7 +147,7 @@ function AppContent(): React.ReactElement {
     );
   }
 
-  return (
+  const appContent = (
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <DrawerContext.Provider value={{ drawerOpen, setDrawerOpen, drawerWidth }}>
@@ -492,7 +492,9 @@ function AppContent(): React.ReactElement {
               path="/dashboard"
               element={
                 <ProtectedRoute>
-                  <DashboardPage />
+                  <DataProvider>
+                    <DashboardPage />
+                  </DataProvider>
                 </ProtectedRoute>
               }
             />
@@ -500,7 +502,9 @@ function AppContent(): React.ReactElement {
               path="/exercises"
               element={
                 <ProtectedRoute>
-                  <ExerciseOverviewPage />
+                  <DataProvider>
+                    <ExerciseOverviewPage />
+                  </DataProvider>
                 </ProtectedRoute>
               }
             />
@@ -508,9 +512,11 @@ function AppContent(): React.ReactElement {
               path="/exercises/:exerciseName"
               element={
                 <ProtectedRoute>
-                  <Container maxWidth="xl" sx={{ py: 2 }}>
-                    <ExerciseDetailsPage />
-                  </Container>
+                  <DataProvider>
+                    <Container maxWidth="xl" sx={{ py: 2 }}>
+                      <ExerciseDetailsPage />
+                    </Container>
+                  </DataProvider>
                 </ProtectedRoute>
               }
             />
@@ -518,7 +524,9 @@ function AppContent(): React.ReactElement {
               path="/profile"
               element={
                 <ProtectedRoute>
-                  <UserProfilePage />
+                  <DataProvider>
+                    <UserProfilePage />
+                  </DataProvider>
                 </ProtectedRoute>
               }
             />
@@ -535,6 +543,8 @@ function AppContent(): React.ReactElement {
       </DrawerContext.Provider>
     </ThemeProvider>
   );
+
+  return appContent;
 } // end component AppContent
 
 /**
@@ -548,9 +558,7 @@ export function App(): React.ReactElement {
       <OidcAuthProvider {...getAuthProviderConfig()}>
         <AuthProvider>
           <CookieProvider>
-            <DataProvider>
-              <AppContent />
-            </DataProvider>
+            <AppContent />
           </CookieProvider>
         </AuthProvider>
       </OidcAuthProvider>

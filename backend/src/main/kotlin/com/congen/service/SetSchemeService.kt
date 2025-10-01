@@ -3,7 +3,7 @@ package com.congen.service
 import com.congen.client.PostgresClient
 import com.congen.dal.ProgrammedExerciseDAL
 import com.congen.dal.SetSchemeDAL
-import com.congen.dal.UserOneRepMaxDAL
+import com.congen.service.UserOneRepMaxService
 import com.congen.exceptions.NoResultsFoundException
 import com.congen.model.Band
 import com.congen.model.SetScheme
@@ -42,7 +42,7 @@ import reactor.core.publisher.Mono
  *
  * @param setSchemeDAL Data access layer for set scheme operations
  * @param programmedExerciseDAL Data access layer for programmed exercise operations
- * @param userOneRepMaxDAL Data access layer for user one rep max operations
+ * @param userOneRepMaxService Service for user one rep max operations
  * @param unitConverter Service for unit conversions
  * @param oneRepMaxCalculator Service for one rep max calculations
  * @param postgresClient Database client with transaction support
@@ -54,7 +54,7 @@ import reactor.core.publisher.Mono
 class SetSchemeService(
     private val setSchemeDAL: SetSchemeDAL,
     private val programmedExerciseDAL: ProgrammedExerciseDAL,
-    private val userOneRepMaxDAL: UserOneRepMaxDAL,
+    private val userOneRepMaxService: UserOneRepMaxService,
     private val unitConverter: UnitConverter,
     private val oneRepMaxCalculator: OneRepMaxCalculator,
     private val postgresClient: PostgresClient
@@ -368,11 +368,11 @@ class SetSchemeService(
                             // Use transaction to prevent race conditions in read-then-update
                             postgresClient.withTransaction {
                                 // Check if user has a 1RM for this exercise
-                                userOneRepMaxDAL.selectUserOneRepMax(userId, exerciseName)
+                                userOneRepMaxService.selectUserOneRepMax(userId, exerciseName)
                                     .flatMap { currentOneRepMax ->
                                         // Update 1RM if estimated 1RM is greater than current
                                         if (estimatedOneRepMax > currentOneRepMax.oneRepMax) {
-                                            userOneRepMaxDAL.updateUserOneRepMax(userId, exerciseName, estimatedOneRepMax)
+                                            userOneRepMaxService.updateUserOneRepMax(userId, exerciseName, estimatedOneRepMax)
                                                 .doOnSuccess {
                                                     logger.info(
                                                         "Updated 1RM for user {} exercise {} from {} to {} " +
@@ -399,7 +399,7 @@ class SetSchemeService(
                                     }
                                     .onErrorResume(NoResultsFoundException::class.java) {
                                         // No existing 1RM, create new one with estimated value
-                                        userOneRepMaxDAL.insertUserOneRepMax(userId, exerciseName, estimatedOneRepMax)
+                                        userOneRepMaxService.insertUserOneRepMax(userId, exerciseName, estimatedOneRepMax)
                                             .doOnSuccess {
                                                 logger.info(
                                                     "Created new 1RM for user {} exercise {}: {} (calculated from {} lbs × {} reps)",

@@ -27,11 +27,11 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ user }) =>
     performanceScores,
     performanceMetrics,
     weeklyTests,
-    wilksScore,
     refreshPerformanceData,
+    isReady,
   } = useData();
 
-  if (isDataLoading) {
+  if (!isReady || isDataLoading) {
     return <LoadingSpinner message="Loading dashboard..." fullHeight={false} />;
   }
 
@@ -46,7 +46,6 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ user }) =>
               scores={performanceScores}
               metrics={performanceMetrics}
               weeklyTests={weeklyTests}
-              wilksScore={wilksScore}
               userName={user.name}
             />
           </Grid>

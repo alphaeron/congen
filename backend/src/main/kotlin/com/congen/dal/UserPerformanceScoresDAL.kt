@@ -6,6 +6,7 @@ import com.congen.cache.CacheTTL
 import com.congen.cache.annotation.CacheEvict
 import com.congen.cache.annotation.Cacheable
 import com.congen.client.PostgresClient
+import com.congen.exceptions.NoResultsFoundException
 import com.congen.model.UserPerformanceScores
 import com.congen.service.AuditService
 import org.slf4j.LoggerFactory
@@ -150,10 +151,10 @@ class UserPerformanceScoresDAL(
                     """
                     INSERT INTO user_performance_scores (
                         keycloak_id, explosiveness_score, aerobic_capacity_score, recovery_score,
-                        reaction_time_score, mobility_score, level, level_change_reason,
+                        reaction_time_score, mobility_score, strength_score, wilks_score, level, level_change_reason,
                         hp, hp_loss, mp, mp_loss, fatigue, fatigue_loss, skills, created_at
                     ) VALUES (
-                        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16
+                        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18
                     )
                     """,
                     scoresWithTimestamps.keycloakId,
@@ -162,6 +163,8 @@ class UserPerformanceScoresDAL(
                     scoresWithTimestamps.recoveryScore,
                     scoresWithTimestamps.reactionTimeScore,
                     scoresWithTimestamps.mobilityScore,
+                    scoresWithTimestamps.strengthScore,
+                    scoresWithTimestamps.wilksScore,
                     scoresWithTimestamps.level,
                     scoresWithTimestamps.levelChangeReason,
                     scoresWithTimestamps.hp,
@@ -174,6 +177,148 @@ class UserPerformanceScoresDAL(
                     LocalDateTime.ofInstant(scoresWithTimestamps.createdAt, ZoneOffset.UTC)
                 )
             )
-            .then(Mono.just(scoresWithTimestamps))
+            .map { scoresWithTimestamps }
+    }
+
+    /**
+     * Upserts performance scores for a user with day-based logic.
+     * If a record exists for today, it updates in place. Otherwise, creates a new record.
+     *
+     * @param scores The performance scores to upsert
+     * @return Mono containing the upserted performance scores
+     */
+    @CacheEvict(
+        invalidationStrategy = CacheInvalidationStrategy.USER_DATA,
+        entityName = "user_performance_scores"
+    )
+    fun upsertUserPerformanceScores(scores: UserPerformanceScores): Mono<UserPerformanceScores> {
+        logger.debug("Upserting performance scores for user: ${scores.keycloakId}")
+
+        val now = Instant.now()
+        val scoresWithTimestamps = scores.copy(createdAt = now)
+
+        return auditService.logDataAccess("user_performance_scores", "UPSERT", scores.keycloakId)
+            .then(
+                // First, check if there's already a record for today
+                selectUserPerformanceScores(scores.keycloakId)
+                    .flatMap { existingScores ->
+                        val existingDate = existingScores.createdAt.atZone(ZoneOffset.UTC).toLocalDate()
+                        val newDate = now.atZone(ZoneOffset.UTC).toLocalDate()
+
+                        if (existingDate == newDate) {
+                            // Update existing record for today
+                            postgresClient.update<UserPerformanceScores>(
+                                """
+                                UPDATE user_performance_scores SET
+                                    explosiveness_score = $2,
+                                    aerobic_capacity_score = $3,
+                                    recovery_score = $4,
+                                    reaction_time_score = $5,
+                                    mobility_score = $6,
+                                    strength_score = $7,
+                                    wilks_score = $8,
+                                    level = $9,
+                                    level_change_reason = $10,
+                                    hp = $11,
+                                    hp_loss = $12,
+                                    mp = $13,
+                                    mp_loss = $14,
+                                    fatigue = $15,
+                                    fatigue_loss = $16,
+                                    skills = $17
+                                WHERE id = (
+                                    SELECT id FROM user_performance_scores 
+                                    WHERE keycloak_id = $1 AND DATE(created_at) = DATE(NOW())
+                                    ORDER BY created_at DESC
+                                    LIMIT 1
+                                )
+                                """,
+                                scoresWithTimestamps.keycloakId,
+                                scoresWithTimestamps.explosivenessScore,
+                                scoresWithTimestamps.aerobicCapacityScore,
+                                scoresWithTimestamps.recoveryScore,
+                                scoresWithTimestamps.reactionTimeScore,
+                                scoresWithTimestamps.mobilityScore,
+                                scoresWithTimestamps.strengthScore,
+                                scoresWithTimestamps.wilksScore,
+                                scoresWithTimestamps.level,
+                                scoresWithTimestamps.levelChangeReason,
+                                scoresWithTimestamps.hp,
+                                scoresWithTimestamps.hpLoss,
+                                scoresWithTimestamps.mp,
+                                scoresWithTimestamps.mpLoss,
+                                scoresWithTimestamps.fatigue,
+                                scoresWithTimestamps.fatigueLoss,
+                                scoresWithTimestamps.skills.toTypedArray()
+                            )
+                        } else {
+                            // Create new record for new day
+                            postgresClient.update<UserPerformanceScores>(
+                                """
+                                INSERT INTO user_performance_scores (
+                                    keycloak_id, explosiveness_score, aerobic_capacity_score, recovery_score,
+                                    reaction_time_score, mobility_score, strength_score, wilks_score, level, level_change_reason,
+                                    hp, hp_loss, mp, mp_loss, fatigue, fatigue_loss, skills, created_at
+                                ) VALUES (
+                                    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, NOW()
+                                )
+                                """,
+                                scoresWithTimestamps.keycloakId,
+                                scoresWithTimestamps.explosivenessScore,
+                                scoresWithTimestamps.aerobicCapacityScore,
+                                scoresWithTimestamps.recoveryScore,
+                                scoresWithTimestamps.reactionTimeScore,
+                                scoresWithTimestamps.mobilityScore,
+                                scoresWithTimestamps.strengthScore,
+                                scoresWithTimestamps.wilksScore,
+                                scoresWithTimestamps.level,
+                                scoresWithTimestamps.levelChangeReason,
+                                scoresWithTimestamps.hp,
+                                scoresWithTimestamps.hpLoss,
+                                scoresWithTimestamps.mp,
+                                scoresWithTimestamps.mpLoss,
+                                scoresWithTimestamps.fatigue,
+                                scoresWithTimestamps.fatigueLoss,
+                                scoresWithTimestamps.skills.toTypedArray()
+                            )
+                        }
+                    }
+                    .onErrorResume { throwable: Throwable ->
+                        if (throwable is NoResultsFoundException) {
+                            // No existing scores, create new record
+                            postgresClient.update<UserPerformanceScores>(
+                                """
+                                INSERT INTO user_performance_scores (
+                                    keycloak_id, explosiveness_score, aerobic_capacity_score, recovery_score,
+                                    reaction_time_score, mobility_score, strength_score, wilks_score, level, level_change_reason,
+                                    hp, hp_loss, mp, mp_loss, fatigue, fatigue_loss, skills, created_at
+                                ) VALUES (
+                                    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, NOW()
+                                )
+                                """,
+                                scoresWithTimestamps.keycloakId,
+                                scoresWithTimestamps.explosivenessScore,
+                                scoresWithTimestamps.aerobicCapacityScore,
+                                scoresWithTimestamps.recoveryScore,
+                                scoresWithTimestamps.reactionTimeScore,
+                                scoresWithTimestamps.mobilityScore,
+                                scoresWithTimestamps.strengthScore,
+                                scoresWithTimestamps.wilksScore,
+                                scoresWithTimestamps.level,
+                                scoresWithTimestamps.levelChangeReason,
+                                scoresWithTimestamps.hp,
+                                scoresWithTimestamps.hpLoss,
+                                scoresWithTimestamps.mp,
+                                scoresWithTimestamps.mpLoss,
+                                scoresWithTimestamps.fatigue,
+                                scoresWithTimestamps.fatigueLoss,
+                                scoresWithTimestamps.skills.toTypedArray()
+                            )
+                        } else {
+                            Mono.error(throwable)
+                        }
+                    }
+            )
+            .map { scoresWithTimestamps }
     }
 }

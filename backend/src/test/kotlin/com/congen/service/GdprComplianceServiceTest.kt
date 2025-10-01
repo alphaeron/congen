@@ -8,7 +8,7 @@ import com.congen.dal.ProgramPreferencesDAL
 import com.congen.dal.UserDAL
 import com.congen.dal.UserEquipmentDAL
 import com.congen.dal.UserExercisePreferenceDAL
-import com.congen.dal.UserOneRepMaxDAL
+import com.congen.service.UserOneRepMaxService
 import com.congen.dal.UserWeightUnitPreferenceDAL
 import com.congen.model.User
 import com.congen.model.UserConsent
@@ -41,7 +41,7 @@ class GdprComplianceServiceTest {
     private lateinit var userEquipmentDAL: UserEquipmentDAL
     private lateinit var userExercisePreferenceDAL: UserExercisePreferenceDAL
     private lateinit var programPreferencesDAL: ProgramPreferencesDAL
-    private lateinit var userOneRepMaxDAL: UserOneRepMaxDAL
+    private lateinit var userOneRepMaxService: UserOneRepMaxService
     private lateinit var userWeightUnitPreferenceDAL: UserWeightUnitPreferenceDAL
     private lateinit var programDAL: ProgramDAL
     private lateinit var keycloakClient: KeycloakClient
@@ -55,7 +55,7 @@ class GdprComplianceServiceTest {
         userEquipmentDAL = mock()
         userExercisePreferenceDAL = mock()
         programPreferencesDAL = mock()
-        userOneRepMaxDAL = mock()
+        userOneRepMaxService = mock()
         userWeightUnitPreferenceDAL = mock()
         programDAL = mock()
         keycloakClient = mock()
@@ -74,7 +74,7 @@ class GdprComplianceServiceTest {
                 userEquipmentDAL = userEquipmentDAL,
                 userExercisePreferenceDAL = userExercisePreferenceDAL,
                 programPreferencesDAL = programPreferencesDAL,
-                userOneRepMaxDAL = userOneRepMaxDAL,
+                userOneRepMaxService = userOneRepMaxService,
                 userWeightUnitPreferenceDAL = userWeightUnitPreferenceDAL,
                 programDAL = programDAL,
                 auditService = auditService,
@@ -200,7 +200,7 @@ class GdprComplianceServiceTest {
         whenever(userEquipmentDAL.selectUserEquipmentByUser(keycloakId)).thenReturn(Mono.just(emptyList()))
         whenever(userExercisePreferenceDAL.selectUserExercisePreferencesByUser(keycloakId)).thenReturn(Mono.just(emptyList()))
         whenever(programPreferencesDAL.selectProgramPreferences(any())).thenReturn(Mono.empty())
-        whenever(userOneRepMaxDAL.selectUserOneRepMaxByUser(keycloakId)).thenReturn(Mono.just(emptyList()))
+        whenever(userOneRepMaxService.selectUserOneRepMaxByUser(keycloakId)).thenReturn(Mono.just(emptyList()))
         whenever(userWeightUnitPreferenceDAL.selectUserWeightUnitPreferencesByUser(keycloakId)).thenReturn(Mono.just(emptyList()))
         whenever(programDAL.selectProgramsByUserId(keycloakId)).thenReturn(Mono.just(emptyList()))
         whenever(programDAL.selectProgramsWithWorkoutHierarchyByUserId(keycloakId)).thenReturn(Mono.just(emptyList()))

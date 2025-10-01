@@ -10,7 +10,7 @@ import com.congen.dal.ProgrammedWorkoutDAL
 import com.congen.dal.SetSchemeDAL
 import com.congen.dal.UserEquipmentDAL
 import com.congen.dal.UserExercisePreferenceDAL
-import com.congen.dal.UserOneRepMaxDAL
+import com.congen.service.UserOneRepMaxService
 import com.congen.dal.UserWeakMuscleDAL
 import com.congen.dal.UserWeightUnitPreferenceDAL
 import com.congen.model.Program
@@ -75,7 +75,7 @@ import reactor.core.publisher.Mono
  */
 @Service
 class ConjugateWorkoutGeneratorService(
-    private val userOneRepMaxDAL: UserOneRepMaxDAL,
+    private val userOneRepMaxService: UserOneRepMaxService,
     private val programPreferencesDAL: ProgramPreferencesDAL,
     private val programService: ProgramService,
     private val programmedWorkoutDAL: ProgrammedWorkoutDAL,
@@ -117,7 +117,7 @@ class ConjugateWorkoutGeneratorService(
         return programService.selectProgramById(programId)
             .flatMap { program ->
                 Mono.zip(
-                    userOneRepMaxDAL.selectUserOneRepMaxByUser(program.userId),
+                    userOneRepMaxService.selectUserOneRepMaxByUser(program.userId),
                     programPreferencesDAL.selectProgramPreferences(program.id),
                     userWeakMuscleDAL.selectUserWeakMusclesByUser(program.userId),
                     userWeightUnitPreferenceDAL.selectUserWeightUnitPreferencesByUser(program.userId),
@@ -257,7 +257,7 @@ class ConjugateWorkoutGeneratorService(
         return programService.selectProgramById(programId)
             .flatMap { program ->
                 // Get existing 1RM values for the user
-                userOneRepMaxDAL.selectUserOneRepMaxByUser(program.userId)
+                userOneRepMaxService.selectUserOneRepMaxByUser(program.userId)
                     .map { existingOneRepMaxes ->
                         // Create a map of exercise names to their 1RM values
                         existingOneRepMaxes.associate { it.exerciseName to it.oneRepMax.toDouble() }
