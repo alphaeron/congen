@@ -4,6 +4,7 @@ import Divider from '@mui/material/Divider';
 import { alpha } from '@mui/material/styles';
 import * as React from 'react';
 
+import { CycleDiagram } from './CycleDiagram';
 import { GameText, GameCard } from './GameTheme';
 
 // Simplified Mermaid diagram definitions
@@ -65,26 +66,15 @@ flowchart LR
     E --> E3[Fatigue: Session Depletion]
 `;
 
-const PERSONALIZATION_DIAGRAM = `
-journey
-    title Smart Personalization Journey
-    section Profile Setup
-      Enter Goals: 5: User
-      Set Equipment: 4: User
-      Input Time Available: 3: User
-      Define Experience Level: 4: User
-    section Smart Analysis
-      Equipment Matching: 5: System
-      Time Optimization: 5: System
-      Exercise Selection: 5: System
-    section Program Generation
-      Generate Workout: 5: System
-      Review Program: 4: User
-    section Continuous Learning
-      Track Performance: 5: System
-      Auto Adjustments: 5: System
-      Refine Algorithm: 5: System
-`;
+// Personalization cycle data with colors
+const personalizationNodes = [
+  { id: 'profile', label: 'Profile Setup', details: ['Enter Goals', 'Set Equipment'], color: '#3b82f6' },
+  { id: 'analysis', label: 'Smart Analysis', details: ['Equipment Matching', 'Time Optimization'], color: '#8b5cf6' },
+  { id: 'generation', label: 'Program Generation', details: ['Generate Workout'], color: '#10b981' },
+  { id: 'tracking', label: 'Performance Tracking', details: ['Track Performance'], color: '#f59e0b' },
+  { id: 'adjustments', label: 'Auto Adjustments', details: ['Adjust Intensity', 'Update Schedule'], color: '#ef4444' },
+  { id: 'refinement', label: 'Algorithm Refinement', details: ['Refine Algorithm'], color: '#06b6d4' }
+];
 
 interface MermaidDiagramProps {
   diagram: string;
@@ -133,7 +123,7 @@ const MermaidDiagram: React.FC<MermaidDiagramProps> = ({ diagram, title, descrip
                 htmlLabels: true,
                 useMaxWidth: false,
               },
-              journey: {
+              flowchart: {
                 nodeSpacing: 150,
                 rankSpacing: 200,
                 padding: 50,
@@ -617,10 +607,9 @@ const PersonalizationSection = () => (
               overflow: 'visible',
             }}
           >
-            <MermaidDiagram
-              diagram={PERSONALIZATION_DIAGRAM}
-              title="personalization"
-              description=""
+            <CycleDiagram 
+              nodes={personalizationNodes} 
+              title="Smart Personalization Journey"
             />
           </Box>
     </Box>
