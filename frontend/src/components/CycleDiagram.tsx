@@ -84,14 +84,17 @@ export const CycleDiagram: React.FC<CycleDiagramProps> = ({
             </filter>
           </defs>
           
-          {/* Render each segment as a single clean path */}
+          {/* Render each segment as a single clean path - in correct order */}
           {nodes.map((node, index) => {
-            const startAngle = (index * segmentAngle) - Math.PI / 2;
-            const endAngle = ((index + 1) * segmentAngle) - Math.PI / 2;
+            // Each segment gets equal angle space, accounting for arrowhead/slot space
+            const segmentAngleWithSpace = (2 * Math.PI) / nodes.length;
+            const startAngle = (index * segmentAngleWithSpace) - Math.PI / 2;
+            const endAngle = ((index + 1) * segmentAngleWithSpace) - Math.PI / 2;
             
             // Calculate the main arc angles (without arrowhead/slot)
-            const arcStartAngle = startAngle + arrowheadSize;
-            const arcEndAngle = endAngle - arrowheadSize;
+            // Each segment uses half the arrowhead size for slot and half for arrowhead
+            const arcStartAngle = startAngle + arrowheadSize / 2;
+            const arcEndAngle = endAngle - arrowheadSize / 2;
             
             // Arrowhead points (at the end of the segment)
             // Tip extends beyond the segment end, base is at the arc end
@@ -99,9 +102,9 @@ export const CycleDiagram: React.FC<CycleDiagramProps> = ({
             const arrowheadBaseAngle = arcEndAngle;
             
             // Slot points (at the start of the segment)  
-            // Tip is at the segment start, base extends inward
+            // Tip is at the segment start, base extends inward (concave)
             const slotTipAngle = startAngle;
-            const slotBaseAngle = startAngle - arrowheadSize;
+            const slotBaseAngle = startAngle - arrowheadSize / 2;
             
             // Middle radius for tips
             const middleRadius = (outerRadius + innerRadius) / 2;
