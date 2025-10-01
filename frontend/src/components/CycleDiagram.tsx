@@ -33,6 +33,16 @@ export const CycleDiagram: React.FC<CycleDiagramProps> = ({
 }) => {
   const segmentAngle = (2 * Math.PI) / nodes.length;
   const arrowheadSize = 0.3; // radians - make arrowheads and slots more visible
+  const gapSize = 0.05; // radians - small gap between arrowheads and slots
+  
+  // Calculate middle radius first
+  const middleRadius = (outerRadius + innerRadius) / 2;
+  
+  // Calculate the actual linear gap distance to maintain consistent spacing
+  const linearGapSize = gapSize * outerRadius; // Convert angular gap to linear distance
+  const angularGapOuter = linearGapSize / outerRadius; // Angular gap for outer edge
+  const angularGapInner = linearGapSize / innerRadius; // Angular gap for inner edge
+  const angularGapTip = linearGapSize / middleRadius; // Angular gap for tip (middle radius)
 
   return (
     <Box
@@ -91,41 +101,48 @@ export const CycleDiagram: React.FC<CycleDiagramProps> = ({
             const startAngle = (index * segmentAngleWithSpace) - Math.PI / 2;
             const endAngle = ((index + 1) * segmentAngleWithSpace) - Math.PI / 2;
             
-            // Calculate the main arc angles (without arrowhead/slot)
-            // Each segment uses half the arrowhead size for slot and half for arrowhead
-            const arcStartAngle = startAngle + arrowheadSize / 2;
-            const arcEndAngle = endAngle - arrowheadSize / 2;
+            // Calculate the main arc angles (without arrowhead/slot/gap)
+            // Each segment uses half the arrowhead size for slot and half for arrowhead, plus gap
+            const arcStartAngle = startAngle + arrowheadSize / 2 + angularGapOuter;
+            const arcEndAngle = endAngle - arrowheadSize / 2 - angularGapOuter;
             
             // Arrowhead points (at the end of the segment)
-            // Tip extends beyond the segment end, base is at the arc end
-            const arrowheadTipAngle = endAngle;
-            const arrowheadBaseAngle = arcEndAngle;
+            // Tip stays within the outer radius, base is at the arc end (convex, pointing outward)
+            const arrowheadTipAngle = endAngle - angularGapTip;
+            const arrowheadBaseAngle = endAngle - angularGapOuter - arrowheadSize / 2;
             
             // Slot points (at the start of the segment)  
             // Tip is at the segment start, base extends inward (concave)
-            const slotTipAngle = startAngle;
-            const slotBaseAngle = startAngle - arrowheadSize / 2;
+            const slotTipAngle = startAngle + angularGapTip;
+            const slotBaseAngle = startAngle + angularGapOuter - arrowheadSize / 2;
             
-            // Middle radius for tips
-            const middleRadius = (outerRadius + innerRadius) / 2;
+            // Middle radius is already calculated above
             
-            // Arrowhead coordinates
+            // Calculate inner edge angles with proper gap sizing
+            const innerArcStartAngle = startAngle + arrowheadSize / 2 + angularGapInner;
+            const innerArcEndAngle = endAngle - arrowheadSize / 2 - angularGapInner;
+            const innerArrowheadTipAngle = endAngle - angularGapTip;
+            const innerArrowheadBaseAngle = endAngle - angularGapInner - arrowheadSize / 2;
+            const innerSlotTipAngle = startAngle + angularGapTip;
+            const innerSlotBaseAngle = startAngle + angularGapInner - arrowheadSize / 2;
+            
+            // Arrowhead coordinates - tip at middle radius
             const arrowheadTipX = centerX + middleRadius * Math.cos(arrowheadTipAngle);
             const arrowheadTipY = centerY + middleRadius * Math.sin(arrowheadTipAngle);
             const arrowheadBaseX = centerX + outerRadius * Math.cos(arrowheadBaseAngle);
             const arrowheadBaseY = centerY + outerRadius * Math.sin(arrowheadBaseAngle);
-            const arrowheadInnerTipX = centerX + middleRadius * Math.cos(arrowheadTipAngle);
-            const arrowheadInnerTipY = centerY + middleRadius * Math.sin(arrowheadTipAngle);
-            const arrowheadInnerBaseX = centerX + innerRadius * Math.cos(arrowheadBaseAngle);
-            const arrowheadInnerBaseY = centerY + innerRadius * Math.sin(arrowheadBaseAngle);
+            const arrowheadInnerTipX = centerX + middleRadius * Math.cos(innerArrowheadTipAngle);
+            const arrowheadInnerTipY = centerY + middleRadius * Math.sin(innerArrowheadTipAngle);
+            const arrowheadInnerBaseX = centerX + innerRadius * Math.cos(innerArrowheadBaseAngle);
+            const arrowheadInnerBaseY = centerY + innerRadius * Math.sin(innerArrowheadBaseAngle);
             
             // Slot coordinates
             const slotTipX = centerX + middleRadius * Math.cos(slotTipAngle);
             const slotTipY = centerY + middleRadius * Math.sin(slotTipAngle);
             const slotBaseX = centerX + outerRadius * Math.cos(slotBaseAngle);
             const slotBaseY = centerY + outerRadius * Math.sin(slotBaseAngle);
-            const slotInnerBaseX = centerX + innerRadius * Math.cos(slotBaseAngle);
-            const slotInnerBaseY = centerY + innerRadius * Math.sin(slotBaseAngle);
+            const slotInnerBaseX = centerX + innerRadius * Math.cos(innerSlotBaseAngle);
+            const slotInnerBaseY = centerY + innerRadius * Math.sin(innerSlotBaseAngle);
             
             // Single clean path: slot -> outer arc -> arrowhead -> inner arc -> slot
             // Always use sweep flag 1 for clockwise direction
