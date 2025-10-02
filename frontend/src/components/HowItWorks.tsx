@@ -4,7 +4,7 @@ import Divider from '@mui/material/Divider';
 import { alpha } from '@mui/material/styles';
 import * as React from 'react';
 
-import { CycleDiagram } from './CycleDiagram';
+import { CycleDiagramReact as CycleDiagram } from './CycleDiagramReact';
 import { GameText, GameCard } from './GameTheme';
 
 // Simplified Mermaid diagram definitions
@@ -66,14 +66,14 @@ flowchart LR
     E --> E3[Fatigue: Session Depletion]
 `;
 
-// Personalization cycle data with colors
+// Personalization cycle data
 const personalizationNodes = [
-  { id: 'profile', label: 'Profile Setup', details: ['Enter Goals', 'Set Equipment'], color: '#3b82f6' },
-  { id: 'analysis', label: 'Smart Analysis', details: ['Equipment Matching', 'Time Optimization'], color: '#8b5cf6' },
-  { id: 'generation', label: 'Program Generation', details: ['Generate Workout'], color: '#10b981' },
-  { id: 'tracking', label: 'Performance Tracking', details: ['Track Performance'], color: '#f59e0b' },
-  { id: 'adjustments', label: 'Auto Adjustments', details: ['Adjust Intensity', 'Update Schedule'], color: '#ef4444' },
-  { id: 'refinement', label: 'Algorithm Refinement', details: ['Refine Algorithm'], color: '#06b6d4' }
+  { id: 'profile', label: 'Profile Setup', details: ['Enter Goals', 'Set Equipment'] },
+  { id: 'analysis', label: 'Smart Analysis', details: ['Equipment Matching', 'Time Optimization'] },
+  { id: 'generation', label: 'Program Generation', details: ['Generate Workout'] },
+  { id: 'tracking', label: 'Performance Tracking', details: ['Track Performance'] },
+  { id: 'adjustments', label: 'Auto Adjustments', details: ['Adjust Intensity', 'Update Schedule'] },
+  { id: 'refinement', label: 'Algorithm Refinement', details: ['Refine Algorithm'] }
 ];
 
 interface MermaidDiagramProps {
@@ -121,12 +121,6 @@ const MermaidDiagram: React.FC<MermaidDiagramProps> = ({ diagram, title, descrip
                 curve: 'basis',
                 padding: 80,
                 htmlLabels: true,
-                useMaxWidth: false,
-              },
-              flowchart: {
-                nodeSpacing: 150,
-                rankSpacing: 200,
-                padding: 50,
                 useMaxWidth: false,
               },
             });

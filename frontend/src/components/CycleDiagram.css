@@ -1,0 +1,48 @@
+/* CycleDiagram CSS - Framework Agnostic Styles */
+
+.cycle-diagram-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  width: 100%;
+  max-width: 100%;
+  overflow: visible;
+  font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.cycle-diagram-svg-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: visible;
+}
+
+.cycle-diagram-title {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 600;
+  color: #1f2937;
+  text-align: center;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .cycle-diagram-container {
+    gap: 16px;
+  }
+  
+  .cycle-diagram-title {
+    font-size: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .cycle-diagram-container {
+    gap: 12px;
+  }
+  
+  .cycle-diagram-title {
+    font-size: 18px;
+  }
+}
