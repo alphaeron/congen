@@ -68,12 +68,10 @@ flowchart LR
 
 // Personalization cycle data
 const personalizationNodes = [
-  { id: 'profile', label: 'Profile Setup', details: ['Enter Goals', 'Set Equipment'] },
-  { id: 'analysis', label: 'Smart Analysis', details: ['Equipment Matching', 'Time Optimization'] },
-  { id: 'generation', label: 'Program Generation', details: ['Generate Workout'] },
-  { id: 'tracking', label: 'Performance Tracking', details: ['Track Performance'] },
-  { id: 'adjustments', label: 'Auto Adjustments', details: ['Adjust Intensity', 'Update Schedule'] },
-  { id: 'refinement', label: 'Algorithm Refinement', details: ['Refine Algorithm'] }
+  { id: 'generation', label: 'Generate Workouts', details: ['Conjugate Workout Generation'] },
+  { id: 'personalization', label: 'Workout Personalization', details: ['One Rep Max Integration'] },
+  { id: 'tracking', label: 'Workout Tracking', details: ['Record Performance'] },
+  { id: 'performance', label: 'Performance Tracking', details: ['Calculate Scores', 'Leveling Progression'] }
 ];
 
 interface MermaidDiagramProps {
