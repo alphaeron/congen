@@ -3,41 +3,25 @@ import Container from '@mui/material/Container';
 import Divider from '@mui/material/Divider';
 import { alpha } from '@mui/material/styles';
 import * as React from 'react';
+import { 
+  FitnessCenter, 
+  Assessment, 
+  History, 
+  DataObject, 
+  Pool, 
+  SportsGymnastics,
+  Speed,
+  Accessible,
+  Tune,
+  Balance,
+  RotateRight,
+  CheckCircle
+} from '@mui/icons-material';
 
 import { CycleDiagramReact as CycleDiagram } from './CycleDiagramReact';
 import { GameText, GameCard } from './GameTheme';
 import { AdventurerStatusCard } from './AdventurerStatusCard';
 import type { UserPerformanceScores, UserPerformanceMetrics, UserTestResult } from '../api/types';
-
-// Simplified Mermaid diagram definitions
-const WORKOUT_ALGORITHM_DIAGRAM = `
-graph TD
-    B["Equipment Analysis"]
-    C["Strength Assessment"]
-    D["Training History"]
-    
-    B --> E["Conjugate Method Selection"]
-    C --> E
-    D --> E
-    
-    E --> F["Max Effort Days"]
-    E --> G["Dynamic Effort Days"]
-    E --> H["Accessory Work"]
-    E --> I["Recovery Days"]
-    
-    F --> J["Exercise Rotation"]
-    G --> J
-    H --> J
-    I --> J
-    
-    J --> K["Load Progression"]
-    K --> L["Weak Point Training"]
-    
-    style E fill:#7c3aed,stroke:#8b5cf6,color:#fff
-    style J fill:#ea580c,stroke:#f97316,color:#fff
-    style L fill:#059669,stroke:#10b981,color:#fff
-`;
-
 
 // Personalization cycle data
 const personalizationNodes = [
@@ -115,225 +99,253 @@ const sampleWeeklyTests: UserTestResult[] = [
   }
 ];
 
-interface MermaidDiagramProps {
-  diagram: string;
-  title: string;
-  description: string;
-}
 
-const MermaidDiagram: React.FC<MermaidDiagramProps> = ({ diagram, title, description }) => {
-  const [isLoaded, setIsLoaded] = React.useState(false);
-
-  React.useEffect(() => {
-    const loadMermaid = async () => {
-      try {
-        const mermaid = (await import('mermaid')).default;
-            mermaid.initialize({
-              startOnLoad: false,
-              theme: 'base',
-              securityLevel: 'loose',
-              themeVariables: {
-                fontSize: '32px',
-                fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-                primaryColor: '#1e293b',
-                primaryTextColor: '#f1f5f9',
-                primaryBorderColor: '#3b82f6',
-                lineColor: '#3b82f6',
-                secondaryColor: '#334155',
-                tertiaryColor: '#475569',
-                background: '#0f172a',
-                mainBkg: '#1e293b',
-                secondBkg: '#334155',
-                tertiaryBkg: '#475569',
-                nodeBkg: '#1e293b',
-                nodeBorder: '#3b82f6',
-                clusterBkg: '#1e293b',
-                clusterBorder: '#3b82f6',
-                defaultLinkColor: '#3b82f6',
-                titleColor: '#f1f5f9',
-                edgeLabelBackground: '#1e293b',
-                edgeLabelColor: '#f1f5f9',
-              },
-              flowchart: {
-                nodeSpacing: 300,
-                rankSpacing: 350,
-                curve: 'basis',
-                padding: 80,
-                htmlLabels: true,
-                useMaxWidth: false,
-              },
-            });
-        setIsLoaded(true);
-      } catch (error) {
-        // Failed to load Mermaid
-      }
-    };
-
-    loadMermaid();
-  }, []);
-
-  React.useEffect(() => {
-    if (isLoaded) {
-      const renderDiagram = async () => {
-        try {
-          const mermaid = (await import('mermaid')).default;
-          const diagramId = title ? title.replace(/\s+/g, '-').toLowerCase() : 'diagram';
-          const element = document.getElementById(`mermaid-${diagramId}`);
-          if (element) {
-            element.innerHTML = '';
-            const uniqueId = `diagram-${diagramId}-${Date.now()}`;
-            const { svg } = await mermaid.render(uniqueId, diagram);
-            element.innerHTML = svg;
-          }
-        } catch (error) {
-          // Failed to render diagram
-          const diagramId = title ? title.replace(/\s+/g, '-').toLowerCase() : 'diagram';
-          const element = document.getElementById(`mermaid-${diagramId}`);
-          if (element) {
-            element.innerHTML = '<div style="color: #ef4444; text-align: center; padding: 20px;">Failed to load diagram</div>';
-          }
-        }
-      };
-
-      // Add a small delay to ensure DOM is ready
-      setTimeout(renderDiagram, 100);
-    }
-  }, [isLoaded, diagram, title]);
-
-  const diagramId = title ? title.replace(/\s+/g, '-').toLowerCase() : 'diagram';
-
+// Algorithm Infographic Component
+const AlgorithmInfographic = () => {
   return (
     <Box
       sx={{
         width: '100%',
-        height: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'flex-start',
-        justifyContent: 'flex-start',
-        minHeight: 600,
-        p: 4,
+        maxWidth: 800,
+        height: 400,
         position: 'relative',
-        overflow: 'visible',
+        background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%)',
+        borderRadius: 4,
+        overflow: 'hidden',
+        boxShadow: '0 20px 40px rgba(0, 0, 0, 0.3)',
+        border: '1px solid rgba(59, 130, 246, 0.2)',
       }}
     >
-      {isLoaded ? (
-            <Box
-              sx={{
-                width: '100%',
-                height: '100%',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'flex-start',
-                justifyContent: 'flex-start',
-                overflow: 'visible',
-                '& svg': {
-                  width: '100%',
-                  height: 'auto',
-                  maxHeight: 'none',
-                  minHeight: 'auto',
-                  overflow: 'visible',
-                  '& text': {
-                    fontSize: '32px !important',
-                    fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important',
-                    fontWeight: '600 !important',
-                    fill: '#f1f5f9 !important',
-                  },
-                  '& .node': {
-                    '& text': {
-                      fontSize: '32px !important',
-                      fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important',
-                      fontWeight: '600 !important',
-                      fill: '#f1f5f9 !important',
-                    },
-                    '& rect': {
-                      fill: '#1e293b !important',
-                      stroke: '#3b82f6 !important',
-                      strokeWidth: '4px !important',
-                      rx: '12px !important',
-                      ry: '12px !important',
-                      filter: 'drop-shadow(0 4px 8px rgba(59, 130, 246, 0.3)) !important',
-                    },
-                    '& polygon': {
-                      fill: '#1e293b !important',
-                      stroke: '#3b82f6 !important',
-                      strokeWidth: '12px !important',
-                      filter: 'drop-shadow(0 16px 32px rgba(59, 130, 246, 0.5)) !important',
-                    },
-                    '& ellipse': {
-                      fill: '#1e293b !important',
-                      stroke: '#3b82f6 !important',
-                      strokeWidth: '12px !important',
-                      filter: 'drop-shadow(0 16px 32px rgba(59, 130, 246, 0.5)) !important',
-                    },
-                  },
-                  '& .edgePath': {
-                    '& path': {
-                      stroke: '#3b82f6 !important',
-                      strokeWidth: '8px !important',
-                      filter: 'drop-shadow(0 6px 12px rgba(59, 130, 246, 0.4)) !important',
-                    },
-                    '& marker': {
-                      fill: '#3b82f6 !important',
-                    },
-                  },
-                  '& .cluster': {
-                    '& rect': {
-                      fill: 'rgba(30, 41, 59, 0.8) !important',
-                      stroke: '#3b82f6 !important',
-                      strokeWidth: '4px !important',
-                      rx: '16px !important',
-                      ry: '16px !important',
-                    },
-                    '& text': {
-                      fontSize: '40px !important',
-                      fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important',
-                      fontWeight: '700 !important',
-                      fill: '#f1f5f9 !important',
-                    },
-                  },
-                },
-              }}
-            >
-          <Box
-            id={`mermaid-${diagramId}`}
-            sx={{
-              width: '100%',
-              height: '100%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          />
+      {/* Background Pattern */}
+      <Box
+        sx={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: `
+            radial-gradient(circle at 20% 20%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
+            radial-gradient(circle at 80% 80%, rgba(124, 58, 237, 0.1) 0%, transparent 50%),
+            radial-gradient(circle at 40% 60%, rgba(5, 150, 105, 0.1) 0%, transparent 50%)
+          `,
+        }}
+      />
+
+      {/* Input Stage - Top */}
+      <Box
+        sx={{
+          position: 'absolute',
+          top: 30,
+          left: '50%',
+          transform: 'translateX(-50%)',
+          display: 'flex',
+          gap: 2,
+        }}
+      >
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: '#3b82f6' }}>
+          <FitnessCenter sx={{ fontSize: 18 }} />
+          <Box sx={{ fontSize: '13px', fontWeight: 600, color: '#f1f5f9' }}>Equipment</Box>
         </Box>
-      ) : (
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: '#3b82f6' }}>
+          <Assessment sx={{ fontSize: 18 }} />
+          <Box sx={{ fontSize: '13px', fontWeight: 600, color: '#f1f5f9' }}>Strength</Box>
+        </Box>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: '#3b82f6' }}>
+          <History sx={{ fontSize: 18 }} />
+          <Box sx={{ fontSize: '13px', fontWeight: 600, color: '#f1f5f9' }}>History</Box>
+        </Box>
+      </Box>
+
+      {/* Arrow Down */}
+      <Box
+        sx={{
+          position: 'absolute',
+          top: 80,
+          left: '50%',
+          transform: 'translateX(-50%)',
+          width: 0,
+          height: 0,
+          borderLeft: '6px solid transparent',
+          borderRight: '6px solid transparent',
+          borderTop: '10px solid #3b82f6',
+        }}
+      />
+
+      {/* Data Preparation & Exercise Pool - Same Row */}
+      <Box
+        sx={{
+          position: 'absolute',
+          top: 110,
+          left: '50%',
+          transform: 'translateX(-50%)',
+          display: 'flex',
+          gap: 4,
+          alignItems: 'center',
+        }}
+      >
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 2,
+            background: 'rgba(124, 58, 237, 0.2)',
+            border: '1px solid rgba(124, 58, 237, 0.4)',
+            borderRadius: 3,
+            px: 2,
+            py: 1.5,
+          }}
+        >
+          <DataObject sx={{ fontSize: 20, color: '#7c3aed' }} />
+          <Box sx={{ fontSize: '16px', fontWeight: 700, color: '#f1f5f9' }}>Data Preparation</Box>
+        </Box>
+        
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 2,
+            background: 'rgba(124, 58, 237, 0.2)',
+            border: '1px solid rgba(124, 58, 237, 0.4)',
+            borderRadius: 3,
+            px: 2,
+            py: 1.5,
+          }}
+        >
+          <Pool sx={{ fontSize: 20, color: '#7c3aed' }} />
+          <Box sx={{ fontSize: '16px', fontWeight: 700, color: '#f1f5f9' }}>Exercise Pool</Box>
+        </Box>
+      </Box>
+
+      {/* Arrow Down */}
+      <Box
+        sx={{
+          position: 'absolute',
+          top: 180,
+          left: '50%',
+          transform: 'translateX(-50%)',
+          width: 0,
+          height: 0,
+          borderLeft: '6px solid transparent',
+          borderRight: '6px solid transparent',
+          borderTop: '10px solid #7c3aed',
+        }}
+      />
+
+      {/* Workout Stage Generation - Based on FourDayWorkoutStageGenerationService */}
+      <Box
+        sx={{
+          position: 'absolute',
+          top: 210,
+          left: '50%',
+          transform: 'translateX(-50%)',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 1.5,
+          alignItems: 'center',
+        }}
+      >
+        {/* Primary & Secondary Exercise Selection */}
+        <Box
+          sx={{
+            display: 'flex',
+            gap: 3,
+          }}
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: '#059669' }}>
+            <Speed sx={{ fontSize: 14 }} />
+            <Box sx={{ fontSize: '11px', fontWeight: 600, color: '#f1f5f9' }}>Primary Exercise</Box>
+          </Box>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: '#059669' }}>
+            <Accessible sx={{ fontSize: 14 }} />
+            <Box sx={{ fontSize: '11px', fontWeight: 600, color: '#f1f5f9' }}>Secondary Exercise</Box>
+          </Box>
+        </Box>
+
+        {/* Set Scheme Generation - Elaborated */}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: '#059669', mb: 1 }}>
+          <Tune sx={{ fontSize: 14 }} />
+          <Box sx={{ fontSize: '11px', fontWeight: 600, color: '#f1f5f9' }}>Set Scheme Generation</Box>
+        </Box>
+        
+        {/* Set Scheme Components */}
         <Box
           sx={{
             display: 'flex',
             flexDirection: 'column',
+            gap: 0.5,
             alignItems: 'center',
-            gap: 2,
           }}
         >
-          <Box
-            sx={{
-              width: 40,
-              height: 40,
-              borderRadius: '50%',
-              border: theme => `3px solid ${alpha(theme.palette.primary.main, 0.3)}`,
-              borderTop: theme => `3px solid ${theme.palette.primary.main}`,
-              animation: 'spin 1s linear infinite',
-              '@keyframes spin': {
-                '0%': { transform: 'rotate(0deg)' },
-                '100%': { transform: 'rotate(360deg)' },
-              },
-            }}
-          />
-          <GameText textVariant="secondary" sx={{ opacity: 0.6 }}>
-            Loading diagram...
-          </GameText>
+          {/* Prilepin Guidelines */}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: '#7c3aed' }}>
+            <Assessment sx={{ fontSize: 10 }} />
+            <Box sx={{ fontSize: '9px', fontWeight: 600, color: '#f1f5f9' }}>Prilepin Guidelines</Box>
+          </Box>
+          
+          {/* Weight Selection */}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: '#7c3aed' }}>
+            <FitnessCenter sx={{ fontSize: 10 }} />
+            <Box sx={{ fontSize: '9px', fontWeight: 600, color: '#f1f5f9' }}>Weight Selection</Box>
+          </Box>
+          
+          {/* Movement Balance Integration */}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: '#7c3aed' }}>
+            <Balance sx={{ fontSize: 10 }} />
+            <Box sx={{ fontSize: '9px', fontWeight: 600, color: '#f1f5f9' }}>Movement Balance</Box>
+          </Box>
+          
+          {/* Exercise Rotation Logic */}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: '#7c3aed' }}>
+            <RotateRight sx={{ fontSize: 10 }} />
+            <Box sx={{ fontSize: '9px', fontWeight: 600, color: '#f1f5f9' }}>Exercise Rotation</Box>
+          </Box>
         </Box>
-      )}
+
+        {/* Workout Stages */}
+        <Box
+          sx={{
+            display: 'flex',
+            gap: 2,
+            mt: 0.5,
+          }}
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: '#dc2626' }}>
+            <Balance sx={{ fontSize: 12 }} />
+            <Box sx={{ fontSize: '10px', fontWeight: 600, color: '#f1f5f9' }}>Warmup</Box>
+          </Box>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: '#dc2626' }}>
+            <RotateRight sx={{ fontSize: 12 }} />
+            <Box sx={{ fontSize: '10px', fontWeight: 600, color: '#f1f5f9' }}>Primary</Box>
+          </Box>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: '#dc2626' }}>
+            <CheckCircle sx={{ fontSize: 12 }} />
+            <Box sx={{ fontSize: '10px', fontWeight: 600, color: '#f1f5f9' }}>Secondary</Box>
+          </Box>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: '#dc2626' }}>
+            <FitnessCenter sx={{ fontSize: 12 }} />
+            <Box sx={{ fontSize: '10px', fontWeight: 600, color: '#f1f5f9' }}>Accessory</Box>
+          </Box>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: '#dc2626' }}>
+            <Assessment sx={{ fontSize: 12 }} />
+            <Box sx={{ fontSize: '10px', fontWeight: 600, color: '#f1f5f9' }}>Conditioning</Box>
+          </Box>
+        </Box>
+      </Box>
+
+      {/* Connecting Lines - Positioned to avoid text overlap */}
+      <Box
+        sx={{
+          position: 'absolute',
+          top: 80,
+          left: '50%',
+          transform: 'translateX(-50%)',
+          width: '2px',
+          height: '200px',
+          background: 'linear-gradient(to bottom, #3b82f6, #7c3aed, #059669)',
+          zIndex: 0,
+        }}
+      />
     </Box>
   );
 };
@@ -428,14 +440,15 @@ const AlgorithmSection = () => (
         <Box
           sx={{
             flex: { xs: 1, lg: 1.2 },
-            minHeight: 1200,
+            minHeight: 400,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 3,
           }}
         >
-          <MermaidDiagram
-            diagram={WORKOUT_ALGORITHM_DIAGRAM}
-            title="algorithm"
-            description=""
-          />
+          <AlgorithmInfographic />
         </Box>
     </Box>
   </Box>
