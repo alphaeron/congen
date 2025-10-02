@@ -6,6 +6,8 @@ import * as React from 'react';
 
 import { CycleDiagramReact as CycleDiagram } from './CycleDiagramReact';
 import { GameText, GameCard } from './GameTheme';
+import { AdventurerStatusCard } from './AdventurerStatusCard';
+import type { UserPerformanceScores, UserPerformanceMetrics, UserTestResult } from '../api/types';
 
 // Simplified Mermaid diagram definitions
 const WORKOUT_ALGORITHM_DIAGRAM = `
@@ -36,35 +38,6 @@ graph TD
     style L fill:#059669,stroke:#10b981,color:#fff
 `;
 
-const GAMIFICATION_DIAGRAM = `
-flowchart LR
-    A[Performance Tracking] --> B[Score Calculation]
-    B --> C[Level Progression]
-    C --> D[Skill Generation]
-    D --> E[HP/MP/Fatigue]
-    E --> A
-    
-    A --> A1[Daily Metrics]
-    A --> A2[Weekly Tests]
-    A --> A3[Volume Tracking]
-    
-    B --> B1[Explosiveness Score]
-    B --> B2[Aerobic Capacity Score]
-    B --> B3[Recovery Score]
-    B --> B4[Reaction Time Score]
-    B --> B5[Mobility Score]
-    B --> B6[Strength Score]
-    
-    C --> C1[Level 1-100: Tanh Scaling]
-    C --> C2[Diminishing Returns]
-    
-    D --> D1[60+ Score: Basic Skills]
-    D --> D2[80+ Score: Advanced Skills]
-    
-    E --> E1[HP: Health Points]
-    E --> E2[MP: Magic Points]
-    E --> E3[Fatigue: Session Depletion]
-`;
 
 // Personalization cycle data
 const personalizationNodes = [
@@ -72,6 +45,74 @@ const personalizationNodes = [
   { id: 'personalization', label: 'Workout Personalization', details: ['One Rep Max Integration'] },
   { id: 'tracking', label: 'Workout Tracking', details: ['Record Performance'] },
   { id: 'performance', label: 'Performance Tracking', details: ['Calculate Scores', 'Leveling Progression'] }
+];
+
+// Sample data for AdventurerStatusCard demonstration
+// Calculated using backend logic: average score = 73.3, tanh scaling = level 15
+const samplePerformanceScores: UserPerformanceScores = {
+  id: 1,
+  keycloak_id: 'sample-user',
+  explosiveness_score: 75.5,  // 60+ = "Quick Burst" skill
+  aerobic_capacity_score: 68.2,  // 60+ = "Endurance Runner" skill  
+  recovery_score: 82.1,  // 80+ = "Rapid Recovery" skill
+  reaction_time_score: 71.8,  // 60+ = "Quick Response" skill
+  mobility_score: 65.4,  // 60+ = "Agile Movement" skill
+  strength_score: 78.9,  // 60+ = "Strong Lifter" skill
+  wilks_score: 285.6,
+  level: 15,  // Calculated: tanh((73.3-50)/15) + 1) * 50 = 15
+  level_change_reason: 'weekly_test_completed',
+  hp: 85.2,
+  hp_loss: 12.3,
+  mp: 78.7,
+  mp_loss: 8.1,
+  fatigue: 45.6,
+  fatigue_loss: 15.2,
+  skills: ['Quick Burst', 'Endurance Runner', 'Rapid Recovery', 'Quick Response', 'Agile Movement', 'Strong Lifter'],
+  created_at: new Date()
+};
+
+const samplePerformanceMetrics: UserPerformanceMetrics = {
+  keycloak_id: 'sample-user',
+  vo2_max: 42.5,
+  hrv: 45.2,
+  sleep_score: 78.3,
+  strain: 12.1,
+  recovery: 85.6,
+  created_at: new Date(),
+  updated_at: new Date()
+};
+
+const sampleWeeklyTests: UserTestResult[] = [
+  {
+    id: 1,
+    keycloak_id: 'sample-user',
+    week_start_timestamp: new Date(),
+    test_name: 'vertical_jump',
+    status: 'COMPLETED',
+    result_value: 52.3,
+    created_at: new Date(),
+    updated_at: new Date()
+  },
+  {
+    id: 2,
+    keycloak_id: 'sample-user',
+    week_start_timestamp: new Date(),
+    test_name: 'hr_recovery',
+    status: 'COMPLETED',
+    result_value: 28,
+    created_at: new Date(),
+    updated_at: new Date()
+  },
+  {
+    id: 3,
+    keycloak_id: 'sample-user',
+    week_start_timestamp: new Date(),
+    test_name: 'reflex',
+    status: 'COMPLETED',
+    result_value: 285,
+    created_at: new Date(),
+    updated_at: new Date()
+  }
 ];
 
 interface MermaidDiagramProps {
@@ -447,7 +488,7 @@ const GamificationSection = () => (
           }}
         >
           Transform your fitness journey into an epic RPG adventure. Level up your 
-          character, unlock skills, choose your class, and master the HP/MP/Fatigue 
+          character, unlock skills, and master the HP/MP/Fatigue 
           system for maximum motivation.
         </GameText>
         <Box
@@ -461,7 +502,7 @@ const GamificationSection = () => (
         >
           {[
             'Level Progression',
-            'Character Classes', 
+            'Performance Tracking', 
             'Skill System',
             'HP/MP Mechanics'
           ].map((feature, index) => (
@@ -493,13 +534,19 @@ const GamificationSection = () => (
               flex: { xs: 1, lg: 1.2 },
               minHeight: 600,
               maxHeight: 800,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
             }}
           >
-            <MermaidDiagram
-              diagram={GAMIFICATION_DIAGRAM}
-              title="gamification"
-              description=""
-            />
+            <Box sx={{ maxWidth: 800, width: '100%' }}>
+              <AdventurerStatusCard
+                scores={samplePerformanceScores}
+                metrics={samplePerformanceMetrics}
+                weeklyTests={sampleWeeklyTests}
+                userName="Alex Chen"
+              />
+            </Box>
           </Box>
     </Box>
   </Box>

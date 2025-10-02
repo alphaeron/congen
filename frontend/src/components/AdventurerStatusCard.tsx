@@ -15,14 +15,14 @@ interface AdventurerStatusCardProps {
   scores: UserPerformanceScores;
   metrics?: UserPerformanceMetrics | null;
   weeklyTests?: UserTestResult[] | null;
-  userName?: string;
+  userName: string;
 }
 
 export const AdventurerStatusCard: React.FC<AdventurerStatusCardProps> = ({
   scores,
   metrics,
   weeklyTests,
-  userName = 'Raven Thornfield',
+  userName,
 }) => {
   return (
     <GameCard className={GAME_CLASSES.overflowVisible}>
@@ -123,7 +123,7 @@ export const AdventurerStatusCard: React.FC<AdventurerStatusCardProps> = ({
         {/* Skills and Radar Chart - Side by Side */}
         <Grid container spacing={3} overflow="visible" justifyContent="center">
           {/* Skills Section - Left */}
-          <Grid size="auto">
+          <Grid size={{ xs: 12, sm: 6, md: 5 }}>
             <Stack direction="row" alignItems="center" spacing={1} mb={1}>
               <CustomSvgIcon
                 src={SkillsIcon}
@@ -138,24 +138,29 @@ export const AdventurerStatusCard: React.FC<AdventurerStatusCardProps> = ({
                 Skills
               </GameText>
             </Stack>
-            {scores.skills.length > 0 ? (
-              <Grid container spacing={1} justifyContent="center">
-                {scores.skills.map((skill, index) => (
-                  <Grid key={index} size="auto">
-                    <GameSkillChip
-                      label={skill}
-                      size="small"
-                      icon={
-                        <CustomSvgIcon
-                          src={SkillsIcon}
-                          alt="Skill"
-                          className={`${GAME_CLASSES.fontSize16} ${GAME_CLASSES.colorCyan}`}
-                        />
-                      }
-                    />
-                  </Grid>
-                ))}
-              </Grid>
+             {scores.skills.length > 0 ? (
+               <Stack 
+                 direction="row" 
+                 spacing={1} 
+                 justifyContent="center" 
+                 flexWrap="wrap"
+                 useFlexGap={true}
+               >
+                 {scores.skills.map((skill, index) => (
+                   <GameSkillChip
+                     key={index}
+                     label={skill}
+                     size="small"
+                     icon={
+                       <CustomSvgIcon
+                         src={SkillsIcon}
+                         alt="Skill"
+                         className={`${GAME_CLASSES.fontSize16} ${GAME_CLASSES.colorCyan}`}
+                       />
+                     }
+                   />
+                 ))}
+               </Stack>
             ) : (
               <GameTextSecondary variant="body2" className={`${GAME_CLASSES.textItalic} ${GAME_CLASSES.textCenter}`}>
                 No skills unlocked yet. Complete quests to unlock skills!
@@ -164,7 +169,7 @@ export const AdventurerStatusCard: React.FC<AdventurerStatusCardProps> = ({
           </Grid>
 
           {/* Performance Radar Chart - Right */}
-          <Grid size="auto">
+          <Grid size={{ xs: 12, sm: 6, md: 7 }}>
             <PerformanceRadarChart
               scores={scores}
               metrics={metrics}

@@ -191,14 +191,14 @@ level = 1 + (log(athleticismScore / 5 + 1) / log(2)) * 3
 ### Character Progression
 - **Levels**: 1-20+ with increasing difficulty
 - **Ranks**: D, C, C+, B, B+, A, A+, S, S+ based on level
-- **Classes**: Auto-assigned based on performance profile (Warrior, Ranger, Paladin, Rogue, Monk, Barbarian)
+- **Performance Profiles**: Auto-assigned based on performance profile
 - **Guilds**: Unlocked based on level progression
 
 ### Skill System
-- **Bronze Skills**: Basic performance levels (40-59 score)
-- **Silver Skills**: Intermediate performance (60-79 score)
-- **Gold Skills**: Advanced performance (80-89 score)
-- **Platinum Skills**: Elite performance (90+ score)
+- **Basic Skills**: Performance levels (40-59 score)
+- **Intermediate Skills**: Performance levels (60-79 score)
+- **Advanced Skills**: Performance levels (80-89 score)
+- **Elite Skills**: Performance levels (90+ score)
 
 ### Weekly Quests
 - **Test Completion**: Complete weekly test protocol
