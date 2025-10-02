@@ -177,11 +177,14 @@ const AlgorithmSection = () => (
           sx={{
             flex: { xs: 1, lg: 1.2 },
             minHeight: 400,
+            maxWidth: '900px',
+            width: '100%',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
             gap: 3,
+            overflow: 'hidden',
           }}
         >
           <AlgorithmInfographic />

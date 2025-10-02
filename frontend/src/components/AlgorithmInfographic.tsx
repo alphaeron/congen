@@ -27,26 +27,18 @@ const COLORS = {
 
 // single stage definitions (each stage exists exactly once)
 const STAGES = {
-  overview: {
-    id: 'overview',
-    title: 'Algorithm Overview',
-    subtitle: 'Conjugate powerlifting system — intelligent algorithms working together.',
-    colorFrom: '#7c6bff',
-    colorTo: '#60e0d8',
-    shape: 'rounded-pill'
-  },
 
   // Inputs (top)
   equipment: { id: 'equipment', title: 'Equipment', colorFrom: '#ff8a6b', colorTo: '#ffb56b', shape: 'circle' },
   one_rm: { id: 'one_rm', title: 'One Rep Maxes', colorFrom: '#6be0ff', colorTo: '#7dd3fc', shape: 'circle' },
   previous: { id: 'previous', title: 'Previous Workouts', colorFrom: '#c084fc', colorTo: '#a855f7', shape: 'circle' },
 
-  // Preparation row
-  data_prep: { id: 'data_prep', title: 'Data Preparation', colorFrom: '#60e0d8', colorTo: '#7c6bff', shape: 'rounded-rect' },
-  exercise_pool: { id: 'exercise_pool', title: 'Exercise Pool Creation', colorFrom: '#ff8ab6', colorTo: '#ffb56b', shape: 'filter-hex' },
+  // Preparation row - individual exercise pool components
+  sliding_window: { id: 'sliding_window', title: 'Sliding Window Analysis', colorFrom: '#60e0d8', colorTo: '#7c6bff', shape: 'rounded-rect' },
+  available_equipment: { id: 'available_equipment', title: 'Available Equipment Filter', colorFrom: '#ff8ab6', colorTo: '#ffb56b', shape: 'rounded-rect' },
+  exercise_matching: { id: 'exercise_matching', title: 'Exercise Matching Logic', colorFrom: '#f59e0b', colorTo: '#ff8a6b', shape: 'rounded-rect' },
 
   // Generation
-  set_scheme: { id: 'set_scheme', title: 'Set Scheme Generation', colorFrom: '#f59e0b', colorTo: '#ff8a6b', shape: 'diamond' },
   primary_select: { id: 'primary_select', title: 'Primary Exercise Selection', colorFrom: '#ffd36b', colorTo: '#ff7a7a', shape: 'rounded-rect' },
   secondary_select: { id: 'secondary_select', title: 'Secondary Exercise Selection', colorFrom: '#7ef27e', colorTo: '#6be0ff', shape: 'rounded-rect' },
 
@@ -69,8 +61,8 @@ const fadeIn = { initial: { opacity: 0, y: 8 }, animate: { opacity: 1, y: 0 }, t
 // small helper: gradient id
 const gradId = (id: string) => `g-${id}`
 
-// SVG shapes renderer
-function Shape({ node, size = 86 }: { node: any; size?: number }) {
+// SVG shapes renderer - ALL shapes exactly the same size
+function Shape({ node, size = 180 }: { node: any; size?: number }) {
   const r = size / 2
   const { colorFrom, colorTo, shape } = node
   const gradient = `url(#${gradId(node.id)})`
@@ -79,16 +71,16 @@ function Shape({ node, size = 86 }: { node: any; size?: number }) {
     return <circle r={r} fill={gradient} stroke="rgba(255,255,255,0.06)" strokeWidth="1.5" />
   }
   if (shape === 'rounded-pill') {
-    return <rect x={-r - 30} y={-r/2} width={size + 60} height={r} rx={r/2} fill={gradient} stroke="rgba(255,255,255,0.06)" strokeWidth="1.5" />
+    return <rect x={-r - 40} y={-r/2} width={size + 80} height={r} rx={r/2} fill={gradient} stroke="rgba(255,255,255,0.06)" strokeWidth="1.5" />
   }
   if (shape === 'rounded-rect') {
-    return <rect x={-r} y={-r} width={size} height={size * 0.75} rx={14} fill={gradient} stroke="rgba(255,255,255,0.06)" strokeWidth="1.5" />
+    return <rect x={-r} y={-r} width={size} height={size} rx={20} fill={gradient} stroke="rgba(255,255,255,0.06)" strokeWidth="1.5" />
   }
   if (shape === 'diamond') {
     return <polygon points={`${0},${-r} ${r},0 0,${r} ${-r},0`} fill={gradient} stroke="rgba(255,255,255,0.06)" strokeWidth="1.5" />
   }
   if (shape === 'filter-hex') {
-    return <rect x={-r} y={-r} width={size} height={size} rx={20} fill={gradient} stroke="rgba(255,255,255,0.06)" strokeWidth="1.5" />
+    return <rect x={-r} y={-r} width={size} height={size} rx={25} fill={gradient} stroke="rgba(255,255,255,0.06)" strokeWidth="1.5" />
   }
   if (shape === 'triangle') {
     return <polygon points={`0,${-r} ${r},${r} ${-r},${r}`} fill={gradient} stroke="rgba(255,255,255,0.06)" strokeWidth="1.5" />
@@ -97,7 +89,7 @@ function Shape({ node, size = 86 }: { node: any; size?: number }) {
   return <circle r={r} fill={gradient} />
 }
 
-// Helper function to wrap text within shapes
+// Helper function to wrap text within shapes - ONLY break at whitespace
 function wrapText(text: string, maxWidth: number, fontSize: number): string[] {
   const words = text.split(' ')
   const lines: string[] = []
@@ -105,7 +97,7 @@ function wrapText(text: string, maxWidth: number, fontSize: number): string[] {
   
   for (const word of words) {
     const testLine = currentLine + (currentLine ? ' ' : '') + word
-    const testWidth = testLine.length * fontSize * 0.6 // Approximate character width
+    const testWidth = testLine.length * fontSize * 0.6 // Character width estimation
     
     if (testWidth <= maxWidth) {
       currentLine = testLine
@@ -114,7 +106,8 @@ function wrapText(text: string, maxWidth: number, fontSize: number): string[] {
         lines.push(currentLine)
         currentLine = word
       } else {
-        lines.push(word) // Single word longer than maxWidth
+        // If single word is too long, we need bigger shapes - don't break mid-word
+        lines.push(word)
       }
     }
   }
@@ -126,41 +119,121 @@ function wrapText(text: string, maxWidth: number, fontSize: number): string[] {
   return lines
 }
 
-// Single Node (SVG group representing a stage) — exact single instance each
-function NodeSVG({ node, x, y, labelBelow = true }: { node: any; x: number; y: number; labelBelow?: boolean }) {
-  const maxWidth = 70 // Maximum width for text wrapping
-  const fontSize = 12 // Larger font size
-  const wrappedText = wrapText(node.title, maxWidth, fontSize)
+// HTML-based node component using proper CSS
+function NodeHTML({ node }: { node: any }) {
+  const wrappedText = wrapText(node.title, node.shape === 'triangle' ? 80 : 120, 14)
   
-  return (
-    <g transform={`translate(${x}, ${y})`}>
-      <defs>
-        <linearGradient id={gradId(node.id)} x1="0" x2="1">
-          <stop offset="0%" stopColor={node.colorFrom} />
-          <stop offset="100%" stopColor={node.colorTo} />
-        </linearGradient>
-      </defs>
+  const getShapeStyles = () => {
+    const baseStyles = {
+      width: '140px',
+      height: '140px',
+      background: `linear-gradient(135deg, ${node.colorFrom}, ${node.colorTo})`,
+      borderRadius: '10px',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      color: '#fff',
+      fontWeight: '700',
+      fontSize: '14px',
+      textAlign: 'center' as const,
+      lineHeight: '16px',
+      padding: '12px',
+      boxSizing: 'border-box' as const,
+      border: '1px solid rgba(255,255,255,0.06)'
+    }
 
-      <motion.g initial={{ scale: 0.88, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.5 }}>
-        <g>
-          <Shape node={node} />
-        </g>
-        {/* Wrapped text inside the shape */}
-        {wrappedText.map((line, index) => (
-          <text 
-            key={index}
-            x="0" 
-            y={-wrappedText.length * 3 + index * 6} 
-            textAnchor="middle" 
-            fontSize={fontSize} 
-            fontWeight="600" 
-            fill="#fff"
-          >
-            {line}
-          </text>
-        ))}
-      </motion.g>
-    </g>
+    switch (node.shape) {
+      case 'circle':
+        return { ...baseStyles, borderRadius: '50%' }
+      case 'diamond':
+        return { 
+          ...baseStyles, 
+          width: '100px',
+          height: '100px',
+          transform: 'rotate(45deg)',
+          borderRadius: '8px'
+        }
+      case 'triangle':
+        return { 
+          width: '140px',
+          height: '140px',
+          background: 'transparent',
+          borderRadius: '0',
+          display: 'flex',
+          alignItems: 'flex-end',
+          justifyContent: 'center',
+          paddingBottom: '20px',
+          position: 'relative' as const,
+          color: '#fff',
+          fontWeight: '700',
+          fontSize: '14px',
+          textAlign: 'center' as const,
+          lineHeight: '16px',
+          boxSizing: 'border-box' as const,
+          border: 'none'
+        }
+      default:
+        return baseStyles
+    }
+  }
+
+  return (
+    <motion.div
+      style={getShapeStyles()}
+      initial={{ scale: 0.88, opacity: 0 }}
+      animate={{ scale: 1, opacity: 1 }}
+      transition={{ duration: 0.5 }}
+      whileHover={{ scale: 1.05 }}
+    >
+      {node.shape === 'triangle' ? (
+        <>
+          {/* Triangle background using CSS */}
+          <div style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            background: `linear-gradient(135deg, ${node.colorFrom}, ${node.colorTo})`,
+            clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)',
+            zIndex: 1
+          }} />
+          {/* Text positioned at bottom */}
+          <div style={{ 
+            position: 'relative',
+            zIndex: 2,
+            display: 'flex', 
+            flexDirection: 'column', 
+            alignItems: 'center',
+            justifyContent: 'flex-end',
+            height: '100%',
+            width: '100%',
+            paddingBottom: '2px'
+          }}>
+            {wrappedText.map((line, index) => (
+              <div key={index} style={{ marginBottom: index < wrappedText.length - 1 ? '2px' : '0' }}>
+                {line}
+              </div>
+            ))}
+          </div>
+        </>
+      ) : (
+        <div style={{ 
+          display: 'flex', 
+          flexDirection: 'column', 
+          alignItems: 'center',
+          justifyContent: 'center',
+          height: '100%',
+          width: '100%'
+        }}>
+          {wrappedText.map((line, index) => (
+            <div key={index} style={{ marginBottom: index < wrappedText.length - 1 ? '2px' : '0' }}>
+              {line}
+            </div>
+          ))}
+        </div>
+      )}
+    </motion.div>
   )
 }
 
@@ -179,21 +252,21 @@ function ConnectorPath({ x1, y1, x2, y2, index = 0, colorFrom = '#7dd3fc', color
 
   return (
     <>
-      <defs>
+        <defs>
         <linearGradient id={`conn-${index}`} x1="0" x2="0" y1="0" y2="1">
           <stop offset="0%" stopColor={colorFrom} stopOpacity="0.95" />
           <stop offset="100%" stopColor={colorTo} stopOpacity="0.95" />
-        </linearGradient>
+              </linearGradient>
         {/* Glow filter for enhanced visibility */}
         <filter id={`glow-${index}`} x="-50%" y="-50%" width="200%" height="200%">
           <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
-          <feMerge> 
+            <feMerge>
             <feMergeNode in="coloredBlur"/>
             <feMergeNode in="SourceGraphic"/>
-          </feMerge>
-        </filter>
-      </defs>
-      
+            </feMerge>
+          </filter>
+        </defs>
+
       {/* Main connection path - straight vertical line */}
       <motion.path
         d={d}
@@ -207,36 +280,27 @@ function ConnectorPath({ x1, y1, x2, y2, index = 0, colorFrom = '#7dd3fc', color
         transition={{ duration: 1.2, delay: 0.1 * index }}
       />
       
-      {/* Animated data particles flowing downward */}
-      {[...Array(3)].map((_, i) => (
+      {/* Simple animated data particles flowing downward */}
+      {[...Array(2)].map((_, i) => (
         <motion.circle
           key={i}
-          r="3"
+          r="2"
           fill={colorFrom}
-          initial={{ cx: x1, cy: y1, opacity: 0, scale: 0 }}
+          initial={{ cx: x1, cy: y1, opacity: 0 }}
           animate={{ 
             cx: x2, 
             cy: y2 - 10,
-            opacity: [0, 1, 0],
-            scale: [0, 1, 0]
+            opacity: [0, 1, 0]
           }}
           transition={{
-            delay: 1.2 + i * 0.4,
-            duration: 2.5,
+            delay: 1.2 + i * 0.3,
+            duration: 2.0,
             repeat: Infinity,
-            ease: "easeInOut"
+            ease: "linear"
           }}
         />
       ))}
       
-      {/* Directional arrow pointing down */}
-      <motion.polygon
-        points={`${arrowX - arrowSize/2},${arrowY - arrowSize} ${arrowX + arrowSize/2},${arrowY - arrowSize} ${arrowX},${arrowY}`}
-        fill={colorTo}
-        initial={{ opacity: 0, scale: 0 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: 1.2, duration: 0.4 }}
-      />
       
       {/* Data type label */}
       {dataType && (
@@ -244,9 +308,9 @@ function ConnectorPath({ x1, y1, x2, y2, index = 0, colorFrom = '#7dd3fc', color
           x={mx}
           y={my - 20}
           textAnchor="middle"
-          fontSize="14"
+          fontSize="16"
           fill={colorTo}
-          fontWeight="600"
+          fontWeight="700"
           initial={{ opacity: 0, y: my - 10 }}
           animate={{ opacity: 1, y: my - 20 }}
           transition={{ delay: 1.5, duration: 0.4 }}
@@ -303,57 +367,96 @@ export default function WorkoutAlgorithmInfographicStructured() {
   const midX = 420
   const rightX = 680
 
-  // Reorganized positions with proper centering
+  // Reactive centering system - calculate positions dynamically
+  const containerWidth = 1200 // Bigger container to accommodate larger shapes
+  const containerStartX = 160
+  
+  // Helper function to center items within a row - truly reactive
+  const centerItemsInRow = (itemCount: number, y: number) => {
+    const items = []
+    const shapeSize = 180 // All shapes are the same size now
+    const totalSpacing = containerWidth - (itemCount * shapeSize)
+    const spacing = totalSpacing / (itemCount + 1) // Equal spacing on both sides and between
+    
+    for (let i = 0; i < itemCount; i++) {
+      const x = containerStartX + spacing + (i * (shapeSize + spacing)) + (shapeSize / 2) // Half shape size
+      items.push([x, y])
+    }
+    return items
+  }
+  
+  // Calculate positions reactively with proper spacing between bounding boxes
+  const inputPositions = centerItemsInRow(3, 150)
+  const processingPositions = centerItemsInRow(3, 400) // Increased from 350
+  const generationTopPositions = centerItemsInRow(3, 700) // Moved down to add space above generation container
+  const generationBottomPositions = centerItemsInRow(2, 850) // Proper spacing from top row
+  const outputPositions = centerItemsInRow(5, 1200) // Moved further down to match spacing of other boxes
+  
+  // Calculate container dimensions dynamically
+  const shapeSize = 180
+  const padding = 32
+  const rowSpacing = 130 // Space between rows in generation phase
+  
+  const inputContainerHeight = shapeSize + padding
+  const processingContainerHeight = shapeSize + padding
+  const generationContainerHeight = (shapeSize * 2) + rowSpacing + padding
+  const outputContainerHeight = shapeSize + padding
+  
+  const inputContainerY = 150 - (shapeSize / 2) - (padding / 2)
+  const processingContainerY = 400 - (shapeSize / 2) - (padding / 2) // Updated to match new position
+  const generationContainerY = 700 - (shapeSize / 2) - (padding / 2) // Updated to match new position
+  const outputContainerY = 1200 - (shapeSize / 2) - (padding / 2) // Updated to match new position
+  
+  // Calculate dynamic SVG dimensions
+  const svgWidth = containerStartX + containerWidth + 160 // 160px margin on right
+  const svgHeight = outputContainerY + outputContainerHeight + 100 // 100px margin on bottom
+  
   const pos = {
-    overview: [640, 50],
+    // INPUT PHASE - reactively centered (3 items)
+    equipment: inputPositions[0],
+    one_rm: inputPositions[1],
+    previous: inputPositions[2],
 
-    // INPUT PHASE - centered within container
-    equipment: [480, 150],
-    one_rm: [640, 150],
-    previous: [800, 150],
+    // PROCESSING PHASE - reactively centered (3 items)
+    data_prep: processingPositions[0],
+    exercise_pool: processingPositions[1],
+    set_scheme: processingPositions[2],
 
-    // PROCESSING PHASE - centered within container
-    data_prep: [480, 300],
-    exercise_pool: [640, 300],
-    set_scheme: [800, 300],
+    // GENERATION PHASE - reactively centered
+    // Top row (3 items)
+    primary_select: generationTopPositions[0],
+    secondary_select: generationTopPositions[1],
+    session_time: generationTopPositions[2],
+    // Bottom row (2 items)
+    matching: generationBottomPositions[0],
+    weak_point: generationBottomPositions[1],
 
-    // GENERATION PHASE - centered within container
-    primary_select: [480, 450],
-    secondary_select: [640, 450],
-    session_time: [800, 450],
-    matching: [480, 520],      // Moved inside Generation container
-    weak_point: [640, 520],     // Moved inside Generation container
-
-    // OUTPUT PHASE - centered within container
-    warmup: [320, 750],
-    primary_out: [480, 750],
-    secondary_out: [640, 750],
-    accessory: [800, 750],
-    conditioning: [960, 750]
+    // OUTPUT PHASE - reactively centered (5 items)
+    warmup: outputPositions[0],
+    primary_out: outputPositions[1],
+    secondary_out: outputPositions[2],
+    accessory: outputPositions[3],
+    conditioning: outputPositions[4]
   }
 
-  // Group-to-group connectors for clean flow
+  // Group-to-group connectors for clean flow - keep vertical lines, remove diagonal lines
   const groupConnectors = [
-    // Overview to Input Phase
-    { from: 'overview', to: 'input_phase', dataType: 'User Data Collection' },
-    
     // Input Phase to Processing Phase
-    { from: 'input_phase', to: 'processing_phase', dataType: 'Raw Data' },
+    { from: 'input_phase', to: 'processing_phase', dataType: '' },
     
     // Processing Phase to Generation Phase
-    { from: 'processing_phase', to: 'generation_phase', dataType: 'Processed Data' },
+    { from: 'processing_phase', to: 'generation_phase', dataType: '' },
     
     // Generation Phase to Output Phase
-    { from: 'generation_phase', to: 'output_phase', dataType: 'Workout Components' }
+    { from: 'generation_phase', to: 'output_phase', dataType: '' }
   ]
 
-  // Group center positions for clean connections - properly centered
+  // Group center positions for clean connections - reactively calculated
   const groupCenters = {
-    overview: [640, 50],
-    input_phase: [640, 150],
-    processing_phase: [640, 300],
-    generation_phase: [640, 450],
-    output_phase: [640, 750]
+    input_phase: [inputPositions[1][0], 150],      // Center of input phase (middle item)
+    processing_phase: [processingPositions[1][0], 400], // Center of processing phase (middle item)
+    generation_phase: [inputPositions[1][0], 775], // Center of generation phase (between two rows, use same x as input)
+    output_phase: [outputPositions[2][0], 1200]      // Center of output phase (middle item)
   }
 
   // order for right-side cards (roughly top-to-bottom order)
@@ -361,9 +464,9 @@ export default function WorkoutAlgorithmInfographicStructured() {
     'equipment',
     'one_rm',
     'previous',
-    'data_prep',
-    'exercise_pool',
-    'set_scheme',
+    'sliding_window',
+    'available_equipment',
+    'exercise_matching',
     'primary_select',
     'secondary_select',
     'session_time',
@@ -380,96 +483,123 @@ export default function WorkoutAlgorithmInfographicStructured() {
     <div style={{
       background: `linear-gradient(180deg, ${COLORS.bg}, #08080b)`,
       minHeight: '100vh',
-      padding: 28,
+      padding: 12,
       color: COLORS.text,
       fontFamily: 'Inter, Roboto, system-ui, Arial'
     }}>
       <div style={{
-        maxWidth: 1400,
+        maxWidth: 800,
+        width: '100%',
         margin: '0 auto',
-        borderRadius: 18,
-        padding: 18,
+        borderRadius: 12,
+        padding: 12,
         background: 'linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01))',
         border: '1px solid rgba(255,255,255,0.04)',
         position: 'relative',
         overflow: 'visible'
       }}>
-        {/* svg canvas */}
-        <svg viewBox="0 0 1280 900" width="100%" height="900" style={{ display: 'block' }}>
-          <defs>
-            {/* gradients for nodes and connectors */}
-            {Object.values(STAGES).map(s => (
-              <linearGradient id={gradId(s.id)} key={s.id} x1="0" x2="1">
-                <stop offset="0%" stopColor={s.colorFrom} />
-                <stop offset="100%" stopColor={s.colorTo} />
-              </linearGradient>
+        {/* Proper flex-based layout with margins and padding */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '40px', padding: '20px 0', position: 'relative' }}>
+          
+          {/* Input Phase */}
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center',
+            padding: '16px',
+            border: '1px dashed rgba(255,255,255,0.08)',
+            borderRadius: '12px',
+            background: 'rgba(255,255,255,0.02)'
+          }}>
+            {['equipment', 'one_rm', 'previous'].map(id => (
+              <NodeHTML key={id} node={STAGES[id as keyof typeof STAGES]} />
             ))}
-          </defs>
+          </div>
 
-          {/* Clean group-to-group connectors */}
-          <g>
-            {groupConnectors.map((connector, i) => {
-              const { from, to, dataType } = connector
-              const [x1, y1] = groupCenters[from as keyof typeof groupCenters]
-              const [x2, y2] = groupCenters[to as keyof typeof groupCenters]
-              
-              // Simple vertical flow - no offsets needed for group centers
-              return (
-                <ConnectorPath
-                  key={`${from}-${to}-${i}`}
-                  x1={x1}
-                  y1={y1 + 20}
-                  x2={x2}
-                  y2={y2 - 20}
-                  index={i}
-                  colorFrom="#7dd3fc"
-                  colorTo="#ff8a6b"
-                  dataType={dataType}
-                />
-              )
-            })}
-          </g>
+          {/* Processing Phase */}
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center',
+            padding: '16px',
+            border: '1px dashed rgba(255,255,255,0.08)',
+            borderRadius: '12px',
+            background: 'rgba(255,255,255,0.02)'
+          }}>
+            {['sliding_window', 'available_equipment', 'exercise_matching'].map(id => (
+              <NodeHTML key={id} node={STAGES[id as keyof typeof STAGES]} />
+            ))}
+          </div>
 
-          {/* Phase containers - properly centered */}
-          <g>
-            {/* Input Phase Container - centered */}
-            <rect x={320} y={100} width={640} height={120} rx={12} fill="rgba(255,255,255,0.02)" stroke="rgba(255,255,255,0.08)" strokeWidth="1" strokeDasharray="4,4" />
-            
-            {/* Processing Phase Container - centered */}
-            <rect x={320} y={250} width={640} height={120} rx={12} fill="rgba(255,255,255,0.02)" stroke="rgba(255,255,255,0.08)" strokeWidth="1" strokeDasharray="4,4" />
-            
-            {/* Generation Phase Container - centered and expanded */}
-            <rect x={320} y={400} width={640} height={200} rx={12} fill="rgba(255,255,255,0.02)" stroke="rgba(255,255,255,0.08)" strokeWidth="1" strokeDasharray="4,4" />
-            
-            {/* Output Phase Container - centered */}
-            <rect x={160} y={700} width={960} height={120} rx={12} fill="rgba(255,255,255,0.02)" stroke="rgba(255,255,255,0.08)" strokeWidth="1" strokeDasharray="4,4" />
-          </g>
+          {/* Generation Phase */}
+          <div style={{ 
+            display: 'flex', 
+            flexDirection: 'column',
+            gap: '20px',
+            padding: '16px',
+            border: '1px dashed rgba(255,255,255,0.08)',
+            borderRadius: '12px',
+            background: 'rgba(255,255,255,0.02)'
+          }}>
+            {/* Top row */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              {['primary_select', 'secondary_select', 'session_time'].map(id => (
+                <NodeHTML key={id} node={STAGES[id as keyof typeof STAGES]} />
+              ))}
+            </div>
+            {/* Bottom row */}
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '60px' }}>
+              {['matching', 'weak_point'].map(id => (
+                <NodeHTML key={id} node={STAGES[id as keyof typeof STAGES]} />
+              ))}
+            </div>
+          </div>
 
-          {/* nodes */}
-          <g>
-            {Object.keys(STAGES).map(k => {
-              const node = STAGES[k as keyof typeof STAGES]
-              const [x, y] = pos[k as keyof typeof pos]
-              // overview pill is wider; pass labelBelow = k !== 'overview'
-              return <NodeSVG key={k} node={node} x={x} y={y} labelBelow={k !== 'overview'} />
-            })}
-          </g>
+          {/* Output Phase */}
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center',
+            padding: '16px',
+            border: '1px dashed rgba(255,255,255,0.08)',
+            borderRadius: '12px',
+            background: 'rgba(255,255,255,0.02)'
+          }}>
+            {['warmup', 'primary_out', 'secondary_out', 'accessory', 'conditioning'].map(id => (
+              <NodeHTML key={id} node={STAGES[id as keyof typeof STAGES]} />
+            ))}
+          </div>
 
-          {/* subtle decorative wave lines (top area) */}
-          <g opacity="0.06">
-            <path d="M 40 28 C 200 10, 400 50, 640 30 C 880 10, 1100 60, 1240 40" stroke="#ffffff" strokeWidth="1.2" fill="none" strokeLinecap="round" />
-          </g>
-        </svg>
-
-        {/* right side numbered cards — structured like the reference vertical list */}
-        <div style={{ position: 'absolute', right: 28, top: 28 }}>
-          {rightOrder.map((id, idx) => {
-            const node = STAGES[id as keyof typeof STAGES]
-            // vertical stacking with spacing
-            const top = 20 + idx * 86
-            return <RightCard key={id} node={node} number={idx + 1} top={top} />
-          })}
         </div>
+
+        {/* Animated dots flowing down */}
+        {[...Array(3)].map((_, i) => (
+          <motion.div
+            key={i}
+            style={{
+              position: 'absolute',
+              width: '8px',
+              height: '8px',
+              borderRadius: '50%',
+              background: '#7dd3fc',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              top: '0',
+              zIndex: 2
+            }}
+            animate={{
+              top: ['0%', '100%'],
+              opacity: [0, 1, 0]
+            }}
+            transition={{
+              duration: 3,
+              delay: i * 0.5,
+              repeat: Infinity,
+              ease: 'linear'
+            }}
+          />
+        ))}
+
 
       </div>
     </div>
