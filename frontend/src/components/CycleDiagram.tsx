@@ -31,8 +31,16 @@ export const CycleDiagram: React.FC<CycleDiagramProps> = ({
   height = 600,
 }) => {
   const segmentAngle = (2 * Math.PI) / nodes.length;
-  const arrowheadSize = 0.3; // radians - make arrowheads and slots more visible
-  const gapSize = 0.033; // radians - small gap between arrowheads and slots (2/3 of 0.05)
+  
+  // Dynamic sizing based on component dimensions and segment count
+  const scaleFactor = Math.min(width, height) / 600; // Base scale on 600px
+  const segmentCountFactor = Math.sqrt(6 / nodes.length); // Adjust for segment count
+  
+  // Dynamic arrowhead size based on segment count and scale
+  const arrowheadSize = (0.3 * segmentCountFactor) * scaleFactor;
+  
+  // Dynamic gap size based on scale and segment count
+  const gapSize = (0.033 * segmentCountFactor) * scaleFactor;
   
   // Calculate middle radius first
   const middleRadius = (outerRadius + innerRadius) / 2;
@@ -163,11 +171,14 @@ export const CycleDiagram: React.FC<CycleDiagramProps> = ({
                   const nextAngleDiff = Math.abs(nextSegmentAngle - segmentEndAngle);
                   const minAngleDiff = Math.min(prevAngleDiff, nextAngleDiff);
                   
+                  // Dynamic text sizing based on scale and segment count
+                  const fontSize = Math.max(10, 14 * scaleFactor * segmentCountFactor);
+                  const charWidth = fontSize * 0.6; // Approximate character width based on font size
+                  
                   // Use a conservative estimate of available space (50% of segment or distance to adjacent)
                   const availableAngle = Math.min(segmentAngle * 0.5, minAngleDiff * 0.8);
                   const maxArcWidth = availableAngle * innerRadius;
                   
-                  const charWidth = 8; // Approximate character width
                   const maxCharsPerLine = Math.floor(maxArcWidth / charWidth);
                   
                   // Split text into lines with more aggressive wrapping
@@ -186,7 +197,7 @@ export const CycleDiagram: React.FC<CycleDiagramProps> = ({
                   if (currentLine) lines.push(currentLine);
                   
                   // Calculate text dimensions for wrapped text
-                  const lineHeight = 16;
+                  const lineHeight = fontSize * 1.2; // Dynamic line height based on font size
                   const textHeight = lines.length * lineHeight;
                   const maxLineWidth = Math.max(...lines.map(line => line.length * charWidth));
                   
@@ -215,7 +226,7 @@ export const CycleDiagram: React.FC<CycleDiagramProps> = ({
                   }
                   
                   // Calculate intelligent gap distance based on segment angle and text box orientation
-                  const baseGapDistance = 15; // pixels - base gap for most segments
+                  const baseGapDistance = 15 * scaleFactor; // Dynamic base gap based on scale
                   
                   // Use the already calculated segment center angle
                   
@@ -234,11 +245,11 @@ export const CycleDiagram: React.FC<CycleDiagramProps> = ({
                   
                   // Primary adjustment: based on vertical position (sine component)
                   // Segments at top (90°) and bottom (270°) get different treatments
-                  const verticalAdjustment = Math.sin(angleRadians) * 8;
+                  const verticalAdjustment = Math.sin(angleRadians) * (8 * scaleFactor);
                   
                   // Secondary adjustment: based on horizontal position (cosine component)  
                   // Segments at left (-1) and right (1) get different treatments
-                  const horizontalAdjustment = Math.cos(angleRadians) * 5;
+                  const horizontalAdjustment = Math.cos(angleRadians) * (5 * scaleFactor);
                   
                   // Combine adjustments for natural positioning
                   const gapAdjustment = Math.round(verticalAdjustment + horizontalAdjustment);
@@ -261,7 +272,7 @@ export const CycleDiagram: React.FC<CycleDiagramProps> = ({
                           textAnchor="middle"
                           dominantBaseline="middle"
                           fill="white"
-                          fontSize="14"
+                          fontSize={fontSize}
                           fontWeight="600"
                           fontFamily="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
                         >
@@ -272,11 +283,11 @@ export const CycleDiagram: React.FC<CycleDiagramProps> = ({
                       {/* Colored line under the title */}
                       <line
                         x1={textX - maxLineWidth / 2}
-                        y1={textY + halfHeight + 5}
+                        y1={textY + halfHeight + (5 * scaleFactor)}
                         x2={textX + maxLineWidth / 2}
-                        y2={textY + halfHeight + 5}
+                        y2={textY + halfHeight + (5 * scaleFactor)}
                         stroke={node.color}
-                        strokeWidth="2"
+                        strokeWidth={2 * scaleFactor}
                       />
                       
                       {/* Details text below the divider line */}
@@ -284,11 +295,11 @@ export const CycleDiagram: React.FC<CycleDiagramProps> = ({
                         <text
                           key={`detail-${detailIndex}`}
                           x={textX}
-                          y={textY + halfHeight + 20 + (detailIndex * 12)}
+                          y={textY + halfHeight + (20 * scaleFactor) + (detailIndex * (12 * scaleFactor))}
                           textAnchor="middle"
                           dominantBaseline="middle"
                           fill="#cbd5e1"
-                          fontSize="10"
+                          fontSize={fontSize * 0.7}
                           fontWeight="400"
                           fontFamily="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
                         >
