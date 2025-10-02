@@ -24,8 +24,8 @@ export interface CycleDiagramProps {
 export const CycleDiagram: React.FC<CycleDiagramProps> = ({
   nodes,
   title = 'Smart Personalization Journey',
-  outerRadius = 200,
-  innerRadius = 120,
+  outerRadius = 280,
+  innerRadius = 230, // (280 + 180) / 2 = 230
   centerX = 300,
   centerY = 300,
   width = 600,
@@ -33,7 +33,7 @@ export const CycleDiagram: React.FC<CycleDiagramProps> = ({
 }) => {
   const segmentAngle = (2 * Math.PI) / nodes.length;
   const arrowheadSize = 0.3; // radians - make arrowheads and slots more visible
-  const gapSize = 0.05; // radians - small gap between arrowheads and slots
+  const gapSize = 0.033; // radians - small gap between arrowheads and slots (2/3 of 0.05)
   
   // Calculate middle radius first
   const middleRadius = (outerRadius + innerRadius) / 2;
@@ -57,19 +57,29 @@ export const CycleDiagram: React.FC<CycleDiagramProps> = ({
       }}
     >
       {/* Title */}
-      <Typography
-        variant="h4"
-        sx={{
-          color: '#3b82f6',
-          fontWeight: 700,
-          textAlign: 'center',
-          fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-          borderBottom: '2px solid #3b82f6',
-          paddingBottom: 1,
-        }}
-      >
-        {title}
-      </Typography>
+      <Box sx={{ textAlign: 'center' }}>
+        <Typography
+          variant="h4"
+          sx={{
+            color: '#3b82f6',
+            fontWeight: 700,
+            fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+            display: 'inline-block',
+            position: 'relative',
+          }}
+        >
+          {title}
+        </Typography>
+        {/* Properly centered underline */}
+        <Box
+          sx={{
+            width: '100%',
+            height: '2px',
+            backgroundColor: '#3b82f6',
+            marginTop: 1,
+          }}
+        />
+      </Box>
 
       {/* SVG Diagram */}
       <Box
@@ -167,19 +177,99 @@ export const CycleDiagram: React.FC<CycleDiagramProps> = ({
                   filter="url(#segmentShadow)"
                 />
                 
-                {/* Title text inside the donut */}
-                <text
-                  x={centerX + (outerRadius + innerRadius) / 2 * Math.cos(startAngle + segmentAngle / 2)}
-                  y={centerY + (outerRadius + innerRadius) / 2 * Math.sin(startAngle + segmentAngle / 2)}
-                  textAnchor="middle"
-                  dominantBaseline="middle"
-                  fill="white"
-                  fontSize="14"
-                  fontWeight="600"
-                  fontFamily="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
-                >
-                  {node.label}
-                </text>
+                {/* Calculate text position with intelligent wrapping and consistent gaps */}
+                {(() => {
+                  // Calculate the angle for this segment's center
+                  const segmentCenterAngle = startAngle + segmentAngle / 2;
+                  
+                  // Intelligent text wrapping based on available arc space
+                  const maxArcWidth = segmentAngle * innerRadius * 0.8; // 80% of arc width
+                  const charWidth = 8; // Approximate character width
+                  const maxCharsPerLine = Math.floor(maxArcWidth / charWidth);
+                  
+                  // Split text into lines
+                  const words = node.label.split(' ');
+                  const lines = [];
+                  let currentLine = '';
+                  
+                  for (const word of words) {
+                    if ((currentLine + ' ' + word).length <= maxCharsPerLine) {
+                      currentLine = currentLine ? currentLine + ' ' + word : word;
+                    } else {
+                      if (currentLine) lines.push(currentLine);
+                      currentLine = word;
+                    }
+                  }
+                  if (currentLine) lines.push(currentLine);
+                  
+                  // Calculate text dimensions for wrapped text
+                  const lineHeight = 16;
+                  const textHeight = lines.length * lineHeight;
+                  const maxLineWidth = Math.max(...lines.map(line => line.length * charWidth));
+                  
+                  // Calculate text bounding box corners relative to center
+                  const halfWidth = maxLineWidth / 2;
+                  const halfHeight = textHeight / 2;
+                  
+                  // Calculate the four corners of the text bounding box
+                  const corners = [
+                    { x: -halfWidth, y: -halfHeight }, // Top-left
+                    { x: halfWidth, y: -halfHeight },  // Top-right
+                    { x: halfWidth, y: halfHeight },   // Bottom-right
+                    { x: -halfWidth, y: halfHeight }   // Bottom-left
+                  ];
+                  
+                  // Find the corner closest to the center (origin)
+                  let closestCorner = corners[0];
+                  let minDistance = Math.sqrt(corners[0].x ** 2 + corners[0].y ** 2);
+                  
+                  for (const corner of corners) {
+                    const distance = Math.sqrt(corner.x ** 2 + corner.y ** 2);
+                    if (distance < minDistance) {
+                      minDistance = distance;
+                      closestCorner = corner;
+                    }
+                  }
+                  
+                  // Calculate the desired radius so the closest corner is consistent gap distance from inner radius
+                  const consistentGapDistance = 15; // pixels - consistent for all segments
+                  const desiredRadius = innerRadius - consistentGapDistance - minDistance;
+                  
+                  // Calculate final text position
+                  const textX = centerX + desiredRadius * Math.cos(segmentCenterAngle);
+                  const textY = centerY + desiredRadius * Math.sin(segmentCenterAngle);
+                  
+                  return (
+                    <React.Fragment key={`text-${node.id}`}>
+                      {/* Wrapped text positioned based on bounding box calculation */}
+                      {lines.map((line, lineIndex) => (
+                        <text
+                          key={`line-${lineIndex}`}
+                          x={textX}
+                          y={textY + (lineIndex - (lines.length - 1) / 2) * lineHeight}
+                          textAnchor="middle"
+                          dominantBaseline="middle"
+                          fill="white"
+                          fontSize="14"
+                          fontWeight="600"
+                          fontFamily="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+                        >
+                          {line}
+                        </text>
+                      ))}
+                      
+                      {/* Colored line under the text - positioned relative to text */}
+                      <line
+                        x1={textX - maxLineWidth / 2}
+                        y1={textY + halfHeight + 5}
+                        x2={textX + maxLineWidth / 2}
+                        y2={textY + halfHeight + 5}
+                        stroke={node.color}
+                        strokeWidth="2"
+                      />
+                    </React.Fragment>
+                  );
+                })()}
               </g>
             );
           })}
