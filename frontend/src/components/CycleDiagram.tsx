@@ -18,11 +18,13 @@ export interface CycleDiagramProps {
   height?: number;
   theme?: 'default' | 'vibrant' | 'pastel' | 'monochrome' | 'ocean' | 'sunset' | 'forest' | 'custom';
   customColors?: string[]; // For custom theme
+  minTextSize?: number; // Minimum text size before moving outside
 }
 
 export class CycleDiagram {
   private container: HTMLElement;
   private props: CycleDiagramProps;
+  private resizeObserver: ResizeObserver | null = null;
 
   constructor(container: HTMLElement, props: CycleDiagramProps) {
     this.container = container;
@@ -34,9 +36,14 @@ export class CycleDiagram {
       width: 600,
       height: 600,
       theme: 'default',
+      minTextSize: 10,
       ...props
     };
-    this.render();
+    // Delay initial render to ensure container has proper dimensions
+    setTimeout(() => {
+      this.render();
+    }, 0);
+    this.setupResizeObserver();
   }
 
   /**
@@ -209,15 +216,42 @@ export class CycleDiagram {
   private render(): void {
     const { 
       nodes, 
-      outerRadius = 310, 
-      innerRadius = 255, 
-      centerX = 300, 
-      centerY = 300, 
-      width = 600, 
-      height = 600,
+      outerRadius: propOuterRadius, 
+      innerRadius: propInnerRadius, 
+      centerX: propCenterX, 
+      centerY: propCenterY, 
+      width: propWidth, 
+      height: propHeight,
       theme = 'default',
-      customColors
+      customColors,
+      minTextSize = 10
     } = this.props;
+
+    // Calculate responsive dimensions
+    let width, height, outerRadius, innerRadius, centerX, centerY;
+    
+    // Always use responsive behavior - get container dimensions
+    const containerRect = this.container.getBoundingClientRect();
+    const containerWidth = containerRect.width;
+    const containerHeight = containerRect.height;
+    
+    // If container has no explicit dimensions, use a reasonable default
+    if (containerWidth === 0 || containerHeight === 0) {
+      // Fallback to a reasonable size based on viewport or props
+      const fallbackSize = Math.min(window.innerWidth * 0.4, 600);
+      width = height = Math.max(400, fallbackSize);
+    } else {
+      // Use the smaller dimension to maintain square aspect ratio
+      const containerSize = Math.min(containerWidth, containerHeight);
+      width = height = Math.max(200, containerSize);
+    }
+    
+    centerX = centerY = width / 2;
+    
+    // Calculate responsive radii (leave 20% margin for text)
+    const maxRadius = (width * 0.4); // 40% of width for radius
+    outerRadius = maxRadius;
+    innerRadius = maxRadius * 0.82; // Inner radius is 82% of outer
 
     // Generate intelligent color palette
     const colorPalette = this.generateColorPalette(nodes.length, theme, customColors);
@@ -400,13 +434,20 @@ export class CycleDiagram {
                   const nextAngleDiff = Math.abs(nextSegmentAngle - segmentEndAngle);
                   const minAngleDiff = Math.min(prevAngleDiff, nextAngleDiff);
                   
-                  // Dynamic text sizing based on scale and segment count
-                  const fontSize = Math.max(10, 14 * scaleFactor * segmentCountFactor);
-                  const charWidth = fontSize * 0.6; // Approximate character width based on font size
-                  
                   // Use a conservative estimate of available space (50% of segment or distance to adjacent)
                   const availableAngle = Math.min(segmentAngle * 0.5, minAngleDiff * 0.8);
                   const maxArcWidth = availableAngle * innerRadius;
+                  
+                  // Dynamic text sizing based on scale and segment count
+                  const fontSize = Math.max(minTextSize, 14 * scaleFactor * segmentCountFactor);
+                  const charWidth = fontSize * 0.6; // Approximate character width based on font size
+                  
+                  // Determine if text should be positioned outside the circle
+                  const textFitsInside = fontSize >= minTextSize && 
+                    (maxArcWidth > 50) && // Minimum arc width for text
+                    (innerRadius > 80); // Minimum inner radius
+                  
+                  const useOutsideText = !textFitsInside;
                   
                   const maxCharsPerLine = Math.floor(maxArcWidth / charWidth);
                   
@@ -462,29 +503,37 @@ export class CycleDiagram {
                   // Convert to degrees for easier quadrant calculation
                   const angleDegrees = (segmentCenterAngle * 180 / Math.PI + 360) % 360;
                   
-                  // Calculate dynamic gap adjustment based on angle using a mathematical formula
-                  // This formula works for any number of segments and adjusts positioning intelligently
+                  let desiredRadius;
                   
-                  // Convert angle to radians for trigonometric calculations
-                  const angleRadians = segmentCenterAngle;
-                  
-                  // Create a smooth adjustment curve based on the segment's position
-                  // The formula uses sine and cosine to create natural positioning adjustments
-                  // that work well for text boxes around a circle
-                  
-                  // Primary adjustment: based on vertical position (sine component)
-                  // Segments at top (90°) and bottom (270°) get different treatments
-                  const verticalAdjustment = Math.sin(angleRadians) * (8 * scaleFactor);
-                  
-                  // Secondary adjustment: based on horizontal position (cosine component)  
-                  // Segments at left (-1) and right (1) get different treatments
-                  const horizontalAdjustment = Math.cos(angleRadians) * (5 * scaleFactor);
-                  
-                  // Combine adjustments for natural positioning
-                  const gapAdjustment = Math.round(verticalAdjustment + horizontalAdjustment);
-                  
-                  const gapDistance = baseGapDistance + gapAdjustment;
-                  const desiredRadius = innerRadius - gapDistance - minDistance;
+                  if (useOutsideText) {
+                    // Position text outside the circle
+                    const outsideGap = 20 * scaleFactor; // Gap between circle and text
+                    desiredRadius = outerRadius + outsideGap + minDistance;
+                  } else {
+                    // Calculate dynamic gap adjustment based on angle using a mathematical formula
+                    // This formula works for any number of segments and adjusts positioning intelligently
+                    
+                    // Convert angle to radians for trigonometric calculations
+                    const angleRadians = segmentCenterAngle;
+                    
+                    // Create a smooth adjustment curve based on the segment's position
+                    // The formula uses sine and cosine to create natural positioning adjustments
+                    // that work well for text boxes around a circle
+                    
+                    // Primary adjustment: based on vertical position (sine component)
+                    // Segments at top (90°) and bottom (270°) get different treatments
+                    const verticalAdjustment = Math.sin(angleRadians) * (8 * scaleFactor);
+                    
+                    // Secondary adjustment: based on horizontal position (cosine component)  
+                    // Segments at left (-1) and right (1) get different treatments
+                    const horizontalAdjustment = Math.cos(angleRadians) * (5 * scaleFactor);
+                    
+                    // Combine adjustments for natural positioning
+                    const gapAdjustment = Math.round(verticalAdjustment + horizontalAdjustment);
+                    
+                    const gapDistance = baseGapDistance + gapAdjustment;
+                    desiredRadius = innerRadius - gapDistance - minDistance;
+                  }
                   
                   // Calculate final text position
                   const textX = centerX + desiredRadius * Math.cos(segmentCenterAngle);
@@ -543,6 +592,33 @@ export class CycleDiagram {
 
   // Method to destroy the diagram
   public destroy(): void {
+    if (this.resizeObserver) {
+      this.resizeObserver.disconnect();
+      this.resizeObserver = null;
+    }
     this.container.innerHTML = '';
   }
+
+  /**
+   * Setup resize observer for responsive behavior
+   */
+  private setupResizeObserver(): void {
+    if (typeof ResizeObserver === 'undefined') {
+      return;
+    }
+
+    this.resizeObserver = new ResizeObserver(() => {
+      // Debounce resize events
+      if (this.resizeTimeout) {
+        clearTimeout(this.resizeTimeout);
+      }
+      this.resizeTimeout = setTimeout(() => {
+        this.render();
+      }, 100);
+    });
+
+    this.resizeObserver.observe(this.container);
+  }
+
+  private resizeTimeout: NodeJS.Timeout | null = null;
 }

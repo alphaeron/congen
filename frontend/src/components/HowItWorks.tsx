@@ -596,9 +596,12 @@ const PersonalizationSection = () => (
           <Box
             sx={{
               flex: { xs: 1, lg: 1.5 },
-              minHeight: 800,
+              minHeight: 600,
+              minWidth: 400,
               width: '100%',
               overflow: 'visible',
+              alignItems: 'center',
+              justifyContent: 'center',
             }}
           >
             <CycleDiagram 
