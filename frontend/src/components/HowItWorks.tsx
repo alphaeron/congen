@@ -521,8 +521,10 @@ const PersonalizationSection = () => (
       sx={{
         display: 'flex',
         flexDirection: { xs: 'column', lg: 'row' },
-        alignItems: 'flex-start',
+        alignItems: { xs: 'center', lg: 'flex-start' },
         gap: { xs: 2, lg: 3 },
+        minHeight: { xs: 'auto', lg: '60vh' },
+        width: '100%',
       }}
     >
           <Box
@@ -596,10 +598,13 @@ const PersonalizationSection = () => (
           <Box
             sx={{
               flex: { xs: 1, lg: 1.5 },
-              minHeight: 600,
-              minWidth: 400,
+              minWidth: { xs: 200, sm: 300, md: 400 },
               width: '100%',
+              height: '100%',
+              aspectRatio: '1 / 1',
+              maxHeight: '80vh',
               overflow: 'visible',
+              display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
             }}

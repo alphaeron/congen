@@ -25,6 +25,7 @@ export class CycleDiagram {
   private container: HTMLElement;
   private props: CycleDiagramProps;
   private resizeObserver: ResizeObserver | null = null;
+  private dimensions: { width: number; height: number } = { width: 0, height: 0 };
 
   constructor(container: HTMLElement, props: CycleDiagramProps) {
     this.container = container;
@@ -39,11 +40,14 @@ export class CycleDiagram {
       minTextSize: 10,
       ...props
     };
-    // Delay initial render to ensure container has proper dimensions
-    setTimeout(() => {
-      this.render();
-    }, 0);
     this.setupResizeObserver();
+    
+    // Trigger initial render after a short delay to ensure container is ready
+    setTimeout(() => {
+      if (this.dimensions.width === 0 || this.dimensions.height === 0) {
+        this.render();
+      }
+    }, 50);
   }
 
   /**
@@ -230,21 +234,22 @@ export class CycleDiagram {
     // Calculate responsive dimensions
     let width, height, outerRadius, innerRadius, centerX, centerY;
     
-    // Always use responsive behavior - get container dimensions
-    const containerRect = this.container.getBoundingClientRect();
-    const containerWidth = containerRect.width;
-    const containerHeight = containerRect.height;
+    // Use stored dimensions from ResizeObserver
+    let containerSize = Math.min(this.dimensions.width, this.dimensions.height);
     
-    // If container has no explicit dimensions, use a reasonable default
-    if (containerWidth === 0 || containerHeight === 0) {
-      // Fallback to a reasonable size based on viewport or props
-      const fallbackSize = Math.min(window.innerWidth * 0.4, 600);
-      width = height = Math.max(400, fallbackSize);
-    } else {
-      // Use the smaller dimension to maintain square aspect ratio
-      const containerSize = Math.min(containerWidth, containerHeight);
-      width = height = Math.max(200, containerSize);
+    // Fallback if dimensions are still 0 (initial render before ResizeObserver fires)
+    if (containerSize === 0) {
+      // Get the parent container dimensions, not the container itself
+      const parentElement = this.container.parentElement;
+      if (parentElement) {
+        containerSize = Math.min(parentElement.offsetWidth, parentElement.offsetHeight);
+      } else {
+        // Last resort: use the container itself
+        containerSize = Math.min(this.container.offsetWidth, this.container.offsetHeight);
+      }
     }
+    
+    width = height = containerSize;
     
     centerX = centerY = width / 2;
     
@@ -607,17 +612,43 @@ export class CycleDiagram {
       return;
     }
 
-    this.resizeObserver = new ResizeObserver(() => {
-      // Debounce resize events
-      if (this.resizeTimeout) {
-        clearTimeout(this.resizeTimeout);
+    this.resizeObserver = new ResizeObserver((entries) => {
+      for (let entry of entries) {
+        // Get parent container dimensions, not the container itself
+        const parentElement = this.container.parentElement;
+        if (parentElement) {
+          this.dimensions = {
+            width: parentElement.offsetWidth,
+            height: parentElement.offsetHeight,
+          };
+        } else {
+          // Fallback to container itself
+          this.dimensions = {
+            width: this.container.offsetWidth,
+            height: this.container.offsetHeight,
+          };
+        }
+        
+        // Only render if we have valid dimensions
+        if (this.dimensions.width > 0 && this.dimensions.height > 0) {
+          // Debounce resize events
+          if (this.resizeTimeout) {
+            clearTimeout(this.resizeTimeout);
+          }
+          this.resizeTimeout = setTimeout(() => {
+            this.render();
+          }, 100);
+        }
       }
-      this.resizeTimeout = setTimeout(() => {
-        this.render();
-      }, 100);
     });
 
-    this.resizeObserver.observe(this.container);
+    // Observe the parent element, not the container itself
+    const parentElement = this.container.parentElement;
+    if (parentElement) {
+      this.resizeObserver.observe(parentElement);
+    } else {
+      this.resizeObserver.observe(this.container);
+    }
   }
 
   private resizeTimeout: NodeJS.Timeout | null = null;
