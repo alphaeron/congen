@@ -222,36 +222,26 @@ export const CycleDiagram: React.FC<CycleDiagramProps> = ({
                   // Convert to degrees for easier quadrant calculation
                   const angleDegrees = (segmentCenterAngle * 180 / Math.PI + 360) % 360;
                   
-                  // Calculate gap adjustment based on segment angle and text box orientation
-                  let gapAdjustment = 0;
+                  // Calculate dynamic gap adjustment based on angle using a mathematical formula
+                  // This formula works for any number of segments and adjusts positioning intelligently
                   
-                  // Determine which corner of the text box is closest to the center
-                  // and adjust positioning based on the segment's position in the circle
+                  // Convert angle to radians for trigonometric calculations
+                  const angleRadians = segmentCenterAngle;
                   
-                  // Segment 0 (Profile Setup): 300.0° - needs to be closer to center
-                  if (angleDegrees >= 300 && angleDegrees < 360) {
-                    gapAdjustment = -10; // Move closer to center
-                  }
-                  // Segment 1 (Smart Analysis): 0.0° - well positioned
-                  else if (angleDegrees >= 0 && angleDegrees < 30) {
-                    gapAdjustment = 0; // Keep base gap
-                  }
-                  // Segment 2 (Program Generation): 60.0° - needs to be closer to center
-                  else if (angleDegrees >= 30 && angleDegrees < 90) {
-                    gapAdjustment = 10; // Move closer to center
-                  }
-                  // Segment 3 (Performance Tracking): 120.0° - needs to be closer to center
-                  else if (angleDegrees >= 90 && angleDegrees < 150) {
-                    gapAdjustment = 10; // Move closer to center
-                  }
-                  // Segment 4 (Auto Adjustments): 180.0° - needs more gap from arc
-                  else if (angleDegrees >= 150 && angleDegrees < 210) {
-                    gapAdjustment = 10; // Move farther from arc
-                  }
-                  // Segment 5 (Algorithm Refinement): 240.0° - well positioned
-                  else if (angleDegrees >= 210 && angleDegrees < 300) {
-                    gapAdjustment = 0; // Keep base gap
-                  }
+                  // Create a smooth adjustment curve based on the segment's position
+                  // The formula uses sine and cosine to create natural positioning adjustments
+                  // that work well for text boxes around a circle
+                  
+                  // Primary adjustment: based on vertical position (sine component)
+                  // Segments at top (90°) and bottom (270°) get different treatments
+                  const verticalAdjustment = Math.sin(angleRadians) * 8;
+                  
+                  // Secondary adjustment: based on horizontal position (cosine component)  
+                  // Segments at left (-1) and right (1) get different treatments
+                  const horizontalAdjustment = Math.cos(angleRadians) * 5;
+                  
+                  // Combine adjustments for natural positioning
+                  const gapAdjustment = Math.round(verticalAdjustment + horizontalAdjustment);
                   
                   const gapDistance = baseGapDistance + gapAdjustment;
                   const desiredRadius = innerRadius - gapDistance - minDistance;
