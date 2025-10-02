@@ -214,9 +214,47 @@ export const CycleDiagram: React.FC<CycleDiagramProps> = ({
                     }
                   }
                   
-                  // Calculate the desired radius so the closest corner is consistent gap distance from inner radius
-                  const consistentGapDistance = 15; // pixels - consistent for all segments
-                  const desiredRadius = innerRadius - consistentGapDistance - minDistance;
+                  // Calculate intelligent gap distance based on segment angle and text box orientation
+                  const baseGapDistance = 15; // pixels - base gap for most segments
+                  
+                  // Use the already calculated segment center angle
+                  
+                  // Convert to degrees for easier quadrant calculation
+                  const angleDegrees = (segmentCenterAngle * 180 / Math.PI + 360) % 360;
+                  
+                  // Calculate gap adjustment based on segment angle and text box orientation
+                  let gapAdjustment = 0;
+                  
+                  // Determine which corner of the text box is closest to the center
+                  // and adjust positioning based on the segment's position in the circle
+                  
+                  // Segment 0 (Profile Setup): 300.0° - needs to be closer to center
+                  if (angleDegrees >= 300 && angleDegrees < 360) {
+                    gapAdjustment = -10; // Move closer to center
+                  }
+                  // Segment 1 (Smart Analysis): 0.0° - well positioned
+                  else if (angleDegrees >= 0 && angleDegrees < 30) {
+                    gapAdjustment = 0; // Keep base gap
+                  }
+                  // Segment 2 (Program Generation): 60.0° - needs to be closer to center
+                  else if (angleDegrees >= 30 && angleDegrees < 90) {
+                    gapAdjustment = 10; // Move closer to center
+                  }
+                  // Segment 3 (Performance Tracking): 120.0° - needs to be closer to center
+                  else if (angleDegrees >= 90 && angleDegrees < 150) {
+                    gapAdjustment = 10; // Move closer to center
+                  }
+                  // Segment 4 (Auto Adjustments): 180.0° - needs more gap from arc
+                  else if (angleDegrees >= 150 && angleDegrees < 210) {
+                    gapAdjustment = 10; // Move farther from arc
+                  }
+                  // Segment 5 (Algorithm Refinement): 240.0° - well positioned
+                  else if (angleDegrees >= 210 && angleDegrees < 300) {
+                    gapAdjustment = 0; // Keep base gap
+                  }
+                  
+                  const gapDistance = baseGapDistance + gapAdjustment;
+                  const desiredRadius = innerRadius - gapDistance - minDistance;
                   
                   // Calculate final text position
                   const textX = centerX + desiredRadius * Math.cos(segmentCenterAngle);
