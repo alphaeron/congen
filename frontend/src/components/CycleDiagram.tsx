@@ -23,9 +23,8 @@ export interface CycleDiagramProps {
 
 export const CycleDiagram: React.FC<CycleDiagramProps> = ({
   nodes,
-  title = 'Smart Personalization Journey',
-  outerRadius = 280,
-  innerRadius = 230, // (280 + 180) / 2 = 230
+  outerRadius = 310,
+  innerRadius = 255,
   centerX = 300,
   centerY = 300,
   width = 600,
@@ -56,31 +55,6 @@ export const CycleDiagram: React.FC<CycleDiagramProps> = ({
         overflow: 'visible',
       }}
     >
-      {/* Title */}
-      <Box sx={{ textAlign: 'center' }}>
-        <Typography
-          variant="h4"
-          sx={{
-            color: '#3b82f6',
-            fontWeight: 700,
-            fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-            display: 'inline-block',
-            position: 'relative',
-          }}
-        >
-          {title}
-        </Typography>
-        {/* Properly centered underline */}
-        <Box
-          sx={{
-            width: '100%',
-            height: '2px',
-            backgroundColor: '#3b82f6',
-            marginTop: 1,
-          }}
-        />
-      </Box>
-
       {/* SVG Diagram */}
       <Box
         sx={{
@@ -111,11 +85,6 @@ export const CycleDiagram: React.FC<CycleDiagramProps> = ({
             const startAngle = (index * segmentAngleWithSpace) - Math.PI / 2;
             const endAngle = ((index + 1) * segmentAngleWithSpace) - Math.PI / 2;
             
-            // Calculate the main arc angles (without arrowhead/slot/gap)
-            // Each segment uses half the arrowhead size for slot and half for arrowhead, plus gap
-            const arcStartAngle = startAngle + arrowheadSize / 2 + angularGapOuter;
-            const arcEndAngle = endAngle - arrowheadSize / 2 - angularGapOuter;
-            
             // Arrowhead points (at the end of the segment)
             // Tip stays within the outer radius, base is at the arc end (convex, pointing outward)
             const arrowheadTipAngle = endAngle - angularGapTip;
@@ -129,11 +98,7 @@ export const CycleDiagram: React.FC<CycleDiagramProps> = ({
             // Middle radius is already calculated above
             
             // Calculate inner edge angles with proper gap sizing
-            const innerArcStartAngle = startAngle + arrowheadSize / 2 + angularGapInner;
-            const innerArcEndAngle = endAngle - arrowheadSize / 2 - angularGapInner;
-            const innerArrowheadTipAngle = endAngle - angularGapTip;
             const innerArrowheadBaseAngle = endAngle - angularGapInner - arrowheadSize / 2;
-            const innerSlotTipAngle = startAngle + angularGapTip;
             const innerSlotBaseAngle = startAngle + angularGapInner - arrowheadSize / 2;
             
             // Arrowhead coordinates - tip at middle radius
@@ -141,8 +106,6 @@ export const CycleDiagram: React.FC<CycleDiagramProps> = ({
             const arrowheadTipY = centerY + middleRadius * Math.sin(arrowheadTipAngle);
             const arrowheadBaseX = centerX + outerRadius * Math.cos(arrowheadBaseAngle);
             const arrowheadBaseY = centerY + outerRadius * Math.sin(arrowheadBaseAngle);
-            const arrowheadInnerTipX = centerX + middleRadius * Math.cos(innerArrowheadTipAngle);
-            const arrowheadInnerTipY = centerY + middleRadius * Math.sin(innerArrowheadTipAngle);
             const arrowheadInnerBaseX = centerX + innerRadius * Math.cos(innerArrowheadBaseAngle);
             const arrowheadInnerBaseY = centerY + innerRadius * Math.sin(innerArrowheadBaseAngle);
             
@@ -177,17 +140,37 @@ export const CycleDiagram: React.FC<CycleDiagramProps> = ({
                   filter="url(#segmentShadow)"
                 />
                 
-                {/* Calculate text position with intelligent wrapping and consistent gaps */}
+                {/* Calculate text position with intelligent wrapping, consistent gaps, and collision detection */}
                 {(() => {
                   // Calculate the angle for this segment's center
                   const segmentCenterAngle = startAngle + segmentAngle / 2;
                   
-                  // Intelligent text wrapping based on available arc space
-                  const maxArcWidth = segmentAngle * innerRadius * 0.8; // 80% of arc width
+                  // Calculate available space considering adjacent segments
+                  const currentIndex = nodes.findIndex(n => n.id === node.id);
+                  const prevIndex = (currentIndex - 1 + nodes.length) % nodes.length;
+                  const nextIndex = (currentIndex + 1) % nodes.length;
+                  
+                  // Calculate angles for adjacent segments
+                  const prevSegmentAngle = (prevIndex * segmentAngle) + segmentAngle / 2;
+                  const nextSegmentAngle = (nextIndex * segmentAngle) + segmentAngle / 2;
+                  
+                  // Calculate the actual available arc width considering adjacent text
+                  const segmentStartAngle = startAngle;
+                  const segmentEndAngle = startAngle + segmentAngle;
+                  
+                  // Find the closest point to adjacent segments to determine safe text width
+                  const prevAngleDiff = Math.abs(segmentStartAngle - prevSegmentAngle);
+                  const nextAngleDiff = Math.abs(nextSegmentAngle - segmentEndAngle);
+                  const minAngleDiff = Math.min(prevAngleDiff, nextAngleDiff);
+                  
+                  // Use a conservative estimate of available space (50% of segment or distance to adjacent)
+                  const availableAngle = Math.min(segmentAngle * 0.5, minAngleDiff * 0.8);
+                  const maxArcWidth = availableAngle * innerRadius;
+                  
                   const charWidth = 8; // Approximate character width
                   const maxCharsPerLine = Math.floor(maxArcWidth / charWidth);
                   
-                  // Split text into lines
+                  // Split text into lines with more aggressive wrapping
                   const words = node.label.split(' ');
                   const lines = [];
                   let currentLine = '';
@@ -241,7 +224,7 @@ export const CycleDiagram: React.FC<CycleDiagramProps> = ({
                   
                   return (
                     <React.Fragment key={`text-${node.id}`}>
-                      {/* Wrapped text positioned based on bounding box calculation */}
+                      {/* Title text positioned based on bounding box calculation */}
                       {lines.map((line, lineIndex) => (
                         <text
                           key={`line-${lineIndex}`}
@@ -258,7 +241,7 @@ export const CycleDiagram: React.FC<CycleDiagramProps> = ({
                         </text>
                       ))}
                       
-                      {/* Colored line under the text - positioned relative to text */}
+                      {/* Colored line under the title */}
                       <line
                         x1={textX - maxLineWidth / 2}
                         y1={textY + halfHeight + 5}
@@ -267,6 +250,23 @@ export const CycleDiagram: React.FC<CycleDiagramProps> = ({
                         stroke={node.color}
                         strokeWidth="2"
                       />
+                      
+                      {/* Details text below the divider line */}
+                      {node.details.map((detail, detailIndex) => (
+                        <text
+                          key={`detail-${detailIndex}`}
+                          x={textX}
+                          y={textY + halfHeight + 20 + (detailIndex * 12)}
+                          textAnchor="middle"
+                          dominantBaseline="middle"
+                          fill="#cbd5e1"
+                          fontSize="10"
+                          fontWeight="400"
+                          fontFamily="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+                        >
+                          {detail}
+                        </text>
+                      ))}
                     </React.Fragment>
                   );
                 })()}
@@ -274,53 +274,6 @@ export const CycleDiagram: React.FC<CycleDiagramProps> = ({
             );
           })}
         </svg>
-      </Box>
-
-      {/* Detailed descriptions below */}
-      <Box
-        sx={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-          gap: 2,
-          width: '100%',
-          maxWidth: '800px',
-        }}
-      >
-        {nodes.map((node, index) => (
-          <Box
-            key={node.id}
-            sx={{
-              textAlign: 'center',
-              padding: 2,
-              borderRadius: 2,
-              backgroundColor: 'rgba(30, 41, 59, 0.5)',
-              border: `2px solid ${node.color}`,
-            }}
-          >
-            <Typography
-              variant="body2"
-              sx={{
-                color: node.color,
-                fontWeight: 600,
-                marginBottom: 0.5,
-                fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-              }}
-            >
-              {node.label}
-            </Typography>
-            <Typography
-              variant="caption"
-              sx={{
-                color: '#cbd5e1',
-                fontSize: '10px',
-                lineHeight: 1.4,
-                fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-              }}
-            >
-              {node.details.join(', ')}
-            </Typography>
-          </Box>
-        ))}
       </Box>
     </Box>
   );

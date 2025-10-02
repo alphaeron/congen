@@ -609,7 +609,6 @@ const PersonalizationSection = () => (
           >
             <CycleDiagram 
               nodes={personalizationNodes} 
-              title="Smart Personalization Journey"
             />
           </Box>
     </Box>
