@@ -239,10 +239,11 @@ export class CycleDiagram {
     
     // Fallback if dimensions are still 0 (initial render before ResizeObserver fires)
     if (containerSize === 0) {
-      // Get the parent container dimensions, not the container itself
+      // Get the parent container dimensions using getBoundingClientRect
       const parentElement = this.container.parentElement;
       if (parentElement) {
-        containerSize = Math.min(parentElement.offsetWidth, parentElement.offsetHeight);
+        const parentRect = parentElement.getBoundingClientRect();
+        containerSize = Math.min(parentRect.width, parentRect.height);
       } else {
         // Last resort: use the container itself
         containerSize = Math.min(this.container.offsetWidth, this.container.offsetHeight);
@@ -443,14 +444,15 @@ export class CycleDiagram {
                   const availableAngle = Math.min(segmentAngle * 0.5, minAngleDiff * 0.8);
                   const maxArcWidth = availableAngle * innerRadius;
                   
-                  // Dynamic text sizing based on scale and segment count
-                  const fontSize = Math.max(minTextSize, 14 * scaleFactor * segmentCountFactor);
-                  const charWidth = fontSize * 0.6; // Approximate character width based on font size
+                  // Use Nivo's default text sizes (fixed, not dynamic)
+                  const titleFontSize = 14; // Nivo default title size
+                  const descriptionFontSize = 12; // Nivo default description size
+                  const charWidth = titleFontSize * 0.6; // Approximate character width
                   
                   // Determine if text should be positioned outside the circle
-                  const textFitsInside = fontSize >= minTextSize && 
-                    (maxArcWidth > 50) && // Minimum arc width for text
-                    (innerRadius > 80); // Minimum inner radius
+                  // Use more aggressive thresholds to move text outside earlier
+                  const textFitsInside = (maxArcWidth > 100) &&
+                    (innerRadius > 100);
                   
                   const useOutsideText = !textFitsInside;
                   
@@ -472,7 +474,7 @@ export class CycleDiagram {
                   if (currentLine) lines.push(currentLine);
                   
                   // Calculate text dimensions for wrapped text
-                  const lineHeight = fontSize * 1.2; // Dynamic line height based on font size
+                  const lineHeight = titleFontSize * 1.2; // Line height based on title font size
                   const textHeight = lines.length * lineHeight;
                   const maxLineWidth = Math.max(...lines.map(line => line.length * charWidth));
                   
@@ -552,7 +554,7 @@ export class CycleDiagram {
         textElement.setAttribute('text-anchor', 'middle');
         textElement.setAttribute('dominant-baseline', 'middle');
         textElement.setAttribute('fill', 'white');
-        textElement.setAttribute('font-size', fontSize.toString());
+        textElement.setAttribute('font-size', titleFontSize.toString());
         textElement.setAttribute('font-weight', '600');
         textElement.setAttribute('font-family', 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif');
         textElement.textContent = line;
@@ -577,7 +579,7 @@ export class CycleDiagram {
         detailElement.setAttribute('text-anchor', 'middle');
         detailElement.setAttribute('dominant-baseline', 'middle');
         detailElement.setAttribute('fill', '#cbd5e1');
-        detailElement.setAttribute('font-size', (fontSize * 0.7).toString());
+        detailElement.setAttribute('font-size', descriptionFontSize.toString());
         detailElement.setAttribute('font-weight', '400');
         detailElement.setAttribute('font-family', 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif');
         detailElement.textContent = detail;
@@ -614,12 +616,13 @@ export class CycleDiagram {
 
     this.resizeObserver = new ResizeObserver((entries) => {
       for (let entry of entries) {
-        // Get parent container dimensions, not the container itself
+        // Get parent container dimensions using getBoundingClientRect
         const parentElement = this.container.parentElement;
         if (parentElement) {
+          const parentRect = parentElement.getBoundingClientRect();
           this.dimensions = {
-            width: parentElement.offsetWidth,
-            height: parentElement.offsetHeight,
+            width: parentRect.width,
+            height: parentRect.height,
           };
         } else {
           // Fallback to container itself
