@@ -450,9 +450,43 @@ export default function WorkoutAlgorithmInfographicStructured() {
             }}>
               INPUT SENSORS
             </div>
-            {['equipment', 'one_rm', 'previous'].map((id, index) => (
-              <CircuitComponent key={id} node={STAGES[id as keyof typeof STAGES]} groupIndex={0} itemIndex={index} />
-            ))}
+            
+            {/* First component - Equipment */}
+            <div style={{ position: 'relative' }}>
+              <CircuitComponent node={STAGES.equipment} groupIndex={0} itemIndex={0} />
+              {/* Line extending from right edge */}
+              <div style={{
+                position: 'absolute',
+                right: `-${COMPONENT_WIDTH}px`,
+                top: '50%',
+                transform: 'translateY(-50%)',
+                width: `${COMPONENT_WIDTH}px`,
+                height: '2px',
+                background: COLORS.electricity,
+                boxShadow: `0 0 5px ${COLORS.electricity}`,
+                zIndex: 1
+              }} />
+            </div>
+            
+            {/* Second component - One Rep Maxes */}
+            <div style={{ position: 'relative' }}>
+              <CircuitComponent node={STAGES.one_rm} groupIndex={0} itemIndex={1} />
+              {/* Line extending from right edge */}
+              <div style={{
+                position: 'absolute',
+                right: `-${COMPONENT_WIDTH}px`,
+                top: '50%',
+                transform: 'translateY(-50%)',
+                width: `${COMPONENT_WIDTH}px`,
+                height: '2px',
+                background: COLORS.electricity,
+                boxShadow: `0 0 5px ${COLORS.electricity}`,
+                zIndex: 1
+              }} />
+            </div>
+            
+            {/* Third component - Previous Workouts */}
+            <CircuitComponent node={STAGES.previous} groupIndex={0} itemIndex={2} />
           </div>
 
           {/* Processing Phase - Logic Chips */}
@@ -497,7 +531,21 @@ export default function WorkoutAlgorithmInfographicStructured() {
             </div>
             
             {/* Second component - Available Equipment Filter */}
-            <CircuitComponent node={STAGES.available_equipment} groupIndex={1} itemIndex={1} />
+            <div style={{ position: 'relative' }}>
+              <CircuitComponent node={STAGES.available_equipment} groupIndex={1} itemIndex={1} />
+              {/* Line extending from right edge */}
+              <div style={{
+                position: 'absolute',
+                right: `-${COMPONENT_WIDTH}px`,
+                top: '50%',
+                transform: 'translateY(-50%)',
+                width: `${COMPONENT_WIDTH}px`,
+                height: '2px',
+                background: COLORS.electricity,
+                boxShadow: `0 0 5px ${COLORS.electricity}`,
+                zIndex: 1
+              }} />
+            </div>
             
             {/* Third component - Exercise Matching Logic */}
             <CircuitComponent node={STAGES.exercise_matching} groupIndex={1} itemIndex={2} />
@@ -528,15 +576,81 @@ export default function WorkoutAlgorithmInfographicStructured() {
             </div>
             {/* Top row */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              {['session_time_allocation', 'rotating_exercise_selection', 'weak_point_targeting'].map((id, index) => (
-                <CircuitComponent key={id} node={STAGES[id as keyof typeof STAGES]} groupIndex={2} itemIndex={index} />
-              ))}
+              {/* First component - Session Time Allocation */}
+              <div style={{ position: 'relative' }}>
+                <CircuitComponent node={STAGES.session_time_allocation} groupIndex={2} itemIndex={0} />
+                {/* Line extending from right edge */}
+                <div style={{
+                  position: 'absolute',
+                  right: `-${COMPONENT_WIDTH}px`,
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  width: `${COMPONENT_WIDTH}px`,
+                  height: '2px',
+                  background: COLORS.electricity,
+                  boxShadow: `0 0 5px ${COLORS.electricity}`,
+                  zIndex: 1
+                }} />
+              </div>
+              
+              {/* Second component - Rotating Exercise Selection */}
+              <div style={{ position: 'relative' }}>
+                <CircuitComponent node={STAGES.rotating_exercise_selection} groupIndex={2} itemIndex={1} />
+                {/* Line extending from right edge */}
+                <div style={{
+                  position: 'absolute',
+                  right: `-${COMPONENT_WIDTH}px`,
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  width: `${COMPONENT_WIDTH}px`,
+                  height: '2px',
+                  background: COLORS.electricity,
+                  boxShadow: `0 0 5px ${COLORS.electricity}`,
+                  zIndex: 1
+                }} />
+              </div>
+              
+              {/* Third component - Weak Point Targeting */}
+              <CircuitComponent node={STAGES.weak_point_targeting} groupIndex={2} itemIndex={2} />
             </div>
             {/* Bottom row */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              {['movement_balancing', 'weight_selection', 'set_scheme_generation'].map((id, index) => (
-                <CircuitComponent key={id} node={STAGES[id as keyof typeof STAGES]} groupIndex={2} itemIndex={index + 3} />
-              ))}
+              {/* First component - Movement Balancing */}
+              <div style={{ position: 'relative' }}>
+                <CircuitComponent node={STAGES.movement_balancing} groupIndex={2} itemIndex={3} />
+                {/* Line extending from right edge */}
+                <div style={{
+                  position: 'absolute',
+                  right: `-${COMPONENT_WIDTH}px`,
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  width: `${COMPONENT_WIDTH}px`,
+                  height: '2px',
+                  background: COLORS.electricity,
+                  boxShadow: `0 0 5px ${COLORS.electricity}`,
+                  zIndex: 1
+                }} />
+              </div>
+              
+              {/* Second component - Weight Selection */}
+              <div style={{ position: 'relative' }}>
+                <CircuitComponent node={STAGES.weight_selection} groupIndex={2} itemIndex={4} />
+                {/* Line extending from right edge */}
+                <div style={{
+                  position: 'absolute',
+                  right: `-${COMPONENT_WIDTH}px`,
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  width: `${COMPONENT_WIDTH}px`,
+                  height: '2px',
+                  background: COLORS.electricity,
+                  boxShadow: `0 0 5px ${COLORS.electricity}`,
+                  zIndex: 1
+                }} />
+              </div>
+              
+              {/* Third component - Set Scheme Generation */}
+              <CircuitComponent node={STAGES.set_scheme_generation} groupIndex={2} itemIndex={5} />
             </div>
           </div>
 
@@ -563,9 +677,77 @@ export default function WorkoutAlgorithmInfographicStructured() {
             }}>
               OUTPUT ACTUATORS
             </div>
-            {['warmup', 'primary_out', 'secondary_out', 'accessory', 'conditioning'].map((id, index) => (
-              <CircuitComponent key={id} node={STAGES[id as keyof typeof STAGES]} groupIndex={3} itemIndex={index} />
-            ))}
+            
+            {/* First component - Warmup */}
+            <div style={{ position: 'relative' }}>
+              <CircuitComponent node={STAGES.warmup} groupIndex={3} itemIndex={0} />
+              {/* Line extending from right edge */}
+              <div style={{
+                position: 'absolute',
+                right: `-${COMPONENT_WIDTH}px`,
+                top: '50%',
+                transform: 'translateY(-50%)',
+                width: `${COMPONENT_WIDTH}px`,
+                height: '2px',
+                background: COLORS.electricity,
+                boxShadow: `0 0 5px ${COLORS.electricity}`,
+                zIndex: 1
+              }} />
+            </div>
+            
+            {/* Second component - Primary */}
+            <div style={{ position: 'relative' }}>
+              <CircuitComponent node={STAGES.primary_out} groupIndex={3} itemIndex={1} />
+              {/* Line extending from right edge */}
+              <div style={{
+                position: 'absolute',
+                right: `-${COMPONENT_WIDTH}px`,
+                top: '50%',
+                transform: 'translateY(-50%)',
+                width: `${COMPONENT_WIDTH}px`,
+                height: '2px',
+                background: COLORS.electricity,
+                boxShadow: `0 0 5px ${COLORS.electricity}`,
+                zIndex: 1
+              }} />
+            </div>
+            
+            {/* Third component - Secondary */}
+            <div style={{ position: 'relative' }}>
+              <CircuitComponent node={STAGES.secondary_out} groupIndex={3} itemIndex={2} />
+              {/* Line extending from right edge */}
+              <div style={{
+                position: 'absolute',
+                right: `-${COMPONENT_WIDTH}px`,
+                top: '50%',
+                transform: 'translateY(-50%)',
+                width: `${COMPONENT_WIDTH}px`,
+                height: '2px',
+                background: COLORS.electricity,
+                boxShadow: `0 0 5px ${COLORS.electricity}`,
+                zIndex: 1
+              }} />
+            </div>
+            
+            {/* Fourth component - Accessory */}
+            <div style={{ position: 'relative' }}>
+              <CircuitComponent node={STAGES.accessory} groupIndex={3} itemIndex={3} />
+              {/* Line extending from right edge */}
+              <div style={{
+                position: 'absolute',
+                right: `-${COMPONENT_WIDTH}px`,
+                top: '50%',
+                transform: 'translateY(-50%)',
+                width: `${COMPONENT_WIDTH}px`,
+                height: '2px',
+                background: COLORS.electricity,
+                boxShadow: `0 0 5px ${COLORS.electricity}`,
+                zIndex: 1
+              }} />
+            </div>
+            
+            {/* Fifth component - Conditioning */}
+            <CircuitComponent node={STAGES.conditioning} groupIndex={3} itemIndex={4} />
           </div>
         </div>
       </div>
