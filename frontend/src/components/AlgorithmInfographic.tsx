@@ -1,318 +1,384 @@
+// WorkoutAlgorithmInfographicStructured.js
 import React from 'react'
 import { motion } from 'framer-motion'
 
-// WorkoutAlgorithmInfographic.jsx
-// Single-file React component designed to drop into a single-page React app.
-// - Uses Tailwind utility classes for layout and spacing (no imports required here)
-// - Uses inline SVG for crisp scalable output (easy to convert to PNG/WebP later)
-// - Framer Motion is used for subtle entrance & hover animations (assumed available)
-// - All algorithm stages are present exactly once (no duplicates)
+/**
+ * Structured infographic: left hierarchical flow + right numbered steps.
+ * - Each algorithm stage is included exactly once (no duplicates).
+ * - Designed after the reference: shapes, connectors, and right-side numbered cards.
+ *
+ * Usage:
+ * <WorkoutAlgorithmInfographicStructured />
+ *
+ * Dependencies:
+ * - framer-motion
+ */
 
-// USAGE
-// <WorkoutAlgorithmInfographic className="w-full h-[820px]" />
-
-const WIDTH = 1200
-const HEIGHT = 820
-
-const nodes = [
-  // Input Stage (Top Level)
-  { id: 'equipment',       label: 'Equipment',       group: 'input',  x: 120,  y: 140, icon: 'dumbbell' },
-  { id: 'one_rm',          label: 'One Rep Maxes',   group: 'input',  x: 540,  y: 120, icon: 'one' },
-  { id: 'previous',        label: 'Previous Workouts',group: 'input', x: 960,  y: 140, icon: 'list' },
-
-  // Exercise Pool Creation with Algorithm Details
-  { id: 'equipment_filter', label: 'Equipment Filtering', group: 'prep', x: 180,  y: 320, icon: 'filter' },
-  { id: 'user_prefs',       label: 'User Preferences', group: 'prep', x: 360,  y: 320, icon: 'prefs' },
-  { id: 'sliding_window',   label: 'Sliding Window Logic', group: 'prep', x: 540,  y: 320, icon: 'window' },
-  { id: 'exercise_pool',    label: 'Exercise Pool Creation', group: 'prep', x: 720,  y: 320, icon: 'pool' },
-
-  // Set Scheme Generation with Details
-  { id: 'prilepin',        label: 'Prilepin Guidelines', group: 'generation', x: 180, y: 480, icon: 'chart' },
-  { id: 'weight_selection', label: 'Weight Selection', group: 'generation', x: 360, y: 480, icon: 'weight' },
-  { id: 'movement_balance', label: 'Movement Balance', group: 'generation', x: 540, y: 480, icon: 'balance' },
-  { id: 'exercise_rotation', label: 'Exercise Rotation', group: 'generation', x: 720, y: 480, icon: 'rotate' },
-
-  // Workout Stage Generation
-  { id: 'primary',         label: 'Primary Exercise Selection',   group: 'generation', x: 220, y: 520, icon: 'barbell' },
-  { id: 'secondary',       label: 'Secondary Exercise Selection', group: 'generation', x: 540, y: 540, icon: 'support' },
-
-  // Additional Algorithm Components
-  { id: 'session_time',    label: 'Session Time Calculation',    group: 'additional', x: 860, y: 520, icon: 'stopwatch' },
-  { id: 'matching',        label: 'Exercise Matching Service',    group: 'additional', x: 420, y: 660, icon: 'match' },
-  { id: 'weak_point',      label: 'Weak Point Targeting',         group: 'additional', x: 740, y: 660, icon: 'target' },
-
-  // Output Stages
-  { id: 'warmup',          label: 'Warmup Stage',    group: 'output', x: 140, y: 760, icon: 'triangle' },
-  { id: 'primary_out',     label: 'Primary Stage',   group: 'output', x: 380, y: 760, icon: 'triangle' },
-  { id: 'secondary_out',   label: 'Secondary Stage', group: 'output', x: 620, y: 760, icon: 'triangle' },
-  { id: 'accessory',       label: 'Accessory Stage', group: 'output', x: 860, y: 760, icon: 'triangle' },
-  { id: 'conditioning',    label: 'Conditioning Stage', group: 'output', x: 1100, y: 760, icon: 'triangle' }
-]
-
-// Connections define the flow. They are intentionally single-instance and form continuous connected lines.
-const links = [
-  // Input to Exercise Pool Creation
-  ['equipment','equipment_filter'],
-  ['one_rm','user_prefs'],
-  ['previous','sliding_window'],
-
-  // Exercise Pool Creation flow
-  ['equipment_filter','exercise_pool'],
-  ['user_prefs','exercise_pool'],
-  ['sliding_window','exercise_pool'],
-
-  // Exercise Pool to Set Scheme Generation
-  ['exercise_pool','prilepin'],
-  ['exercise_pool','weight_selection'],
-  ['exercise_pool','movement_balance'],
-  ['exercise_pool','exercise_rotation'],
-
-  // Set Scheme Generation to Workout Stages
-  ['prilepin','primary'],
-  ['weight_selection','primary'],
-  ['movement_balance','primary'],
-  ['exercise_rotation','primary'],
-
-  ['primary','secondary'],
-  ['secondary','session_time'],
-
-  ['session_time','matching'],
-  ['matching','weak_point'],
-  ['weak_point','accessory'],
-
-  ['primary','primary_out'],
-  ['secondary','secondary_out'],
-  ['accessory','accessory'],
-  ['accessory','conditioning'],
-  ['warmup','primary_out']
-]
-
-const GROUP_COLORS: Record<string, { from: string; to: string }> = {
-  input:   { from: '#ff7a7a', to: '#ffb56b' },
-  prep:    { from: '#7c6bff', to: '#60e0d8' },
-  generation: { from: '#ff8ab6', to: '#7dd3fc' },
-  additional: { from: '#ffd36b', to: '#a78bfa' },
-  output:  { from: '#7ef27e', to: '#6be0ff' }
+const COLORS = {
+  bg: '#0b0b12',
+  panel: 'rgba(255,255,255,0.03)',
+  text: '#e8e6ef',
+  accentA: '#ff8a6b',
+  accentB: '#7dd3fc',
+  accentC: '#c084fc',
+  accentD: '#ffd36b',
+  accentE: '#6be0ff'
 }
 
-function gradientId(id: string): string { return `g-${id}` }
+// single stage definitions (each stage exists exactly once)
+const STAGES = {
+  overview: {
+    id: 'overview',
+    title: 'Algorithm Overview',
+    subtitle: 'Conjugate powerlifting system — intelligent algorithms working together.',
+    colorFrom: '#7c6bff',
+    colorTo: '#60e0d8',
+    shape: 'rounded-pill'
+  },
 
-function Icon({type, size=36}: {type: string, size?: number}){
-  // Minimal inline icons — shapes are simple so they scale cleanly.
-  switch(type){
-    case 'dumbbell': return (
-      <g transform={`scale(${size/36})`} fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="1" y="12" width="34" height="12" rx="2" opacity="0" />
-        <path d="M6 18h4M30 18h4M14 14v8M22 14v8" />
-      </g>
-    )
-    case 'one': return (
-      <text x="0" y="24" fontSize="26" fontWeight="700" fill="white">1</text>
-    )
-    case 'list': return (
-      <g transform={`scale(${size/36})`} fill="none" stroke="white" strokeWidth="1.8">
-        <rect x="4" y="6" width="28" height="24" rx="3" />
-        <path d="M10 14h14M10 20h10" />
-      </g>
-    )
-    case 'db': return (
-      <g transform={`scale(${size/36})`} fill="none" stroke="white" strokeWidth="1.8">
-        <ellipse cx="18" cy="12" rx="12" ry="4" />
-        <path d="M6 12v12c0 2 5 4 12 4s12-2 12-4V12" />
-      </g>
-    )
-    case 'filter': return (
-      <g transform={`scale(${size/36})`} fill="none" stroke="white" strokeWidth="2">
-        <path d="M6 8h24M10 18h14M14 28h6" strokeLinecap="round" />
-      </g>
-    )
-    case 'prefs': return (
-      <g transform={`scale(${size/36})`} fill="none" stroke="white" strokeWidth="2">
-        <circle cx="18" cy="18" r="8" />
-        <path d="M18 10v-2M18 26v-2M10 18h-2M26 18h-2" />
-      </g>
-    )
-    case 'window': return (
-      <g transform={`scale(${size/36})`} fill="none" stroke="white" strokeWidth="2">
-        <rect x="6" y="8" width="24" height="20" rx="2" />
-        <path d="M10 14h8M10 20h12" />
-      </g>
-    )
-    case 'pool': return (
-      <g transform={`scale(${size/36})`} fill="none" stroke="white" strokeWidth="2">
-        <circle cx="18" cy="18" r="10" />
-        <path d="M8 18h20M18 8v20" />
-      </g>
-    )
-    case 'chart': return (
-      <g transform={`scale(${size/36})`} fill="none" stroke="white" strokeWidth="2">
-        <rect x="6" y="20" width="4" height="8" />
-        <rect x="12" y="16" width="4" height="12" />
-        <rect x="18" y="12" width="4" height="16" />
-        <rect x="24" y="8" width="4" height="20" />
-      </g>
-    )
-    case 'weight': return (
-      <g transform={`scale(${size/36})`} fill="none" stroke="white" strokeWidth="2">
-        <path d="M4 18h28" />
-        <rect x="2" y="14" width="6" height="8" rx="1" />
-        <rect x="30" y="14" width="6" height="8" rx="1" />
-        <circle cx="18" cy="18" r="3" />
-      </g>
-    )
-    case 'balance': return (
-      <g transform={`scale(${size/36})`} fill="none" stroke="white" strokeWidth="2">
-        <path d="M18 6v24M6 18h24" />
-        <circle cx="18" cy="18" r="4" />
-        <path d="M10 10l8 8M26 10l-8 8" />
-      </g>
-    )
-    case 'rotate': return (
-      <g transform={`scale(${size/36})`} fill="none" stroke="white" strokeWidth="2">
-        <path d="M18 6v6l4-4M18 30v-6l4 4" />
-        <circle cx="18" cy="18" r="8" />
-      </g>
-    )
-    case 'scheme': return (
-      <g transform={`scale(${size/36})`} fill="none" stroke="white" strokeWidth="2">
-        <rect x="6" y="8" width="24" height="20" rx="3" />
-        <path d="M12 14h8M12 20h12" />
-      </g>
-    )
-    case 'barbell': return (
-      <g transform={`scale(${size/36})`} fill="none" stroke="white" strokeWidth="2" strokeLinecap="round">
-        <path d="M4 18h28" />
-        <rect x="2" y="14" width="6" height="8" rx="1" />
-        <rect x="30" y="14" width="6" height="8" rx="1" />
-      </g>
-    )
-    case 'support': return (
-      <g transform={`scale(${size/36})`} fill="none" stroke="white" strokeWidth="2">
-        <circle cx="18" cy="14" r="6" />
-        <path d="M18 20v6" />
-      </g>
-    )
-    case 'stopwatch': return (
-      <g transform={`scale(${size/36})`} fill="none" stroke="white" strokeWidth="2">
-        <circle cx="18" cy="20" r="8" />
-        <path d="M18 12v-3" />
-        <path d="M22 6l-2 2" />
-      </g>
-    )
-    case 'match': return (
-      <g transform={`scale(${size/36})`} fill="none" stroke="white" strokeWidth="2">
-        <rect x="6" y="8" width="12" height="16" rx="2" />
-        <circle cx="26" cy="18" r="6" />
-      </g>
-    )
-    case 'target': return (
-      <g transform={`scale(${size/36})`} fill="none" stroke="white" strokeWidth="1.8">
-        <circle cx="18" cy="18" r="8" />
-        <circle cx="18" cy="18" r="4" />
-        <path d="M18 10v-4" />
-      </g>
-    )
-    case 'triangle': return (
-      <polygon points="18,6 30,30 6,30" fill="white" opacity="0.95" />
-    )
-    default: return null
+  // Inputs (top)
+  equipment: { id: 'equipment', title: 'Equipment', colorFrom: '#ff8a6b', colorTo: '#ffb56b', shape: 'circle' },
+  one_rm: { id: 'one_rm', title: 'One Rep Maxes', colorFrom: '#6be0ff', colorTo: '#7dd3fc', shape: 'circle' },
+  previous: { id: 'previous', title: 'Previous Workouts', colorFrom: '#c084fc', colorTo: '#a855f7', shape: 'circle' },
+
+  // Preparation row
+  data_prep: { id: 'data_prep', title: 'Data Preparation', colorFrom: '#60e0d8', colorTo: '#7c6bff', shape: 'rounded-rect' },
+  exercise_pool: { id: 'exercise_pool', title: 'Exercise Pool Creation', colorFrom: '#ff8ab6', colorTo: '#ffb56b', shape: 'filter-hex' },
+
+  // Generation
+  set_scheme: { id: 'set_scheme', title: 'Set Scheme Generation', colorFrom: '#f59e0b', colorTo: '#ff8a6b', shape: 'diamond' },
+  primary_select: { id: 'primary_select', title: 'Primary Exercise Selection', colorFrom: '#ffd36b', colorTo: '#ff7a7a', shape: 'rounded-rect' },
+  secondary_select: { id: 'secondary_select', title: 'Secondary Exercise Selection', colorFrom: '#7ef27e', colorTo: '#6be0ff', shape: 'rounded-rect' },
+
+  // Additional components (satellites)
+  session_time: { id: 'session_time', title: 'Session Time Calculation', colorFrom: '#ffb86b', colorTo: '#ff7a7a', shape: 'circle' },
+  matching: { id: 'matching', title: 'Exercise Matching Service', colorFrom: '#7dd3fc', colorTo: '#60e0d8', shape: 'circle' },
+  weak_point: { id: 'weak_point', title: 'Weak Point Targeting', colorFrom: '#c084fc', colorTo: '#a855f7', shape: 'circle' },
+
+  // Outputs (final row)
+  warmup: { id: 'warmup', title: 'Warmup Stage', colorFrom: '#99f0b7', colorTo: '#7ef27e', shape: 'triangle' },
+  primary_out: { id: 'primary_out', title: 'Primary Stage', colorFrom: '#ff8a8a', colorTo: '#ff4d4d', shape: 'triangle' },
+  secondary_out: { id: 'secondary_out', title: 'Secondary Stage', colorFrom: '#7dd3fc', colorTo: '#60e0d8', shape: 'triangle' },
+  accessory: { id: 'accessory', title: 'Accessory Stage', colorFrom: '#f7c08a', colorTo: '#ffb56b', shape: 'triangle' },
+  conditioning: { id: 'conditioning', title: 'Conditioning Stage', colorFrom: '#7ea8ff', colorTo: '#6be0ff', shape: 'triangle' }
+}
+
+// simple animation variants
+const fadeIn = { initial: { opacity: 0, y: 8 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.6 } }
+
+// small helper: gradient id
+const gradId = (id) => `g-${id}`
+
+// SVG shapes renderer
+function Shape({ node, size = 86 }) {
+  const r = size / 2
+  const { colorFrom, colorTo, shape } = node
+  const gradient = `url(#${gradId(node.id)})`
+
+  if (shape === 'circle') {
+    return <circle r={r} fill={gradient} stroke="rgba(255,255,255,0.06)" strokeWidth="1.5" />
   }
+  if (shape === 'rounded-pill') {
+    return <rect x={-r - 30} y={-r/2} width={size + 60} height={r} rx={r/2} fill={gradient} stroke="rgba(255,255,255,0.06)" strokeWidth="1.5" />
+  }
+  if (shape === 'rounded-rect') {
+    return <rect x={-r} y={-r} width={size} height={size * 0.75} rx={14} fill={gradient} stroke="rgba(255,255,255,0.06)" strokeWidth="1.5" />
+  }
+  if (shape === 'diamond') {
+    return <polygon points={`${0},${-r} ${r},0 0,${r} ${-r},0`} fill={gradient} stroke="rgba(255,255,255,0.06)" strokeWidth="1.5" />
+  }
+  if (shape === 'filter-hex') {
+    return <rect x={-r} y={-r} width={size} height={size} rx={20} fill={gradient} stroke="rgba(255,255,255,0.06)" strokeWidth="1.5" />
+  }
+  if (shape === 'triangle') {
+    return <polygon points={`0,${-r} ${r},${r} ${-r},${r}`} fill={gradient} stroke="rgba(255,255,255,0.06)" strokeWidth="1.5" />
+  }
+  // fallback
+  return <circle r={r} fill={gradient} />
 }
 
-function wavyPath(a: {x: number, y: number}, b: {x: number, y: number}): string {
-  // cubic bezier curve between points producing a smooth wave-like connector
-  const dx = Math.abs(b.x - a.x)
-  const mx = (a.x + b.x)/2
-  const my = (a.y + b.y)/2
-  const dy = Math.max(40, Math.min(150, (b.y - a.y)))
-  const c1 = { x: a.x + dx*0.25, y: a.y }
-  const c2 = { x: b.x - dx*0.25, y: b.y }
-  return `M ${a.x} ${a.y} C ${c1.x} ${c1.y} ${c2.x} ${c2.y} ${b.x} ${b.y}`
+// Single Node (SVG group representing a stage) — exact single instance each
+function NodeSVG({ node, x, y, labelBelow = true }) {
+  return (
+    <g transform={`translate(${x}, ${y})`}>
+      <defs>
+        <linearGradient id={gradId(node.id)} x1="0" x2="1">
+          <stop offset="0%" stopColor={node.colorFrom} />
+          <stop offset="100%" stopColor={node.colorTo} />
+        </linearGradient>
+      </defs>
+
+      <motion.g initial={{ scale: 0.88, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.5 }}>
+        <g>
+          <Shape node={node} />
+        </g>
+        {/* center icon/text (simple first-letter or emoji fallback) */}
+        <text x="0" y="6" textAnchor="middle" fontSize="18" fontWeight="700" fill="#fff">
+          {node.title.split(' ').map(w => w[0]).slice(0,2).join('')}
+        </text>
+        {labelBelow && (
+          <text x="0" y={60} textAnchor="middle" fontSize="12" fill={COLORS.text} fontWeight="600">
+            {node.title}
+          </text>
+        )}
+      </motion.g>
+    </g>
+  )
 }
 
-export default function WorkoutAlgorithmInfographic({ className='' }: { className?: string }){
-  // compute id->node map
-  const map = Object.fromEntries(nodes.map(n=>[n.id,n]))
+// curved connector path generator (smooth cubic)
+function ConnectorPath({ x1, y1, x2, y2, index = 0, colorFrom = '#7dd3fc', colorTo = '#ff8a6b' }) {
+  const dx = Math.abs(x2 - x1)
+  const mx = (x1 + x2) / 2
+  const my = (y1 + y2) / 2
+  const c1x = x1 + (dx * 0.25)
+  const c1y = y1 + (index % 2 === 0 ? -18 : 18)
+  const c2x = x2 - (dx * 0.25)
+  const c2y = y2 + (index % 2 === 0 ? -18 : 18)
+  const d = `M ${x1} ${y1} C ${c1x} ${c1y} ${c2x} ${c2y} ${x2} ${y2}`
 
   return (
-    <div className={`bg-gradient-to-b from-[#0f0b1a] to-[#120d22] rounded-2xl p-6 ${className}`}>
-      <svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`} width="100%" height="100%" preserveAspectRatio="xMidYMid meet" aria-hidden>
-        <defs>
-          {nodes.map(n=>{
-            const col = GROUP_COLORS[n.group] || GROUP_COLORS.generation
-            return (
-              <linearGradient key={n.id} id={gradientId(n.id)} x1="0" x2="1" y1="0" y2="1">
-                <stop offset="0%" stopColor={col.from} />
-                <stop offset="100%" stopColor={col.to} />
+    <>
+      <defs>
+        <linearGradient id={`conn-${index}`} x1="0" x2="1">
+          <stop offset="0%" stopColor={colorFrom} stopOpacity="0.95" />
+          <stop offset="100%" stopColor={colorTo} stopOpacity="0.95" />
+        </linearGradient>
+      </defs>
+      <motion.path
+        d={d}
+        stroke={`url(#conn-${index})`}
+        strokeWidth={3}
+        fill="none"
+        strokeLinecap="round"
+        initial={{ pathLength: 0, opacity: 0 }}
+        animate={{ pathLength: 1, opacity: 1 }}
+        transition={{ duration: 0.9, delay: 0.06 * index }}
+      />
+    </>
+  )
+}
+
+// Right side numbered step card (process style)
+function RightCard({ node, number, top }) {
+  const bg = `linear-gradient(180deg, ${node.colorFrom}12 0%, ${node.colorTo}08 100%)`
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: 12 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ duration: 0.6, delay: 0.1 * number }}
+      style={{
+        position: 'absolute',
+        left: 980,
+        top,
+        width: 320,
+        padding: 14,
+        borderRadius: 14,
+        background: bg,
+        border: '1px solid rgba(255,255,255,0.04)',
+        color: '#e6e3f0',
+        display: 'flex',
+        gap: 12,
+        alignItems: 'flex-start',
+      }}
+    >
+      <div style={{
+        width: 46, height: 46, borderRadius: 999, background: `linear-gradient(135deg, ${node.colorFrom}, ${node.colorTo})`,
+        display: 'grid', placeItems: 'center', fontWeight: 800, color: 'white'
+      }}>
+        {number < 10 ? `0${number}` : number}
+      </div>
+      <div style={{ flex: 1 }}>
+        <div style={{ fontWeight: 800 }}>{node.title}</div>
+        <div style={{ marginTop: 6, fontSize: 13, color: '#cfd6ea' }}>{node.subtitle || node.title}</div>
+      </div>
+    </motion.div>
+  )
+}
+
+// Main export component
+export default function WorkoutAlgorithmInfographicStructured() {
+  // fixed layout coordinates (keeps structured look like reference)
+  // left column x positions and y spacing
+  const leftX = 160
+  const midX = 420
+  const rightX = 680
+
+  // map exact positions for each stage (no duplicates)
+  const pos = {
+    overview: [420, 36],
+
+    equipment: [leftX, 120],
+    one_rm: [midX, 120],
+    previous: [rightX, 120],
+
+    data_prep: [leftX + 60, 240],
+    exercise_pool: [midX + 30, 260],
+    set_scheme: [rightX - 20, 250],
+
+    primary_select: [leftX + 20, 370],
+    secondary_select: [midX + 20, 380],
+
+    session_time: [rightX - 30, 360],
+    matching: [midX + 120, 490],
+    weak_point: [rightX + 60, 500],
+
+    warmup: [140, 680],
+    primary_out: [360, 680],
+    secondary_out: [580, 680],
+    accessory: [800, 680],
+    conditioning: [1020, 680]
+  }
+
+  // connectors (ordered to form continuous flowing motion)
+  const connectors = [
+    // overview -> inputs
+    ['overview', 'equipment'],
+    ['overview', 'one_rm'],
+    ['overview', 'previous'],
+
+    // inputs -> data prep/exercise pool
+    ['equipment', 'data_prep'],
+    ['one_rm', 'exercise_pool'],
+    ['previous', 'set_scheme'],
+
+    // consolidation
+    ['data_prep', 'exercise_pool'],
+    ['exercise_pool', 'set_scheme'],
+
+    // generation -> selection
+    ['set_scheme', 'primary_select'],
+    ['set_scheme', 'secondary_select'],
+
+    // generation -> additional components
+    ['primary_select', 'session_time'],
+    ['secondary_select', 'matching'],
+    ['session_time', 'weak_point'],
+    ['matching', 'weak_point'],
+
+    // final outputs (branch flows from selections & weak_point to outputs)
+    ['primary_select', 'primary_out'],
+    ['secondary_select', 'secondary_out'],
+    ['weak_point', 'accessory'],
+    ['session_time', 'warmup'],
+    ['weak_point', 'conditioning']
+  ]
+
+  // order for right-side cards (roughly top-to-bottom order)
+  const rightOrder = [
+    'equipment',
+    'one_rm',
+    'previous',
+    'data_prep',
+    'exercise_pool',
+    'set_scheme',
+    'primary_select',
+    'secondary_select',
+    'session_time',
+    'matching',
+    'weak_point',
+    'warmup',
+    'primary_out',
+    'secondary_out',
+    'accessory',
+    'conditioning'
+  ]
+
+  return (
+    <div style={{
+      background: `linear-gradient(180deg, ${COLORS.bg}, #08080b)`,
+      minHeight: '100vh',
+      padding: 28,
+      color: COLORS.text,
+      fontFamily: 'Inter, Roboto, system-ui, Arial'
+    }}>
+      <div style={{
+        maxWidth: 1400,
+        margin: '0 auto',
+        borderRadius: 18,
+        padding: 18,
+        background: 'linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01))',
+        border: '1px solid rgba(255,255,255,0.04)',
+        position: 'relative',
+        overflow: 'visible'
+      }}>
+        {/* svg canvas */}
+        <svg viewBox="0 0 1280 820" width="100%" height="820" style={{ display: 'block' }}>
+          <defs>
+            {/* gradients for nodes and connectors */}
+            {Object.values(STAGES).map(s => (
+              <linearGradient id={gradId(s.id)} key={s.id} x1="0" x2="1">
+                <stop offset="0%" stopColor={s.colorFrom} />
+                <stop offset="100%" stopColor={s.colorTo} />
               </linearGradient>
-            )
+            ))}
+          </defs>
+
+          {/* connectors (under nodes) */}
+          <g>
+            {connectors.map((c, i) => {
+              const [a, b] = c
+              const [x1, y1] = pos[a]
+              const [x2, y2] = pos[b]
+              // small offset so connectors attach outside shapes more cleanly
+              const offA = (x2 > x1) ? 60 : -60
+              const offB = (x2 > x1) ? -60 : 60
+              return (
+                <ConnectorPath
+                  key={`${a}-${b}-${i}`}
+                  x1={x1 + offA}
+                  y1={y1 + 18}
+                  x2={x2 + offB}
+                  y2={y2 - 6}
+                  index={i}
+                  colorFrom={STAGES[a].colorFrom}
+                  colorTo={STAGES[b].colorTo}
+                />
+              )
+            })}
+          </g>
+
+          {/* nodes */}
+          <g>
+            {Object.keys(STAGES).map(k => {
+              const node = STAGES[k]
+              const [x, y] = pos[k]
+              // overview pill is wider; pass labelBelow = k !== 'overview'
+              return <NodeSVG key={k} node={node} x={x} y={y} labelBelow={k !== 'overview'} />
+            })}
+          </g>
+
+          {/* subtle decorative wave lines (top area) */}
+          <g opacity="0.06">
+            <path d="M 40 28 C 200 10, 400 50, 640 30 C 880 10, 1100 60, 1240 40" stroke="#ffffff" strokeWidth="1.2" fill="none" strokeLinecap="round" />
+          </g>
+        </svg>
+
+        {/* right side numbered cards — structured like the reference vertical list */}
+        <div style={{ position: 'absolute', right: 28, top: 28 }}>
+          {rightOrder.map((id, idx) => {
+            const node = STAGES[id]
+            // vertical stacking with spacing
+            const top = 20 + idx * 86
+            return <RightCard key={id} node={node} number={idx + 1} top={top} />
           })}
+        </div>
 
-          <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
-            <feGaussianBlur stdDeviation="8" result="coloredBlur" />
-            <feMerge>
-              <feMergeNode in="coloredBlur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-        </defs>
-
-        {/* Wavy connectors - draw first so nodes sit on top */}
-        <g strokeWidth={6} strokeLinecap="round" strokeLinejoin="round" opacity={0.9} filter="url(#glow)">
-          {links.map((pair, i)=>{
-            const a = map[pair[0]]
-            const b = map[pair[1]]
-            if(!a || !b) return null
-            // stroke color derived from source group
-            const col = GROUP_COLORS[a.group] || GROUP_COLORS.generation
-            return (
-              <path key={i} d={wavyPath({x:a.x+60,y:a.y},{x:b.x-60,y:b.y})} stroke={`url(#${gradientId(a.id)})`} fill="none" />
-            )
-          })}
-        </g>
-
-        {/* Nodes */}
-        {nodes.map(n=>{
-          const g = GROUP_COLORS[n.group]
-          const radius = n.group === 'output' ? 46 : 54
-          return (
-            <g key={n.id} transform={`translate(${n.x},${n.y})`}>
-              {/* shadow ring */}
-              <circle r={radius+8} fill="rgba(10,10,14,0.28)" />
-              {/* gradient fill */}
-              <motion.circle
-                initial={{ r: 0, opacity: 0 }}
-                animate={{ r: radius, opacity: 1 }}
-                transition={{ duration: 0.6, delay: 0.02*nodes.indexOf(n) }}
-                r={radius}
-                fill={`url(#${gradientId(n.id)})`}
-                stroke="rgba(255,255,255,0.06)"
-                strokeWidth={1}
-                style={{ mixBlendMode: 'screen' }}
-              />
-
-              {/* inner icon plate */}
-              <motion.g whileHover={{ scale: 1.06 }} style={{ transformOrigin: 'center' }}>
-                <g transform="translate(-28,-28)">
-                  <rect x="0" y="0" width="56" height="56" rx="14" fill="rgba(0,0,0,0.12)" />
-                  <g transform="translate(10,6)">{/* place icon */}
-                    <Icon type={n.icon} size={36} />
-                  </g>
-                </g>
-              </motion.g>
-
-              {/* label */}
-              <text x="0" y={radius+28} textAnchor="middle" style={{ fontFamily: 'Inter, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial', fontWeight:600 }} fill="#f7f3ea" fontSize={16}>{n.label}</text>
-            </g>
-          )
-        })}
-
-        {/* Bottom legend — tidy, single instance icons for outputs */}
-      </svg>
-
-      <div className="mt-3 text-sm text-[#d6cbdc]" style={{ maxWidth: 1100 }}>
-        {/* Small descriptive line — keep it short so the canvas remains focused on the visual */}
-        <p className="opacity-80">Conjugate powerlifting workout generator — single-instance stages shown, connected by continuous flow lines. Designed for responsive integration in a single-page React app.</p>
+        {/* small footer legend */}
+        <div style={{ position: 'absolute', left: 18, bottom: 14, color: '#cbd3ea', fontSize: 13 }}>
+          <strong style={{ display: 'block', marginBottom: 6 }}>Flow legend</strong>
+          <div style={{ display: 'flex', gap: 12 }}>
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              <div style={{ width: 12, height: 12, borderRadius: 3, background: '#ffffff11' }} /> Inputs
+            </div>
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              <div style={{ width: 12, height: 12, borderRadius: 3, background: '#ffffff11' }} /> Processing
+            </div>
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              <div style={{ width: 12, height: 12, borderRadius: 3, background: '#ffffff11' }} /> Output
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   )
