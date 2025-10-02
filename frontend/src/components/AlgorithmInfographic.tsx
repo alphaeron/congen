@@ -39,13 +39,12 @@ const STAGES = {
   exercise_matching: { id: 'exercise_matching', title: 'Exercise Matching Logic', colorFrom: '#f59e0b', colorTo: '#ff8a6b', shape: 'rounded-rect' },
 
   // Generation
-  primary_select: { id: 'primary_select', title: 'Primary Exercise Selection', colorFrom: '#ffd36b', colorTo: '#ff7a7a', shape: 'rounded-rect' },
-  secondary_select: { id: 'secondary_select', title: 'Secondary Exercise Selection', colorFrom: '#7ef27e', colorTo: '#6be0ff', shape: 'rounded-rect' },
-
-  // Additional components (satellites)
-  session_time: { id: 'session_time', title: 'Session Time Calculation', colorFrom: '#ffb86b', colorTo: '#ff7a7a', shape: 'circle' },
-  matching: { id: 'matching', title: 'Exercise Matching Service', colorFrom: '#7dd3fc', colorTo: '#60e0d8', shape: 'circle' },
-  weak_point: { id: 'weak_point', title: 'Weak Point Targeting', colorFrom: '#c084fc', colorTo: '#a855f7', shape: 'circle' },
+  session_time_allocation: { id: 'session_time_allocation', title: 'Session Time Allocation', colorFrom: '#ffb86b', colorTo: '#ff7a7a', shape: 'rounded-rect' },
+  rotating_exercise_selection: { id: 'rotating_exercise_selection', title: 'Rotating Exercise Selection', colorFrom: '#7ef27e', colorTo: '#6be0ff', shape: 'rounded-rect' },
+  weak_point_targeting: { id: 'weak_point_targeting', title: 'Weak Point Targeting', colorFrom: '#c084fc', colorTo: '#a855f7', shape: 'rounded-rect' },
+  movement_balancing: { id: 'movement_balancing', title: 'Movement Balancing', colorFrom: '#7dd3fc', colorTo: '#60e0d8', shape: 'rounded-rect' },
+  weight_selection: { id: 'weight_selection', title: 'Weight Selection', colorFrom: '#ffd36b', colorTo: '#ff7a7a', shape: 'rounded-rect' },
+  set_scheme_generation: { id: 'set_scheme_generation', title: 'Set Scheme Generation', colorFrom: '#f59e0b', colorTo: '#ff8a6b', shape: 'rounded-rect' },
 
   // Outputs (final row)
   warmup: { id: 'warmup', title: 'Warmup Stage', colorFrom: '#99f0b7', colorTo: '#7ef27e', shape: 'triangle' },
@@ -282,7 +281,7 @@ function ConnectorPath({ x1, y1, x2, y2, index = 0, colorFrom = '#7dd3fc', color
       
       {/* Simple animated data particles flowing downward */}
       {[...Array(2)].map((_, i) => (
-        <motion.circle
+              <motion.circle
           key={i}
           r="2"
           fill={colorFrom}
@@ -467,11 +466,12 @@ export default function WorkoutAlgorithmInfographicStructured() {
     'sliding_window',
     'available_equipment',
     'exercise_matching',
-    'primary_select',
-    'secondary_select',
-    'session_time',
-    'matching',
-    'weak_point',
+    'session_time_allocation',
+    'rotating_exercise_selection',
+    'weak_point_targeting',
+    'movement_balancing',
+    'weight_selection',
+    'set_scheme_generation',
     'warmup',
     'primary_out',
     'secondary_out',
@@ -543,13 +543,13 @@ export default function WorkoutAlgorithmInfographicStructured() {
           }}>
             {/* Top row */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              {['primary_select', 'secondary_select', 'session_time'].map(id => (
+              {['session_time_allocation', 'rotating_exercise_selection', 'weak_point_targeting'].map(id => (
                 <NodeHTML key={id} node={STAGES[id as keyof typeof STAGES]} />
               ))}
             </div>
             {/* Bottom row */}
-            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '60px' }}>
-              {['matching', 'weak_point'].map(id => (
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              {['movement_balancing', 'weight_selection', 'set_scheme_generation'].map(id => (
                 <NodeHTML key={id} node={STAGES[id as keyof typeof STAGES]} />
               ))}
             </div>
