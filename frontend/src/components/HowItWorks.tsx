@@ -87,112 +87,6 @@ const sampleWeeklyTests: UserTestResult[] = [
 ];
 
 // Individual section components for better UX
-const AlgorithmSection = () => (
-  <Box
-    id="algorithm"
-    sx={{
-      py: { xs: 8, sm: 12 },
-      position: 'relative',
-      width: '100%',
-      px: { xs: 2, sm: 4, md: 6 },
-    }}
-  >
-    <Box
-      sx={{
-        display: 'flex',
-        flexDirection: { xs: 'column', lg: 'row' },
-        alignItems: 'center',
-        gap: { xs: 4, lg: 8 },
-      }}
-    >
-          <Box
-            sx={{
-              flex: { xs: 1, lg: 0.8 },
-              textAlign: { xs: 'center', lg: 'left' },
-            }}
-          >
-        <GameText
-          variant="h2"
-          textVariant="glow"
-          sx={{
-            fontWeight: 700,
-            mb: 3,
-            fontSize: { xs: '2rem', sm: '2.5rem', md: '3rem' },
-          }}
-        >
-          Advanced Algorithm
-        </GameText>
-        <GameText
-          variant="h5"
-          textVariant="secondary"
-          sx={{
-            fontWeight: 400,
-            mb: 4,
-            lineHeight: 1.6,
-            opacity: 0.9,
-          }}
-        >
-          Our sophisticated conjugate method algorithm automatically selects exercises, 
-          calculates optimal weights, and structures your workouts based on proven 
-          scientific principles.
-        </GameText>
-        <Box
-          sx={{
-            display: 'flex',
-            flexDirection: { xs: 'column', sm: 'row' },
-            gap: 2,
-            flexWrap: 'wrap',
-          }}
-        >
-          {[
-            'Conjugate Method',
-            'Exercise Rotation', 
-            'Load Balancing',
-            'Weak Point Training'
-          ].map((feature, index) => (
-            <GameCard
-              key={index}
-              sx={{
-                p: 2,
-                background: theme => 
-                  `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.1)}, ${alpha(theme.palette.primary.main, 0.05)})`,
-                border: theme => `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
-                flex: '1 1 auto',
-                minWidth: '200px',
-              }}
-            >
-              <GameText
-                variant="body1"
-                textVariant="glow"
-                sx={{ fontWeight: 600 }}
-              >
-                {feature}
-              </GameText>
-            </GameCard>
-          ))}
-        </Box>
-      </Box>
-      
-        <Box
-          sx={{
-            flex: { xs: 1, lg: 1.2 },
-            minHeight: 400,
-            maxWidth: '900px',
-            width: '100%',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 3,
-            overflow: 'hidden',
-          }}
-        >
-          <AlgorithmInfographic />
-        </Box>
-    </Box>
-  </Box>
-);
-
 const GamificationSection = () => (
   <Box
     id="gamification"
@@ -417,7 +311,7 @@ const PersonalizationSection = () => (
 export function HowItWorks() {
   return (
     <React.Fragment>
-      <AlgorithmSection />
+      <AlgorithmInfographic />
       <Divider />
       <GamificationSection />
       <Divider />

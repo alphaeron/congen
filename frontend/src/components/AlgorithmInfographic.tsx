@@ -1,6 +1,9 @@
 // WorkoutAlgorithmInfographicStructured.js
 import React from 'react'
 import { motion } from 'framer-motion'
+import Box from '@mui/material/Box'
+import { alpha } from '@mui/material/styles'
+import { GameText, GameCard } from './GameTheme'
 
 /**
  * Circuit Board Infographic: Algorithm stages displayed as electronic components
@@ -358,44 +361,160 @@ function ConnectingLine({
 // Main circuit board component
 export default function WorkoutAlgorithmInfographicStructured() {
   return (
-    <div style={{
-      background: COLORS.bg,
-      minHeight: '100vh',
-      padding: 20,
-      color: COLORS.text,
-      fontFamily: 'Inter, Roboto, system-ui, Arial',
-      position: 'relative'
-    }}>
-      <div style={{
-        maxWidth: 900,
-        width: '100%',
-        margin: '0 auto',
+    <Box
+      id="algorithm"
+      sx={{
+        py: { xs: 8, sm: 12 },
         position: 'relative',
-        overflow: 'visible',
-        zIndex: 1
-      }}>
-        {/* Circuit layout */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: `${GROUP_GAP}px`, padding: '20px 0', position: 'relative' }}>
-          
-          {/* Input Phase - Sensors */}
-          <div style={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
+        width: '100%',
+        px: { xs: 2, sm: 4, md: 6 },
+        background: COLORS.bg,
+        minHeight: '100vh',
+        color: COLORS.text,
+        fontFamily: 'Inter, Roboto, system-ui, Arial'
+    }}>
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: { xs: 'column', lg: 'row' },
+          alignItems: 'center',
+          gap: { xs: 4, lg: 8 },
+        }}
+      >
+        {/* Text Content */}
+        <Box
+          sx={{
+            flex: { xs: 1, lg: 0.8 },
+            textAlign: { xs: 'center', lg: 'left' },
+          }}
+        >
+          <GameText
+            variant="h2"
+            textVariant="glow"
+            sx={{
+              fontWeight: 700,
+              mb: 3,
+              fontSize: { xs: '2rem', sm: '2.5rem', md: '3rem' },
+            }}
+          >
+            Advanced Algorithm
+          </GameText>
+          <GameText
+            variant="h5"
+            textVariant="secondary"
+            sx={{
+              fontWeight: 400,
+              mb: 4,
+              lineHeight: 1.6,
+              opacity: 0.9,
+            }}
+          >
+            Our sophisticated conjugate method algorithm automatically selects exercises, 
+            calculates optimal weights, and structures your workouts based on proven 
+            scientific principles.
+          </GameText>
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: { xs: 'column', sm: 'row' },
+              gap: 2,
+              flexWrap: 'wrap',
+            }}
+          >
+            {[
+              'Conjugate Method',
+              'Exercise Rotation', 
+              'Load Balancing',
+              'Weak Point Training'
+            ].map((feature, index) => (
+              <GameCard
+                key={index}
+                sx={{
+                  p: 2,
+                  background: theme => 
+                    `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.1)}, ${alpha(theme.palette.primary.main, 0.05)})`,
+                  border: theme => `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
+                  flex: '1 1 auto',
+                  minWidth: '200px',
+                }}
+              >
+                <GameText
+                  variant="body1"
+                  textVariant="glow"
+                  sx={{ fontWeight: 600 }}
+                >
+                  {feature}
+                </GameText>
+              </GameCard>
+            ))}
+          </Box>
+        </Box>
+        
+        {/* Infographic Content */}
+        <Box
+          sx={{
+            flex: { xs: 1, lg: 1.2 },
+            minHeight: 400,
+            width: '100%',
+            display: 'flex',
+            flexDirection: 'column',
             alignItems: 'center',
-            padding: '15px',
-            position: 'relative'
+            justifyContent: 'center',
+            gap: 3,
+            overflow: 'visible',
+          }}
+        >
+          <div style={{
+            margin: '0 auto',
+            position: 'relative',
+            overflow: 'visible',
+            zIndex: 1
           }}>
-            {/* Horizontal line at top of group */}
-            <div style={{
-              position: 'absolute',
-              top: '0px',
-              left: `${15 + COMPONENT_WIDTH / 2}px`,
-              width: `calc(100% - ${30 + COMPONENT_WIDTH}px)`,
-              height: '2px',
-              background: COLORS.electricity,
-              boxShadow: `0 0 5px ${COLORS.electricity}`,
-              zIndex: 1
-            }} />
+            {/* Circuit layout */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: `${GROUP_GAP}px`, padding: '20px 0', position: 'relative' }}>
+          
+           {/* Input Phase - Sensors */}
+           <div style={{ 
+             display: 'flex', 
+             justifyContent: 'space-between', 
+             alignItems: 'center',
+             padding: '15px',
+             position: 'relative'
+           }}>
+             {/* Horizontal line at top of group */}
+             <div style={{
+               position: 'absolute',
+               top: '0px',
+               left: `${15 + COMPONENT_WIDTH / 2}px`,
+               width: `calc(100% - ${30 + COMPONENT_WIDTH}px)`,
+               height: '2px',
+               background: COLORS.electricity,
+               boxShadow: `0 0 5px ${COLORS.electricity}`,
+               zIndex: 1
+             }} />
+             {/* Strategic extensions from top horizontal line */}
+             <div style={{
+               position: 'absolute',
+               top: '0px',
+               left: `${15 + COMPONENT_WIDTH / 2 - 120}px`,
+               width: '120px',
+               height: '2px',
+               background: COLORS.electricity,
+               boxShadow: `0 0 5px ${COLORS.electricity}`,
+               zIndex: 1,
+               opacity: 0.6
+             }} />
+             <div style={{
+               position: 'absolute',
+               top: '0px',
+               right: `${15 + COMPONENT_WIDTH / 2 - 180}px`,
+               width: '180px',
+               height: '2px',
+               background: COLORS.electricity,
+               boxShadow: `0 0 5px ${COLORS.electricity}`,
+               zIndex: 1,
+               opacity: 0.4
+             }} />
             {/* Horizontal line at bottom of group */}
             <div style={{
               position: 'absolute',
@@ -407,8 +526,31 @@ export default function WorkoutAlgorithmInfographicStructured() {
               boxShadow: `0 0 5px ${COLORS.electricity}`,
               zIndex: 1
             }} />
-            
-            {/* First component - Equipment */}
+            {/* Strategic extensions from bottom horizontal line */}
+            <div style={{
+              position: 'absolute',
+              bottom: '0px',
+              left: `${15 + COMPONENT_WIDTH / 2 - 150}px`,
+              width: '150px',
+              height: '2px',
+              background: COLORS.electricity,
+              boxShadow: `0 0 5px ${COLORS.electricity}`,
+              zIndex: 1,
+              opacity: 0.5
+            }} />
+            <div style={{
+              position: 'absolute',
+              bottom: '0px',
+              right: `${15 + COMPONENT_WIDTH / 2 - 90}px`,
+              width: '90px',
+              height: '2px',
+              background: COLORS.electricity,
+              boxShadow: `0 0 5px ${COLORS.electricity}`,
+              zIndex: 1,
+              opacity: 0.7
+            }} />
+             
+             {/* First component - Equipment */}
             <div style={{ position: 'relative' }}>
               <CircuitComponent node={STAGES.equipment} groupIndex={0} itemIndex={0} />
               {/* Line extending from right edge */}
@@ -523,8 +665,7 @@ export default function WorkoutAlgorithmInfographicStructured() {
             <div style={{
               position: 'absolute',
               bottom: '-34px',
-              left: '50%',
-              transform: 'translateX(-50%)',
+              left: `${15 + COMPONENT_WIDTH / 2}px`,
               width: `${LINE_WIDTH}px`,
               height: '40px',
               background: COLORS.electricity,
@@ -533,25 +674,48 @@ export default function WorkoutAlgorithmInfographicStructured() {
             }} />
           </div>
 
-          {/* Processing Phase - Logic Chips */}
-          <div style={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
-            alignItems: 'center',
-            padding: '15px',
-            position: 'relative'
-          }}>
-            {/* Horizontal line at top of group */}
-            <div style={{
-              position: 'absolute',
-              top: '0px',
-              left: `${15 + COMPONENT_WIDTH / 2}px`,
-              width: `calc(100% - ${30 + COMPONENT_WIDTH}px)`,
-              height: '2px',
-              background: COLORS.electricity,
-              boxShadow: `0 0 5px ${COLORS.electricity}`,
-              zIndex: 1
-            }} />
+           {/* Processing Phase - Logic Chips */}
+           <div style={{ 
+             display: 'flex', 
+             justifyContent: 'space-between', 
+             alignItems: 'center',
+             padding: '15px',
+             position: 'relative'
+           }}>
+             {/* Horizontal line at top of group */}
+             <div style={{
+               position: 'absolute',
+               top: '0px',
+               left: `${15 + COMPONENT_WIDTH / 2}px`,
+               width: `calc(100% - ${30 + COMPONENT_WIDTH}px)`,
+               height: '2px',
+               background: COLORS.electricity,
+               boxShadow: `0 0 5px ${COLORS.electricity}`,
+               zIndex: 1
+             }} />
+             {/* Strategic extensions from top horizontal line */}
+             <div style={{
+               position: 'absolute',
+               top: '0px',
+               left: `${15 + COMPONENT_WIDTH / 2 - 80}px`,
+               width: '80px',
+               height: '2px',
+               background: COLORS.electricity,
+               boxShadow: `0 0 5px ${COLORS.electricity}`,
+               zIndex: 1,
+               opacity: 0.8
+             }} />
+             <div style={{
+               position: 'absolute',
+               top: '0px',
+               right: `${15 + COMPONENT_WIDTH / 2 - 200}px`,
+               width: '200px',
+               height: '2px',
+               background: COLORS.electricity,
+               boxShadow: `0 0 5px ${COLORS.electricity}`,
+               zIndex: 1,
+               opacity: 0.3
+             }} />
             {/* Horizontal line at bottom of group */}
             <div style={{
               position: 'absolute',
@@ -563,8 +727,31 @@ export default function WorkoutAlgorithmInfographicStructured() {
               boxShadow: `0 0 5px ${COLORS.electricity}`,
               zIndex: 1
             }} />
-            
-            {/* First component - Sliding Window Analysis */}
+            {/* Strategic extensions from bottom horizontal line */}
+            <div style={{
+              position: 'absolute',
+              bottom: '0px',
+              left: `${15 + COMPONENT_WIDTH / 2 - 160}px`,
+              width: '160px',
+              height: '2px',
+              background: COLORS.electricity,
+              boxShadow: `0 0 5px ${COLORS.electricity}`,
+              zIndex: 1,
+              opacity: 0.4
+            }} />
+            <div style={{
+              position: 'absolute',
+              bottom: '0px',
+              right: `${15 + COMPONENT_WIDTH / 2 - 110}px`,
+              width: '110px',
+              height: '2px',
+              background: COLORS.electricity,
+              boxShadow: `0 0 5px ${COLORS.electricity}`,
+              zIndex: 1,
+              opacity: 0.6
+            }} />
+             
+             {/* First component - Sliding Window Analysis */}
             <div style={{ position: 'relative' }}>
               <CircuitComponent node={STAGES.sliding_window} groupIndex={1} itemIndex={0} />
               {/* Line extending from right edge */}
@@ -679,8 +866,7 @@ export default function WorkoutAlgorithmInfographicStructured() {
             <div style={{
               position: 'absolute',
               bottom: '-34px',
-              left: '50%',
-              transform: 'translateX(-50%)',
+              left: `${15 + COMPONENT_WIDTH / 2}px`,
               width: `${LINE_WIDTH}px`,
               height: '40px',
               background: COLORS.electricity,
@@ -689,25 +875,48 @@ export default function WorkoutAlgorithmInfographicStructured() {
             }} />
           </div>
 
-          {/* Generation Phase - Advanced Processors */}
-          <div style={{ 
-            display: 'flex', 
-            flexDirection: 'column',
-            gap: '15px',
-            padding: '15px',
-            position: 'relative'
-          }}>
-            {/* Horizontal line at top of group */}
-            <div style={{
-              position: 'absolute',
-              top: '0px',
-              left: `${15 + COMPONENT_WIDTH / 2}px`,
-              width: `calc(100% - ${30 + COMPONENT_WIDTH}px)`,
-              height: '2px',
-              background: COLORS.electricity,
-              boxShadow: `0 0 5px ${COLORS.electricity}`,
-              zIndex: 1
-            }} />
+           {/* Generation Phase - Advanced Processors */}
+           <div style={{ 
+             display: 'flex', 
+             flexDirection: 'column',
+             gap: '15px',
+             padding: '15px',
+             position: 'relative'
+           }}>
+             {/* Horizontal line at top of group */}
+             <div style={{
+               position: 'absolute',
+               top: '0px',
+               left: `${15 + COMPONENT_WIDTH / 2}px`,
+               width: `calc(100% - ${30 + COMPONENT_WIDTH}px)`,
+               height: '2px',
+               background: COLORS.electricity,
+               boxShadow: `0 0 5px ${COLORS.electricity}`,
+               zIndex: 1
+             }} />
+             {/* Strategic extensions from top horizontal line */}
+             <div style={{
+               position: 'absolute',
+               top: '0px',
+               left: `${15 + COMPONENT_WIDTH / 2 - 140}px`,
+               width: '140px',
+               height: '2px',
+               background: COLORS.electricity,
+               boxShadow: `0 0 5px ${COLORS.electricity}`,
+               zIndex: 1,
+               opacity: 0.5
+             }} />
+             <div style={{
+               position: 'absolute',
+               top: '0px',
+               right: `${15 + COMPONENT_WIDTH / 2 - 60}px`,
+               width: '60px',
+               height: '2px',
+               background: COLORS.electricity,
+               boxShadow: `0 0 5px ${COLORS.electricity}`,
+               zIndex: 1,
+               opacity: 0.9
+             }} />
             {/* Horizontal line at bottom of group */}
             <div style={{
               position: 'absolute',
@@ -719,7 +928,30 @@ export default function WorkoutAlgorithmInfographicStructured() {
               boxShadow: `0 0 5px ${COLORS.electricity}`,
               zIndex: 1
             }} />
-            {/* Top row */}
+            {/* Strategic extensions from bottom horizontal line */}
+            <div style={{
+              position: 'absolute',
+              bottom: '0px',
+              left: `${15 + COMPONENT_WIDTH / 2 - 95}px`,
+              width: '95px',
+              height: '2px',
+              background: COLORS.electricity,
+              boxShadow: `0 0 5px ${COLORS.electricity}`,
+              zIndex: 1,
+              opacity: 0.7
+            }} />
+            <div style={{
+              position: 'absolute',
+              bottom: '0px',
+              right: `${15 + COMPONENT_WIDTH / 2 - 170}px`,
+              width: '170px',
+              height: '2px',
+              background: COLORS.electricity,
+              boxShadow: `0 0 5px ${COLORS.electricity}`,
+              zIndex: 1,
+              opacity: 0.4
+            }} />
+             {/* Top row */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               {/* First component - Session Time Allocation */}
               <div style={{ position: 'relative' }}>
@@ -914,8 +1146,7 @@ export default function WorkoutAlgorithmInfographicStructured() {
             <div style={{
               position: 'absolute',
               bottom: '-34px',
-              left: '50%',
-              transform: 'translateX(-50%)',
+              left: `${15 + COMPONENT_WIDTH / 2}px`,
               width: `${LINE_WIDTH}px`,
               height: '40px',
               background: COLORS.electricity,
@@ -924,25 +1155,48 @@ export default function WorkoutAlgorithmInfographicStructured() {
             }} />
           </div>
 
-          {/* Output Phase - Actuators */}
-          <div style={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
-            alignItems: 'center',
-            padding: '15px',
-            position: 'relative'
-          }}>
-            {/* Horizontal line at top of group */}
-            <div style={{
-              position: 'absolute',
-              top: '0px',
-              left: `${15 + COMPONENT_WIDTH / 2}px`,
-              width: `calc(100% - ${30 + COMPONENT_WIDTH}px)`,
-              height: '2px',
-              background: COLORS.electricity,
-              boxShadow: `0 0 5px ${COLORS.electricity}`,
-              zIndex: 1
-            }} />
+           {/* Output Phase - Actuators */}
+           <div style={{ 
+             display: 'flex', 
+             justifyContent: 'space-between', 
+             alignItems: 'center',
+             padding: '15px',
+             position: 'relative'
+           }}>
+             {/* Horizontal line at top of group */}
+             <div style={{
+               position: 'absolute',
+               top: '0px',
+               left: `${15 + COMPONENT_WIDTH / 2}px`,
+               width: `calc(100% - ${30 + COMPONENT_WIDTH}px)`,
+               height: '2px',
+               background: COLORS.electricity,
+               boxShadow: `0 0 5px ${COLORS.electricity}`,
+               zIndex: 1
+             }} />
+             {/* Strategic extensions from top horizontal line */}
+             <div style={{
+               position: 'absolute',
+               top: '0px',
+               left: `${15 + COMPONENT_WIDTH / 2 - 130}px`,
+               width: '130px',
+               height: '2px',
+               background: COLORS.electricity,
+               boxShadow: `0 0 5px ${COLORS.electricity}`,
+               zIndex: 1,
+               opacity: 0.6
+             }} />
+             <div style={{
+               position: 'absolute',
+               top: '0px',
+               right: `${15 + COMPONENT_WIDTH / 2 - 160}px`,
+               width: '160px',
+               height: '2px',
+               background: COLORS.electricity,
+               boxShadow: `0 0 5px ${COLORS.electricity}`,
+               zIndex: 1,
+               opacity: 0.5
+             }} />
             {/* Horizontal line at bottom of group */}
             <div style={{
               position: 'absolute',
@@ -954,8 +1208,31 @@ export default function WorkoutAlgorithmInfographicStructured() {
               boxShadow: `0 0 5px ${COLORS.electricity}`,
               zIndex: 1
             }} />
-            
-            {/* First component - Warmup */}
+            {/* Strategic extensions from bottom horizontal line */}
+            <div style={{
+              position: 'absolute',
+              bottom: '0px',
+              left: 'calc(-100vw + 50%)',
+              width: '100vw',
+              height: '2px',
+              background: COLORS.electricity,
+              boxShadow: `0 0 5px ${COLORS.electricity}`,
+              zIndex: 1,
+              opacity: 0.4
+            }} />
+            <div style={{
+              position: 'absolute',
+              bottom: '0px',
+              right: `${15 + COMPONENT_WIDTH / 2 - 100}px`,
+              width: '100px',
+              height: '2px',
+              background: COLORS.electricity,
+              boxShadow: `0 0 5px ${COLORS.electricity}`,
+              zIndex: 1,
+              opacity: 0.8
+            }} />
+             
+             {/* First component - Warmup */}
             <div style={{ position: 'relative' }}>
               <CircuitComponent node={STAGES.warmup} groupIndex={3} itemIndex={0} />
               {/* Line extending from right edge */}
@@ -1149,7 +1426,9 @@ export default function WorkoutAlgorithmInfographicStructured() {
             </div>
           </div>
         </div>
-      </div>
-    </div>
+          </div>
+        </Box>
+      </Box>
+    </Box>
   )
 }
