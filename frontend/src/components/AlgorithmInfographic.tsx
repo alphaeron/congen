@@ -770,6 +770,19 @@ export default function WorkoutAlgorithmInfographicStructured() {
                 zIndex: 1
               }} />
             </div>
+            
+            {/* Vertical line extending down to Generation Phase */}
+            <div style={{
+              position: 'absolute',
+              bottom: '-34px',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              width: `${LINE_WIDTH}px`,
+              height: '40px',
+              background: COLORS.electricity,
+              boxShadow: `0 0 5px ${COLORS.electricity}`,
+              zIndex: 1
+            }} />
           </div>
 
           {/* Generation Phase - Advanced Processors */}
@@ -1007,6 +1020,19 @@ export default function WorkoutAlgorithmInfographicStructured() {
                 }} />
               </div>
             </div>
+            
+            {/* Vertical line extending down to Output Phase */}
+            <div style={{
+              position: 'absolute',
+              bottom: '-34px',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              width: `${LINE_WIDTH}px`,
+              height: '40px',
+              background: COLORS.electricity,
+              boxShadow: `0 0 5px ${COLORS.electricity}`,
+              zIndex: 1
+            }} />
           </div>
 
           {/* Output Phase - Actuators */}
