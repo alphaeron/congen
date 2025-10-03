@@ -36,6 +36,12 @@ const GROUP_GAP = 30
 const GROUP_PADDING = 15
 const LINE_WIDTH = 2
 const EQUILATERAL_TRIANGLE_HEIGHT_RATIO = Math.sqrt(3) / 2
+// Calculate horizontal line length between triangles using trigonometry
+// For equilateral triangle, the horizontal line at 50% height should be 1/2 the base width
+const TRIANGLE_HORIZONTAL_LINE_LENGTH = COMPONENT_WIDTH / 2
+// Triangle line positioning calculations
+const TRIANGLE_LINE_RIGHT_OFFSET = COMPONENT_WIDTH / 4 - 2
+const TRIANGLE_LINE_WIDTH = TRIANGLE_HORIZONTAL_LINE_LENGTH - 4
 
 // Circuit component definitions with electronic component types
 const STAGES = {
@@ -955,10 +961,10 @@ export default function WorkoutAlgorithmInfographicStructured() {
               {/* Line extending from right edge */}
               <div style={{
                 position: 'absolute',
-                right: `-${COMPONENT_WIDTH / 2}px`,
+                right: `-${TRIANGLE_LINE_RIGHT_OFFSET}px`,
                 top: '50%',
                 transform: 'translateY(-50%)',
-                width: `${COMPONENT_WIDTH * 3 / 4}px`,
+                width: `${TRIANGLE_LINE_WIDTH}px`,
                 height: '2px',
                 background: COLORS.electricity,
                 boxShadow: `0 0 5px ${COLORS.electricity}`,
@@ -996,10 +1002,10 @@ export default function WorkoutAlgorithmInfographicStructured() {
               {/* Line extending from right edge */}
               <div style={{
                 position: 'absolute',
-                right: `-${COMPONENT_WIDTH / 2}px`,
+                right: `-${TRIANGLE_LINE_RIGHT_OFFSET}px`,
                 top: '50%',
                 transform: 'translateY(-50%)',
-                width: `${COMPONENT_WIDTH * 3 / 4}px`,
+                width: `${TRIANGLE_LINE_WIDTH}px`,
                 height: '2px',
                 background: COLORS.electricity,
                 boxShadow: `0 0 5px ${COLORS.electricity}`,
@@ -1037,10 +1043,10 @@ export default function WorkoutAlgorithmInfographicStructured() {
               {/* Line extending from right edge */}
               <div style={{
                 position: 'absolute',
-                right: `-${COMPONENT_WIDTH / 2}px`,
+                right: `-${TRIANGLE_LINE_RIGHT_OFFSET}px`,
                 top: '50%',
                 transform: 'translateY(-50%)',
-                width: `${COMPONENT_WIDTH * 3 / 4}px`,
+                width: `${TRIANGLE_LINE_WIDTH}px`,
                 height: '2px',
                 background: COLORS.electricity,
                 boxShadow: `0 0 5px ${COLORS.electricity}`,
@@ -1078,10 +1084,10 @@ export default function WorkoutAlgorithmInfographicStructured() {
               {/* Line extending from right edge */}
               <div style={{
                 position: 'absolute',
-                right: `-${COMPONENT_WIDTH / 2}px`,
+                right: `-${TRIANGLE_LINE_RIGHT_OFFSET}px`,
                 top: '50%',
                 transform: 'translateY(-50%)',
-                width: `${COMPONENT_WIDTH * 3 / 4}px`,
+                width: `${TRIANGLE_LINE_WIDTH}px`,
                 height: '2px',
                 background: COLORS.electricity,
                 boxShadow: `0 0 5px ${COLORS.electricity}`,
