@@ -19,6 +19,7 @@ export interface CycleDiagramProps {
   theme?: 'default' | 'vibrant' | 'pastel' | 'monochrome' | 'ocean' | 'sunset' | 'forest' | 'custom';
   customColors?: string[]; // For custom theme
   minTextSize?: number; // Minimum text size before moving outside
+  showText?: boolean; // Control text visibility for animation
 }
 
 export class CycleDiagram {
@@ -38,6 +39,7 @@ export class CycleDiagram {
       height: 600,
       theme: 'default',
       minTextSize: 10,
+      showText: true,
       ...props
     };
     this.setupResizeObserver();
@@ -557,6 +559,8 @@ export class CycleDiagram {
         textElement.setAttribute('font-size', titleFontSize.toString());
         textElement.setAttribute('font-weight', '600');
         textElement.setAttribute('font-family', 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif');
+        textElement.setAttribute('opacity', this.props.showText ? '1' : '0');
+        textElement.setAttribute('class', 'cycle-diagram-text');
         textElement.textContent = line;
         group.appendChild(textElement);
       });
@@ -569,6 +573,8 @@ export class CycleDiagram {
       lineElement.setAttribute('y2', (textY + halfHeight + (5 * scaleFactor)).toString());
       lineElement.setAttribute('stroke', node.color);
       lineElement.setAttribute('stroke-width', (2 * scaleFactor).toString());
+      lineElement.setAttribute('opacity', this.props.showText ? '1' : '0');
+      lineElement.setAttribute('class', 'cycle-diagram-line');
       group.appendChild(lineElement);
       
       // Create details text elements
@@ -582,6 +588,8 @@ export class CycleDiagram {
         detailElement.setAttribute('font-size', descriptionFontSize.toString());
         detailElement.setAttribute('font-weight', '400');
         detailElement.setAttribute('font-family', 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif');
+        detailElement.setAttribute('opacity', this.props.showText ? '1' : '0');
+        detailElement.setAttribute('class', 'cycle-diagram-detail');
         detailElement.textContent = detail;
         group.appendChild(detailElement);
       });
@@ -595,6 +603,29 @@ export class CycleDiagram {
   public update(newProps: Partial<CycleDiagramProps>): void {
     this.props = { ...this.props, ...newProps };
     this.render();
+  }
+
+  // Method to update text visibility for animation
+  public updateTextVisibility(showText: boolean): void {
+    this.props.showText = showText;
+    
+    // Animate all text-related elements: titles, lines, and details
+    const textElements = this.container.querySelectorAll('.cycle-diagram-text, .cycle-diagram-line, .cycle-diagram-detail');
+    textElements.forEach(element => {
+      if (showText) {
+        // Use Web Animations API for smooth opacity animation
+        element.animate([
+          { opacity: 0 },
+          { opacity: 1 }
+        ], {
+          duration: 800,
+          easing: 'ease-out',
+          fill: 'forwards'
+        });
+      } else {
+        element.setAttribute('opacity', '0');
+      }
+    });
   }
 
   // Method to destroy the diagram
