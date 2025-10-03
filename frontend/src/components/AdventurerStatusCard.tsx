@@ -30,6 +30,16 @@ export const AdventurerStatusCard: React.FC<AdventurerStatusCardProps> = ({
   const [isSkillsInView, setIsSkillsInView] = useState(false);
   const skillsRef = useRef<HTMLDivElement>(null);
 
+  // State for level slot machine animation
+  const [displayedLevel, setDisplayedLevel] = useState(1);
+  const [isLevelAnimating, setIsLevelAnimating] = useState(false);
+  const [isLevelInView, setIsLevelInView] = useState(false);
+  const levelRef = useRef<HTMLDivElement>(null);
+
+  // State for profile section viewport detection
+  const [isProfileInView, setIsProfileInView] = useState(false);
+  const profileRef = useRef<HTMLDivElement>(null);
+
   // Intersection Observer for skills section
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -51,6 +61,84 @@ export const AdventurerStatusCard: React.FC<AdventurerStatusCardProps> = ({
       }
     };
   }, []);
+
+  // Intersection Observer for level section
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsLevelInView(true);
+        }
+      },
+      { threshold: 0.9 }
+    );
+
+    if (levelRef.current) {
+      observer.observe(levelRef.current);
+    }
+
+    return () => {
+      if (levelRef.current) {
+        observer.unobserve(levelRef.current);
+      }
+    };
+  }, []);
+
+  // Intersection Observer for profile section
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsProfileInView(true);
+        }
+      },
+      { threshold: 0.9 }
+    );
+
+    if (profileRef.current) {
+      observer.observe(profileRef.current);
+    }
+
+    return () => {
+      if (profileRef.current) {
+        observer.unobserve(profileRef.current);
+      }
+    };
+  }, []);
+
+  // Level slot machine animation
+  useEffect(() => {
+    if (isLevelInView && scores.level > 1 && !isLevelAnimating) {
+      setIsLevelAnimating(true);
+      
+      const animateLevel = () => {
+        let currentLevel = 1;
+        const targetLevel = scores.level;
+        const increment = Math.max(1, Math.ceil((targetLevel - 1) / 20)); // Adjust speed based on level
+        const delay = Math.max(50, 200 - (targetLevel * 5)); // Faster for higher levels
+        
+        // Set initial level to 1
+        setDisplayedLevel(1);
+        
+        const timer = setInterval(() => {
+          currentLevel += increment;
+          if (currentLevel >= targetLevel) {
+            currentLevel = targetLevel;
+            setDisplayedLevel(currentLevel);
+            clearInterval(timer);
+            setIsLevelAnimating(false);
+          } else {
+            setDisplayedLevel(currentLevel);
+          }
+        }, delay);
+      };
+
+      // Start animation after the fade-in completes (0.5s delay for fade-in + 0.3s for entrance)
+      setTimeout(animateLevel, 800);
+    } else if (isLevelInView && scores.level === 1) {
+      setDisplayedLevel(1);
+    }
+  }, [isLevelInView, scores.level]);
 
   return (
     <GameCard 
@@ -89,43 +177,20 @@ export const AdventurerStatusCard: React.FC<AdventurerStatusCardProps> = ({
 
       <CardContent className={GAME_CLASSES.paddingTop0}>
         {/* Profile Information - Centered under STATUS */}
-        <Box
-          sx={{
-            opacity: 0,
-            transform: 'translateY(15px)',
-            animation: 'profileEntrance 0.3s ease-out 0.1s forwards',
-            '@keyframes profileEntrance': {
-              '0%': {
-                opacity: 0,
-                transform: 'translateY(15px)',
-              },
-              '100%': {
-                opacity: 1,
-                transform: 'translateY(0)',
-              },
-            },
-          }}
+        <motion.div
+          ref={profileRef}
+          initial={{ opacity: 0, y: 15 }}
+          animate={isProfileInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 15 }}
+          transition={{ duration: 0.3, delay: 0.1, ease: "easeOut" }}
         >
           <Grid container spacing={1} mb={1} overflow="visible">
             <Grid size={12}>
               <Stack direction="column" alignItems="center">
                 <Stack direction="row" alignItems="flex-start" spacing={2}>
-                  <Box
-                    sx={{
-                      opacity: 0,
-                      transform: 'scale(0.95)',
-                      animation: 'profileIconEntrance 0.25s ease-out 0.2s forwards',
-                      '@keyframes profileIconEntrance': {
-                        '0%': {
-                          opacity: 0,
-                          transform: 'scale(0.95)',
-                        },
-                        '100%': {
-                          opacity: 1,
-                          transform: 'scale(1)',
-                        },
-                      },
-                    }}
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={isProfileInView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.95 }}
+                    transition={{ duration: 0.25, delay: 0.2, ease: "easeOut" }}
                   >
                     <Stack direction="column" alignItems="center" className={GAME_CLASSES.rowGap0}>
                       <CustomSvgIcon
@@ -140,31 +205,33 @@ export const AdventurerStatusCard: React.FC<AdventurerStatusCardProps> = ({
                         {userName}
                       </GameText>
                     </Stack>
-                  </Box>
-                  <Box
-                    sx={{
-                      opacity: 0,
-                      transform: 'scale(0.95)',
-                      animation: 'levelEntrance 0.25s ease-out 0.3s forwards',
-                      '@keyframes levelEntrance': {
-                        '0%': {
-                          opacity: 0,
-                          transform: 'scale(0.95)',
-                        },
-                        '100%': {
-                          opacity: 1,
-                          transform: 'scale(1)',
-                        },
-                      },
-                    }}
+                  </motion.div>
+                  <motion.div
+                    ref={levelRef}
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={isLevelInView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.95 }}
+                    transition={{ duration: 0.5, delay: 0.3, ease: "easeOut" }}
                   >
                     <Stack direction="column" alignItems="center" className={GAME_CLASSES.rowGap0}>
-                      <GameText
-                        variant="h2"
-                        className={`${GAME_CLASSES.fontSize3rem} ${GAME_CLASSES.textBold} ${GAME_CLASSES.colorCyan} ${GAME_CLASSES.lineHeight1} ${GAME_CLASSES.marginTop16}`}
+                      <motion.div
+                        key={displayedLevel}
+                        initial={{ y: 20, opacity: 0.7 }}
+                        animate={isLevelInView ? { y: 0, opacity: 1 } : { y: 20, opacity: 0.7 }}
+                        transition={{ 
+                          duration: 0.1, 
+                          ease: "easeOut",
+                          type: "spring",
+                          stiffness: 300,
+                          damping: 20
+                        }}
                       >
-                        {scores.level}
-                      </GameText>
+                        <GameText
+                          variant="h2"
+                          className={`${GAME_CLASSES.fontSize3rem} ${GAME_CLASSES.textBold} ${GAME_CLASSES.colorCyan} ${GAME_CLASSES.lineHeight1} ${GAME_CLASSES.marginTop16}`}
+                        >
+                          {displayedLevel}
+                        </GameText>
+                      </motion.div>
                       <GameText
                         variant="h6"
                         className={`${GAME_CLASSES.colorLightGray} ${GAME_CLASSES.textShadowGlow5} ${GAME_CLASSES.marginTopNegative10}`}
@@ -172,12 +239,12 @@ export const AdventurerStatusCard: React.FC<AdventurerStatusCardProps> = ({
                         LEVEL
                       </GameText>
                     </Stack>
-                  </Box>
+                  </motion.div>
                 </Stack>
               </Stack>
             </Grid>
           </Grid>
-        </Box>
+        </motion.div>
 
         {/* Status Bars - Centered under profile */}
         <Box
