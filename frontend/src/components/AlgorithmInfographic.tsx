@@ -1310,6 +1310,19 @@ export default function WorkoutAlgorithmInfographicStructured() {
                 boxShadow: `0 0 5px ${COLORS.electricity}`,
                 zIndex: 1
               }} />
+              {/* Vertical background circuit extending downward from triangle bottom */}
+              <div style={{
+                position: 'absolute',
+                bottom: `-${GROUP_PADDING}px - ${COMPONENT_WIDTH - COMPONENT_WIDTH * EQUILATERAL_TRIANGLE_HEIGHT_RATIO}px`,
+                left: '50%',
+                transform: 'translateX(-50%)',
+                width: `${LINE_WIDTH}px`,
+                height: '10vh',
+                background: COLORS.electricity,
+                boxShadow: `0 0 5px ${COLORS.electricity}`,
+                zIndex: 1,
+                opacity: 0.3
+              }} />
             </div>
             
             {/* Second component - Primary */}
@@ -1350,6 +1363,19 @@ export default function WorkoutAlgorithmInfographicStructured() {
                 background: COLORS.electricity,
                 boxShadow: `0 0 5px ${COLORS.electricity}`,
                 zIndex: 1
+              }} />
+              {/* Vertical background circuit extending downward from triangle bottom (very stubby) */}
+              <div style={{
+                position: 'absolute',
+                bottom: `-${GROUP_PADDING}px - ${COMPONENT_WIDTH - COMPONENT_WIDTH * EQUILATERAL_TRIANGLE_HEIGHT_RATIO}px`,
+                left: '50%',
+                transform: 'translateX(-50%)',
+                width: `${LINE_WIDTH}px`,
+                height: '6vh',
+                background: COLORS.electricity,
+                boxShadow: `0 0 5px ${COLORS.electricity}`,
+                zIndex: 1,
+                opacity: 0.3
               }} />
             </div>
             
@@ -1392,6 +1418,19 @@ export default function WorkoutAlgorithmInfographicStructured() {
                 boxShadow: `0 0 5px ${COLORS.electricity}`,
                 zIndex: 1
               }} />
+              {/* Vertical background circuit extending downward from triangle bottom (shorter) */}
+              <div style={{
+                position: 'absolute',
+                bottom: `-${GROUP_PADDING}px - ${COMPONENT_WIDTH - COMPONENT_WIDTH * EQUILATERAL_TRIANGLE_HEIGHT_RATIO}px`,
+                left: '50%',
+                transform: 'translateX(-50%)',
+                width: `${LINE_WIDTH}px`,
+                height: '5vh',
+                background: COLORS.electricity,
+                boxShadow: `0 0 5px ${COLORS.electricity}`,
+                zIndex: 1,
+                opacity: 0.3
+              }} />
             </div>
             
             {/* Fourth component - Accessory */}
@@ -1433,6 +1472,19 @@ export default function WorkoutAlgorithmInfographicStructured() {
                 boxShadow: `0 0 5px ${COLORS.electricity}`,
                 zIndex: 1
               }} />
+              {/* Vertical background circuit extending to bottom of container */}
+              <div style={{
+                position: 'absolute',
+                bottom: `-${GROUP_PADDING}px - ${COMPONENT_WIDTH - COMPONENT_WIDTH * EQUILATERAL_TRIANGLE_HEIGHT_RATIO}px`,
+                left: '50%',
+                transform: 'translateX(-50%)',
+                width: `${LINE_WIDTH}px`,
+                height: `calc(100% + ${GROUP_PADDING - 2 * LINE_WIDTH}px)`,
+                background: COLORS.electricity,
+                boxShadow: `0 0 5px ${COLORS.electricity}`,
+                zIndex: 1,
+                opacity: 0.3
+              }} />
             </div>
             
             {/* Fifth component - Conditioning */}
@@ -1461,6 +1513,19 @@ export default function WorkoutAlgorithmInfographicStructured() {
                 background: COLORS.electricity,
                 boxShadow: `0 0 5px ${COLORS.electricity}`,
                 zIndex: 1
+              }} />
+              {/* Vertical background circuit extending downward from triangle bottom (very stubby) */}
+              <div style={{
+                position: 'absolute',
+                bottom: `-${GROUP_PADDING}px - ${COMPONENT_WIDTH - COMPONENT_WIDTH * EQUILATERAL_TRIANGLE_HEIGHT_RATIO}px`,
+                left: '50%',
+                transform: 'translateX(-50%)',
+                width: `${LINE_WIDTH}px`,
+                height: '3vh',
+                background: COLORS.electricity,
+                boxShadow: `0 0 5px ${COLORS.electricity}`,
+                zIndex: 1,
+                opacity: 0.3
               }} />
             </div>
           </div>
