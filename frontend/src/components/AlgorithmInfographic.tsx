@@ -195,57 +195,6 @@ function CircuitComponent({ node, groupIndex, itemIndex }: { node: any; groupInd
         }}
       />
       )}
-
-
-      {/* Component pins/connectors - side pins removed for triangles */}
-      {node.shape !== 'triangle' && (
-        <>
-          <div style={{
-            position: 'absolute',
-            top: '50%',
-            left: '-4px',
-            width: '8px',
-            height: '2px',
-            background: COLORS.copper,
-            borderRadius: '1px',
-            transform: 'translateY(-50%)',
-            zIndex: 2
-          }} />
-          <div style={{
-            position: 'absolute',
-            top: '50%',
-            right: '-4px',
-            width: '8px',
-            height: '2px',
-            background: COLORS.copper,
-            borderRadius: '1px',
-            transform: 'translateY(-50%)',
-            zIndex: 2
-          }} />
-        </>
-      )}
-      <div style={{
-        position: 'absolute',
-        top: '-4px',
-        left: '50%',
-        width: `${LINE_WIDTH}px`,
-        height: '8px',
-        background: COLORS.copper,
-        borderRadius: '1px',
-        transform: 'translateX(-50%)',
-        zIndex: 2
-      }} />
-      <div style={{
-        position: 'absolute',
-        bottom: '-4px',
-        left: '50%',
-        width: `${LINE_WIDTH}px`,
-        height: '8px',
-        background: COLORS.copper,
-        borderRadius: '1px',
-        transform: 'translateX(-50%)',
-        zIndex: 2
-      }} />
       
       {node.shape === 'triangle' ? (
         <>
