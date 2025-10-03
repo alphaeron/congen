@@ -161,7 +161,6 @@ function CircuitComponent({ node, groupIndex, itemIndex }: { node: any; groupInd
       initial={{ scale: 0.9, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
       transition={{ duration: 0.6 }}
-      whileHover={{ scale: 1.02 }}
     >
       {/* Electrical flow along borders - disabled for Output Actuators triangles */}
       {!(node.shape === 'triangle' && groupIndex === 3) && (
