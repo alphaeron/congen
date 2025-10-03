@@ -375,9 +375,6 @@ export default function WorkoutAlgorithmInfographicStructured() {
             justifyContent: 'space-between', 
             alignItems: 'center',
             padding: '15px',
-            border: `2px solid ${COLORS.copper}`,
-            borderRadius: '8px',
-            background: `${COLORS.component}40`,
             position: 'relative'
           }}>
             {/* Horizontal line at top of group */}
@@ -534,9 +531,6 @@ export default function WorkoutAlgorithmInfographicStructured() {
             justifyContent: 'space-between', 
             alignItems: 'center',
             padding: '15px',
-            border: `2px solid ${COLORS.copper}`,
-            borderRadius: '8px',
-            background: `${COLORS.component}40`,
             position: 'relative'
           }}>
             {/* Horizontal line at top of group */}
@@ -693,9 +687,6 @@ export default function WorkoutAlgorithmInfographicStructured() {
             flexDirection: 'column',
             gap: '15px',
             padding: '15px',
-            border: `2px solid ${COLORS.copper}`,
-            borderRadius: '8px',
-            background: `${COLORS.component}40`,
             position: 'relative'
           }}>
             {/* Horizontal line at top of group */}
@@ -931,9 +922,6 @@ export default function WorkoutAlgorithmInfographicStructured() {
             justifyContent: 'space-between', 
             alignItems: 'center',
             padding: '15px',
-            border: `2px solid ${COLORS.copper}`,
-            borderRadius: '8px',
-            background: `${COLORS.component}40`,
             position: 'relative'
           }}>
             {/* Horizontal line at top of group */}
