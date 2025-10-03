@@ -479,6 +479,30 @@ export default function WorkoutAlgorithmInfographicStructured() {
                 boxShadow: `0 0 5px ${COLORS.electricity}`,
                 zIndex: 1
               }} />
+              {/* Vertical line from top of component to group top */}
+              <div style={{
+                position: 'absolute',
+                top: '-15px',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                width: '2px',
+                height: '15px',
+                background: COLORS.electricity,
+                boxShadow: `0 0 5px ${COLORS.electricity}`,
+                zIndex: 1
+              }} />
+              {/* Vertical line from bottom of component to group bottom */}
+              <div style={{
+                position: 'absolute',
+                bottom: '-15px',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                width: '2px',
+                height: '15px',
+                background: COLORS.electricity,
+                boxShadow: `0 0 5px ${COLORS.electricity}`,
+                zIndex: 1
+              }} />
             </div>
             
             {/* Second component - One Rep Maxes */}
@@ -496,10 +520,60 @@ export default function WorkoutAlgorithmInfographicStructured() {
                 boxShadow: `0 0 5px ${COLORS.electricity}`,
                 zIndex: 1
               }} />
+              {/* Vertical line from top of component to group top */}
+              <div style={{
+                position: 'absolute',
+                top: '-15px',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                width: '2px',
+                height: '15px',
+                background: COLORS.electricity,
+                boxShadow: `0 0 5px ${COLORS.electricity}`,
+                zIndex: 1
+              }} />
+              {/* Vertical line from bottom of component to group bottom */}
+              <div style={{
+                position: 'absolute',
+                bottom: '-15px',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                width: '2px',
+                height: '15px',
+                background: COLORS.electricity,
+                boxShadow: `0 0 5px ${COLORS.electricity}`,
+                zIndex: 1
+              }} />
             </div>
             
             {/* Third component - Previous Workouts */}
-            <CircuitComponent node={STAGES.previous} groupIndex={0} itemIndex={2} />
+            <div style={{ position: 'relative' }}>
+              <CircuitComponent node={STAGES.previous} groupIndex={0} itemIndex={2} />
+              {/* Vertical line from top of component to group top */}
+              <div style={{
+                position: 'absolute',
+                top: '-15px',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                width: '2px',
+                height: '15px',
+                background: COLORS.electricity,
+                boxShadow: `0 0 5px ${COLORS.electricity}`,
+                zIndex: 1
+              }} />
+              {/* Vertical line from bottom of component to group bottom */}
+              <div style={{
+                position: 'absolute',
+                bottom: '-15px',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                width: '2px',
+                height: '15px',
+                background: COLORS.electricity,
+                boxShadow: `0 0 5px ${COLORS.electricity}`,
+                zIndex: 1
+              }} />
+            </div>
           </div>
 
           {/* Processing Phase - Logic Chips */}
@@ -541,6 +615,30 @@ export default function WorkoutAlgorithmInfographicStructured() {
                 boxShadow: `0 0 5px ${COLORS.electricity}`,
                 zIndex: 1
               }} />
+              {/* Vertical line from top of component to group top */}
+              <div style={{
+                position: 'absolute',
+                top: '-15px',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                width: '2px',
+                height: '15px',
+                background: COLORS.electricity,
+                boxShadow: `0 0 5px ${COLORS.electricity}`,
+                zIndex: 1
+              }} />
+              {/* Vertical line from bottom of component to group bottom */}
+              <div style={{
+                position: 'absolute',
+                bottom: '-15px',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                width: '2px',
+                height: '15px',
+                background: COLORS.electricity,
+                boxShadow: `0 0 5px ${COLORS.electricity}`,
+                zIndex: 1
+              }} />
             </div>
             
             {/* Second component - Available Equipment Filter */}
@@ -558,10 +656,60 @@ export default function WorkoutAlgorithmInfographicStructured() {
                 boxShadow: `0 0 5px ${COLORS.electricity}`,
                 zIndex: 1
               }} />
+              {/* Vertical line from top of component to group top */}
+              <div style={{
+                position: 'absolute',
+                top: '-15px',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                width: '2px',
+                height: '15px',
+                background: COLORS.electricity,
+                boxShadow: `0 0 5px ${COLORS.electricity}`,
+                zIndex: 1
+              }} />
+              {/* Vertical line from bottom of component to group bottom */}
+              <div style={{
+                position: 'absolute',
+                bottom: '-15px',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                width: '2px',
+                height: '15px',
+                background: COLORS.electricity,
+                boxShadow: `0 0 5px ${COLORS.electricity}`,
+                zIndex: 1
+              }} />
             </div>
             
             {/* Third component - Exercise Matching Logic */}
-            <CircuitComponent node={STAGES.exercise_matching} groupIndex={1} itemIndex={2} />
+            <div style={{ position: 'relative' }}>
+              <CircuitComponent node={STAGES.exercise_matching} groupIndex={1} itemIndex={2} />
+              {/* Vertical line from top of component to group top */}
+              <div style={{
+                position: 'absolute',
+                top: '-15px',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                width: '2px',
+                height: '15px',
+                background: COLORS.electricity,
+                boxShadow: `0 0 5px ${COLORS.electricity}`,
+                zIndex: 1
+              }} />
+              {/* Vertical line from bottom of component to group bottom */}
+              <div style={{
+                position: 'absolute',
+                bottom: '-15px',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                width: '2px',
+                height: '15px',
+                background: COLORS.electricity,
+                boxShadow: `0 0 5px ${COLORS.electricity}`,
+                zIndex: 1
+              }} />
+            </div>
           </div>
 
           {/* Generation Phase - Advanced Processors */}
