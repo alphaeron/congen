@@ -26,6 +26,32 @@ export const AdventurerStatusCard: React.FC<AdventurerStatusCardProps> = ({
   weeklyTests,
   userName,
 }) => {
+  // State for skills section viewport detection
+  const [isSkillsInView, setIsSkillsInView] = useState(false);
+  const skillsRef = useRef<HTMLDivElement>(null);
+
+  // Intersection Observer for skills section
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsSkillsInView(true);
+        }
+      },
+      { threshold: 0.9 }
+    );
+
+    if (skillsRef.current) {
+      observer.observe(skillsRef.current);
+    }
+
+    return () => {
+      if (skillsRef.current) {
+        observer.unobserve(skillsRef.current);
+      }
+    };
+  }, []);
+
   return (
     <GameCard 
       className={GAME_CLASSES.overflowVisible}
@@ -219,44 +245,28 @@ export const AdventurerStatusCard: React.FC<AdventurerStatusCardProps> = ({
         </Box>
 
         {/* Skills and Radar Chart - Side by Side */}
-        <Box
-          sx={{
-            opacity: 0,
-            transform: 'translateY(15px)',
-            animation: 'skillsSectionEntrance 0.3s ease-out 0.8s forwards',
-            '@keyframes skillsSectionEntrance': {
-              '0%': {
-                opacity: 0,
-                transform: 'translateY(15px)',
-              },
-              '100%': {
-                opacity: 1,
-                transform: 'translateY(0)',
-              },
-            },
-          }}
+        <motion.div
+          ref={skillsRef}
+          initial={{ opacity: 0, y: 15 }}
+          animate={isSkillsInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 15 }}
+          transition={{ duration: 0.3, ease: "easeOut" }}
         >
           <Grid container spacing={3} overflow="visible" justifyContent="center">
             {/* Skills Section - Left */}
             <Grid size={{ xs: 12, sm: 6, md: 5 }}>
-              <Box
-                sx={{
-                  opacity: 0,
-                  transform: 'translateX(-15px)',
-                  animation: 'skillsEntrance 0.25s ease-out 0.9s forwards',
-                  '@keyframes skillsEntrance': {
-                    '0%': {
-                      opacity: 0,
-                      transform: 'translateX(-15px)',
-                    },
-                    '100%': {
-                      opacity: 1,
-                      transform: 'translateX(0)',
-                    },
-                  },
-                }}
-              >
-                <Stack direction="row" alignItems="center" spacing={1} mb={1}>
+              <Box>
+                {/* Skills Header - Fade in first */}
+                <motion.div
+                  initial={{ opacity: 0, x: -15 }}
+                  animate={isSkillsInView ? { opacity: 1, x: 0 } : { opacity: 0, x: -15 }}
+                  transition={{ duration: 0.3, delay: 0.1, ease: "easeOut" }}
+                >
+                  <Stack 
+                    direction="row" 
+                    alignItems="center" 
+                    spacing={1} 
+                    mb={1}
+                  >
                   <CustomSvgIcon
                     src={SkillsIcon}
                     alt="Skills"
@@ -269,7 +279,8 @@ export const AdventurerStatusCard: React.FC<AdventurerStatusCardProps> = ({
                   >
                     Skills
                   </GameText>
-                </Stack>
+                  </Stack>
+                </motion.div>
                  {scores.skills.length > 0 ? (
                    <Stack 
                      direction="row" 
@@ -279,39 +290,43 @@ export const AdventurerStatusCard: React.FC<AdventurerStatusCardProps> = ({
                      useFlexGap={true}
                    >
                      {scores.skills.map((skill, index) => (
-                       <GameSkillChip
+                       <motion.div
                          key={index}
-                         label={skill}
-                         size="small"
-                         icon={
-                           <CustomSvgIcon
-                             src={SkillsIcon}
-                             alt="Skill"
-                             className={`${GAME_CLASSES.fontSize16} ${GAME_CLASSES.colorCyan}`}
-                           />
-                         }
-                         sx={{
-                           opacity: 0,
-                           transform: 'scale(0.95)',
-                           animation: `fadeInScale 0.2s ease-out ${1.0 + (index * 0.05)}s forwards`,
-                           '@keyframes fadeInScale': {
-                             '0%': {
-                               opacity: 0,
-                               transform: 'scale(0.95)',
-                             },
-                             '100%': {
-                               opacity: 1,
-                               transform: 'scale(1)',
-                             },
-                           },
+                         initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                         animate={isSkillsInView ? { opacity: 1, y: 0, scale: 1 } : { opacity: 0, y: 10, scale: 0.95 }}
+                         transition={{ 
+                           duration: 0.25, 
+                           delay: 0.4 + (index * 0.1), 
+                           ease: "easeOut" 
                          }}
-                       />
+                       >
+                         <GameSkillChip
+                           label={skill}
+                           size="small"
+                           icon={
+                             <CustomSvgIcon
+                               src={SkillsIcon}
+                               alt="Skill"
+                               className={`${GAME_CLASSES.fontSize16} ${GAME_CLASSES.colorCyan}`}
+                             />
+                           }
+                         />
+                       </motion.div>
                      ))}
                    </Stack>
                 ) : (
-                  <GameTextSecondary variant="body2" className={`${GAME_CLASSES.textItalic} ${GAME_CLASSES.textCenter}`}>
-                    No skills unlocked yet. Complete quests to unlock skills!
-                  </GameTextSecondary>
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={isSkillsInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 10 }}
+                    transition={{ duration: 0.25, delay: 0.4, ease: "easeOut" }}
+                  >
+                    <GameTextSecondary 
+                      variant="body2" 
+                      className={`${GAME_CLASSES.textItalic} ${GAME_CLASSES.textCenter}`}
+                    >
+                      No skills unlocked yet. Complete quests to unlock skills!
+                    </GameTextSecondary>
+                  </motion.div>
                 )}
               </Box>
             </Grid>
@@ -345,7 +360,7 @@ export const AdventurerStatusCard: React.FC<AdventurerStatusCardProps> = ({
               </Box>
             </Grid>
           </Grid>
-        </Box>
+        </motion.div>
       </CardContent>
     </GameCard>
   );
