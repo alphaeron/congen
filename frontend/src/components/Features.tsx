@@ -1,16 +1,13 @@
 import AutoFixHighRoundedIcon from '@mui/icons-material/AutoFixHighRounded';
 import ConstructionRoundedIcon from '@mui/icons-material/ConstructionRounded';
-import QueryStatsRoundedIcon from '@mui/icons-material/QueryStatsRounded';
-import PsychologyRoundedIcon from '@mui/icons-material/PsychologyRounded';
 import SportsEsportsRoundedIcon from '@mui/icons-material/SportsEsportsRounded';
-import TrendingUpRoundedIcon from '@mui/icons-material/TrendingUpRounded';
 import Box from '@mui/material/Box';
-import Card from '@mui/material/Card';
 import Container from '@mui/material/Container';
 import Grid from '@mui/material/Grid';
 import Stack from '@mui/material/Stack';
 import { alpha } from '@mui/material/styles';
 import * as React from 'react';
+import { motion, useInView, useScroll, useTransform, useMotionValue, useSpring } from 'framer-motion';
 
 import { GameText, GameCard, GAME_CLASSES } from './GameTheme';
 
@@ -23,13 +20,6 @@ export const FEATURE_ITEMS = [
     color: 'primary',
   },
   {
-    icon: <AutoFixHighRoundedIcon />,
-    title: 'Intelligent Exercise Rotation',
-    description:
-      'Prevents accommodation and plateaus by automatically rotating exercises every 1-3 weeks using scientific periodization principles.',
-    color: 'secondary',
-  },
-  {
     icon: <SportsEsportsRoundedIcon />,
     title: 'RPG-Style Gamification',
     description:
@@ -37,123 +27,201 @@ export const FEATURE_ITEMS = [
     color: 'success',
   },
   {
-    icon: <PsychologyRoundedIcon />,
-    title: 'Performance Analytics',
+    icon: <AutoFixHighRoundedIcon />,
+    title: 'Equipment Matching',
     description:
-      'Track 6 core performance domains (Strength, Power, Endurance, Recovery, Stamina, Speed) with detailed analytics and insights.',
-    color: 'warning',
-  },
-  {
-    icon: <TrendingUpRoundedIcon />,
-    title: 'Adaptive Programming',
-    description:
-      'Your program evolves with you - automatic weight progression, exercise substitutions, and program adjustments based on your performance.',
-    color: 'info',
-  },
-  {
-    icon: <QueryStatsRoundedIcon />,
-    title: 'Comprehensive Tracking',
-    description:
-      'Monitor everything from one-rep maxes to recovery metrics, with detailed workout history and progress visualization.',
-    color: 'error',
+      'Every aspect of your program is algorithmically tailored to your equipment, goals, experience level, and physical attributes.',
+    color: 'secondary',
   },
 ];
 
+// Advanced animation variants with 3D effects
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.15,
+      delayChildren: 0.3,
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: { 
+    y: 50, 
+    opacity: 0, 
+    scale: 0.9,
+    rotateX: -15,
+    transformPerspective: 1000,
+  },
+  visible: {
+    y: 0,
+    opacity: 1,
+    scale: 1,
+    rotateX: 0,
+    transition: {
+      duration: 0.8,
+      ease: [0.25, 0.46, 0.45, 0.94] as const,
+    },
+  },
+};
+
+const iconVariants = {
+  hidden: { 
+    scale: 0, 
+    rotate: -180,
+    y: 20,
+    opacity: 0,
+  },
+  visible: {
+    scale: 1,
+    rotate: 0,
+    y: 0,
+    opacity: 1,
+    transition: {
+      duration: 1.0,
+      ease: [0.25, 0.46, 0.45, 0.94] as const,
+    },
+  },
+};
+
+// Card hover variants with 3D tilt effect
+const cardHoverVariants = {
+  rest: { 
+    scale: 1, 
+    rotateX: 0, 
+    rotateY: 0,
+    z: 0,
+  },
+  hover: { 
+    scale: 1.05, 
+    rotateX: 5, 
+    rotateY: 5,
+    z: 20,
+    transition: {
+      type: "spring" as const,
+      stiffness: 300,
+      damping: 20,
+    },
+  },
+};
+
 export function Features() {
+  const ref = React.useRef(null);
+  const isInView = useInView(ref, { once: true, margin: "-100px" });
+  
+  // Advanced scroll-triggered animations
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: ["start end", "end start"]
+  });
+  
+  const y = useTransform(scrollYProgress, [0, 1], [100, -100]);
+  const opacity = useTransform(scrollYProgress, [0, 0.2, 0.8, 1], [0, 1, 1, 0]);
+
   return (
-    <Container
-      id="features"
-      sx={{
-        position: 'relative',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        gap: { xs: 4, sm: 8 },
-        py: { xs: 8, sm: 12 },
-      }}
+    <motion.div
+      style={{ y, opacity }}
     >
-      <Box
+      <Container
+        id="features"
         sx={{
-          width: { sm: '100%', md: '70%' },
-          textAlign: 'center',
-          mb: 3,
+          position: 'relative',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: { xs: 4, sm: 8 },
+          py: { xs: 8, sm: 12 },
+          '&::before': {
+            content: '""',
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: theme =>
+              `radial-gradient(circle at 30% 20%, ${alpha(theme.palette.primary.main, 0.05)} 0%, transparent 50%),
+               radial-gradient(circle at 70% 80%, ${alpha(theme.palette.secondary.main, 0.03)} 0%, transparent 50%)`,
+            zIndex: 0,
+          },
         }}
       >
-        <GameText
-          variant="h3"
-          textVariant="glow"
-          sx={{
-            fontWeight: 700,
-            mb: 2,
-          }}
-        >
-          Features
-        </GameText>
-        <GameText
-          variant="h6"
-          textVariant="secondary"
-          sx={{
-            fontWeight: 400,
-            opacity: 0.8,
-          }}
-        >
-          Everything you need to build the perfect conjugate workout program
-        </GameText>
-      </Box>
-
-      <Grid container spacing={4}>
-        {FEATURE_ITEMS.map((item, index) => (
-          <Grid size={{ xs: 12, sm: 6, md: 4 }} key={index}>
-            <GameCard
-              interactive={true}
+      <motion.div
+        ref={ref}
+        variants={containerVariants}
+        initial="hidden"
+        animate={isInView ? "visible" : "hidden"}
+        style={{ width: '100%' }}
+      >
+        <motion.div variants={itemVariants}>
+          <Box
+            sx={{
+              width: { sm: '100%', md: '70%' },
+              textAlign: 'center',
+              mb: 6,
+              mx: 'auto',
+            }}
+          >
+            <GameText
+              variant="h3"
+              textVariant="glow"
               sx={{
-                p: 4,
-                height: '100%',
+                fontWeight: 700,
+                mb: 2,
+                background: 'linear-gradient(135deg, #0ea5e9, #f97316)',
+                backgroundClip: 'text',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
               }}
             >
-              <Stack spacing={3} sx={{ height: '100%' }}>
-                <Box
+              Features
+            </GameText>
+            <GameText
+              variant="h6"
+              textVariant="secondary"
+              sx={{
+                fontWeight: 400,
+                opacity: 0.8,
+                fontSize: { xs: '1.1rem', sm: '1.25rem' },
+              }}
+            >
+              Everything you need to build the perfect conjugate workout program
+            </GameText>
+          </Box>
+        </motion.div>
+
+        <Grid container spacing={4}>
+          {FEATURE_ITEMS.map((item, index) => (
+            <Grid size={{ xs: 12, md: 4 }} key={index}>
+              <motion.div
+                variants={itemVariants}
+                initial="rest"
+                whileHover="hover"
+                style={{ 
+                  height: '100%',
+                  transformStyle: 'preserve-3d',
+                  perspective: 1000,
+                }}
+              >
+                <GameCard
+                  interactive={true}
                   sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    width: 64,
-                    height: 64,
-                    borderRadius: 2,
-                    background: theme => {
-                      const colorValue = item.color === 'primary' ? theme.palette.primary.main :
-                                       item.color === 'secondary' ? theme.palette.secondary.main :
-                                       item.color === 'success' ? '#22c55e' :
-                                       item.color === 'warning' ? '#f59e0b' :
-                                       item.color === 'info' ? '#3b82f6' :
-                                       item.color === 'error' ? '#ef4444' :
-                                       theme.palette.primary.main;
-                      return `linear-gradient(135deg, ${alpha(colorValue, 0.1)}, ${alpha(colorValue, 0.05)})`;
-                    },
-                    border: theme => {
-                      const colorValue = item.color === 'primary' ? theme.palette.primary.main :
-                                       item.color === 'secondary' ? theme.palette.secondary.main :
-                                       item.color === 'success' ? '#22c55e' :
-                                       item.color === 'warning' ? '#f59e0b' :
-                                       item.color === 'info' ? '#3b82f6' :
-                                       item.color === 'error' ? '#ef4444' :
-                                       theme.palette.primary.main;
-                      return `1px solid ${alpha(colorValue, 0.2)}`;
-                    },
-                    color: theme => {
-                      const colorValue = item.color === 'primary' ? theme.palette.primary.main :
-                                       item.color === 'secondary' ? theme.palette.secondary.main :
-                                       item.color === 'success' ? '#22c55e' :
-                                       item.color === 'warning' ? '#f59e0b' :
-                                       item.color === 'info' ? '#3b82f6' :
-                                       item.color === 'error' ? '#ef4444' :
-                                       theme.palette.primary.main;
-                      return colorValue;
-                    },
-                    fontSize: '2rem',
-                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                    '&:hover': {
-                      transform: 'scale(1.1)',
+                    p: 4,
+                    height: '100%',
+                    position: 'relative',
+                    overflow: 'hidden',
+                    backdropFilter: 'blur(20px)',
+                    background: 'rgba(255, 255, 255, 0.05)',
+                    border: theme => `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
+                    boxShadow: theme => `0 8px 32px ${alpha(theme.palette.primary.main, 0.1)}`,
+                    '&::before': {
+                      content: '""',
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
                       background: theme => {
                         const colorValue = item.color === 'primary' ? theme.palette.primary.main :
                                          item.color === 'secondary' ? theme.palette.secondary.main :
@@ -162,44 +230,134 @@ export function Features() {
                                          item.color === 'info' ? '#3b82f6' :
                                          item.color === 'error' ? '#ef4444' :
                                          theme.palette.primary.main;
-                        return `linear-gradient(135deg, ${alpha(colorValue, 0.2)}, ${alpha(colorValue, 0.1)})`;
+                        return `linear-gradient(135deg, ${alpha(colorValue, 0.08)}, transparent)`;
+                      },
+                      opacity: 0,
+                      transition: 'opacity 0.3s ease',
+                    },
+                    '&::after': {
+                      content: '""',
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      background: 'linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.1) 50%, transparent 70%)',
+                      opacity: 0,
+                      transition: 'opacity 0.3s ease',
+                    },
+                    '&:hover': {
+                      boxShadow: theme => `0 20px 40px ${alpha(theme.palette.primary.main, 0.2)}`,
+                      border: theme => `1px solid ${alpha(theme.palette.primary.main, 0.3)}`,
+                      '&::before': {
+                        opacity: 1,
+                      },
+                      '&::after': {
+                        opacity: 1,
                       },
                     },
                   }}
                 >
-                  {React.cloneElement(item.icon, {
-                    sx: { fontSize: '2rem' },
-                  })}
-                </Box>
+                  <Stack spacing={3} sx={{ height: '100%', position: 'relative', zIndex: 1 }}>
+                    <motion.div
+                      variants={iconVariants}
+                      whileHover={{ 
+                        scale: 1.1,
+                        rotate: 5,
+                        transition: { duration: 0.2 }
+                      }}
+                    >
+                      <Box
+                        sx={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          width: 80,
+                          height: 80,
+                          borderRadius: 3,
+                          background: theme => {
+                            const colorValue = item.color === 'primary' ? theme.palette.primary.main :
+                                             item.color === 'secondary' ? theme.palette.secondary.main :
+                                             item.color === 'success' ? '#22c55e' :
+                                             item.color === 'warning' ? '#f59e0b' :
+                                             item.color === 'info' ? '#3b82f6' :
+                                             item.color === 'error' ? '#ef4444' :
+                                             theme.palette.primary.main;
+                            return `linear-gradient(135deg, ${alpha(colorValue, 0.1)}, ${alpha(colorValue, 0.05)})`;
+                          },
+                          border: theme => {
+                            const colorValue = item.color === 'primary' ? theme.palette.primary.main :
+                                             item.color === 'secondary' ? theme.palette.secondary.main :
+                                             item.color === 'success' ? '#22c55e' :
+                                             item.color === 'warning' ? '#f59e0b' :
+                                             item.color === 'info' ? '#3b82f6' :
+                                             item.color === 'error' ? '#ef4444' :
+                                             theme.palette.primary.main;
+                            return `2px solid ${alpha(colorValue, 0.2)}`;
+                          },
+                          color: theme => {
+                            const colorValue = item.color === 'primary' ? theme.palette.primary.main :
+                                             item.color === 'secondary' ? theme.palette.secondary.main :
+                                             item.color === 'success' ? '#22c55e' :
+                                             item.color === 'warning' ? '#f59e0b' :
+                                             item.color === 'info' ? '#3b82f6' :
+                                             item.color === 'error' ? '#ef4444' :
+                                             theme.palette.primary.main;
+                            return colorValue;
+                          },
+                          fontSize: '2.5rem',
+                          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                          boxShadow: theme => {
+                            const colorValue = item.color === 'primary' ? theme.palette.primary.main :
+                                             item.color === 'secondary' ? theme.palette.secondary.main :
+                                             item.color === 'success' ? '#22c55e' :
+                                             item.color === 'warning' ? '#f59e0b' :
+                                             item.color === 'info' ? '#3b82f6' :
+                                             item.color === 'error' ? '#ef4444' :
+                                             theme.palette.primary.main;
+                            return `0 8px 25px ${alpha(colorValue, 0.15)}`;
+                          },
+                        }}
+                      >
+                        {React.cloneElement(item.icon, {
+                          sx: { fontSize: '2.5rem' },
+                        })}
+                      </Box>
+                    </motion.div>
 
-                <Box sx={{ flex: 1 }}>
-                  <GameText
-                    variant="h5"
-                    sx={{
-                      fontWeight: 600,
-                      mb: 2,
-                      lineHeight: 1.3,
-                    }}
-                    gutterBottom
-                  >
-                    {item.title}
-                  </GameText>
-                  <GameText
-                    variant="body1"
-                    textVariant="secondary"
-                    sx={{
-                      lineHeight: 1.6,
-                      opacity: 0.8,
-                    }}
-                  >
-                    {item.description}
-                  </GameText>
-                </Box>
-              </Stack>
-            </GameCard>
-          </Grid>
-        ))}
-      </Grid>
+                    <Box sx={{ flex: 1 }}>
+                      <GameText
+                        variant="h5"
+                        sx={{
+                          fontWeight: 600,
+                          mb: 2,
+                          lineHeight: 1.3,
+                          fontSize: { xs: '1.25rem', sm: '1.5rem' },
+                        }}
+                        gutterBottom
+                      >
+                        {item.title}
+                      </GameText>
+                      <GameText
+                        variant="body1"
+                        textVariant="secondary"
+                        sx={{
+                          lineHeight: 1.6,
+                          opacity: 0.8,
+                          fontSize: { xs: '0.95rem', sm: '1rem' },
+                        }}
+                      >
+                        {item.description}
+                      </GameText>
+                    </Box>
+                  </Stack>
+                </GameCard>
+              </motion.div>
+            </Grid>
+          ))}
+        </Grid>
+      </motion.div>
     </Container>
+    </motion.div>
   );
 }

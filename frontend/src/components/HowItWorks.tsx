@@ -3,6 +3,7 @@ import Container from '@mui/material/Container';
 import Divider from '@mui/material/Divider';
 import { alpha } from '@mui/material/styles';
 import * as React from 'react';
+import { motion, useInView, useScroll, useTransform, useMotionValue, useSpring } from 'framer-motion';
 
 import { CycleDiagramReact as CycleDiagram } from './CycleDiagramReact';
 import { GameText, GameCard } from './GameTheme';
@@ -87,17 +88,125 @@ const sampleWeeklyTests: UserTestResult[] = [
 ];
 
 // Individual section components for better UX
-const GamificationSection = () => (
-  <Box
-    id="gamification"
-    sx={{
-      py: { xs: 8, sm: 12 },
-      position: 'relative',
-      background: theme => alpha(theme.palette.background.paper, 0.5),
-      width: '100%',
-      px: { xs: 2, sm: 4, md: 6 },
-    }}
-  >
+// Advanced animation variants with 3D effects and micro-interactions
+const sectionVariants = {
+  hidden: { 
+    opacity: 0, 
+    y: 60, 
+    scale: 0.95,
+    rotateX: -10,
+    transformPerspective: 1000,
+  },
+  visible: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    rotateX: 0,
+    transition: {
+      duration: 1.0,
+      ease: [0.25, 0.46, 0.45, 0.94] as const,
+    },
+  },
+};
+
+const staggerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.25,
+      delayChildren: 0.4,
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: { 
+    y: 30, 
+    opacity: 0, 
+    scale: 0.9,
+    rotateY: -15,
+  },
+  visible: {
+    y: 0,
+    opacity: 1,
+    scale: 1,
+    rotateY: 0,
+    transition: {
+      duration: 0.8,
+      ease: [0.25, 0.46, 0.45, 0.94] as const,
+    },
+  },
+};
+
+// Advanced card hover variants with 3D tilt
+const cardHoverVariants = {
+  rest: { 
+    scale: 1, 
+    rotateX: 0, 
+    rotateY: 0,
+    z: 0,
+  },
+  hover: { 
+    scale: 1.03, 
+    rotateX: 3, 
+    rotateY: 3,
+    z: 15,
+    transition: {
+      type: "spring" as const,
+      stiffness: 300,
+      damping: 20,
+    },
+  },
+};
+
+const GamificationSection = () => {
+  const ref = React.useRef(null);
+  const isInView = useInView(ref, { once: true, margin: "-100px" });
+  
+  // Advanced scroll-triggered animations
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: ["start end", "end start"]
+  });
+  
+  const y = useTransform(scrollYProgress, [0, 1], [50, -50]);
+  const opacity = useTransform(scrollYProgress, [0, 0.2, 0.8, 1], [0, 1, 1, 0]);
+
+  return (
+    <motion.div
+      style={{ y, opacity }}
+    >
+      <motion.div
+        ref={ref}
+        variants={sectionVariants}
+        initial="hidden"
+        animate={isInView ? "visible" : "hidden"}
+      >
+        <Box
+          id="gamification"
+          sx={{
+            py: { xs: 8, sm: 12 },
+            position: 'relative',
+            background: 'rgba(255, 255, 255, 0.02)',
+            backdropFilter: 'blur(20px)',
+            border: theme => `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
+            width: '100%',
+            px: { xs: 2, sm: 4, md: 6 },
+            '&::before': {
+              content: '""',
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: theme =>
+                `radial-gradient(circle at 20% 30%, ${alpha(theme.palette.secondary.main, 0.05)} 0%, transparent 50%),
+                 radial-gradient(circle at 80% 70%, ${alpha(theme.palette.primary.main, 0.03)} 0%, transparent 50%)`,
+              zIndex: 0,
+            },
+          }}
+        >
     <Box
       sx={{
         display: 'flex',
@@ -106,78 +215,112 @@ const GamificationSection = () => (
         gap: { xs: 4, lg: 8 },
       }}
     >
-      <Box
-        sx={{
+      <motion.div
+        variants={staggerVariants}
+        style={{
           flex: 1,
-          textAlign: { xs: 'center', lg: 'right' },
+          textAlign: 'center',
         }}
       >
-        <GameText
-          variant="h2"
-          textVariant="glow"
-          sx={{
-            fontWeight: 700,
-            mb: 3,
-            fontSize: { xs: '2rem', sm: '2.5rem', md: '3rem' },
-          }}
-        >
-          RPG-Style Gamification
-        </GameText>
-        <GameText
-          variant="h5"
-          textVariant="secondary"
-          sx={{
-            fontWeight: 400,
-            mb: 4,
-            lineHeight: 1.6,
-            opacity: 0.9,
-          }}
-        >
-          Transform your fitness journey into an epic RPG adventure. Level up your 
-          character, unlock skills, and master the HP/MP/Fatigue 
-          system for maximum motivation.
-        </GameText>
-        <Box
-          sx={{
-            display: 'flex',
-            flexDirection: { xs: 'column', sm: 'row' },
-            gap: 2,
-            flexWrap: 'wrap',
-            justifyContent: { xs: 'center', lg: 'flex-end' },
-          }}
-        >
-          {[
-            'Level Progression',
-            'Performance Tracking', 
-            'Skill System',
-            'HP/MP Mechanics'
-          ].map((feature, index) => (
-            <GameCard
-              key={index}
-              sx={{
-                p: 2,
-                background: theme => 
-                  `linear-gradient(135deg, ${alpha('#8b5cf6', 0.1)}, ${alpha('#8b5cf6', 0.05)})`,
-                border: theme => `1px solid ${alpha('#8b5cf6', 0.2)}`,
-                flex: '1 1 auto',
-                minWidth: '200px',
-              }}
-            >
-              <GameText
-                variant="body1"
-                textVariant="glow"
-                sx={{ fontWeight: 600 }}
-              >
-                {feature}
-              </GameText>
-            </GameCard>
-          ))}
-        </Box>
-      </Box>
-      
+        <motion.div variants={itemVariants}>
+          <GameText
+            variant="h2"
+            textVariant="glow"
+            sx={{
+              fontWeight: 700,
+              mb: 3,
+              fontSize: { xs: '2rem', sm: '2.5rem', md: '3rem' },
+              background: 'linear-gradient(135deg, #8b5cf6, #f97316)',
+              backgroundClip: 'text',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+            }}
+          >
+            RPG-Style Gamification
+          </GameText>
+        </motion.div>
+        
+        <motion.div variants={itemVariants}>
+          <GameText
+            variant="h5"
+            textVariant="secondary"
+            sx={{
+              fontWeight: 400,
+              mb: 4,
+              lineHeight: 1.6,
+              opacity: 0.9,
+              fontSize: { xs: '1.1rem', sm: '1.25rem' },
+            }}
+          >
+            Transform your fitness journey into an epic RPG adventure. Level up your 
+            character, unlock skills, and master the HP/MP/Fatigue 
+            system for maximum motivation.
+          </GameText>
+        </motion.div>
+        
+        <motion.div variants={staggerVariants}>
           <Box
             sx={{
-              flex: { xs: 1, lg: 1.2 },
+              display: 'flex',
+              flexDirection: { xs: 'column', sm: 'row' },
+              gap: 2,
+              flexWrap: 'wrap',
+              justifyContent: 'center',
+            }}
+          >
+            {[
+              'Level Progression',
+              'Performance Tracking', 
+              'Skill System',
+              'HP/MP Mechanics'
+            ].map((feature, index) => (
+              <motion.div 
+                key={index} 
+                variants={itemVariants}
+                initial="rest"
+                whileHover="hover"
+                style={{
+                  transformStyle: 'preserve-3d',
+                  perspective: 1000,
+                }}
+              >
+                <GameCard
+                  sx={{
+                    p: 3,
+                    background: 'rgba(139, 92, 246, 0.05)',
+                    backdropFilter: 'blur(20px)',
+                    border: theme => `2px solid ${alpha('#8b5cf6', 0.2)}`,
+                    flex: '1 1 auto',
+                    minWidth: '200px',
+                    transition: 'all 0.3s ease',
+                    boxShadow: theme => `0 8px 32px ${alpha('#8b5cf6', 0.1)}`,
+                    '&:hover': {
+                      boxShadow: theme => `0 20px 40px ${alpha('#8b5cf6', 0.3)}`,
+                      border: theme => `2px solid ${alpha('#8b5cf6', 0.4)}`,
+                    },
+                  }}
+                >
+                  <GameText
+                    variant="body1"
+                    textVariant="glow"
+                    sx={{ 
+                      fontWeight: 600,
+                      color: '#8b5cf6',
+                    }}
+                  >
+                    {feature}
+                  </GameText>
+                </GameCard>
+              </motion.div>
+            ))}
+          </Box>
+        </motion.div>
+      </motion.div>
+      
+          <motion.div
+            variants={itemVariants}
+            style={{
+              flex: 1,
               minHeight: 600,
               maxHeight: 800,
               display: 'flex',
@@ -186,28 +329,73 @@ const GamificationSection = () => (
             }}
           >
             <Box sx={{ maxWidth: 800, width: '100%' }}>
-              <AdventurerStatusCard
-                scores={samplePerformanceScores}
-                metrics={samplePerformanceMetrics}
-                weeklyTests={sampleWeeklyTests}
-                userName="Alex Chen"
-              />
+              <motion.div
+                whileHover={{ scale: 1.02 }}
+                transition={{ duration: 0.3 }}
+              >
+                <AdventurerStatusCard
+                  scores={samplePerformanceScores}
+                  metrics={samplePerformanceMetrics}
+                  weeklyTests={sampleWeeklyTests}
+                  userName="Alex Chen"
+                />
+              </motion.div>
             </Box>
-          </Box>
+          </motion.div>
     </Box>
   </Box>
-);
+      </motion.div>
+    </motion.div>
+  );
+};
 
-const PersonalizationSection = () => (
-  <Box
-    id="personalization"
-    sx={{
-      py: { xs: 8, sm: 12 },
-      position: 'relative',
-      width: '100%',
-      px: { xs: 2, sm: 4, md: 6 },
-    }}
-  >
+const PersonalizationSection = () => {
+  const ref = React.useRef(null);
+  const isInView = useInView(ref, { once: true, margin: "-100px" });
+  
+  // Advanced scroll-triggered animations
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: ["start end", "end start"]
+  });
+  
+  const y = useTransform(scrollYProgress, [0, 1], [50, -50]);
+  const opacity = useTransform(scrollYProgress, [0, 0.2, 0.8, 1], [0, 1, 1, 0]);
+
+  return (
+    <motion.div
+      style={{ y, opacity }}
+    >
+      <motion.div
+        ref={ref}
+        variants={sectionVariants}
+        initial="hidden"
+        animate={isInView ? "visible" : "hidden"}
+      >
+        <Box
+          id="personalization"
+          sx={{
+            py: { xs: 8, sm: 12 },
+            position: 'relative',
+            background: 'rgba(255, 255, 255, 0.02)',
+            backdropFilter: 'blur(20px)',
+            border: theme => `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
+            width: '100%',
+            px: { xs: 2, sm: 4, md: 6 },
+            '&::before': {
+              content: '""',
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: theme =>
+                `radial-gradient(circle at 30% 20%, ${alpha(theme.palette.primary.main, 0.05)} 0%, transparent 50%),
+                 radial-gradient(circle at 70% 80%, ${alpha(theme.palette.secondary.main, 0.03)} 0%, transparent 50%)`,
+              zIndex: 0,
+            },
+          }}
+        >
     <Box
       sx={{
         display: 'flex',
@@ -263,17 +451,32 @@ const PersonalizationSection = () => (
             'Real-time Updates',
             'Continuous Learning'
           ].map((feature, index) => (
-            <GameCard
+            <motion.div
               key={index}
-              sx={{
-                p: 2,
-                background: theme => 
-                  `linear-gradient(135deg, ${alpha('#22c55e', 0.1)}, ${alpha('#22c55e', 0.05)})`,
-                border: theme => `1px solid ${alpha('#22c55e', 0.2)}`,
+              initial="rest"
+              whileHover="hover"
+              variants={cardHoverVariants}
+              style={{
+                transformStyle: 'preserve-3d',
+                perspective: 1000,
                 flex: '1 1 auto',
                 minWidth: '200px',
               }}
             >
+              <GameCard
+                sx={{
+                  p: 2,
+                  background: 'rgba(34, 197, 94, 0.05)',
+                  backdropFilter: 'blur(20px)',
+                  border: theme => `1px solid ${alpha('#22c55e', 0.2)}`,
+                  boxShadow: theme => `0 8px 32px ${alpha('#22c55e', 0.1)}`,
+                  transition: 'all 0.3s ease',
+                  '&:hover': {
+                    boxShadow: theme => `0 20px 40px ${alpha('#22c55e', 0.3)}`,
+                    border: theme => `1px solid ${alpha('#22c55e', 0.4)}`,
+                  },
+                }}
+              >
               <GameText
                 variant="body1"
                 textVariant="glow"
@@ -281,7 +484,8 @@ const PersonalizationSection = () => (
               >
                 {feature}
               </GameText>
-            </GameCard>
+              </GameCard>
+            </motion.div>
           ))}
         </Box>
       </Box>
@@ -306,12 +510,25 @@ const PersonalizationSection = () => (
           </Box>
     </Box>
   </Box>
-);
+      </motion.div>
+    </motion.div>
+  );
+};
 
 export function HowItWorks() {
+  const algorithmRef = React.useRef(null);
+  const isAlgorithmInView = useInView(algorithmRef, { once: true, margin: "-100px" });
+
   return (
     <React.Fragment>
-      <AlgorithmInfographic />
+      <motion.div
+        ref={algorithmRef}
+        variants={sectionVariants}
+        initial="hidden"
+        animate={isAlgorithmInView ? "visible" : "hidden"}
+      >
+        <AlgorithmInfographic />
+      </motion.div>
       <Divider />
       <GamificationSection />
       <Divider />
