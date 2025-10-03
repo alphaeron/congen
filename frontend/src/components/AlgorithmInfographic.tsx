@@ -704,7 +704,8 @@ export default function WorkoutAlgorithmInfographicStructured() {
             <div style={{
               position: 'absolute',
               bottom: '-34px',
-              left: `${GROUP_PADDING + COMPONENT_WIDTH / 2}px`,
+              left: '50%',
+              transform: 'translateX(-50%)',
               width: `${LINE_WIDTH}px`,
               height: '40px',
               background: COLORS.electricity,
@@ -905,7 +906,8 @@ export default function WorkoutAlgorithmInfographicStructured() {
             <div style={{
               position: 'absolute',
               bottom: '-34px',
-              left: `${GROUP_PADDING + COMPONENT_WIDTH / 2}px`,
+              left: '50%',
+              transform: 'translateX(-50%)',
               width: `${LINE_WIDTH}px`,
               height: '40px',
               background: COLORS.electricity,
@@ -1185,7 +1187,8 @@ export default function WorkoutAlgorithmInfographicStructured() {
             <div style={{
               position: 'absolute',
               bottom: '-34px',
-              left: `${GROUP_PADDING + COMPONENT_WIDTH / 2}px`,
+              left: '50%',
+              transform: 'translateX(-50%)',
               width: `${LINE_WIDTH}px`,
               height: '40px',
               background: COLORS.electricity,
