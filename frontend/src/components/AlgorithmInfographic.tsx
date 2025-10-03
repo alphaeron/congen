@@ -149,7 +149,7 @@ function CircuitComponent({ node, groupIndex, itemIndex }: { node: any; groupInd
           display: 'flex',
           alignItems: 'flex-end',
           justifyContent: 'center',
-          paddingBottom: '15px',
+          paddingBottom: `${GROUP_PADDING}px`,
           position: 'relative' as const,
           color: COLORS.text,
           fontWeight: '600',
@@ -337,7 +337,7 @@ function ConnectingLine({
           position: 'absolute',
           top: '-1px',
           left: 0,
-          width: '15px',
+          width: `${GROUP_PADDING}px`,
           height: '3px',
           background: COLORS.electricityBright,
           borderRadius: '2px',
@@ -478,7 +478,7 @@ export default function WorkoutAlgorithmInfographicStructured() {
              display: 'flex', 
              justifyContent: 'space-between', 
              alignItems: 'center',
-             padding: '15px',
+             padding: `${GROUP_PADDING}px`,
              position: 'relative'
            }}>
              {/* Horizontal line at top of group */}
@@ -568,23 +568,36 @@ export default function WorkoutAlgorithmInfographicStructured() {
               {/* Vertical line from top of component to group top */}
               <div style={{
                 position: 'absolute',
-                top: '-15px',
+                top: `-${GROUP_PADDING}px`,
                 left: '50%',
                 transform: 'translateX(-50%)',
                 width: `${LINE_WIDTH}px`,
-                height: '15px',
+                height: `${GROUP_PADDING}px`,
                 background: COLORS.electricity,
                 boxShadow: `0 0 5px ${COLORS.electricity}`,
                 zIndex: 1
               }} />
+              {/* Vertical background circuit extending upward from corner */}
+              <div style={{
+                position: 'absolute',
+                top: `calc(-${GROUP_PADDING}px - 10vh)`,
+                left: '50%',
+                transform: 'translateX(-50%)',
+                width: '2px',
+                height: '10vh',
+                background: COLORS.electricity,
+                boxShadow: `0 0 5px ${COLORS.electricity}`,
+                zIndex: 1,
+                opacity: 0.3
+              }} />
               {/* Vertical line from bottom of component to group bottom */}
               <div style={{
                 position: 'absolute',
-                bottom: '-15px',
+                bottom: `-${GROUP_PADDING}px`,
                 left: '50%',
                 transform: 'translateX(-50%)',
                 width: `${LINE_WIDTH}px`,
-                height: '15px',
+                height: `${GROUP_PADDING}px`,
                 background: COLORS.electricity,
                 boxShadow: `0 0 5px ${COLORS.electricity}`,
                 zIndex: 1
@@ -609,23 +622,36 @@ export default function WorkoutAlgorithmInfographicStructured() {
               {/* Vertical line from top of component to group top */}
               <div style={{
                 position: 'absolute',
-                top: '-15px',
+                top: `-${GROUP_PADDING}px`,
                 left: '50%',
                 transform: 'translateX(-50%)',
                 width: `${LINE_WIDTH}px`,
-                height: '15px',
+                height: `${GROUP_PADDING}px`,
                 background: COLORS.electricity,
                 boxShadow: `0 0 5px ${COLORS.electricity}`,
                 zIndex: 1
               }} />
+              {/* Vertical background circuit extending upward from corner (shorter) */}
+              <div style={{
+                position: 'absolute',
+                top: `calc(-${GROUP_PADDING}px - 5vh)`,
+                left: '50%',
+                transform: 'translateX(-50%)',
+                width: '2px',
+                height: '5vh',
+                background: COLORS.electricity,
+                boxShadow: `0 0 5px ${COLORS.electricity}`,
+                zIndex: 1,
+                opacity: 0.3
+              }} />
               {/* Vertical line from bottom of component to group bottom */}
               <div style={{
                 position: 'absolute',
-                bottom: '-15px',
+                bottom: `-${GROUP_PADDING}px`,
                 left: '50%',
                 transform: 'translateX(-50%)',
                 width: `${LINE_WIDTH}px`,
-                height: '15px',
+                height: `${GROUP_PADDING}px`,
                 background: COLORS.electricity,
                 boxShadow: `0 0 5px ${COLORS.electricity}`,
                 zIndex: 1
@@ -638,23 +664,36 @@ export default function WorkoutAlgorithmInfographicStructured() {
               {/* Vertical line from top of component to group top */}
               <div style={{
                 position: 'absolute',
-                top: '-15px',
+                top: `-${GROUP_PADDING}px`,
                 left: '50%',
                 transform: 'translateX(-50%)',
                 width: `${LINE_WIDTH}px`,
-                height: '15px',
+                height: `${GROUP_PADDING}px`,
                 background: COLORS.electricity,
                 boxShadow: `0 0 5px ${COLORS.electricity}`,
                 zIndex: 1
               }} />
+              {/* Vertical background circuit extending to top of Advanced Algorithm section */}
+              <div style={{
+                position: 'absolute',
+                top: `calc(-100% - ${GROUP_PADDING}px + ${2 * LINE_WIDTH}px)`,
+                left: '50%',
+                transform: 'translateX(-50%)',
+                width: '2px',
+                height: '100%',
+                background: COLORS.electricity,
+                boxShadow: `0 0 5px ${COLORS.electricity}`,
+                zIndex: 1,
+                opacity: 0.3
+              }} />
               {/* Vertical line from bottom of component to group bottom */}
               <div style={{
                 position: 'absolute',
-                bottom: '-15px',
+                bottom: `-${GROUP_PADDING}px`,
                 left: '50%',
                 transform: 'translateX(-50%)',
                 width: `${LINE_WIDTH}px`,
-                height: '15px',
+                height: `${GROUP_PADDING}px`,
                 background: COLORS.electricity,
                 boxShadow: `0 0 5px ${COLORS.electricity}`,
                 zIndex: 1
@@ -679,7 +718,7 @@ export default function WorkoutAlgorithmInfographicStructured() {
              display: 'flex', 
              justifyContent: 'space-between', 
              alignItems: 'center',
-             padding: '15px',
+             padding: `${GROUP_PADDING}px`,
              position: 'relative'
            }}>
              {/* Horizontal line at top of group */}
@@ -769,11 +808,11 @@ export default function WorkoutAlgorithmInfographicStructured() {
               {/* Vertical line from top of component to group top */}
               <div style={{
                 position: 'absolute',
-                top: '-15px',
+                top: `-${GROUP_PADDING}px`,
                 left: '50%',
                 transform: 'translateX(-50%)',
                 width: `${LINE_WIDTH}px`,
-                height: '15px',
+                height: `${GROUP_PADDING}px`,
                 background: COLORS.electricity,
                 boxShadow: `0 0 5px ${COLORS.electricity}`,
                 zIndex: 1
@@ -781,11 +820,11 @@ export default function WorkoutAlgorithmInfographicStructured() {
               {/* Vertical line from bottom of component to group bottom */}
               <div style={{
                 position: 'absolute',
-                bottom: '-15px',
+                bottom: `-${GROUP_PADDING}px`,
                 left: '50%',
                 transform: 'translateX(-50%)',
                 width: `${LINE_WIDTH}px`,
-                height: '15px',
+                height: `${GROUP_PADDING}px`,
                 background: COLORS.electricity,
                 boxShadow: `0 0 5px ${COLORS.electricity}`,
                 zIndex: 1
@@ -810,11 +849,11 @@ export default function WorkoutAlgorithmInfographicStructured() {
               {/* Vertical line from top of component to group top */}
               <div style={{
                 position: 'absolute',
-                top: '-15px',
+                top: `-${GROUP_PADDING}px`,
                 left: '50%',
                 transform: 'translateX(-50%)',
                 width: `${LINE_WIDTH}px`,
-                height: '15px',
+                height: `${GROUP_PADDING}px`,
                 background: COLORS.electricity,
                 boxShadow: `0 0 5px ${COLORS.electricity}`,
                 zIndex: 1
@@ -822,11 +861,11 @@ export default function WorkoutAlgorithmInfographicStructured() {
               {/* Vertical line from bottom of component to group bottom */}
               <div style={{
                 position: 'absolute',
-                bottom: '-15px',
+                bottom: `-${GROUP_PADDING}px`,
                 left: '50%',
                 transform: 'translateX(-50%)',
                 width: `${LINE_WIDTH}px`,
-                height: '15px',
+                height: `${GROUP_PADDING}px`,
                 background: COLORS.electricity,
                 boxShadow: `0 0 5px ${COLORS.electricity}`,
                 zIndex: 1
@@ -839,11 +878,11 @@ export default function WorkoutAlgorithmInfographicStructured() {
               {/* Vertical line from top of component to group top */}
               <div style={{
                 position: 'absolute',
-                top: '-15px',
+                top: `-${GROUP_PADDING}px`,
                 left: '50%',
                 transform: 'translateX(-50%)',
                 width: `${LINE_WIDTH}px`,
-                height: '15px',
+                height: `${GROUP_PADDING}px`,
                 background: COLORS.electricity,
                 boxShadow: `0 0 5px ${COLORS.electricity}`,
                 zIndex: 1
@@ -851,11 +890,11 @@ export default function WorkoutAlgorithmInfographicStructured() {
               {/* Vertical line from bottom of component to group bottom */}
               <div style={{
                 position: 'absolute',
-                bottom: '-15px',
+                bottom: `-${GROUP_PADDING}px`,
                 left: '50%',
                 transform: 'translateX(-50%)',
                 width: `${LINE_WIDTH}px`,
-                height: '15px',
+                height: `${GROUP_PADDING}px`,
                 background: COLORS.electricity,
                 boxShadow: `0 0 5px ${COLORS.electricity}`,
                 zIndex: 1
@@ -879,8 +918,8 @@ export default function WorkoutAlgorithmInfographicStructured() {
            <div style={{ 
              display: 'flex', 
              flexDirection: 'column',
-             gap: '15px',
-             padding: '15px',
+             gap: `${GROUP_PADDING}px`,
+             padding: `${GROUP_PADDING}px`,
              position: 'relative'
            }}>
              {/* Horizontal line at top of group */}
@@ -971,11 +1010,11 @@ export default function WorkoutAlgorithmInfographicStructured() {
                 {/* Vertical line from top of component to group top */}
                 <div style={{
                   position: 'absolute',
-                  top: '-15px',
+                  top: `-${GROUP_PADDING}px`,
                   left: '50%',
                   transform: 'translateX(-50%)',
                   width: `${LINE_WIDTH}px`,
-                  height: '15px',
+                  height: `${GROUP_PADDING}px`,
                   background: COLORS.electricity,
                   boxShadow: `0 0 5px ${COLORS.electricity}`,
                   zIndex: 1
@@ -984,10 +1023,10 @@ export default function WorkoutAlgorithmInfographicStructured() {
                 <div style={{
                   position: 'absolute',
                   left: '50%',
-                  bottom: `-15px`,
+                  bottom: `-${GROUP_PADDING}px`,
                   transform: 'translateX(-50%)',
                   width: `${LINE_WIDTH}px`,
-                  height: `15px`,
+                  height: `${GROUP_PADDING}px`,
                   background: COLORS.electricity,
                   boxShadow: `0 0 5px ${COLORS.electricity}`,
                   zIndex: 1
@@ -1012,11 +1051,11 @@ export default function WorkoutAlgorithmInfographicStructured() {
                 {/* Vertical line from top of component to group top */}
                 <div style={{
                   position: 'absolute',
-                  top: '-15px',
+                  top: `-${GROUP_PADDING}px`,
                   left: '50%',
                   transform: 'translateX(-50%)',
                   width: `${LINE_WIDTH}px`,
-                  height: '15px',
+                  height: `${GROUP_PADDING}px`,
                   background: COLORS.electricity,
                   boxShadow: `0 0 5px ${COLORS.electricity}`,
                   zIndex: 1
@@ -1025,10 +1064,10 @@ export default function WorkoutAlgorithmInfographicStructured() {
                 <div style={{
                   position: 'absolute',
                   left: '50%',
-                  bottom: `-15px`,
+                  bottom: `-${GROUP_PADDING}px`,
                   transform: 'translateX(-50%)',
                   width: `${LINE_WIDTH}px`,
-                  height: `15px`,
+                  height: `${GROUP_PADDING}px`,
                   background: COLORS.electricity,
                   boxShadow: `0 0 5px ${COLORS.electricity}`,
                   zIndex: 1
@@ -1041,11 +1080,11 @@ export default function WorkoutAlgorithmInfographicStructured() {
                 {/* Vertical line from top of component to group top */}
                 <div style={{
                   position: 'absolute',
-                  top: '-15px',
+                  top: `-${GROUP_PADDING}px`,
                   left: '50%',
                   transform: 'translateX(-50%)',
                   width: `${LINE_WIDTH}px`,
-                  height: '15px',
+                  height: `${GROUP_PADDING}px`,
                   background: COLORS.electricity,
                   boxShadow: `0 0 5px ${COLORS.electricity}`,
                   zIndex: 1
@@ -1054,10 +1093,10 @@ export default function WorkoutAlgorithmInfographicStructured() {
                 <div style={{
                   position: 'absolute',
                   left: '50%',
-                  bottom: `-15px`,
+                  bottom: `-${GROUP_PADDING}px`,
                   transform: 'translateX(-50%)',
                   width: `${LINE_WIDTH}px`,
-                  height: `15px`,
+                  height: `${GROUP_PADDING}px`,
                   background: COLORS.electricity,
                   boxShadow: `0 0 5px ${COLORS.electricity}`,
                   zIndex: 1
@@ -1084,11 +1123,11 @@ export default function WorkoutAlgorithmInfographicStructured() {
                 {/* Vertical line from bottom of component to group bottom */}
                 <div style={{
                   position: 'absolute',
-                  bottom: '-15px',
+                  bottom: `-${GROUP_PADDING}px`,
                   left: '50%',
                   transform: 'translateX(-50%)',
                   width: `${LINE_WIDTH}px`,
-                  height: '15px',
+                  height: `${GROUP_PADDING}px`,
                   background: COLORS.electricity,
                   boxShadow: `0 0 5px ${COLORS.electricity}`,
                   zIndex: 1
@@ -1113,11 +1152,11 @@ export default function WorkoutAlgorithmInfographicStructured() {
                 {/* Vertical line from bottom of component to group bottom */}
                 <div style={{
                   position: 'absolute',
-                  bottom: '-15px',
+                  bottom: `-${GROUP_PADDING}px`,
                   left: '50%',
                   transform: 'translateX(-50%)',
                   width: `${LINE_WIDTH}px`,
-                  height: '15px',
+                  height: `${GROUP_PADDING}px`,
                   background: COLORS.electricity,
                   boxShadow: `0 0 5px ${COLORS.electricity}`,
                   zIndex: 1
@@ -1130,11 +1169,11 @@ export default function WorkoutAlgorithmInfographicStructured() {
                 {/* Vertical line from bottom of component to group bottom */}
                 <div style={{
                   position: 'absolute',
-                  bottom: '-15px',
+                  bottom: `-${GROUP_PADDING}px`,
                   left: '50%',
                   transform: 'translateX(-50%)',
                   width: `${LINE_WIDTH}px`,
-                  height: '15px',
+                  height: `${GROUP_PADDING}px`,
                   background: COLORS.electricity,
                   boxShadow: `0 0 5px ${COLORS.electricity}`,
                   zIndex: 1
@@ -1160,7 +1199,7 @@ export default function WorkoutAlgorithmInfographicStructured() {
              display: 'flex', 
              justifyContent: 'space-between', 
              alignItems: 'center',
-             padding: '15px',
+             padding: `${GROUP_PADDING}px`,
              position: 'relative'
            }}>
              {/* Horizontal line at top of group */}
@@ -1250,11 +1289,11 @@ export default function WorkoutAlgorithmInfographicStructured() {
               {/* Vertical line from tip of triangle to group top */}
               <div style={{
                 position: 'absolute',
-                top: '-15px',
+                top: `-${GROUP_PADDING}px`,
                 left: '50%',
                 transform: 'translateX(-50%)',
                 width: `${LINE_WIDTH}px`,
-                height: '15px',
+                height: `${GROUP_PADDING}px`,
                 background: COLORS.electricity,
                 boxShadow: `0 0 5px ${COLORS.electricity}`,
                 zIndex: 1
@@ -1262,7 +1301,7 @@ export default function WorkoutAlgorithmInfographicStructured() {
               {/* Vertical line from bottom center of triangle to group bottom */}
               <div style={{
                 position: 'absolute',
-                bottom: '-15px',
+                bottom: `-${GROUP_PADDING}px`,
                 left: '50%',
                 transform: 'translateX(-50%)',
                 width: `${LINE_WIDTH}px`,
@@ -1291,11 +1330,11 @@ export default function WorkoutAlgorithmInfographicStructured() {
               {/* Vertical line from tip of triangle to group top */}
               <div style={{
                 position: 'absolute',
-                top: '-15px',
+                top: `-${GROUP_PADDING}px`,
                 left: '50%',
                 transform: 'translateX(-50%)',
                 width: `${LINE_WIDTH}px`,
-                height: '15px',
+                height: `${GROUP_PADDING}px`,
                 background: COLORS.electricity,
                 boxShadow: `0 0 5px ${COLORS.electricity}`,
                 zIndex: 1
@@ -1303,7 +1342,7 @@ export default function WorkoutAlgorithmInfographicStructured() {
               {/* Vertical line from bottom center of triangle to group bottom */}
               <div style={{
                 position: 'absolute',
-                bottom: '-15px',
+                bottom: `-${GROUP_PADDING}px`,
                 left: '50%',
                 transform: 'translateX(-50%)',
                 width: `${LINE_WIDTH}px`,
@@ -1332,11 +1371,11 @@ export default function WorkoutAlgorithmInfographicStructured() {
               {/* Vertical line from tip of triangle to group top */}
               <div style={{
                 position: 'absolute',
-                top: '-15px',
+                top: `-${GROUP_PADDING}px`,
                 left: '50%',
                 transform: 'translateX(-50%)',
                 width: `${LINE_WIDTH}px`,
-                height: '15px',
+                height: `${GROUP_PADDING}px`,
                 background: COLORS.electricity,
                 boxShadow: `0 0 5px ${COLORS.electricity}`,
                 zIndex: 1
@@ -1344,7 +1383,7 @@ export default function WorkoutAlgorithmInfographicStructured() {
               {/* Vertical line from bottom center of triangle to group bottom */}
               <div style={{
                 position: 'absolute',
-                bottom: '-15px',
+                bottom: `-${GROUP_PADDING}px`,
                 left: '50%',
                 transform: 'translateX(-50%)',
                 width: `${LINE_WIDTH}px`,
@@ -1373,11 +1412,11 @@ export default function WorkoutAlgorithmInfographicStructured() {
               {/* Vertical line from tip of triangle to group top */}
               <div style={{
                 position: 'absolute',
-                top: '-15px',
+                top: `-${GROUP_PADDING}px`,
                 left: '50%',
                 transform: 'translateX(-50%)',
                 width: `${LINE_WIDTH}px`,
-                height: '15px',
+                height: `${GROUP_PADDING}px`,
                 background: COLORS.electricity,
                 boxShadow: `0 0 5px ${COLORS.electricity}`,
                 zIndex: 1
@@ -1385,7 +1424,7 @@ export default function WorkoutAlgorithmInfographicStructured() {
               {/* Vertical line from bottom center of triangle to group bottom */}
               <div style={{
                 position: 'absolute',
-                bottom: '-15px',
+                bottom: `-${GROUP_PADDING}px`,
                 left: '50%',
                 transform: 'translateX(-50%)',
                 width: `${LINE_WIDTH}px`,
@@ -1402,11 +1441,11 @@ export default function WorkoutAlgorithmInfographicStructured() {
               {/* Vertical line from tip of triangle to group top */}
               <div style={{
                 position: 'absolute',
-                top: '-15px',
+                top: `-${GROUP_PADDING}px`,
                 left: '50%',
                 transform: 'translateX(-50%)',
                 width: `${LINE_WIDTH}px`,
-                height: '15px',
+                height: `${GROUP_PADDING}px`,
                 background: COLORS.electricity,
                 boxShadow: `0 0 5px ${COLORS.electricity}`,
                 zIndex: 1
@@ -1414,7 +1453,7 @@ export default function WorkoutAlgorithmInfographicStructured() {
               {/* Vertical line from bottom center of triangle to group bottom */}
               <div style={{
                 position: 'absolute',
-                bottom: '-15px',
+                bottom: `-${GROUP_PADDING}px`,
                 left: '50%',
                 transform: 'translateX(-50%)',
                 width: `${LINE_WIDTH}px`,
