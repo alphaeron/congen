@@ -409,36 +409,13 @@ export default function WorkoutAlgorithmInfographicStructured() {
       fontFamily: 'Inter, Roboto, system-ui, Arial',
       position: 'relative'
     }}>
-      {/* Circuit board background pattern */}
-      <div style={{
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        background: `
-          radial-gradient(circle at 20% 20%, ${COLORS.copper}20 1px, transparent 1px),
-          radial-gradient(circle at 80% 80%, ${COLORS.copper}20 1px, transparent 1px),
-          radial-gradient(circle at 40% 60%, ${COLORS.copper}15 1px, transparent 1px),
-          linear-gradient(45deg, ${COLORS.circuitBoard} 0%, ${COLORS.bg} 100%)
-        `,
-        backgroundSize: '50px 50px, 30px 30px, 70px 70px, 100% 100%',
-        opacity: 0.3,
-        zIndex: 0
-      }} />
-
       <div style={{
         maxWidth: 900,
         width: '100%',
         margin: '0 auto',
-        borderRadius: 8,
-        padding: 20,
-        background: COLORS.circuitBoard,
-        border: `2px solid ${COLORS.copper}`,
         position: 'relative',
         overflow: 'visible',
-        zIndex: 1,
-        boxShadow: `0 0 20px ${COLORS.copper}40, inset 0 0 20px rgba(0,0,0,0.3)`
+        zIndex: 1
       }}>
         {/* Circuit layout */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: `${GROUP_GAP}px`, padding: '20px 0', position: 'relative' }}>
