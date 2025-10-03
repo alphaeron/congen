@@ -752,6 +752,18 @@ export default function WorkoutAlgorithmInfographicStructured() {
                   boxShadow: `0 0 5px ${COLORS.electricity}`,
                   zIndex: 1
                 }} />
+                {/* Vertical line from top of component to group top */}
+                <div style={{
+                  position: 'absolute',
+                  top: '-15px',
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  width: '2px',
+                  height: '15px',
+                  background: COLORS.electricity,
+                  boxShadow: `0 0 5px ${COLORS.electricity}`,
+                  zIndex: 1
+                }} />
                 {/* Vertical line extending down */}
                 <div style={{
                   position: 'absolute',
@@ -781,6 +793,18 @@ export default function WorkoutAlgorithmInfographicStructured() {
                   boxShadow: `0 0 5px ${COLORS.electricity}`,
                   zIndex: 1
                 }} />
+                {/* Vertical line from top of component to group top */}
+                <div style={{
+                  position: 'absolute',
+                  top: '-15px',
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  width: '2px',
+                  height: '15px',
+                  background: COLORS.electricity,
+                  boxShadow: `0 0 5px ${COLORS.electricity}`,
+                  zIndex: 1
+                }} />
                 {/* Vertical line extending down */}
                 <div style={{
                   position: 'absolute',
@@ -798,6 +822,18 @@ export default function WorkoutAlgorithmInfographicStructured() {
               {/* Third component - Weak Point Targeting */}
               <div style={{ position: 'relative' }}>
                 <CircuitComponent node={STAGES.weak_point_targeting} groupIndex={2} itemIndex={2} />
+                {/* Vertical line from top of component to group top */}
+                <div style={{
+                  position: 'absolute',
+                  top: '-15px',
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  width: '2px',
+                  height: '15px',
+                  background: COLORS.electricity,
+                  boxShadow: `0 0 5px ${COLORS.electricity}`,
+                  zIndex: 1
+                }} />
                 {/* Vertical line extending down */}
                 <div style={{
                   position: 'absolute',
@@ -829,6 +865,18 @@ export default function WorkoutAlgorithmInfographicStructured() {
                   boxShadow: `0 0 5px ${COLORS.electricity}`,
                   zIndex: 1
                 }} />
+                {/* Vertical line from bottom of component to group bottom */}
+                <div style={{
+                  position: 'absolute',
+                  bottom: '-15px',
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  width: '2px',
+                  height: '15px',
+                  background: COLORS.electricity,
+                  boxShadow: `0 0 5px ${COLORS.electricity}`,
+                  zIndex: 1
+                }} />
               </div>
               
               {/* Second component - Weight Selection */}
@@ -846,10 +894,36 @@ export default function WorkoutAlgorithmInfographicStructured() {
                   boxShadow: `0 0 5px ${COLORS.electricity}`,
                   zIndex: 1
                 }} />
+                {/* Vertical line from bottom of component to group bottom */}
+                <div style={{
+                  position: 'absolute',
+                  bottom: '-15px',
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  width: '2px',
+                  height: '15px',
+                  background: COLORS.electricity,
+                  boxShadow: `0 0 5px ${COLORS.electricity}`,
+                  zIndex: 1
+                }} />
               </div>
               
               {/* Third component - Set Scheme Generation */}
-              <CircuitComponent node={STAGES.set_scheme_generation} groupIndex={2} itemIndex={5} />
+              <div style={{ position: 'relative' }}>
+                <CircuitComponent node={STAGES.set_scheme_generation} groupIndex={2} itemIndex={5} />
+                {/* Vertical line from bottom of component to group bottom */}
+                <div style={{
+                  position: 'absolute',
+                  bottom: '-15px',
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  width: '2px',
+                  height: '15px',
+                  background: COLORS.electricity,
+                  boxShadow: `0 0 5px ${COLORS.electricity}`,
+                  zIndex: 1
+                }} />
+              </div>
             </div>
           </div>
 
