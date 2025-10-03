@@ -451,6 +451,28 @@ export default function WorkoutAlgorithmInfographicStructured() {
             background: `${COLORS.component}40`,
             position: 'relative'
           }}>
+            {/* Horizontal line at top of group */}
+            <div style={{
+              position: 'absolute',
+              top: '0px',
+              left: `${15 + COMPONENT_WIDTH / 2}px`,
+              width: `calc(100% - ${30 + COMPONENT_WIDTH}px)`,
+              height: '2px',
+              background: COLORS.electricity,
+              boxShadow: `0 0 5px ${COLORS.electricity}`,
+              zIndex: 1
+            }} />
+            {/* Horizontal line at bottom of group */}
+            <div style={{
+              position: 'absolute',
+              bottom: '0px',
+              left: `${15 + COMPONENT_WIDTH / 2}px`,
+              width: `calc(100% - ${30 + COMPONENT_WIDTH}px)`,
+              height: '2px',
+              background: COLORS.electricity,
+              boxShadow: `0 0 5px ${COLORS.electricity}`,
+              zIndex: 1
+            }} />
             <div style={{
               position: 'absolute',
               top: '-12px',
@@ -587,6 +609,28 @@ export default function WorkoutAlgorithmInfographicStructured() {
             background: `${COLORS.component}40`,
             position: 'relative'
           }}>
+            {/* Horizontal line at top of group */}
+            <div style={{
+              position: 'absolute',
+              top: '0px',
+              left: `${15 + COMPONENT_WIDTH / 2}px`,
+              width: `calc(100% - ${30 + COMPONENT_WIDTH}px)`,
+              height: '2px',
+              background: COLORS.electricity,
+              boxShadow: `0 0 5px ${COLORS.electricity}`,
+              zIndex: 1
+            }} />
+            {/* Horizontal line at bottom of group */}
+            <div style={{
+              position: 'absolute',
+              bottom: '0px',
+              left: `${15 + COMPONENT_WIDTH / 2}px`,
+              width: `calc(100% - ${30 + COMPONENT_WIDTH}px)`,
+              height: '2px',
+              background: COLORS.electricity,
+              boxShadow: `0 0 5px ${COLORS.electricity}`,
+              zIndex: 1
+            }} />
             <div style={{
               position: 'absolute',
               top: '-12px',
@@ -723,6 +767,28 @@ export default function WorkoutAlgorithmInfographicStructured() {
             background: `${COLORS.component}40`,
             position: 'relative'
           }}>
+            {/* Horizontal line at top of group */}
+            <div style={{
+              position: 'absolute',
+              top: '0px',
+              left: `${15 + COMPONENT_WIDTH / 2}px`,
+              width: `calc(100% - ${30 + COMPONENT_WIDTH}px)`,
+              height: '2px',
+              background: COLORS.electricity,
+              boxShadow: `0 0 5px ${COLORS.electricity}`,
+              zIndex: 1
+            }} />
+            {/* Horizontal line at bottom of group */}
+            <div style={{
+              position: 'absolute',
+              bottom: '0px',
+              left: `${15 + COMPONENT_WIDTH / 2}px`,
+              width: `calc(100% - ${30 + COMPONENT_WIDTH}px)`,
+              height: '2px',
+              background: COLORS.electricity,
+              boxShadow: `0 0 5px ${COLORS.electricity}`,
+              zIndex: 1
+            }} />
             <div style={{
               position: 'absolute',
               top: '-12px',
@@ -938,6 +1004,28 @@ export default function WorkoutAlgorithmInfographicStructured() {
             background: `${COLORS.component}40`,
             position: 'relative'
           }}>
+            {/* Horizontal line at top of group */}
+            <div style={{
+              position: 'absolute',
+              top: '0px',
+              left: `${15 + COMPONENT_WIDTH / 2}px`,
+              width: `calc(100% - ${30 + COMPONENT_WIDTH}px)`,
+              height: '2px',
+              background: COLORS.electricity,
+              boxShadow: `0 0 5px ${COLORS.electricity}`,
+              zIndex: 1
+            }} />
+            {/* Horizontal line at bottom of group */}
+            <div style={{
+              position: 'absolute',
+              bottom: '0px',
+              left: `${15 + COMPONENT_WIDTH / 2}px`,
+              width: `calc(100% - ${30 + COMPONENT_WIDTH}px)`,
+              height: '2px',
+              background: COLORS.electricity,
+              boxShadow: `0 0 5px ${COLORS.electricity}`,
+              zIndex: 1
+            }} />
             <div style={{
               position: 'absolute',
               top: '-12px',
