@@ -453,18 +453,6 @@ export default function WorkoutAlgorithmInfographicStructured() {
               boxShadow: `0 0 5px ${COLORS.electricity}`,
               zIndex: 1
             }} />
-            <div style={{
-              position: 'absolute',
-              top: '-12px',
-              left: '20px',
-              background: COLORS.circuitBoard,
-              padding: '0 10px',
-              color: COLORS.electricity,
-              fontSize: '12px',
-              fontWeight: 'bold'
-            }}>
-              INPUT SENSORS
-            </div>
             
             {/* First component - Equipment */}
             <div style={{ position: 'relative' }}>
@@ -624,18 +612,6 @@ export default function WorkoutAlgorithmInfographicStructured() {
               boxShadow: `0 0 5px ${COLORS.electricity}`,
               zIndex: 1
             }} />
-            <div style={{
-              position: 'absolute',
-              top: '-12px',
-              left: '20px',
-              background: COLORS.circuitBoard,
-              padding: '0 10px',
-              color: COLORS.electricity,
-              fontSize: '12px',
-              fontWeight: 'bold'
-            }}>
-              PROCESSING UNITS
-            </div>
             
             {/* First component - Sliding Window Analysis */}
             <div style={{ position: 'relative' }}>
@@ -795,18 +771,6 @@ export default function WorkoutAlgorithmInfographicStructured() {
               boxShadow: `0 0 5px ${COLORS.electricity}`,
               zIndex: 1
             }} />
-            <div style={{
-              position: 'absolute',
-              top: '-12px',
-              left: '20px',
-              background: COLORS.circuitBoard,
-              padding: '0 10px',
-              color: COLORS.electricity,
-              fontSize: '12px',
-              fontWeight: 'bold'
-            }}>
-              GENERATION PROCESSORS
-            </div>
             {/* Top row */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               {/* First component - Session Time Allocation */}
@@ -1045,18 +1009,6 @@ export default function WorkoutAlgorithmInfographicStructured() {
               boxShadow: `0 0 5px ${COLORS.electricity}`,
               zIndex: 1
             }} />
-            <div style={{
-              position: 'absolute',
-              top: '-12px',
-              left: '20px',
-              background: COLORS.circuitBoard,
-              padding: '0 10px',
-              color: COLORS.electricity,
-              fontSize: '12px',
-              fontWeight: 'bold'
-            }}>
-              OUTPUT ACTUATORS
-            </div>
             
             {/* First component - Warmup */}
             <div style={{ position: 'relative' }}>
