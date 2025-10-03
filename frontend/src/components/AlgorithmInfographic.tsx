@@ -144,8 +144,11 @@ function CircuitComponent({ node, groupIndex, itemIndex }: { node: any; groupInd
           lineHeight: '13px',
           boxSizing: 'border-box' as const,
           border: 'none',
-          overflow: 'hidden' as const,
-          boxShadow: `0 0 10px ${node.ledColor}40`
+          borderWidth: '0',
+          borderStyle: 'none',
+          overflow: 'visible' as const,
+          boxShadow: 'none',
+          outline: 'none'
         }
       default:
         return baseStyles
@@ -160,19 +163,20 @@ function CircuitComponent({ node, groupIndex, itemIndex }: { node: any; groupInd
       transition={{ duration: 0.6 }}
       whileHover={{ scale: 1.02 }}
     >
-      {/* Electrical flow along borders */}
-      <motion.div
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          border: `2px solid ${COLORS.electricity}`,
-          borderRadius: node.shape === 'circle' ? '50%' : node.shape === 'triangle' ? '0' : '4px',
-          zIndex: 1,
-          opacity: 0.8
-        }}
+      {/* Electrical flow along borders - disabled for Output Actuators triangles */}
+      {!(node.shape === 'triangle' && groupIndex === 3) && (
+        <motion.div
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            border: `2px solid ${COLORS.electricity}`,
+            borderRadius: node.shape === 'circle' ? '50%' : node.shape === 'triangle' ? '0' : '4px',
+            zIndex: 1,
+            opacity: 0.8
+          }}
         animate={{
           boxShadow: [
             `0 0 5px ${COLORS.electricity}`,
@@ -188,59 +192,36 @@ function CircuitComponent({ node, groupIndex, itemIndex }: { node: any; groupInd
           ease: "easeInOut"
         }}
       />
+      )}
 
-      {/* LED indicator */}
-      <motion.div
-        style={{
-          position: 'absolute',
-          top: '8px',
-          right: '8px',
-          width: '8px',
-          height: '8px',
-          borderRadius: '50%',
-          background: node.ledColor,
-          zIndex: 3
-        }}
-        animate={{
-          opacity: [0.3, 1, 0.3],
-          boxShadow: [
-            `0 0 5px ${node.ledColor}`,
-            `0 0 15px ${node.ledColor}`,
-            `0 0 5px ${node.ledColor}`
-          ]
-        }}
-        transition={{
-          delay: totalDelay + 0.5,
-          duration: 1.5,
-          repeat: Infinity,
-          repeatDelay: 2.5,
-          ease: "easeInOut"
-        }}
-      />
 
-      {/* Component pins/connectors */}
-      <div style={{
-        position: 'absolute',
-        top: '50%',
-        left: '-4px',
-        width: '8px',
-        height: '2px',
-        background: COLORS.copper,
-        borderRadius: '1px',
-        transform: 'translateY(-50%)',
-        zIndex: 2
-      }} />
-      <div style={{
-        position: 'absolute',
-        top: '50%',
-        right: '-4px',
-        width: '8px',
-        height: '2px',
-        background: COLORS.copper,
-        borderRadius: '1px',
-        transform: 'translateY(-50%)',
-        zIndex: 2
-      }} />
+      {/* Component pins/connectors - side pins removed for triangles */}
+      {node.shape !== 'triangle' && (
+        <>
+          <div style={{
+            position: 'absolute',
+            top: '50%',
+            left: '-4px',
+            width: '8px',
+            height: '2px',
+            background: COLORS.copper,
+            borderRadius: '1px',
+            transform: 'translateY(-50%)',
+            zIndex: 2
+          }} />
+          <div style={{
+            position: 'absolute',
+            top: '50%',
+            right: '-4px',
+            width: '8px',
+            height: '2px',
+            background: COLORS.copper,
+            borderRadius: '1px',
+            transform: 'translateY(-50%)',
+            zIndex: 2
+          }} />
+        </>
+      )}
       <div style={{
         position: 'absolute',
         top: '-4px',
@@ -266,7 +247,7 @@ function CircuitComponent({ node, groupIndex, itemIndex }: { node: any; groupInd
       
       {node.shape === 'triangle' ? (
         <>
-          {/* Triangle background using CSS */}
+          {/* Pure triangle shape - no rectangular container */}
           <div style={{
             position: 'absolute',
             top: 0,
@@ -276,8 +257,41 @@ function CircuitComponent({ node, groupIndex, itemIndex }: { node: any; groupInd
             background: COLORS.component,
             clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)',
             zIndex: 1,
-            border: `2px solid ${COLORS.componentBorder}`
+            boxShadow: `0 0 10px ${node.ledColor}40, inset 0 0 10px rgba(0,0,0,0.3)`
           }} />
+          {/* Triangle border using SVG with electrical flow animation */}
+          <motion.svg 
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: '100%',
+              zIndex: 2,
+              pointerEvents: 'none'
+            }}
+            animate={{
+              filter: [
+                'drop-shadow(0 0 5px #00ffff)',
+                'drop-shadow(0 0 20px #00ffff)',
+                'drop-shadow(0 0 5px #00ffff)'
+              ]
+            }}
+            transition={{
+              delay: totalDelay,
+              duration: 2,
+              repeat: Infinity,
+              repeatDelay: 3,
+              ease: "easeInOut"
+            }}
+          >
+            <polygon
+              points={`${COMPONENT_WIDTH/2},2 2,${COMPONENT_WIDTH-2} ${COMPONENT_WIDTH-2},${COMPONENT_WIDTH-2}`}
+              fill="none"
+              stroke={COLORS.electricity}
+              strokeWidth="2"
+            />
+          </motion.svg>
           {/* Text positioned at bottom */}
           <div style={{ 
             position: 'relative',
@@ -591,6 +605,18 @@ export default function WorkoutAlgorithmInfographicStructured() {
                   boxShadow: `0 0 5px ${COLORS.electricity}`,
                   zIndex: 1
                 }} />
+                {/* Vertical line extending down */}
+                <div style={{
+                  position: 'absolute',
+                  left: '50%',
+                  bottom: `-15px`,
+                  transform: 'translateX(-50%)',
+                  width: '2px',
+                  height: `15px`,
+                  background: COLORS.electricity,
+                  boxShadow: `0 0 5px ${COLORS.electricity}`,
+                  zIndex: 1
+                }} />
               </div>
               
               {/* Second component - Rotating Exercise Selection */}
@@ -608,10 +634,36 @@ export default function WorkoutAlgorithmInfographicStructured() {
                   boxShadow: `0 0 5px ${COLORS.electricity}`,
                   zIndex: 1
                 }} />
+                {/* Vertical line extending down */}
+                <div style={{
+                  position: 'absolute',
+                  left: '50%',
+                  bottom: `-15px`,
+                  transform: 'translateX(-50%)',
+                  width: '2px',
+                  height: `15px`,
+                  background: COLORS.electricity,
+                  boxShadow: `0 0 5px ${COLORS.electricity}`,
+                  zIndex: 1
+                }} />
               </div>
               
               {/* Third component - Weak Point Targeting */}
-              <CircuitComponent node={STAGES.weak_point_targeting} groupIndex={2} itemIndex={2} />
+              <div style={{ position: 'relative' }}>
+                <CircuitComponent node={STAGES.weak_point_targeting} groupIndex={2} itemIndex={2} />
+                {/* Vertical line extending down */}
+                <div style={{
+                  position: 'absolute',
+                  left: '50%',
+                  bottom: `-15px`,
+                  transform: 'translateX(-50%)',
+                  width: '2px',
+                  height: `15px`,
+                  background: COLORS.electricity,
+                  boxShadow: `0 0 5px ${COLORS.electricity}`,
+                  zIndex: 1
+                }} />
+              </div>
             </div>
             {/* Bottom row */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -681,69 +733,21 @@ export default function WorkoutAlgorithmInfographicStructured() {
             {/* First component - Warmup */}
             <div style={{ position: 'relative' }}>
               <CircuitComponent node={STAGES.warmup} groupIndex={3} itemIndex={0} />
-              {/* Line extending from right edge */}
-              <div style={{
-                position: 'absolute',
-                right: `-${COMPONENT_WIDTH}px`,
-                top: '50%',
-                transform: 'translateY(-50%)',
-                width: `${COMPONENT_WIDTH}px`,
-                height: '2px',
-                background: COLORS.electricity,
-                boxShadow: `0 0 5px ${COLORS.electricity}`,
-                zIndex: 1
-              }} />
             </div>
             
             {/* Second component - Primary */}
             <div style={{ position: 'relative' }}>
               <CircuitComponent node={STAGES.primary_out} groupIndex={3} itemIndex={1} />
-              {/* Line extending from right edge */}
-              <div style={{
-                position: 'absolute',
-                right: `-${COMPONENT_WIDTH}px`,
-                top: '50%',
-                transform: 'translateY(-50%)',
-                width: `${COMPONENT_WIDTH}px`,
-                height: '2px',
-                background: COLORS.electricity,
-                boxShadow: `0 0 5px ${COLORS.electricity}`,
-                zIndex: 1
-              }} />
             </div>
             
             {/* Third component - Secondary */}
             <div style={{ position: 'relative' }}>
               <CircuitComponent node={STAGES.secondary_out} groupIndex={3} itemIndex={2} />
-              {/* Line extending from right edge */}
-              <div style={{
-                position: 'absolute',
-                right: `-${COMPONENT_WIDTH}px`,
-                top: '50%',
-                transform: 'translateY(-50%)',
-                width: `${COMPONENT_WIDTH}px`,
-                height: '2px',
-                background: COLORS.electricity,
-                boxShadow: `0 0 5px ${COLORS.electricity}`,
-                zIndex: 1
-              }} />
             </div>
             
             {/* Fourth component - Accessory */}
             <div style={{ position: 'relative' }}>
               <CircuitComponent node={STAGES.accessory} groupIndex={3} itemIndex={3} />
-              {/* Line extending from right edge */}
-              <div style={{
-                position: 'absolute',
-                right: `-${COMPONENT_WIDTH}px`,
-                top: '50%',
-                transform: 'translateY(-50%)',
-                width: `${COMPONENT_WIDTH}px`,
-                height: '2px',
-                background: COLORS.electricity,
-                boxShadow: `0 0 5px ${COLORS.electricity}`,
-                zIndex: 1
-              }} />
             </div>
             
             {/* Fifth component - Conditioning */}
