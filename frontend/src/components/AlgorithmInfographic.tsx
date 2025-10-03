@@ -25,7 +25,7 @@ const COLORS = {
   text: '#e8e6ef',
   electricity: '#00ffff',
   electricityBright: '#ffffff',
-  component: '#2a2a2a',
+  component: 'rgba(0, 188, 212, 0.15)',
   componentBorder: '#4a4a4a',
   led: '#00ff00',
   ledBright: '#ffffff'
