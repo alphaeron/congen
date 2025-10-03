@@ -966,6 +966,30 @@ export default function WorkoutAlgorithmInfographicStructured() {
                 boxShadow: `0 0 5px ${COLORS.electricity}`,
                 zIndex: 1
               }} />
+              {/* Vertical line from tip of triangle to group top */}
+              <div style={{
+                position: 'absolute',
+                top: '-15px',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                width: '2px',
+                height: '15px',
+                background: COLORS.electricity,
+                boxShadow: `0 0 5px ${COLORS.electricity}`,
+                zIndex: 1
+              }} />
+              {/* Vertical line from bottom center of triangle to group bottom */}
+              <div style={{
+                position: 'absolute',
+                bottom: '-15px',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                width: '2px',
+                height: '15px',
+                background: COLORS.electricity,
+                boxShadow: `0 0 5px ${COLORS.electricity}`,
+                zIndex: 1
+              }} />
             </div>
             
             {/* Second component - Primary */}
@@ -979,6 +1003,30 @@ export default function WorkoutAlgorithmInfographicStructured() {
                 transform: 'translateY(-50%)',
                 width: `${COMPONENT_WIDTH * 3 / 4}px`,
                 height: '2px',
+                background: COLORS.electricity,
+                boxShadow: `0 0 5px ${COLORS.electricity}`,
+                zIndex: 1
+              }} />
+              {/* Vertical line from tip of triangle to group top */}
+              <div style={{
+                position: 'absolute',
+                top: '-15px',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                width: '2px',
+                height: '15px',
+                background: COLORS.electricity,
+                boxShadow: `0 0 5px ${COLORS.electricity}`,
+                zIndex: 1
+              }} />
+              {/* Vertical line from bottom center of triangle to group bottom */}
+              <div style={{
+                position: 'absolute',
+                bottom: '-15px',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                width: '2px',
+                height: '15px',
                 background: COLORS.electricity,
                 boxShadow: `0 0 5px ${COLORS.electricity}`,
                 zIndex: 1
@@ -1000,6 +1048,30 @@ export default function WorkoutAlgorithmInfographicStructured() {
                 boxShadow: `0 0 5px ${COLORS.electricity}`,
                 zIndex: 1
               }} />
+              {/* Vertical line from tip of triangle to group top */}
+              <div style={{
+                position: 'absolute',
+                top: '-15px',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                width: '2px',
+                height: '15px',
+                background: COLORS.electricity,
+                boxShadow: `0 0 5px ${COLORS.electricity}`,
+                zIndex: 1
+              }} />
+              {/* Vertical line from bottom center of triangle to group bottom */}
+              <div style={{
+                position: 'absolute',
+                bottom: '-15px',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                width: '2px',
+                height: '15px',
+                background: COLORS.electricity,
+                boxShadow: `0 0 5px ${COLORS.electricity}`,
+                zIndex: 1
+              }} />
             </div>
             
             {/* Fourth component - Accessory */}
@@ -1017,10 +1089,60 @@ export default function WorkoutAlgorithmInfographicStructured() {
                 boxShadow: `0 0 5px ${COLORS.electricity}`,
                 zIndex: 1
               }} />
+              {/* Vertical line from tip of triangle to group top */}
+              <div style={{
+                position: 'absolute',
+                top: '-15px',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                width: '2px',
+                height: '15px',
+                background: COLORS.electricity,
+                boxShadow: `0 0 5px ${COLORS.electricity}`,
+                zIndex: 1
+              }} />
+              {/* Vertical line from bottom center of triangle to group bottom */}
+              <div style={{
+                position: 'absolute',
+                bottom: '-15px',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                width: '2px',
+                height: '15px',
+                background: COLORS.electricity,
+                boxShadow: `0 0 5px ${COLORS.electricity}`,
+                zIndex: 1
+              }} />
             </div>
             
             {/* Fifth component - Conditioning */}
-            <CircuitComponent node={STAGES.conditioning} groupIndex={3} itemIndex={4} />
+            <div style={{ position: 'relative' }}>
+              <CircuitComponent node={STAGES.conditioning} groupIndex={3} itemIndex={4} />
+              {/* Vertical line from tip of triangle to group top */}
+              <div style={{
+                position: 'absolute',
+                top: '-15px',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                width: '2px',
+                height: '15px',
+                background: COLORS.electricity,
+                boxShadow: `0 0 5px ${COLORS.electricity}`,
+                zIndex: 1
+              }} />
+              {/* Vertical line from bottom center of triangle to group bottom */}
+              <div style={{
+                position: 'absolute',
+                bottom: '-15px',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                width: '2px',
+                height: '15px',
+                background: COLORS.electricity,
+                boxShadow: `0 0 5px ${COLORS.electricity}`,
+                zIndex: 1
+              }} />
+            </div>
           </div>
         </div>
       </div>
