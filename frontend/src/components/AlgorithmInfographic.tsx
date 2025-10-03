@@ -733,21 +733,69 @@ export default function WorkoutAlgorithmInfographicStructured() {
             {/* First component - Warmup */}
             <div style={{ position: 'relative' }}>
               <CircuitComponent node={STAGES.warmup} groupIndex={3} itemIndex={0} />
+              {/* Line extending from right edge */}
+              <div style={{
+                position: 'absolute',
+                right: `-${COMPONENT_WIDTH / 2}px`,
+                top: '50%',
+                transform: 'translateY(-50%)',
+                width: `${COMPONENT_WIDTH * 3 / 4}px`,
+                height: '2px',
+                background: COLORS.electricity,
+                boxShadow: `0 0 5px ${COLORS.electricity}`,
+                zIndex: 1
+              }} />
             </div>
             
             {/* Second component - Primary */}
             <div style={{ position: 'relative' }}>
               <CircuitComponent node={STAGES.primary_out} groupIndex={3} itemIndex={1} />
+              {/* Line extending from right edge */}
+              <div style={{
+                position: 'absolute',
+                right: `-${COMPONENT_WIDTH / 2}px`,
+                top: '50%',
+                transform: 'translateY(-50%)',
+                width: `${COMPONENT_WIDTH * 3 / 4}px`,
+                height: '2px',
+                background: COLORS.electricity,
+                boxShadow: `0 0 5px ${COLORS.electricity}`,
+                zIndex: 1
+              }} />
             </div>
             
             {/* Third component - Secondary */}
             <div style={{ position: 'relative' }}>
               <CircuitComponent node={STAGES.secondary_out} groupIndex={3} itemIndex={2} />
+              {/* Line extending from right edge */}
+              <div style={{
+                position: 'absolute',
+                right: `-${COMPONENT_WIDTH / 2}px`,
+                top: '50%',
+                transform: 'translateY(-50%)',
+                width: `${COMPONENT_WIDTH * 3 / 4}px`,
+                height: '2px',
+                background: COLORS.electricity,
+                boxShadow: `0 0 5px ${COLORS.electricity}`,
+                zIndex: 1
+              }} />
             </div>
             
             {/* Fourth component - Accessory */}
             <div style={{ position: 'relative' }}>
               <CircuitComponent node={STAGES.accessory} groupIndex={3} itemIndex={3} />
+              {/* Line extending from right edge */}
+              <div style={{
+                position: 'absolute',
+                right: `-${COMPONENT_WIDTH / 2}px`,
+                top: '50%',
+                transform: 'translateY(-50%)',
+                width: `${COMPONENT_WIDTH * 3 / 4}px`,
+                height: '2px',
+                background: COLORS.electricity,
+                boxShadow: `0 0 5px ${COLORS.electricity}`,
+                zIndex: 1
+              }} />
             </div>
             
             {/* Fifth component - Conditioning */}
