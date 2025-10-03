@@ -1,7 +1,8 @@
 import { Radar as RadarIcon } from '@mui/icons-material';
 import { Box, useTheme, Tooltip } from '@mui/material';
 import { ResponsiveRadar } from '@nivo/radar';
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { motion } from 'framer-motion';
 
 import { CustomSvgIcon } from './CustomSvgIcon';
 import { GameText, GAME_CLASSES } from './GameTheme';
@@ -118,6 +119,35 @@ export const PerformanceRadarChart: React.FC<PerformanceRadarChartProps> = ({
   height = 400,
 }) => {
   const theme = useTheme();
+  const ref = useRef<HTMLDivElement>(null);
+  const [isInView, setIsInView] = useState(false);
+  const [showNivoAnimation, setShowNivoAnimation] = useState(false);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !isInView) {
+          setIsInView(true);
+          // Delay the Nivo animation to happen after framer-motion fade-in
+          setTimeout(() => {
+            setShowNivoAnimation(true);
+          }, 300); // 300ms delay to allow fade-in to complete
+          observer.disconnect(); // Only animate once
+        }
+      },
+      { threshold: 0.9 }
+    );
+
+    if (ref.current) {
+      observer.observe(ref.current);
+    }
+
+    return () => {
+      if (ref.current) {
+        observer.unobserve(ref.current);
+      }
+    };
+  }, [isInView]);
 
   const metricData = getMetricData(scores, metrics, weeklyTests);
 
@@ -134,9 +164,10 @@ export const PerformanceRadarChart: React.FC<PerformanceRadarChartProps> = ({
   }));
 
   // Convert to Nivo radar chart format - each metric becomes a data point
+  // Start from 0 when not in view, animate to actual values when Nivo animation is triggered
   const radarData = validMetricData.map(item => ({
     metric: item.metric,
-    value: item.value,
+    value: showNivoAnimation ? item.value : 0,
   }));
 
   // Custom tooltip component following Nivo example
@@ -254,8 +285,12 @@ export const PerformanceRadarChart: React.FC<PerformanceRadarChartProps> = ({
           </Tooltip>
         </Box>
       )}
-      <Box
-        sx={{
+      <motion.div
+        ref={ref}
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={isInView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.95 }}
+        transition={{ duration: 0.3, ease: "easeOut" }}
+        style={{
           height,
           width: '100%',
           minHeight: 300,
@@ -275,6 +310,7 @@ export const PerformanceRadarChart: React.FC<PerformanceRadarChartProps> = ({
           curve="linearClosed"
           fillOpacity={0.1}
           animate={true}
+          motionConfig="wobbly"
           gridLevels={5}
           gridShape="circular"
           gridLabelOffset={36}
@@ -286,7 +322,7 @@ export const PerformanceRadarChart: React.FC<PerformanceRadarChartProps> = ({
           dotBorderWidth={2}
           theme={createCongenNivoTheme(theme.palette.mode)}
         />
-      </Box>
+      </motion.div>
     </Box>
   );
 };
