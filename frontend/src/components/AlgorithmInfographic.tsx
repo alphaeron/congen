@@ -35,6 +35,7 @@ const COMPONENT_WIDTH = 120
 const GROUP_GAP = 30
 const GROUP_PADDING = 15
 const LINE_WIDTH = 2
+const EQUILATERAL_TRIANGLE_HEIGHT_RATIO = Math.sqrt(3) / 2
 
 // Circuit component definitions with electronic component types
 const STAGES = {
@@ -207,7 +208,7 @@ function CircuitComponent({ node, groupIndex, itemIndex }: { node: any; groupInd
             width: '100%',
             height: '100%',
             background: COLORS.component,
-            clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)',
+            clipPath: `polygon(50% 0%, 0% ${(EQUILATERAL_TRIANGLE_HEIGHT_RATIO * 100).toFixed(1)}%, 100% ${(EQUILATERAL_TRIANGLE_HEIGHT_RATIO * 100).toFixed(1)}%)`,
             zIndex: 1,
             boxShadow: `0 0 10px ${node.ledColor}40, inset 0 0 10px rgba(0,0,0,0.3)`
           }} />
@@ -238,7 +239,7 @@ function CircuitComponent({ node, groupIndex, itemIndex }: { node: any; groupInd
             }}
           >
             <polygon
-              points={`${COMPONENT_WIDTH/2},2 2,${COMPONENT_WIDTH-2} ${COMPONENT_WIDTH-2},${COMPONENT_WIDTH-2}`}
+              points={`${COMPONENT_WIDTH/2},2 2,${COMPONENT_WIDTH * EQUILATERAL_TRIANGLE_HEIGHT_RATIO} ${COMPONENT_WIDTH-2},${COMPONENT_WIDTH * EQUILATERAL_TRIANGLE_HEIGHT_RATIO}`}
               fill="none"
               stroke={COLORS.electricity}
               strokeWidth="2"
@@ -982,7 +983,7 @@ export default function WorkoutAlgorithmInfographicStructured() {
                 left: '50%',
                 transform: 'translateX(-50%)',
                 width: `${LINE_WIDTH}px`,
-                height: '15px',
+                height: `${15 + (COMPONENT_WIDTH - COMPONENT_WIDTH * EQUILATERAL_TRIANGLE_HEIGHT_RATIO)}px`,
                 background: COLORS.electricity,
                 boxShadow: `0 0 5px ${COLORS.electricity}`,
                 zIndex: 1
@@ -1023,7 +1024,7 @@ export default function WorkoutAlgorithmInfographicStructured() {
                 left: '50%',
                 transform: 'translateX(-50%)',
                 width: `${LINE_WIDTH}px`,
-                height: '15px',
+                height: `${15 + (COMPONENT_WIDTH - COMPONENT_WIDTH * EQUILATERAL_TRIANGLE_HEIGHT_RATIO)}px`,
                 background: COLORS.electricity,
                 boxShadow: `0 0 5px ${COLORS.electricity}`,
                 zIndex: 1
@@ -1064,7 +1065,7 @@ export default function WorkoutAlgorithmInfographicStructured() {
                 left: '50%',
                 transform: 'translateX(-50%)',
                 width: `${LINE_WIDTH}px`,
-                height: '15px',
+                height: `${15 + (COMPONENT_WIDTH - COMPONENT_WIDTH * EQUILATERAL_TRIANGLE_HEIGHT_RATIO)}px`,
                 background: COLORS.electricity,
                 boxShadow: `0 0 5px ${COLORS.electricity}`,
                 zIndex: 1
@@ -1105,7 +1106,7 @@ export default function WorkoutAlgorithmInfographicStructured() {
                 left: '50%',
                 transform: 'translateX(-50%)',
                 width: `${LINE_WIDTH}px`,
-                height: '15px',
+                height: `${15 + (COMPONENT_WIDTH - COMPONENT_WIDTH * EQUILATERAL_TRIANGLE_HEIGHT_RATIO)}px`,
                 background: COLORS.electricity,
                 boxShadow: `0 0 5px ${COLORS.electricity}`,
                 zIndex: 1
@@ -1134,7 +1135,7 @@ export default function WorkoutAlgorithmInfographicStructured() {
                 left: '50%',
                 transform: 'translateX(-50%)',
                 width: `${LINE_WIDTH}px`,
-                height: '15px',
+                height: `${15 + (COMPONENT_WIDTH - COMPONENT_WIDTH * EQUILATERAL_TRIANGLE_HEIGHT_RATIO)}px`,
                 background: COLORS.electricity,
                 boxShadow: `0 0 5px ${COLORS.electricity}`,
                 zIndex: 1
