@@ -485,8 +485,8 @@ export default function WorkoutAlgorithmInfographicStructured() {
              <div style={{
                position: 'absolute',
                top: '0px',
-               left: `${15 + COMPONENT_WIDTH / 2}px`,
-               width: `calc(100% - ${30 + COMPONENT_WIDTH}px)`,
+               left: `${GROUP_PADDING + COMPONENT_WIDTH / 2}px`,
+               width: `calc(100% - ${GROUP_GAP + COMPONENT_WIDTH}px)`,
                height: `${LINE_WIDTH}px`,
                background: COLORS.electricity,
                boxShadow: `0 0 5px ${COLORS.electricity}`,
@@ -507,7 +507,7 @@ export default function WorkoutAlgorithmInfographicStructured() {
              <div style={{
                position: 'absolute',
                top: '0px',
-               right: `${15 + COMPONENT_WIDTH / 2 - 180}px`,
+               right: `${GROUP_PADDING + COMPONENT_WIDTH / 2 - 180}px`,
                width: '180px',
                height: `${LINE_WIDTH}px`,
                background: COLORS.electricity,
@@ -519,8 +519,8 @@ export default function WorkoutAlgorithmInfographicStructured() {
             <div style={{
               position: 'absolute',
               bottom: '0px',
-              left: `${15 + COMPONENT_WIDTH / 2}px`,
-              width: `calc(100% - ${30 + COMPONENT_WIDTH}px)`,
+              left: `${GROUP_PADDING + COMPONENT_WIDTH / 2}px`,
+              width: `calc(100% - ${GROUP_GAP + COMPONENT_WIDTH}px)`,
               height: `${LINE_WIDTH}px`,
               background: COLORS.electricity,
               boxShadow: `0 0 5px ${COLORS.electricity}`,
@@ -541,7 +541,7 @@ export default function WorkoutAlgorithmInfographicStructured() {
             <div style={{
               position: 'absolute',
               bottom: '0px',
-              right: `${15 + COMPONENT_WIDTH / 2 - 90}px`,
+              right: `${GROUP_PADDING + COMPONENT_WIDTH / 2 - 3 * GROUP_GAP}px`,
               width: '90px',
               height: `${LINE_WIDTH}px`,
               background: COLORS.electricity,
@@ -704,7 +704,7 @@ export default function WorkoutAlgorithmInfographicStructured() {
             <div style={{
               position: 'absolute',
               bottom: '-34px',
-              left: `${15 + COMPONENT_WIDTH / 2}px`,
+              left: `${GROUP_PADDING + COMPONENT_WIDTH / 2}px`,
               width: `${LINE_WIDTH}px`,
               height: '40px',
               background: COLORS.electricity,
@@ -725,8 +725,8 @@ export default function WorkoutAlgorithmInfographicStructured() {
              <div style={{
                position: 'absolute',
                top: '0px',
-               left: `${15 + COMPONENT_WIDTH / 2}px`,
-               width: `calc(100% - ${30 + COMPONENT_WIDTH}px)`,
+               left: `${GROUP_PADDING + COMPONENT_WIDTH / 2}px`,
+               width: `calc(100% - ${GROUP_GAP + COMPONENT_WIDTH}px)`,
                height: `${LINE_WIDTH}px`,
                background: COLORS.electricity,
                boxShadow: `0 0 5px ${COLORS.electricity}`,
@@ -747,7 +747,7 @@ export default function WorkoutAlgorithmInfographicStructured() {
              <div style={{
                position: 'absolute',
                top: '0px',
-               right: `${15 + COMPONENT_WIDTH / 2 - 200}px`,
+               right: `${GROUP_PADDING + COMPONENT_WIDTH / 2 - 200}px`,
                width: '200px',
                height: `${LINE_WIDTH}px`,
                background: COLORS.electricity,
@@ -759,8 +759,8 @@ export default function WorkoutAlgorithmInfographicStructured() {
             <div style={{
               position: 'absolute',
               bottom: '0px',
-              left: `${15 + COMPONENT_WIDTH / 2}px`,
-              width: `calc(100% - ${30 + COMPONENT_WIDTH}px)`,
+              left: `${GROUP_PADDING + COMPONENT_WIDTH / 2}px`,
+              width: `calc(100% - ${GROUP_GAP + COMPONENT_WIDTH}px)`,
               height: `${LINE_WIDTH}px`,
               background: COLORS.electricity,
               boxShadow: `0 0 5px ${COLORS.electricity}`,
@@ -905,7 +905,7 @@ export default function WorkoutAlgorithmInfographicStructured() {
             <div style={{
               position: 'absolute',
               bottom: '-34px',
-              left: `${15 + COMPONENT_WIDTH / 2}px`,
+              left: `${GROUP_PADDING + COMPONENT_WIDTH / 2}px`,
               width: `${LINE_WIDTH}px`,
               height: '40px',
               background: COLORS.electricity,
@@ -926,8 +926,8 @@ export default function WorkoutAlgorithmInfographicStructured() {
              <div style={{
                position: 'absolute',
                top: '0px',
-               left: `${15 + COMPONENT_WIDTH / 2}px`,
-               width: `calc(100% - ${30 + COMPONENT_WIDTH}px)`,
+               left: `${GROUP_PADDING + COMPONENT_WIDTH / 2}px`,
+               width: `calc(100% - ${GROUP_GAP + COMPONENT_WIDTH}px)`,
                height: `${LINE_WIDTH}px`,
                background: COLORS.electricity,
                boxShadow: `0 0 5px ${COLORS.electricity}`,
@@ -937,7 +937,7 @@ export default function WorkoutAlgorithmInfographicStructured() {
              <div style={{
                position: 'absolute',
                top: '0px',
-               left: `${15 + COMPONENT_WIDTH / 2 - 140}px`,
+               left: `${GROUP_PADDING + COMPONENT_WIDTH / 2 - 140}px`,
                width: '140px',
                height: `${LINE_WIDTH}px`,
                background: COLORS.electricity,
@@ -948,7 +948,7 @@ export default function WorkoutAlgorithmInfographicStructured() {
              <div style={{
                position: 'absolute',
                top: '0px',
-               right: `${15 + COMPONENT_WIDTH / 2 - 60}px`,
+               right: `${GROUP_PADDING + COMPONENT_WIDTH / 2 - 60}px`,
                width: '60px',
                height: `${LINE_WIDTH}px`,
                background: COLORS.electricity,
@@ -960,8 +960,8 @@ export default function WorkoutAlgorithmInfographicStructured() {
             <div style={{
               position: 'absolute',
               bottom: '0px',
-              left: `${15 + COMPONENT_WIDTH / 2}px`,
-              width: `calc(100% - ${30 + COMPONENT_WIDTH}px)`,
+              left: `${GROUP_PADDING + COMPONENT_WIDTH / 2}px`,
+              width: `calc(100% - ${GROUP_GAP + COMPONENT_WIDTH}px)`,
               height: `${LINE_WIDTH}px`,
               background: COLORS.electricity,
               boxShadow: `0 0 5px ${COLORS.electricity}`,
@@ -982,7 +982,7 @@ export default function WorkoutAlgorithmInfographicStructured() {
             <div style={{
               position: 'absolute',
               bottom: '0px',
-              right: `${15 + COMPONENT_WIDTH / 2 - 170}px`,
+              right: `${GROUP_PADDING + COMPONENT_WIDTH / 2 - 170}px`,
               width: '170px',
               height: `${LINE_WIDTH}px`,
               background: COLORS.electricity,
@@ -1185,7 +1185,7 @@ export default function WorkoutAlgorithmInfographicStructured() {
             <div style={{
               position: 'absolute',
               bottom: '-34px',
-              left: `${15 + COMPONENT_WIDTH / 2}px`,
+              left: `${GROUP_PADDING + COMPONENT_WIDTH / 2}px`,
               width: `${LINE_WIDTH}px`,
               height: '40px',
               background: COLORS.electricity,
@@ -1206,8 +1206,8 @@ export default function WorkoutAlgorithmInfographicStructured() {
              <div style={{
                position: 'absolute',
                top: '0px',
-               left: `${15 + COMPONENT_WIDTH / 2}px`,
-               width: `calc(100% - ${30 + COMPONENT_WIDTH}px)`,
+               left: `${GROUP_PADDING + COMPONENT_WIDTH / 2}px`,
+               width: `calc(100% - ${GROUP_GAP + COMPONENT_WIDTH}px)`,
                height: `${LINE_WIDTH}px`,
                background: COLORS.electricity,
                boxShadow: `0 0 5px ${COLORS.electricity}`,
@@ -1228,7 +1228,7 @@ export default function WorkoutAlgorithmInfographicStructured() {
              <div style={{
                position: 'absolute',
                top: '0px',
-               right: `${15 + COMPONENT_WIDTH / 2 - 160}px`,
+               right: `${GROUP_PADDING + COMPONENT_WIDTH / 2 - 160}px`,
                width: '160px',
                height: `${LINE_WIDTH}px`,
                background: COLORS.electricity,
@@ -1240,8 +1240,8 @@ export default function WorkoutAlgorithmInfographicStructured() {
             <div style={{
               position: 'absolute',
               bottom: '0px',
-              left: `${15 + COMPONENT_WIDTH / 2}px`,
-              width: `calc(100% - ${30 + COMPONENT_WIDTH}px)`,
+              left: `${GROUP_PADDING + COMPONENT_WIDTH / 2}px`,
+              width: `calc(100% - ${GROUP_GAP + COMPONENT_WIDTH}px)`,
               height: `${LINE_WIDTH}px`,
               background: COLORS.electricity,
               boxShadow: `0 0 5px ${COLORS.electricity}`,
@@ -1262,7 +1262,7 @@ export default function WorkoutAlgorithmInfographicStructured() {
             <div style={{
               position: 'absolute',
               bottom: '0px',
-              right: `${15 + COMPONENT_WIDTH / 2 - 100}px`,
+              right: `${GROUP_PADDING + COMPONENT_WIDTH / 2 - 100}px`,
               width: '100px',
               height: `${LINE_WIDTH}px`,
               background: COLORS.electricity,
@@ -1305,7 +1305,7 @@ export default function WorkoutAlgorithmInfographicStructured() {
                 left: '50%',
                 transform: 'translateX(-50%)',
                 width: `${LINE_WIDTH}px`,
-                height: `${15 + (COMPONENT_WIDTH - COMPONENT_WIDTH * EQUILATERAL_TRIANGLE_HEIGHT_RATIO)}px`,
+                height: `${GROUP_PADDING + (COMPONENT_WIDTH - COMPONENT_WIDTH * EQUILATERAL_TRIANGLE_HEIGHT_RATIO)}px`,
                 background: COLORS.electricity,
                 boxShadow: `0 0 5px ${COLORS.electricity}`,
                 zIndex: 1
@@ -1346,7 +1346,7 @@ export default function WorkoutAlgorithmInfographicStructured() {
                 left: '50%',
                 transform: 'translateX(-50%)',
                 width: `${LINE_WIDTH}px`,
-                height: `${15 + (COMPONENT_WIDTH - COMPONENT_WIDTH * EQUILATERAL_TRIANGLE_HEIGHT_RATIO)}px`,
+                height: `${GROUP_PADDING + (COMPONENT_WIDTH - COMPONENT_WIDTH * EQUILATERAL_TRIANGLE_HEIGHT_RATIO)}px`,
                 background: COLORS.electricity,
                 boxShadow: `0 0 5px ${COLORS.electricity}`,
                 zIndex: 1
@@ -1387,7 +1387,7 @@ export default function WorkoutAlgorithmInfographicStructured() {
                 left: '50%',
                 transform: 'translateX(-50%)',
                 width: `${LINE_WIDTH}px`,
-                height: `${15 + (COMPONENT_WIDTH - COMPONENT_WIDTH * EQUILATERAL_TRIANGLE_HEIGHT_RATIO)}px`,
+                height: `${GROUP_PADDING + (COMPONENT_WIDTH - COMPONENT_WIDTH * EQUILATERAL_TRIANGLE_HEIGHT_RATIO)}px`,
                 background: COLORS.electricity,
                 boxShadow: `0 0 5px ${COLORS.electricity}`,
                 zIndex: 1
@@ -1428,7 +1428,7 @@ export default function WorkoutAlgorithmInfographicStructured() {
                 left: '50%',
                 transform: 'translateX(-50%)',
                 width: `${LINE_WIDTH}px`,
-                height: `${15 + (COMPONENT_WIDTH - COMPONENT_WIDTH * EQUILATERAL_TRIANGLE_HEIGHT_RATIO)}px`,
+                height: `${GROUP_PADDING + (COMPONENT_WIDTH - COMPONENT_WIDTH * EQUILATERAL_TRIANGLE_HEIGHT_RATIO)}px`,
                 background: COLORS.electricity,
                 boxShadow: `0 0 5px ${COLORS.electricity}`,
                 zIndex: 1
@@ -1457,7 +1457,7 @@ export default function WorkoutAlgorithmInfographicStructured() {
                 left: '50%',
                 transform: 'translateX(-50%)',
                 width: `${LINE_WIDTH}px`,
-                height: `${15 + (COMPONENT_WIDTH - COMPONENT_WIDTH * EQUILATERAL_TRIANGLE_HEIGHT_RATIO)}px`,
+                height: `${GROUP_PADDING + (COMPONENT_WIDTH - COMPONENT_WIDTH * EQUILATERAL_TRIANGLE_HEIGHT_RATIO)}px`,
                 background: COLORS.electricity,
                 boxShadow: `0 0 5px ${COLORS.electricity}`,
                 zIndex: 1
