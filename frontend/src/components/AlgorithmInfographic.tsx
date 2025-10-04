@@ -391,7 +391,26 @@ export default function WorkoutAlgorithmInfographicStructured() {
         background: 'transparent',
         minHeight: '100vh',
         color: COLORS.text,
-        fontFamily: 'Inter, Roboto, system-ui, Arial'
+        fontFamily: 'Inter, Roboto, system-ui, Arial',
+        '&::before': {
+          content: '""',
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: theme =>
+            `radial-gradient(circle at 20% 20%, ${alpha('#00bcd4', 0.02)} 0%, transparent 50%),
+             radial-gradient(circle at 80% 80%, ${alpha('#00ffff', 0.015)} 0%, transparent 50%),
+             linear-gradient(45deg, transparent 30%, ${alpha('#00bcd4', 0.01)} 50%, transparent 70%)`,
+          backgroundSize: '400px 400px, 600px 600px, 200px 200px',
+          zIndex: 0,
+          pointerEvents: 'none',
+        },
+        '& > *': {
+          position: 'relative',
+          zIndex: 1,
+        },
     }}>
       <Box
         sx={{

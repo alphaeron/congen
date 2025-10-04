@@ -35,34 +35,15 @@ export function OpenSource() {
             right: 0,
             bottom: 0,
             background: theme =>
-              `linear-gradient(90deg, transparent 48%, ${alpha('#0ea5e9', 0.03)} 49%, ${alpha('#0ea5e9', 0.03)} 51%, transparent 52%),
-               linear-gradient(0deg, transparent 48%, ${alpha('#f97316', 0.02)} 49%, ${alpha('#f97316', 0.02)} 51%, transparent 52%),
-               radial-gradient(circle at 20% 20%, ${alpha('#22c55e', 0.04)} 1px, transparent 1px),
-               radial-gradient(circle at 80% 80%, ${alpha('#8b5cf6', 0.03)} 1px, transparent 1px)`,
-            backgroundSize: '80px 80px, 80px 80px, 40px 40px, 40px 40px',
+              `radial-gradient(circle at 20% 20%, ${alpha('#0ea5e9', 0.025)} 0%, transparent 50%),
+               radial-gradient(circle at 80% 80%, ${alpha('#f97316', 0.020)} 0%, transparent 50%),
+               linear-gradient(45deg, transparent 30%, ${alpha('#22c55e', 0.015)} 50%, transparent 70%)`,
+            backgroundSize: '400px 400px, 600px 600px, 200px 200px',
             zIndex: 0,
-            animation: 'codeFlow 18s linear infinite',
-            '@keyframes codeFlow': {
+            animation: 'openSourceFlow 22s linear infinite',
+            '@keyframes openSourceFlow': {
               '0%': { transform: 'translateX(0) translateY(0)' },
-              '100%': { transform: 'translateX(80px) translateY(80px)' },
-            },
-          },
-          '&::after': {
-            content: '""',
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: theme =>
-              `linear-gradient(45deg, transparent 30%, ${alpha('#0ea5e9', 0.05)} 50%, transparent 70%),
-               linear-gradient(-45deg, transparent 30%, ${alpha('#f97316', 0.03)} 50%, transparent 70%)`,
-            backgroundSize: '200px 200px, 300px 300px',
-            zIndex: 0,
-            animation: 'commitFlow 25s linear infinite',
-            '@keyframes commitFlow': {
-              '0%': { transform: 'translateX(0) translateY(0)' },
-              '100%': { transform: 'translateX(-200px) translateY(-200px)' },
+              '100%': { transform: 'translateX(120px) translateY(120px)' },
             },
           },
         }}
