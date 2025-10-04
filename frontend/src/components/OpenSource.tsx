@@ -22,8 +22,11 @@ export function OpenSource() {
         sx={{
           position: 'relative',
           width: '100vw',
+          height: '100vh',
           marginLeft: 'calc(-50vw + 50%)',
           overflow: 'hidden',
+          display: 'flex',
+          alignItems: 'center',
           '&::before': {
             content: '""',
             position: 'absolute',

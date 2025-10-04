@@ -107,7 +107,7 @@ export function Hero() {
           width: '100%',
           position: 'relative',
           overflow: 'hidden',
-          minHeight: '100vh',
+          height: '100vh',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',

@@ -101,9 +101,12 @@ export function Features() {
         sx={{
           position: 'relative',
           width: '100vw',
+          height: '100vh',
           marginLeft: 'calc(-50vw + 50%)',
           marginTop: 0,
           overflow: 'hidden',
+          display: 'flex',
+          alignItems: 'center',
           '&::before': {
             content: '""',
             position: 'absolute',
