@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 // Import only the specific components we need to reduce bundle size
 import Container from '@mui/material/Container';
 import CardContent from '@mui/material/CardContent';
