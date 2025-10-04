@@ -5,26 +5,20 @@ import Container from '@mui/material/Container';
 import Link from '@mui/material/Link';
 import { alpha } from '@mui/material/styles';
 import * as React from 'react';
-import { motion, useScroll, useTransform } from 'framer-motion';
+import { motion } from 'framer-motion';
 
 import { GameText, GameCard } from './GameTheme';
 
 export function OpenSource() {
-  const { scrollY } = useScroll();
-  const y = useTransform(scrollY, [0, 300], [0, 0]);
-  const opacity = useTransform(scrollY, [0, 300], [1, 0.8]);
-
   return (
-    <motion.div
-      style={{ y, opacity }}
-    >
+    <motion.div>
       <Box
+        id="opensource"
         sx={{
           position: 'relative',
           width: '100vw',
           height: '100vh',
           marginLeft: 'calc(-50vw + 50%)',
-          overflow: 'hidden',
           display: 'flex',
           alignItems: 'center',
           '&::before': {
@@ -50,7 +44,6 @@ export function OpenSource() {
       >
         <Container
           sx={{
-            py: { xs: 8, sm: 12 },
             position: 'relative',
             display: 'flex',
             flexDirection: 'column',

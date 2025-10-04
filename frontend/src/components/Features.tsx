@@ -7,7 +7,7 @@ import Grid from '@mui/material/Grid';
 import Stack from '@mui/material/Stack';
 import { alpha } from '@mui/material/styles';
 import * as React from 'react';
-import { motion, useInView, useScroll, useTransform } from 'framer-motion';
+import { motion, useInView } from 'framer-motion';
 
 import { GameText, GameCard } from './GameTheme';
 
@@ -89,14 +89,8 @@ const iconVariants = {
 export function Features() {
   const ref = React.useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
-  const { scrollY } = useScroll();
-  const y = useTransform(scrollY, [0, 300], [0, 0]);
-  const opacity = useTransform(scrollY, [0, 300], [1, 0.8]);
-
   return (
-    <motion.div
-      style={{ y, opacity }}
-    >
+    <motion.div>
       <Box
         sx={{
           position: 'relative',
@@ -104,7 +98,6 @@ export function Features() {
           height: '100vh',
           marginLeft: 'calc(-50vw + 50%)',
           marginTop: 0,
-          overflow: 'hidden',
           display: 'flex',
           alignItems: 'center',
           '&::before': {

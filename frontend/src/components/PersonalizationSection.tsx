@@ -1,7 +1,7 @@
 import Box from '@mui/material/Box';
 import { alpha } from '@mui/material/styles';
 import * as React from 'react';
-import { motion, useInView, useScroll, useTransform } from 'framer-motion';
+import { motion, useInView } from 'framer-motion';
 
 import { GameText, GameCard } from './GameTheme';
 import { CycleDiagramReact as CycleDiagram } from './CycleDiagramReact';
@@ -89,14 +89,8 @@ const cardHoverVariants = {
 export function PersonalizationSection() {
   const ref = React.useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
-  const { scrollY } = useScroll();
-  const y = useTransform(scrollY, [0, 300], [0, 0]);
-  const opacity = useTransform(scrollY, [0, 300], [1, 0.8]);
-
   return (
-    <motion.div
-      style={{ y, opacity }}
-    >
+    <motion.div>
       <motion.div
         ref={ref}
         variants={sectionVariants}
@@ -105,21 +99,19 @@ export function PersonalizationSection() {
       >
         <Box
           id="personalization"
-          sx={{
-            py: { xs: 8, sm: 12 },
-            position: 'relative',
-            background: 'rgba(255, 255, 255, 0.02)',
-            backdropFilter: 'blur(20px)',
-            border: theme => `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
-            width: '100vw',
-            height: '100vh',
-            marginLeft: 'calc(-50vw + 50%)',
-            marginTop: 0,
-            marginBottom: 0,
-            px: { xs: 2, sm: 4, md: 6 },
-            overflow: 'hidden',
-            display: 'flex',
-            alignItems: 'center',
+                  sx={{
+                    position: 'relative',
+                    background: 'rgba(255, 255, 255, 0.02)',
+                    backdropFilter: 'blur(20px)',
+                    border: theme => `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
+                    width: '100vw',
+                    height: '100vh',
+                    marginLeft: 'calc(-50vw + 50%)',
+                    marginTop: 0,
+                    marginBottom: 0,
+                    px: { xs: 2, sm: 4, md: 6 },
+                    display: 'flex',
+                    alignItems: 'center',
             '&::before': {
               content: '""',
               position: 'absolute',

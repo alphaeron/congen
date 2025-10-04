@@ -249,3 +249,24 @@ a,
     box-shadow: 0 20px 25px rgba(0, 0, 0, 0.4);
   }
 }
+
+/* Scroll snap classes */
+.snap-parent-y-mandatory {
+  scroll-snap-type: y mandatory;
+  height: 100vh;
+  overflow-y: scroll;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+}
+
+.section {
+  height: 100vh;
+  scroll-snap-align: start;
+}
+
+/* Prevent body scroll */
+body {
+  overflow: hidden;
+}

@@ -3,7 +3,7 @@ import Container from '@mui/material/Container';
 import Stack from '@mui/material/Stack';
 import { alpha } from '@mui/material/styles';
 import * as React from 'react';
-import { motion, useScroll, useTransform } from 'framer-motion';
+import { motion } from 'framer-motion';
 
 import { useTypewriter } from '../hooks/useTypewriter';
 import { GameText, GameContainer, GAME_CLASSES } from './GameTheme';
@@ -92,21 +92,13 @@ const pulseVariants = {
 
 export function Hero() {
   const headline = useTypewriter('Conjugate Method Programming, Without the Hassle', 40);
-  const { scrollY } = useScroll();
-  const y = useTransform(scrollY, [0, 300], [0, 0]);
-  const opacity = useTransform(scrollY, [0, 300], [1, 0.8]);
-  
-
   return (
-    <motion.div
-      style={{ y, opacity }}
-    >
+    <motion.div>
       <Box
         id="hero"
         sx={{
           width: '100%',
           position: 'relative',
-          overflow: 'hidden',
           height: '100vh',
           display: 'flex',
           alignItems: 'center',
@@ -224,7 +216,6 @@ export function Hero() {
 
       {/* Main content */}
       <motion.div
-        style={{ y, opacity }}
         variants={containerVariants}
         initial="hidden"
         animate="visible"
