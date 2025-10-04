@@ -5,16 +5,19 @@ import Container from '@mui/material/Container';
 import Link from '@mui/material/Link';
 import { alpha } from '@mui/material/styles';
 import * as React from 'react';
-import { motion, useInView } from 'framer-motion';
+import { motion, useScroll, useTransform } from 'framer-motion';
 
-import { GameText, GameCard, GameButton, GAME_CLASSES } from './GameTheme';
+import { GameText, GameCard } from './GameTheme';
 
 export function OpenSource() {
-  const ref = React.useRef(null);
-  const isInView = useInView(ref, { once: true, margin: "-100px" });
+  const { scrollY } = useScroll();
+  const y = useTransform(scrollY, [0, 300], [0, 0]);
+  const opacity = useTransform(scrollY, [0, 300], [1, 0.8]);
 
   return (
-    <motion.div>
+    <motion.div
+      style={{ y, opacity }}
+    >
       <Box
         sx={{
           position: 'relative',

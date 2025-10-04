@@ -388,7 +388,7 @@ export default function WorkoutAlgorithmInfographicStructured() {
         position: 'relative',
         width: '100%',
         px: { xs: 2, sm: 4, md: 6 },
-        background: COLORS.bg,
+        background: 'transparent',
         minHeight: '100vh',
         color: COLORS.text,
         fontFamily: 'Inter, Roboto, system-ui, Arial'

@@ -1,9 +1,7 @@
 import Box from '@mui/material/Box';
-import Container from '@mui/material/Container';
-import Divider from '@mui/material/Divider';
 import { alpha } from '@mui/material/styles';
 import * as React from 'react';
-import { motion, useInView } from 'framer-motion';
+import { motion, useInView, useScroll, useTransform } from 'framer-motion';
 
 import { CycleDiagramReact as CycleDiagram } from './CycleDiagramReact';
 import { GameText, GameCard } from './GameTheme';
@@ -92,14 +90,12 @@ const sampleWeeklyTests: UserTestResult[] = [
 const sectionVariants = {
   hidden: { 
     opacity: 0, 
-    y: 60, 
     scale: 0.95,
     rotateX: -10,
     transformPerspective: 1000,
   },
   visible: {
     opacity: 1,
-    y: 0,
     scale: 1,
     rotateX: 0,
     transition: {
@@ -122,13 +118,11 @@ const staggerVariants = {
 
 const itemVariants = {
   hidden: { 
-    y: 30, 
     opacity: 0, 
     scale: 0.9,
     rotateY: -15,
   },
   visible: {
-    y: 0,
     opacity: 1,
     scale: 1,
     rotateY: 0,
@@ -163,9 +157,14 @@ const cardHoverVariants = {
 const GamificationSection = () => {
   const ref = React.useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
+  const { scrollY } = useScroll();
+  const y = useTransform(scrollY, [0, 300], [0, 0]);
+  const opacity = useTransform(scrollY, [0, 300], [1, 0.8]);
 
   return (
-    <motion.div>
+    <motion.div
+      style={{ y, opacity }}
+    >
       <motion.div
         ref={ref}
         variants={sectionVariants}
@@ -175,7 +174,6 @@ const GamificationSection = () => {
         <Box
           id="gamification"
           sx={{
-            py: { xs: 8, sm: 12 },
             position: 'relative',
             background: 'rgba(255, 255, 255, 0.02)',
             backdropFilter: 'blur(20px)',
@@ -371,9 +369,14 @@ const GamificationSection = () => {
 const PersonalizationSection = () => {
   const ref = React.useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
+  const { scrollY } = useScroll();
+  const y = useTransform(scrollY, [0, 300], [0, 0]);
+  const opacity = useTransform(scrollY, [0, 300], [1, 0.8]);
 
   return (
-    <motion.div>
+    <motion.div
+      style={{ y, opacity }}
+    >
       <motion.div
         ref={ref}
         variants={sectionVariants}
@@ -383,7 +386,6 @@ const PersonalizationSection = () => {
         <Box
           id="personalization"
           sx={{
-            py: { xs: 8, sm: 12 },
             position: 'relative',
             background: 'rgba(255, 255, 255, 0.02)',
             backdropFilter: 'blur(20px)',
@@ -558,9 +560,14 @@ const PersonalizationSection = () => {
 export function HowItWorks() {
   const algorithmRef = React.useRef(null);
   const isAlgorithmInView = useInView(algorithmRef, { once: true, margin: "-100px" });
+  const { scrollY } = useScroll();
+  const y = useTransform(scrollY, [0, 300], [0, 0]);
+  const opacity = useTransform(scrollY, [0, 300], [1, 0.8]);
 
   return (
-    <React.Fragment>
+    <motion.div
+      style={{ y, opacity }}
+    >
       <motion.div
         ref={algorithmRef}
         variants={sectionVariants}
@@ -583,17 +590,12 @@ export function HowItWorks() {
               right: 0,
               bottom: 0,
               background: theme =>
-                `linear-gradient(90deg, transparent 48%, ${alpha('#0ea5e9', 0.05)} 49%, ${alpha('#0ea5e9', 0.05)} 51%, transparent 52%),
-                 linear-gradient(0deg, transparent 48%, ${alpha('#f97316', 0.03)} 49%, ${alpha('#f97316', 0.03)} 51%, transparent 52%),
-                 radial-gradient(circle at 25% 25%, ${alpha('#0ea5e9', 0.08)} 2px, transparent 2px),
-                 radial-gradient(circle at 75% 75%, ${alpha('#f97316', 0.06)} 2px, transparent 2px)`,
-              backgroundSize: '100px 100px, 100px 100px, 50px 50px, 50px 50px',
+                `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.3)} 0%, transparent 50%),
+                 linear-gradient(-45deg, ${alpha(theme.palette.secondary.main, 0.2)} 0%, transparent 50%),
+                 radial-gradient(circle at 20% 20%, ${alpha(theme.palette.primary.main, 0.15)} 0%, transparent 50%),
+                 radial-gradient(circle at 80% 80%, ${alpha(theme.palette.secondary.main, 0.12)} 0%, transparent 50%)`,
+              backgroundSize: '200px 200px, 300px 300px, 400px 400px, 500px 500px',
               zIndex: 0,
-              animation: 'dataFlow 12s linear infinite',
-              '@keyframes dataFlow': {
-                '0%': { transform: 'translateX(0) translateY(0)' },
-                '100%': { transform: 'translateX(100px) translateY(100px)' },
-              },
             },
           }}
         >
@@ -602,6 +604,6 @@ export function HowItWorks() {
       </motion.div>
       <GamificationSection />
       <PersonalizationSection />
-    </React.Fragment>
+    </motion.div>
   );
 }
