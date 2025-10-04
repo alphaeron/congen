@@ -4,9 +4,10 @@ import {
   RotateRight as RotateRightIcon,
   FitnessCenter as FitnessCenterIcon,
 } from '@mui/icons-material';
-import { Box, Tabs, Tab, Slide } from '@mui/material';
+import { Box, Tabs, Tab } from '@mui/material';
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router';
+import { motion, AnimatePresence } from 'framer-motion';
 
 import { ConjugateProgression } from './ConjugateProgression';
 import { ExerciseRotationVisualization } from './ExerciseRotationVisualization';
@@ -28,9 +29,10 @@ interface TabPanelProps {
   children?: React.ReactNode;
   index: number;
   value: number;
+  slideDirection?: 'left' | 'right';
 }
 
-const TabPanel: React.FC<TabPanelProps> = ({ children, value, index, ...other }) => {
+const TabPanel: React.FC<TabPanelProps> = ({ children, value, index, slideDirection = 'left', ...other }) => {
   return (
     <div
       role="tabpanel"
@@ -39,7 +41,31 @@ const TabPanel: React.FC<TabPanelProps> = ({ children, value, index, ...other })
       aria-labelledby={`workout-tab-${index}`}
       {...other}
     >
-      {value === index && <Box sx={{ p: 0 }}>{children}</Box>}
+      <AnimatePresence mode="wait">
+        {value === index && (
+          <motion.div
+            key={index}
+            initial={{ 
+              opacity: 0, 
+              x: slideDirection === 'left' ? 50 : -50 
+            }}
+            animate={{ 
+              opacity: 1, 
+              x: 0 
+            }}
+            exit={{ 
+              opacity: 0, 
+              x: slideDirection === 'left' ? -50 : 50 
+            }}
+            transition={{ 
+              duration: 0.3, 
+              ease: 'easeInOut' 
+            }}
+          >
+            <Box sx={{ p: 0 }}>{children}</Box>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
@@ -154,12 +180,44 @@ export const WorkoutsOverview: React.FC<WorkoutsOverviewProps> = ({ user, select
   return (
     <React.Fragment>
       {/* Workout Tabs */}
-      <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.8, ease: 'easeOut' }}
+        style={{ 
+          borderBottom: '1px solid',
+          borderColor: 'var(--mui-palette-divider)',
+        }}
+      >
         <Tabs 
           value={activeTab} 
           onChange={handleTabChange} 
           aria-label="workout sections"
+          variant="standard"
+          scrollButtons={false}
           className={GAME_CLASSES.tabs}
+          sx={{
+            '& .MuiTabs-flexContainer': {
+              flexWrap: 'nowrap',
+            },
+            '& .MuiTab-root': {
+              minWidth: 'auto',
+              flexShrink: 0,
+              '&:hover': {
+                transform: 'translateY(-2px)',
+                backgroundColor: 'rgba(0, 188, 212, 0.1)',
+                boxShadow: '0 4px 15px rgba(0, 188, 212, 0.2)',
+              },
+              '&.Mui-selected': {
+                color: '#00bcd4',
+                textShadow: '0 0 8px rgba(0, 188, 212, 0.5)',
+              }
+            },
+            '& .MuiTabs-indicator': {
+              backgroundColor: '#00bcd4',
+              boxShadow: '0 0 10px rgba(0, 188, 212, 0.5)',
+            }
+          }}
         >
           <Tab
             label="Workout Calendar"
@@ -197,10 +255,15 @@ export const WorkoutsOverview: React.FC<WorkoutsOverviewProps> = ({ user, select
             aria-controls="workout-tabpanel-4"
           />
         </Tabs>
-      </Box>
+      </motion.div>
 
       {/* Tab Panels */}
-      <TabPanel value={activeTab} index={0}>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, ease: 'easeOut', delay: 0.6 }}
+      >
+        <TabPanel value={activeTab} index={0} slideDirection={slideDirection}>
         {(() => {
           const selectedWeek = searchParams.get('week');
           const selectedWorkoutId = searchParams.get('workout');
@@ -208,135 +271,76 @@ export const WorkoutsOverview: React.FC<WorkoutsOverviewProps> = ({ user, select
           // If both week and workout are selected, show WorkoutDetail
           if (selectedWeek && selectedWorkoutId) {
             return (
-              <Slide
-                key={`workout-detail-${workoutDetailSlideDirection}`}
-                direction={workoutDetailSlideDirection}
-                in={true}
-                mountOnEnter
-                unmountOnExit
-              >
-                <Box>
-                  <WorkoutDetail
-                    workoutId={parseInt(selectedWorkoutId)}
-                    onBack={() => {
-                      setWorkoutDetailSlideDirection('right'); // WorkoutDetail slides out to the right
-                      setWeekDetailsSlideDirection('left'); // WorkoutWeekDetails slides in from the left (going back)
-                      const newSearchParams = new URLSearchParams(searchParams);
-                      newSearchParams.set('section', 'workouts');
-                      newSearchParams.set('subsection', 'calendar');
-                      newSearchParams.set('week', selectedWeek);
-                      newSearchParams.delete('workout');
-                      navigate(`/dashboard?${newSearchParams.toString()}`);
-                    }}
-                  />
-                </Box>
-              </Slide>
+              <WorkoutDetail
+                workoutId={parseInt(selectedWorkoutId)}
+                onBack={() => {
+                  setWorkoutDetailSlideDirection('right'); // WorkoutDetail slides out to the right
+                  setWeekDetailsSlideDirection('left'); // WorkoutWeekDetails slides in from the left (going back)
+                  const newSearchParams = new URLSearchParams(searchParams);
+                  newSearchParams.set('section', 'workouts');
+                  newSearchParams.set('subsection', 'calendar');
+                  newSearchParams.set('week', selectedWeek);
+                  newSearchParams.delete('workout');
+                  navigate(`/dashboard?${newSearchParams.toString()}`);
+                }}
+              />
             );
           }
 
           // If only week is selected, show WorkoutWeekDetails
           if (selectedWeek) {
             return (
-              <Slide
-                key={`workout-week-${weekDetailsSlideDirection}`}
-                direction={weekDetailsSlideDirection}
-                in={true}
-                mountOnEnter
-                unmountOnExit
-              >
-                <Box>
-                  <WorkoutWeekDetails
-                    selectedWorkout={selectedWorkoutId}
-                    weekNumber={parseInt(selectedWeek)}
-                    showBackButton={true}
-                    onBack={() => {
-                      setWeekDetailsSlideDirection('right'); // WorkoutWeekDetails slides out to the right
-                      setWorkoutsSlideDirection('right'); // Workouts slides in from the right
-                      const newSearchParams = new URLSearchParams(searchParams);
-                      newSearchParams.set('section', 'workouts');
-                      newSearchParams.set('subsection', 'calendar');
-                      newSearchParams.delete('week');
-                      newSearchParams.delete('workout');
-                      navigate(`/dashboard?${newSearchParams.toString()}`);
-                    }}
-                    onWorkoutClick={workoutId => {
-                      setWeekDetailsSlideDirection('left'); // WorkoutWeekDetails slides out to the left
-                      setWorkoutDetailSlideDirection('left'); // WorkoutDetail slides in from the left
-                      const newSearchParams = new URLSearchParams(searchParams);
-                      newSearchParams.set('section', 'workouts');
-                      newSearchParams.set('subsection', 'calendar');
-                      newSearchParams.set('week', selectedWeek);
-                      newSearchParams.set('workout', workoutId.toString());
-                      navigate(`/dashboard?${newSearchParams.toString()}`);
-                    }}
-                  />
-                </Box>
-              </Slide>
+              <WorkoutWeekDetails
+                selectedWorkout={selectedWorkoutId}
+                weekNumber={parseInt(selectedWeek)}
+                showBackButton={true}
+                onBack={() => {
+                  setWeekDetailsSlideDirection('right'); // WorkoutWeekDetails slides out to the right
+                  setWorkoutsSlideDirection('right'); // Workouts slides in from the right
+                  const newSearchParams = new URLSearchParams(searchParams);
+                  newSearchParams.set('section', 'workouts');
+                  newSearchParams.set('subsection', 'calendar');
+                  newSearchParams.delete('week');
+                  newSearchParams.delete('workout');
+                  navigate(`/dashboard?${newSearchParams.toString()}`);
+                }}
+                onWorkoutClick={workoutId => {
+                  setWeekDetailsSlideDirection('left'); // WorkoutWeekDetails slides out to the left
+                  setWorkoutDetailSlideDirection('left'); // WorkoutDetail slides in from the left
+                  const newSearchParams = new URLSearchParams(searchParams);
+                  newSearchParams.set('section', 'workouts');
+                  newSearchParams.set('subsection', 'calendar');
+                  newSearchParams.set('week', selectedWeek);
+                  newSearchParams.set('workout', workoutId.toString());
+                  navigate(`/dashboard?${newSearchParams.toString()}`);
+                }}
+              />
             );
           }
 
           // No week selected, show the main Workouts calendar
           return (
-            <Slide
-              key={`workouts-${workoutsSlideDirection}`}
-              direction={workoutsSlideDirection}
-              in={true}
-              mountOnEnter
-              unmountOnExit
-            >
-              <Box>
-                <Workouts selectedWorkout={selectedWorkout} />
-              </Box>
-            </Slide>
+            <Workouts selectedWorkout={selectedWorkout} />
           );
         })()}
       </TabPanel>
 
-      <TabPanel value={activeTab} index={1}>
+      <TabPanel value={activeTab} index={1} slideDirection={slideDirection}>
         <ConjugateProgression />
       </TabPanel>
 
-      <TabPanel value={activeTab} index={2}>
-        <Slide
-          key={`exercise-rotation-${slideDirection}`}
-          direction={slideDirection}
-          in={true}
-          mountOnEnter
-          unmountOnExit
-        >
-          <Box>
-            <ExerciseRotationVisualization />
-          </Box>
-        </Slide>
+      <TabPanel value={activeTab} index={2} slideDirection={slideDirection}>
+        <ExerciseRotationVisualization />
       </TabPanel>
 
-      <TabPanel value={activeTab} index={3}>
-        <Slide
-          key={`1rm-records-${slideDirection}`}
-          direction={slideDirection}
-          in={true}
-          mountOnEnter
-          unmountOnExit
-        >
-          <Box>
-            <OneRepMaxRecords />
-          </Box>
-        </Slide>
+      <TabPanel value={activeTab} index={3} slideDirection={slideDirection}>
+        <OneRepMaxRecords />
       </TabPanel>
 
-      <TabPanel value={activeTab} index={4}>
-        <Slide
-          key={`workout-preferences-${slideDirection}`}
-          direction={slideDirection}
-          in={true}
-          mountOnEnter
-          unmountOnExit
-        >
-          <Box>
-            <WorkoutPreferencesSection />
-          </Box>
-        </Slide>
+      <TabPanel value={activeTab} index={4} slideDirection={slideDirection}>
+        <WorkoutPreferencesSection />
       </TabPanel>
+      </motion.div>
     </React.Fragment>
   );
 };

@@ -167,6 +167,8 @@ export const StreamChart: React.FC<StreamChartProps> = ({
           keys={keys}
           margin={{ top: 30, right: 80, bottom: 30, left: 50 }}
           colors={{ scheme: 'nivo' }}
+          animate={true}
+          motionConfig="gentle"
           theme={{
             ...nivoTheme,
             tooltip: {

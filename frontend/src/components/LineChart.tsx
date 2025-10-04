@@ -216,6 +216,8 @@ export const LineChart: React.FC<LineChartProps> = ({
             pointLabelYOffset={-12}
             useMesh={true}
             colors={colors || congenColorSchemes.strength}
+            animate={true}
+            motionConfig="gentle"
             theme={nivoTheme}
             tooltip={({ point }) => (
               <div

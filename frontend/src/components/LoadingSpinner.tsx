@@ -1,5 +1,6 @@
 import { Box } from '@mui/material';
 import React from 'react';
+import { motion } from 'framer-motion';
 
 import { GameText, GAME_CLASSES } from './GameTheme';
 
@@ -40,34 +41,45 @@ export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
           position: 'relative',
           width: size,
           height: size,
-          '&::before': {
-            content: '""',
+        }}
+      >
+        <motion.div
+          style={{
             position: 'absolute',
             top: 0,
             left: 0,
             width: '100%',
             height: '100%',
             borderRadius: '50%',
-            border: `3px solid transparent`,
-            borderTop: '3px solid',
-            borderTopColor: '#00bcd4',
-            animation: 'spin 1s linear infinite',
-          },
-          '&::after': {
-            content: '""',
+            border: '3px solid transparent',
+            borderTop: '3px solid #00bcd4',
+          }}
+          animate={{ rotate: 360 }}
+          transition={{
+            duration: 1,
+            repeat: Infinity,
+            ease: 'linear'
+          }}
+        />
+        <motion.div
+          style={{
             position: 'absolute',
             top: '10%',
             left: '10%',
             width: '80%',
             height: '80%',
             borderRadius: '50%',
-            border: `2px solid transparent`,
-            borderTop: '2px solid',
-            borderTopColor: '#00acc1',
-            animation: 'spin 1.5s linear infinite reverse',
-          },
-        }}
-      />
+            border: '2px solid transparent',
+            borderTop: '2px solid #00acc1',
+          }}
+          animate={{ rotate: -360 }}
+          transition={{
+            duration: 1.5,
+            repeat: Infinity,
+            ease: 'linear'
+          }}
+        />
+      </Box>
 
       {message && (
         <GameText
@@ -83,13 +95,6 @@ export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
         </GameText>
       )}
 
-      {/* CSS Animation */}
-      <style>{`
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-      `}</style>
     </Box>
   );
 };

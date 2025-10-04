@@ -114,6 +114,7 @@ export const RadarChart: React.FC<RadarChartProps> = ({
             dotBorderWidth={2}
             colors={{ scheme: 'nivo' }}
             blendMode="multiply"
+            animate={true}
             motionConfig="wobbly"
             theme={{
               ...nivoTheme,

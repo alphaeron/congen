@@ -16,6 +16,7 @@ import { useAuth as useOidcAuth } from 'react-oidc-context';
 import { FormField } from '../../components/FormField';
 import { createApiClient } from './api/client';
 import { GameText, GameCard } from '../../components/GameTheme';
+import { HoverCard, HoverLift, ButtonPress } from '../../components/AnimatedWrapper';
 
 // Global type declaration for OIDC user
 declare global {
@@ -218,7 +219,15 @@ export default function Account({ kcContext, i18n: _i18n }: AccountProps) {
       {/* Congen App Bar */}
       <CongenAppBar kcContext={kcContext} user={user || undefined} />
 
-      <Box sx={{ display: 'flex', height: 'calc(100vh - 64px)' }}>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.8, ease: 'easeOut' }}
+        style={{ 
+          display: 'flex', 
+          height: 'calc(100vh - 64px)',
+        }}
+      >
         {/* User Profile Drawer */}
         <UserProfileDrawer
           kcContext={kcContext}
@@ -227,16 +236,28 @@ export default function Account({ kcContext, i18n: _i18n }: AccountProps) {
         />
 
         {/* Main Content */}
-        <Box
-          component="main"
-          sx={{
+        <motion.div
+          initial={{ opacity: 0, x: 30 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.6, ease: 'easeOut', delay: 0.4 }}
+          style={{
             flexGrow: 1,
             height: '100%',
             overflow: 'auto',
             width: 'calc(100% - 240px)',
           }}
         >
-          <Container maxWidth={false} sx={{ py: 3, px: 4 }}>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.6, ease: 'easeOut', delay: 0.6 }}
+            style={{ 
+              paddingTop: '24px', 
+              paddingBottom: '24px',
+              paddingLeft: '32px',
+              paddingRight: '32px',
+            }}
+          >
             {currentPage === 'personal-info' && (
               <form
                 onSubmit={e => {
@@ -247,10 +268,31 @@ export default function Account({ kcContext, i18n: _i18n }: AccountProps) {
               >
                 <Grid container spacing={3}>
                   {/* Profile Editing Form - Takes up more space */}
-                  <Grid size={{ xs: 12, lg: 8 }}>
-                    <GameCard sx={{ height: '100%' }}>
+                  <motion.div
+                    initial={{ opacity: 0, x: -30 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.6, ease: 'easeOut', delay: 0.8 }}
+                    style={{ 
+                      gridColumn: 'span 8',
+                      '@media (max-width: 1200px)': {
+                        gridColumn: 'span 12',
+                      }
+                    }}
+                  >
+                    <HoverCard 
+                      style={{ height: '100%' }}
+                    >
+                      <GameCard>
                       <CardContent sx={{ p: 4 }}>
-                        <GameText variant="h6" textVariant="glow" gutterBottom sx={{ mb: 3, fontWeight: 600 }}>
+                        <GameText 
+                          variant="h6" 
+                          textVariant="glow" 
+                          gutterBottom 
+                          sx={{ 
+                            mb: 3, 
+                            fontWeight: 600,
+                          }}
+                        >
                           Edit Profile
                         </GameText>
 
@@ -260,7 +302,11 @@ export default function Account({ kcContext, i18n: _i18n }: AccountProps) {
                           </Box>
                         ) : (
                           <Grid container spacing={3}>
-                            <Grid size={{ xs: 12, sm: 6 }}>
+                            <Grid 
+                              size={{ xs: 12, sm: 6 }}
+                              sx={{
+                              }}
+                            >
                               <FormField
                                 name="firstName"
                                 form={form}
@@ -270,7 +316,11 @@ export default function Account({ kcContext, i18n: _i18n }: AccountProps) {
                                 fullWidth
                               />
                             </Grid>
-                            <Grid size={{ xs: 12, sm: 6 }}>
+                            <Grid 
+                              size={{ xs: 12, sm: 6 }}
+                              sx={{
+                              }}
+                            >
                               <FormField
                                 name="lastName"
                                 form={form}
@@ -280,7 +330,11 @@ export default function Account({ kcContext, i18n: _i18n }: AccountProps) {
                                 fullWidth
                               />
                             </Grid>
-                            <Grid size={12}>
+                            <Grid 
+                              size={12}
+                              sx={{
+                              }}
+                            >
                               <FormField
                                 name="email"
                                 form={form}
@@ -293,11 +347,25 @@ export default function Account({ kcContext, i18n: _i18n }: AccountProps) {
                           </Grid>
                         )}
 
-                        <Box sx={{ display: 'flex', gap: 2, mt: 4, justifyContent: 'flex-end' }}>
-                          <Button
-                            type="button"
-                            variant="outlined"
-                            sx={{ borderRadius: '12px', px: 3 }}
+                        <Box 
+                          sx={{ 
+                            display: 'flex', 
+                            gap: 2, 
+                            mt: 4, 
+                            justifyContent: 'flex-end',
+                          }}
+                        >
+                          <HoverLift>
+                            <Button
+                              type="button"
+                              variant="outlined"
+                              sx={{ 
+                                borderRadius: '12px', 
+                                px: 3,
+                                '&:hover:not(:disabled)': {
+                                  boxShadow: '0 4px 15px rgba(0, 188, 212, 0.3)',
+                                },
+                              }}
                             onClick={() => {
                               if (user) {
                                 form.setFieldValue(
@@ -315,10 +383,18 @@ export default function Account({ kcContext, i18n: _i18n }: AccountProps) {
                           >
                             Reset
                           </Button>
-                          <Button
-                            type="submit"
-                            variant="contained"
-                            sx={{ borderRadius: '12px', px: 3 }}
+                          </HoverLift>
+                          <HoverLift>
+                            <Button
+                              type="submit"
+                              variant="contained"
+                              sx={{ 
+                                borderRadius: '12px', 
+                                px: 3,
+                                '&:hover:not(:disabled)': {
+                                  boxShadow: '0 4px 15px rgba(0, 188, 212, 0.4)',
+                                },
+                              }}
                             disabled={authLoading || !form.state.isValid || form.state.isSubmitting}
                           >
                             {form.state.isSubmitting ? (
@@ -327,42 +403,83 @@ export default function Account({ kcContext, i18n: _i18n }: AccountProps) {
                               'Save Changes'
                             )}
                           </Button>
+                          </HoverLift>
                         </Box>
                       </CardContent>
-                    </GameCard>
-                  </Grid>
+                      </GameCard>
+                    </HoverCard>
+                  </motion.div>
 
                   {/* Password Change Section - Sidebar style */}
-                  <Grid size={{ xs: 12, lg: 4 }}>
-                    <GameCard>
+                  <motion.div
+                    initial={{ opacity: 0, x: 30 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.6, ease: 'easeOut', delay: 0.8 }}
+                    style={{ 
+                      gridColumn: 'span 4',
+                      '@media (max-width: 1200px)': {
+                        gridColumn: 'span 12',
+                      }
+                    }}
+                  >
+                    <HoverCard>
+                      <GameCard>
                       <CardContent sx={{ p: 4 }}>
-                        <GameText variant="h6" textVariant="glow" gutterBottom sx={{ mb: 3, fontWeight: 600 }}>
+                        <GameText 
+                          variant="h6" 
+                          textVariant="glow" 
+                          gutterBottom 
+                          sx={{ 
+                            mb: 3, 
+                            fontWeight: 600,
+                          }}
+                        >
                           Security
                         </GameText>
 
-                        <GameText variant="body2" textVariant="secondary" sx={{ mb: 3 }}>
+                        <GameText 
+                          variant="body2" 
+                          textVariant="secondary" 
+                          sx={{ 
+                            mb: 3,
+                          }}
+                        >
                           Change your password to keep your account secure
                         </GameText>
 
-                        <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-                          <Button
-                            variant="outlined"
-                            sx={{ borderRadius: '12px', px: 3 }}
-                            onClick={handlePasswordChange}
-                            disabled={authLoading}
-                          >
-                            Change Password
-                          </Button>
+                        <Box 
+                          sx={{ 
+                            display: 'flex', 
+                            justifyContent: 'flex-end',
+                          }}
+                        >
+                          <HoverLift>
+                            <Button
+                              variant="outlined"
+                              sx={{ 
+                                borderRadius: '12px', 
+                                px: 3,
+                                '&:hover:not(:disabled)': {
+                                  boxShadow: '0 4px 15px rgba(0, 188, 212, 0.3)',
+                                },
+                              }}
+                              onClick={handlePasswordChange}
+                              disabled={authLoading}
+                            >
+                              Change Password
+                            </Button>
+                          </HoverLift>
                         </Box>
                       </CardContent>
-                    </GameCard>
-                  </Grid>
+                      </GameCard>
+                    </HoverCard>
+                  </motion.div>
                 </Grid>
               </form>
             )}
-          </Container>
-        </Box>
-      </Box>
+          </motion.div>
+        </motion.div>
+      </motion.div>
     </Box>
   );
 }

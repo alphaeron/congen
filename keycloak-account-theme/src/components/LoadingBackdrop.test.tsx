@@ -69,6 +69,6 @@ describe('LoadingBackdrop', () => {
 
     const styleElement = container.querySelector('style');
     expect(styleElement).toBeInTheDocument();
-    expect(styleElement?.textContent).toContain('@keyframes spin');
+    // CSS animations removed - now using framer-motion
   });
 });

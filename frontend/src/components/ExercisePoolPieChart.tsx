@@ -99,6 +99,8 @@ export const ExercisePoolPieChart: React.FC<ExercisePoolPieChartProps> = ({
             arcLinkLabelsColor="transparent"
             arcLabelsSkipAngle={10}
             arcLabelsTextColor={{ from: 'color', modifiers: [['darker', 2]] }}
+            animate={true}
+            motionConfig="gentle"
             theme={nivoTheme}
             colors={{ scheme: 'nivo' }}
             tooltip={({ datum }) => (

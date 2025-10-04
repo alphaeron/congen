@@ -138,43 +138,44 @@ export function ExerciseDetails(
   } else {
     return (
       <React.Fragment>
-        <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
-          <GameText variant="h1" gutterBottom={true}>
-            {exercise.name}
-          </GameText>
+        <Box sx={{ p: 3 }}>
+          <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
+            <GameText variant="h1" gutterBottom={true}>
+              {exercise.name}
+            </GameText>
           <ExercisePreferenceControls
             exerciseName={exercise.name}
             variant="segmented"
             size="medium"
           />
         </Box>
-        <Grid container={true} spacing={2}>
-          <Grid size={{ xs: 12 }}>
-            <Stack direction="row" spacing={2}>
-              <Chip
-                label={`${capitalizeEachWord(exercise.movement_type)} Exercise`}
-                color="primary"
-              />
-              <BinaryTag
-                isOn={exercise.is_upper}
-                onText="Upper Body"
-                offText="Lower Body"
-                color="success"
-              />
-              <BinaryTag
-                isOn={exercise.is_accessory}
-                onText="Accessory"
-                offText="Primary Movement"
-                color="secondary"
-              />
-              <BinaryTag
-                isOn={exercise.is_unilateral}
-                onText="Unilateral"
-                offText="Bilateral"
-                color="primary"
-              />
-            </Stack>
-          </Grid>
+          <Grid container={true} spacing={2}>
+            <Grid size={{ xs: 12 }}>
+              <Stack direction="row" spacing={2}>
+                <Chip
+                  label={`${capitalizeEachWord(exercise.movement_type)} Exercise`}
+                  color="primary"
+                />
+                <BinaryTag
+                  isOn={exercise.is_upper}
+                  onText="Upper Body"
+                  offText="Lower Body"
+                  color="success"
+                />
+                <BinaryTag
+                  isOn={exercise.is_accessory}
+                  onText="Accessory"
+                  offText="Primary Movement"
+                  color="secondary"
+                />
+                <BinaryTag
+                  isOn={exercise.is_unilateral}
+                  onText="Unilateral"
+                  offText="Bilateral"
+                  color="primary"
+                />
+              </Stack>
+            </Grid>
           <Grid size={{ xs: 9 }}>
             <Stack spacing={2}>
               <Skeleton variant="rectangular" height={360} />
@@ -233,6 +234,7 @@ export function ExerciseDetails(
             </Grid>
           </Grid>
         </Grid>
+        </Box>
       </React.Fragment>
     );
   }

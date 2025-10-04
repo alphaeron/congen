@@ -324,6 +324,8 @@ export const SunburstChart: React.FC<SunburstChartProps> = ({
               from: 'color',
               modifiers: [['darker', 1.4]],
             }}
+            animate={true}
+            motionConfig="gentle"
             theme={nivoTheme}
             onClick={handleArcClick}
             layers={[

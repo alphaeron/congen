@@ -166,6 +166,8 @@ export const PieChart: React.FC<PieChartProps> = ({
             arcLinkLabelsColor={{ from: 'color' }}
             arcLabelsSkipAngle={10}
             arcLabelsTextColor={{ from: 'color', modifiers: [['darker', 2]] }}
+            animate={true}
+            motionConfig="gentle"
             theme={nivoTheme}
             tooltip={({ datum }) => (
               <div

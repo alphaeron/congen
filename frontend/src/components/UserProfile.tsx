@@ -15,6 +15,7 @@ import {
 } from '@mui/material';
 import React from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
+import { motion } from 'framer-motion';
 
 import { GdprComplianceSection } from './GdprComplianceSection';
 import { PhysicalAttributesSection } from './PhysicalAttributesSection';
@@ -80,8 +81,11 @@ export const UserProfile: React.FC<UserProfileProps> = ({ initialSection = 'phys
     menuItems.find(item => item.id === activeSection && !item.isExternal) || menuItems[0];
 
   return (
-    <Box
-      sx={{
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.8, ease: 'easeOut' }}
+      style={{
         display: 'flex',
         height: '100vh', // Use full viewport height
         position: 'relative',
@@ -117,22 +121,82 @@ export const UserProfile: React.FC<UserProfileProps> = ({ initialSection = 'phys
             height: '100%',
           }}
         >
-          <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider', flexShrink: 0 }}>
-            <GameText variant="h6" textVariant="glow">
-              User Profile
-            </GameText>
-          </Box>
+          <motion.div
+            initial={{ opacity: 0, x: -30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6, ease: 'easeOut', delay: 0.2 }}
+            style={{ 
+              padding: '16px', 
+              borderBottom: '1px solid',
+              borderColor: 'var(--mui-palette-divider)', 
+              flexShrink: 0,
+            }}
+          >
+            <motion.div
+              animate={{ 
+                scale: [1, 1.02, 1],
+                opacity: [1, 0.8, 1]
+              }}
+              transition={{ 
+                duration: 2, 
+                repeat: Infinity, 
+                ease: 'easeInOut' 
+              }}
+            >
+              <GameText 
+                variant="h6" 
+                textVariant="glow"
+              >
+                User Profile
+              </GameText>
+            </motion.div>
+          </motion.div>
           <List sx={{ flex: 1, overflow: 'auto' }}>
-            {menuItems.map(item => (
+            {menuItems.map((item, index) => (
               <ListItem key={item.id} disablePadding>
-                <ListItemButton
-                  selected={activeSection === item.id}
-                  onClick={() => handleSectionChange(item.id)}
-                  className={GAME_CLASSES.listItem}
+                <motion.div
+                  initial={{ opacity: 0, x: -30 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.6, ease: 'easeOut', delay: 0.3 + index * 0.1 }}
+                  style={{ width: '100%' }}
                 >
-                  <ListItemIcon sx={{ minWidth: 40 }}>{item.icon}</ListItemIcon>
-                  <ListItemText primary={item.label} />
-                </ListItemButton>
+                  <motion.div
+                    whileHover={{ x: 2 }}
+                    whileTap={{ scale: 0.98 }}
+                    style={{ width: '100%' }}
+                  >
+                    <ListItemButton
+                      selected={activeSection === item.id}
+                      onClick={() => handleSectionChange(item.id)}
+                      className={GAME_CLASSES.listItem}
+                      sx={{
+                        color: activeSection === item.id ? '#00bcd4' : 'rgba(255, 255, 255, 0.8)',
+                        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                        '&.Mui-selected': {
+                          backgroundColor: 'rgba(0, 188, 212, 0.1)',
+                          color: '#00bcd4',
+                          '&:hover': {
+                            backgroundColor: 'rgba(0, 188, 212, 0.15)',
+                          },
+                        },
+                        '&:hover': {
+                          backgroundColor: 'rgba(0, 188, 212, 0.05)',
+                        },
+                      }}
+                    >
+                      <ListItemIcon sx={{ minWidth: 40, color: 'inherit' }}>{item.icon}</ListItemIcon>
+                      <ListItemText 
+                        primary={item.label} 
+                        sx={{ 
+                          '& .MuiListItemText-primary': { 
+                            color: 'inherit',
+                            fontWeight: activeSection === item.id ? 600 : 400,
+                          } 
+                        }} 
+                      />
+                    </ListItemButton>
+                  </motion.div>
+                </motion.div>
               </ListItem>
             ))}
           </List>
@@ -140,9 +204,11 @@ export const UserProfile: React.FC<UserProfileProps> = ({ initialSection = 'phys
       </Drawer>
 
       {/* Main Content */}
-      <Box
-        component="main"
-        sx={{
+      <motion.div
+        initial={{ opacity: 0, x: 30 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.6, ease: 'easeOut', delay: 0.4 }}
+        style={{
           flexGrow: 1,
           height: '100%',
           overflow: 'auto', // Allow content to scroll if needed
@@ -150,9 +216,16 @@ export const UserProfile: React.FC<UserProfileProps> = ({ initialSection = 'phys
         }}
       >
         <Container maxWidth="xl" sx={{ height: '100%' }}>
-          <Box sx={{ p: 3 }}>{currentSection.component}</Box>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.6, ease: 'easeOut', delay: 0.6 }}
+            style={{ padding: '24px' }}
+          >
+            {currentSection.component}
+          </motion.div>
         </Container>
-      </Box>
-    </Box>
+      </motion.div>
+    </motion.div>
   );
 };

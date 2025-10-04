@@ -1,6 +1,7 @@
 import { Box, List, Tabs, Tab } from '@mui/material';
 import { useSnackbar } from 'notistack';
 import React, { useState, useEffect, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 import { DeletableChip } from './DeletableChip';
 import { DeletableListItem } from './DeletableListItem';
@@ -8,6 +9,7 @@ import { FormDialog } from './FormDialog';
 import { FormField } from './FormField';
 import { LoadingSpinner } from './LoadingSpinner';
 import { PreferenceSection } from './PreferenceSection';
+import { GAME_CLASSES } from './GameTheme';
 import {
   WeightUnit,
   type Exercise,
@@ -36,20 +38,45 @@ interface TabPanelProps {
   children?: React.ReactNode;
   index: number;
   value: number;
+  slideDirection?: 'left' | 'right';
 }
 
 function TabPanel(props: TabPanelProps) {
-  const { children, value, index, ...other } = props;
+  const { children, value, index, slideDirection = 'left', ...other } = props;
 
   return (
     <div
       role="tabpanel"
       hidden={value !== index}
-      id={`horizontal-tabpanel-${index}`}
-      aria-labelledby={`horizontal-tab-${index}`}
+      id={`preferences-tabpanel-${index}`}
+      aria-labelledby={`preferences-tab-${index}`}
       {...other}
     >
-      {value === index && <Box sx={{ p: 3 }}>{children}</Box>}
+      <AnimatePresence mode="wait">
+        {value === index && (
+          <motion.div
+            key={index}
+            initial={{ 
+              opacity: 0, 
+              x: slideDirection === 'left' ? 50 : -50 
+            }}
+            animate={{ 
+              opacity: 1, 
+              x: 0 
+            }}
+            exit={{ 
+              opacity: 0, 
+              x: slideDirection === 'left' ? -50 : 50 
+            }}
+            transition={{ 
+              duration: 0.3, 
+              ease: 'easeInOut' 
+            }}
+          >
+            <Box sx={{ p: 0 }}>{children}</Box>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -98,6 +125,7 @@ export function WorkoutPreferencesSection(): React.ReactElement {
 
   // Tab state
   const [activeTab, setActiveTab] = useState(0);
+  const [slideDirection, setSlideDirection] = useState<'left' | 'right'>('left');
 
   // Form data types for TanStack Form
   interface WeightUnitPreferenceFormData extends Record<string, unknown> {
@@ -161,6 +189,13 @@ export function WorkoutPreferencesSection(): React.ReactElement {
 
   // Tab change handler
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+    // Set slide direction based on tab navigation
+    if (newValue > activeTab) {
+      setSlideDirection('left'); // Moving forward to next tab
+    } else {
+      setSlideDirection('right'); // Moving backward to previous tab
+    }
+    
     setActiveTab(newValue);
   };
 
@@ -380,37 +415,76 @@ export function WorkoutPreferencesSection(): React.ReactElement {
   return (
     <Box sx={{ height: '100vh', overflow: 'hidden' }}>
       {/* Horizontal Tabs */}
-      <Box
-        sx={{
-          borderBottom: 1,
-          borderColor: 'divider',
-          backgroundColor: 'background.paper',
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.8, ease: 'easeOut' }}
+        style={{ 
+          borderBottom: '1px solid',
+          borderColor: 'var(--mui-palette-divider)',
         }}
       >
         <Tabs
           value={activeTab}
           onChange={handleTabChange}
           aria-label="workout preferences tabs"
-          variant="scrollable"
-          scrollButtons="auto"
+          variant="standard"
+          scrollButtons={false}
+          className={GAME_CLASSES.tabs}
           sx={{
-            '& .MuiTab-root': {
-              minHeight: 48,
-              textTransform: 'none',
-              fontWeight: 500,
+            '& .MuiTabs-flexContainer': {
+              flexWrap: 'nowrap',
             },
+            '& .MuiTab-root': {
+              minWidth: 'auto',
+              flexShrink: 0,
+              '&:hover': {
+                transform: 'translateY(-2px)',
+                backgroundColor: 'rgba(0, 188, 212, 0.1)',
+                boxShadow: '0 4px 15px rgba(0, 188, 212, 0.2)',
+              },
+              '&.Mui-selected': {
+                color: '#00bcd4',
+                textShadow: '0 0 8px rgba(0, 188, 212, 0.5)',
+              }
+            },
+            '& .MuiTabs-indicator': {
+              backgroundColor: '#00bcd4',
+              boxShadow: '0 0 10px rgba(0, 188, 212, 0.5)',
+            }
           }}
         >
-          <Tab label="Weight Unit Preferences" />
-          <Tab label="Available Equipment" />
-          <Tab label="Weak Muscle Groups" />
-          <Tab label="Exercise Preferences" />
+          <Tab 
+            label="Weight Unit Preferences" 
+            id="preferences-tab-0"
+            aria-controls="preferences-tabpanel-0"
+          />
+          <Tab 
+            label="Available Equipment" 
+            id="preferences-tab-1"
+            aria-controls="preferences-tabpanel-1"
+          />
+          <Tab 
+            label="Weak Muscle Groups" 
+            id="preferences-tab-2"
+            aria-controls="preferences-tabpanel-2"
+          />
+          <Tab 
+            label="Exercise Preferences" 
+            id="preferences-tab-3"
+            aria-controls="preferences-tabpanel-3"
+          />
         </Tabs>
-      </Box>
+      </motion.div>
 
       {/* Tab Content */}
-      <Box sx={{ flex: 1, overflow: 'auto', height: 'calc(100vh - 48px)' }}>
-        <TabPanel value={activeTab} index={0}>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, ease: 'easeOut', delay: 0.6 }}
+        style={{ flex: 1, overflow: 'auto', height: 'calc(100vh - 48px)' }}
+      >
+        <TabPanel value={activeTab} index={0} slideDirection={slideDirection}>
           <PreferenceSection
             title="Weight Unit Preferences"
             description="Set your preferred weight units for specific exercises."
@@ -434,7 +508,7 @@ export function WorkoutPreferencesSection(): React.ReactElement {
           </PreferenceSection>
         </TabPanel>
 
-        <TabPanel value={activeTab} index={1}>
+        <TabPanel value={activeTab} index={1} slideDirection={slideDirection}>
           <PreferenceSection
             title="Available Equipment"
             description="Manage the equipment you have available for workouts. This affects which exercises are available in your exercise pool."
@@ -459,7 +533,7 @@ export function WorkoutPreferencesSection(): React.ReactElement {
           </PreferenceSection>
         </TabPanel>
 
-        <TabPanel value={activeTab} index={2}>
+        <TabPanel value={activeTab} index={2} slideDirection={slideDirection}>
           <PreferenceSection
             title="Weak Muscle Groups"
             description="Identify muscle groups you want to target for improvement. This helps prioritize exercises that work these areas."
@@ -484,7 +558,7 @@ export function WorkoutPreferencesSection(): React.ReactElement {
           </PreferenceSection>
         </TabPanel>
 
-        <TabPanel value={activeTab} index={3}>
+        <TabPanel value={activeTab} index={3} slideDirection={slideDirection}>
           <PreferenceSection
             title="Exercise Preferences"
             description="Set your preferences for specific exercises. You can prefer exercises you enjoy or ignore exercises you want to avoid."
@@ -507,7 +581,7 @@ export function WorkoutPreferencesSection(): React.ReactElement {
             </List>
           </PreferenceSection>
         </TabPanel>
-      </Box>
+      </motion.div>
 
       {/* Add Weight Unit Preference Dialog */}
       <FormDialog<WeightUnitPreferenceFormData>

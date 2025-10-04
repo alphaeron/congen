@@ -94,12 +94,15 @@ export const GameProgressBar: React.FC<GameProgressBarProps> = ({
         if (entry.isIntersecting && !isInView) {
           setIsInView(true);
           const timer = setTimeout(() => {
-            controls.start({
-              x: 0,
-              opacity: 1,
-              transition: { duration: 0.25 }
-            });
-            progressValue.set(1);
+            // Check if component is still mounted before starting animation
+            if (ref.current) {
+              controls.start({
+                x: 0,
+                opacity: 1,
+                transition: { duration: 0.25 }
+              });
+              progressValue.set(1);
+            }
           }, delay);
 
           return () => clearTimeout(timer);
@@ -269,12 +272,15 @@ export const GameCircularProgressBar: React.FC<GameProgressBarProps> = ({
         if (entry.isIntersecting && !isInView) {
           setIsInView(true);
           const timer = setTimeout(() => {
-            controls.start({
-              x: 0,
-              opacity: 1,
-              transition: { duration: 0.25 }
-            });
-            progressValue.set(1);
+            // Check if component is still mounted before starting animation
+            if (ref.current) {
+              controls.start({
+                x: 0,
+                opacity: 1,
+                transition: { duration: 0.25 }
+              });
+              progressValue.set(1);
+            }
           }, delay);
 
           return () => clearTimeout(timer);

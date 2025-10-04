@@ -2,6 +2,7 @@ import { Box, Button, CardContent, CircularProgress, Grid } from '@mui/material'
 import { useForm } from '@tanstack/react-form';
 import { useSnackbar } from 'notistack';
 import React from 'react';
+import { motion } from 'framer-motion';
 
 import { FormField } from './FormField';
 import { GameText, GameCard, GameButton, GAME_CLASSES } from './GameTheme';
@@ -93,16 +94,53 @@ export function PhysicalAttributesSection(): React.ReactElement {
   }
 
   return (
-    <Box>
-      <GameText variant="h5" gutterBottom>
-        Physical Attributes
-      </GameText>
-      <GameText variant="body2" textVariant="secondary" className={GAME_CLASSES.marginBottom3}>
-        Manage your physical attributes for personalized workout recommendations. All data is
-        encrypted at rest for your privacy and GDPR compliance.
-      </GameText>
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.8, ease: 'easeOut' }}
+    >
+      <motion.div
+        initial={{ opacity: 0, x: -30 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.6, ease: 'easeOut', delay: 0.2 }}
+      >
+        <GameText 
+          variant="h5" 
+          gutterBottom
+        >
+          Physical Attributes
+        </GameText>
+      </motion.div>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.6, ease: 'easeOut', delay: 0.4 }}
+      >
+        <GameText 
+          variant="body2" 
+          textVariant="secondary" 
+          className={GAME_CLASSES.marginBottom3}
+        >
+          Manage your physical attributes for personalized workout recommendations. All data is
+          encrypted at rest for your privacy and GDPR compliance.
+        </GameText>
+      </motion.div>
 
-      <GameCard>
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, ease: 'easeOut', delay: 0.6 }}
+        whileHover={{ y: -2 }}
+        style={{ transition: 'box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1)' }}
+      >
+        <GameCard
+          sx={{
+            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+            '&:hover': {
+              boxShadow: '0 8px 25px rgba(0, 188, 212, 0.15)',
+            }
+          }}
+        >
         <CardContent>
           <form
             onSubmit={e => {
@@ -113,57 +151,101 @@ export function PhysicalAttributesSection(): React.ReactElement {
           >
             <Grid container spacing={3}>
               <Grid size={{ xs: 12, sm: 6 }}>
-                <FormField
-                  type="number"
-                  label="Age"
-                  name="age"
-                  form={form}
-                  inputProps={{ min: 1, max: 120 }}
-                  helperText="Your age in years"
-                />
+                <motion.div
+                  initial={{ opacity: 0, x: -30 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.6, ease: 'easeOut', delay: 0.8 }}
+                >
+                  <FormField
+                    type="number"
+                    label="Age"
+                    name="age"
+                    form={form}
+                    inputProps={{ min: 1, max: 120 }}
+                    helperText="Your age in years"
+                  />
+                </motion.div>
               </Grid>
               <Grid size={{ xs: 12, sm: 6 }}>
-                <FormField
-                  type="number"
-                  label="Weight (lbs)"
-                  name="weight"
-                  form={form}
-                  inputProps={{ min: 1, max: 1000 }}
-                  helperText="Your weight in pounds"
-                />
+                <motion.div
+                  initial={{ opacity: 0, x: 30 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.6, ease: 'easeOut', delay: 0.9 }}
+                >
+                  <FormField
+                    type="number"
+                    label="Weight (lbs)"
+                    name="weight"
+                    form={form}
+                    inputProps={{ min: 1, max: 1000 }}
+                    helperText="Your weight in pounds"
+                  />
+                </motion.div>
               </Grid>
               <Grid size={{ xs: 12, sm: 6 }}>
-                <FormField
-                  type="number"
-                  label="Height (cm)"
-                  name="height"
-                  form={form}
-                  inputProps={{ min: 50, max: 300 }}
-                  helperText="Your height in centimeters"
-                />
+                <motion.div
+                  initial={{ opacity: 0, x: -30 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.6, ease: 'easeOut', delay: 1.0 }}
+                >
+                  <FormField
+                    type="number"
+                    label="Height (cm)"
+                    name="height"
+                    form={form}
+                    inputProps={{ min: 50, max: 300 }}
+                    helperText="Your height in centimeters"
+                  />
+                </motion.div>
               </Grid>
               <Grid size={{ xs: 12, sm: 6 }}>
-                <FormField
-                  type="select"
-                  label="Gender"
-                  name="gender"
-                  form={form}
-                  options={[
-                    { value: '', label: 'Select gender' },
-                    { value: 'male', label: 'Male' },
-                    { value: 'female', label: 'Female' },
-                  ]}
-                  helperText="Your gender"
-                />
+                <motion.div
+                  initial={{ opacity: 0, x: 30 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.6, ease: 'easeOut', delay: 1.1 }}
+                >
+                  <FormField
+                    type="select"
+                    label="Gender"
+                    name="gender"
+                    form={form}
+                    options={[
+                      { value: '', label: 'Select gender' },
+                      { value: 'male', label: 'Male' },
+                      { value: 'female', label: 'Female' },
+                    ]}
+                    helperText="Your gender"
+                  />
+                </motion.div>
               </Grid>
             </Grid>
 
-            <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end' }}>
-              <Button
-                type="button"
-                variant="contained"
-                disabled={form.state.isSubmitting}
-                startIcon={form.state.isSubmitting ? <CircularProgress size={20} /> : null}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, ease: 'easeOut', delay: 1.2 }}
+              style={{ 
+                marginTop: '24px', 
+                display: 'flex', 
+                justifyContent: 'flex-end',
+              }}
+            >
+              <motion.div
+                whileHover={{ y: -2 }}
+                whileTap={{ scale: 0.98 }}
+                style={{ transition: 'box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1)' }}
+              >
+                <Button
+                  type="button"
+                  variant="contained"
+                  disabled={form.state.isSubmitting}
+                  startIcon={form.state.isSubmitting ? <CircularProgress size={20} /> : null}
+                  sx={{
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                    '&:hover:not(:disabled)': {
+                      boxShadow: '0 8px 25px rgba(0, 188, 212, 0.4)',
+                    },
+                  }}
                 onClick={async () => {
                   // Call the onSubmit function directly
                   const formData = form.state.values as PhysicalAttributesFormData;
@@ -195,10 +277,12 @@ export function PhysicalAttributesSection(): React.ReactElement {
               >
                 {form.state.isSubmitting ? 'Saving...' : 'Save Changes'}
               </Button>
-            </Box>
+              </motion.div>
+            </motion.div>
           </form>
         </CardContent>
       </GameCard>
-    </Box>
+      </motion.div>
+    </motion.div>
   );
 }

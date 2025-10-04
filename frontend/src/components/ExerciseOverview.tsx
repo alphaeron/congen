@@ -305,7 +305,7 @@ export function ExerciseOverview(): React.ReactElement {
         {hasActiveFilters && (
           <Box sx={{ mb: 3 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-              <GameText variant="h6" textVariant="secondary">
+              <GameText variant="h6" textVariant="secondary" sx={{ color: '#1e293b' }}>
                 Applied Filters
               </GameText>
               <Button
@@ -319,7 +319,15 @@ export function ExerciseOverview(): React.ReactElement {
                   isAccessory: null,
                   isUpper: null,
                 })}
-                sx={{ minWidth: 'auto', p: 0.5 }}
+                className="modern-button"
+                sx={{ 
+                  minWidth: 'auto', 
+                  p: 0.5,
+                  background: 'linear-gradient(135deg, #00bcd4, #00acc1)',
+                  '&:hover': {
+                    background: 'linear-gradient(135deg, #00acc1, #0097a7)',
+                  },
+                }}
               >
                 Clear All
               </Button>
@@ -419,7 +427,7 @@ export function ExerciseOverview(): React.ReactElement {
 
         {/* Results Section */}
         <Box>
-          <GameText variant="h5" className={`${GAME_CLASSES.textBold} ${GAME_CLASSES.marginBottom3}`}>
+          <GameText variant="h5" className={`${GAME_CLASSES.textBold} ${GAME_CLASSES.marginBottom3}`} sx={{ color: '#1e293b' }}>
             Results ({exercisesToDisplay.length} exercises)
           </GameText>
 

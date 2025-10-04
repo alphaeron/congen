@@ -141,25 +141,18 @@ export const AdventurerStatusCard: React.FC<AdventurerStatusCardProps> = ({
   }, [isLevelInView, scores.level]);
 
   return (
-    <GameCard 
-      className={GAME_CLASSES.overflowVisible}
-      interactive={true}
-      sx={{
-        opacity: 0,
-        transform: 'translateY(20px) scale(0.98)',
-        animation: 'cardEntrance 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards',
-        '@keyframes cardEntrance': {
-          '0%': {
-            opacity: 0,
-            transform: 'translateY(20px) scale(0.98)',
-          },
-          '100%': {
-            opacity: 1,
-            transform: 'translateY(0) scale(1)',
-          },
-        },
+    <motion.div
+      initial={{ opacity: 0, y: 20, scale: 0.98 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ 
+        duration: 0.4, 
+        ease: [0.25, 0.46, 0.45, 0.94] 
       }}
     >
+      <GameCard
+        className={GAME_CLASSES.overflowVisible}
+        interactive={true}
+      >
       <CardHeader
         title={
           <Box className={GAME_CLASSES.textCenter}>
@@ -247,21 +240,13 @@ export const AdventurerStatusCard: React.FC<AdventurerStatusCardProps> = ({
         </motion.div>
 
         {/* Status Bars - Centered under profile */}
-        <Box
-          sx={{
-            opacity: 0,
-            transform: 'translateY(15px)',
-            animation: 'statusBarsEntrance 0.3s ease-out 0.4s forwards',
-            '@keyframes statusBarsEntrance': {
-              '0%': {
-                opacity: 0,
-                transform: 'translateY(15px)',
-              },
-              '100%': {
-                opacity: 1,
-                transform: 'translateY(0)',
-              },
-            },
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ 
+            duration: 0.3, 
+            ease: 'easeOut',
+            delay: 0.4 
           }}
         >
           <Grid container spacing={6} justifyContent="center" alignItems="center" mb={3}>
@@ -309,7 +294,7 @@ export const AdventurerStatusCard: React.FC<AdventurerStatusCardProps> = ({
               />
             </Grid>
           </Grid>
-        </Box>
+        </motion.div>
 
         {/* Skills and Radar Chart - Side by Side */}
         <motion.div
@@ -400,21 +385,13 @@ export const AdventurerStatusCard: React.FC<AdventurerStatusCardProps> = ({
 
             {/* Performance Radar Chart - Right */}
             <Grid size={{ xs: 12, sm: 6, md: 7 }}>
-              <Box
-                sx={{
-                  opacity: 0,
-                  transform: 'translateX(15px)',
-                  animation: 'radarChartEntrance 0.25s ease-out 1.0s forwards',
-                  '@keyframes radarChartEntrance': {
-                    '0%': {
-                      opacity: 0,
-                      transform: 'translateX(15px)',
-                    },
-                    '100%': {
-                      opacity: 1,
-                      transform: 'translateX(0)',
-                    },
-                  },
+              <motion.div
+                initial={{ opacity: 0, x: 15 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ 
+                  duration: 0.25, 
+                  ease: 'easeOut',
+                  delay: 1.0 
                 }}
               >
                 <PerformanceRadarChart
@@ -424,11 +401,12 @@ export const AdventurerStatusCard: React.FC<AdventurerStatusCardProps> = ({
                   title=""
                   height={300}
                 />
-              </Box>
+              </motion.div>
             </Grid>
           </Grid>
         </motion.div>
       </CardContent>
-    </GameCard>
+      </GameCard>
+    </motion.div>
   );
 };

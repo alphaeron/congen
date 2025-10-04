@@ -12,11 +12,11 @@ import {
   ListItem,
   ListItemText,
   IconButton,
-  Slide,
 } from '@mui/material';
 import { useSnackbar } from 'notistack';
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
+import { motion } from 'framer-motion';
 
 import { ExportButtons } from './ExportButtons';
 import { LoadingSpinner } from './LoadingSpinner';
@@ -249,48 +249,95 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
   }
 
   return (
-    <Slide direction="left" in={true} mountOnEnter unmountOnExit>
-      <Box>
+    <motion.div
+      initial={{ opacity: 0, x: -50 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ duration: 0.6, ease: 'easeOut' }}
+    >
         {!activeProgram ? (
           <GameCard>
             <CardContent>
-              <GameText variant="h6" gutterBottom>
-                No Active Program
-              </GameText>
-              <GameText variant="body2" textVariant="secondary" paragraph>
-                You need to create a program first before you can generate and view workouts. Please
-                go to the Programs section to create a program.
-              </GameText>
+              <motion.div
+                initial={{ opacity: 0, x: -30 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.6, ease: 'easeOut', delay: 0.2 }}
+              >
+                <GameText 
+                  variant="h6" 
+                  gutterBottom
+                >
+                  No Active Program
+                </GameText>
+              </motion.div>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.6, ease: 'easeOut', delay: 0.4 }}
+              >
+                <GameText 
+                  variant="body2" 
+                  textVariant="secondary" 
+                  paragraph
+                >
+                  You need to create a program first before you can generate and view workouts. Please
+                  go to the Programs section to create a program.
+                </GameText>
+              </motion.div>
             </CardContent>
           </GameCard>
         ) : (
-          <Box sx={{ position: 'relative' }}>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.8, ease: 'easeOut' }}
+            style={{ position: 'relative' }}
+          >
             {/* Back button for week details */}
             {showBackButton && (
-              <IconButton
-                onClick={onBack || handleBackToWeekList}
-                sx={{
+              <motion.div
+                initial={{ opacity: 0, x: -30 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.6, ease: 'easeOut', delay: 0.1 }}
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.95 }}
+                style={{
                   position: 'absolute',
                   top: 24,
                   left: -32,
                   zIndex: 1001,
-                  backgroundColor: 'background.paper',
-                  boxShadow: 2,
-                  '&:hover': {
-                    backgroundColor: 'action.hover',
-                    boxShadow: 4,
-                  },
                 }}
               >
-                <ArrowBackIcon />
-              </IconButton>
+                <IconButton
+                  onClick={onBack || handleBackToWeekList}
+                  sx={{
+                    backgroundColor: 'background.paper',
+                    boxShadow: 2,
+                    '&:hover': {
+                      backgroundColor: 'rgba(0, 188, 212, 0.1)',
+                      boxShadow: 4,
+                    },
+                  }}
+                >
+                  <ArrowBackIcon />
+                </IconButton>
+              </motion.div>
             )}
 
             {/* Progress Bar and Export Buttons */}
-            <Box sx={{ p: 3, pb: 0 }}>
+            <Box 
+              sx={{ 
+                p: 3, 
+                pb: 0,
+              }}
+            >
               <Box display="flex" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
                 {/* Progress Bar on the left */}
-                <Box sx={{ flex: 1, mr: 2 }}>
+                <Box 
+                  sx={{ 
+                    flex: 1, 
+                    mr: 2,
+                  }}
+                >
                   {progressMetrics && (
                     <ProgressBar
                       value={progressMetrics.completionRate}
@@ -316,22 +363,37 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
                 </Box>
 
                 {/* Export Buttons on the right */}
-                <ExportButtons onExportPDF={handleExportPDF} disabled={weekWorkouts.length === 0} />
+                <Box
+                  sx={{
+                  }}
+                >
+                  <ExportButtons onExportPDF={handleExportPDF} disabled={weekWorkouts.length === 0} />
+                </Box>
               </Box>
             </Box>
 
-            <Box id="week-details-content" sx={{ p: 3, pt: 0 }}>
+            <Box 
+              id="week-details-content" 
+              sx={{ 
+                p: 3, 
+                pt: 0,
+              }}
+            >
               <Grid container spacing={3} sx={{ height: 'calc(100vh - 200px)' }}>
                 {/* Workout List - 2/3 width */}
                 <Grid size={{ xs: 12, lg: 8 }}>
-                  <Box sx={{ height: '100%' }}>
+                  <Box 
+                    sx={{ 
+                      height: '100%',
+                    }}
+                  >
                     <Card
                       sx={{
                         mt: 3,
                         height: '100%',
                         '&:hover': {
-                          transform: 'none',
-                          boxShadow: 'none',
+                          transform: 'translateY(-2px)',
+                          boxShadow: '0 8px 25px rgba(0, 188, 212, 0.15)',
                         },
                       }}
                     >
@@ -381,7 +443,7 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
                           </Box>
                         ) : (
                           <List>
-                            {weekWorkouts.map(weekWorkout => {
+                            {weekWorkouts.map((weekWorkout, index) => {
                               // Calculate workout progress using proper logic
                               const workoutProgress = calculateWorkoutProgress(weekWorkout.workout);
                               return (
@@ -397,8 +459,9 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
                                     backgroundColor: 'transparent',
                                     '&:hover': {
                                       backgroundColor: 'action.hover',
-                                      transform: 'translateX(4px)',
-                                      transition: 'all 0.2s ease',
+                                      transform: 'translateX(4px) scale(1.02)',
+                                      boxShadow: '0 4px 15px rgba(0, 188, 212, 0.2)',
+                                      borderColor: '#00bcd4',
                                     },
                                   }}
                                   onClick={() =>
@@ -473,30 +536,54 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
 
                 {/* Charts - 1/3 width */}
                 <Grid size={{ xs: 12, lg: 4 }}>
-                  <Box sx={{ mt: 3, display: 'flex', flexDirection: 'column', gap: 3 }}>
+                  <Box 
+                    sx={{ 
+                      mt: 3, 
+                      display: 'flex', 
+                      flexDirection: 'column', 
+                      gap: 3,
+                    }}
+                  >
                     {weekWorkouts.length > 0 && aggregatedWorkoutData && (
                       <React.Fragment>
-                        <SunburstChart
-                          workoutData={aggregatedWorkoutData}
-                          exerciseMuscleData={exerciseToMusclesData}
-                          weightUnitPreferences={weightUnitPreferences}
-                          selectedExercise="all"
-                        />
-                        <RadarChart
-                          weekWorkouts={weekWorkouts.map(ww => ww.workout)}
-                          exerciseData={exerciseData}
-                          title="Exercise Movement Type"
-                          height={300}
-                        />
+                        <Box
+                          sx={{
+                            '&:hover': {
+                              transform: 'translateY(-2px)',
+                              boxShadow: '0 8px 25px rgba(0, 188, 212, 0.1)',
+                            }
+                          }}
+                        >
+                          <SunburstChart
+                            workoutData={aggregatedWorkoutData}
+                            exerciseMuscleData={exerciseToMusclesData}
+                            weightUnitPreferences={weightUnitPreferences}
+                            selectedExercise="all"
+                          />
+                        </Box>
+                        <Box
+                          sx={{
+                            '&:hover': {
+                              transform: 'translateY(-2px)',
+                              boxShadow: '0 8px 25px rgba(0, 188, 212, 0.1)',
+                            }
+                          }}
+                        >
+                          <RadarChart
+                            weekWorkouts={weekWorkouts.map(ww => ww.workout)}
+                            exerciseData={exerciseData}
+                            title="Exercise Movement Type"
+                            height={300}
+                          />
+                        </Box>
                       </React.Fragment>
                     )}
                   </Box>
                 </Grid>
               </Grid>
             </Box>
-          </Box>
+          </motion.div>
         )}
-      </Box>
-    </Slide>
+    </motion.div>
   );
 };

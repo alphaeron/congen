@@ -333,12 +333,12 @@ export const Workouts: React.FC<WorkoutsProps> = () => {
             </GameCard>
 
             {/* Training Weeks Section */}
-            <GameCard>
+            <GameCard className="glassmorphism-card">
               <CardContent>
-                <GameText variant="h6" gutterBottom>
+                <GameText variant="h6" gutterBottom sx={{ color: '#1e293b' }}>
                   Training Weeks
                 </GameText>
-                <GameText variant="body2" className={`${GAME_CLASSES.opacity80} ${GAME_CLASSES.marginBottom2}`}>
+                <GameText variant="body2" className={`${GAME_CLASSES.opacity80} ${GAME_CLASSES.marginBottom2}`} sx={{ color: '#64748b' }}>
                   Click on any week to view detailed workout information
                 </GameText>
                 {isLoading ? (
@@ -347,7 +347,7 @@ export const Workouts: React.FC<WorkoutsProps> = () => {
                   </Box>
                 ) : weeks.length === 0 ? (
                   <Box sx={{ textAlign: 'center', py: 4 }}>
-                    <GameText variant="body2" textVariant="secondary" className={GAME_CLASSES.marginBottom2}>
+                    <GameText variant="body2" textVariant="secondary" className={GAME_CLASSES.marginBottom2} sx={{ color: '#64748b' }}>
                       No workouts generated yet. Click &quot;Generate Next Week&quot; to create your
                       first workout week.
                     </GameText>
@@ -358,14 +358,14 @@ export const Workouts: React.FC<WorkoutsProps> = () => {
                       <ListItem
                         key={week.weekNumber}
                         disablePadding
+                        className="modern-list-item"
                         sx={{
                           cursor: 'pointer',
                           borderRadius: 1,
                           mb: 1,
                           '&:hover': {
-                            backgroundColor: 'action.hover',
+                            backgroundColor: 'rgba(0, 188, 212, 0.05)',
                             transform: 'translateX(4px)',
-                            transition: 'all 0.2s ease',
                           },
                         }}
                         onClick={() => handleWeekClick(week.weekNumber)}
@@ -373,14 +373,14 @@ export const Workouts: React.FC<WorkoutsProps> = () => {
                         <ListItemText
                           primary={
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                              <GameText variant="subtitle1" className={GAME_CLASSES.textMedium}>
+                              <GameText variant="subtitle1" className={GAME_CLASSES.textMedium} sx={{ color: '#1e293b' }}>
                                 Week {week.weekNumber}
                               </GameText>
                               {week.workoutCount > 0 && (
                                 <Box
                                   sx={{
-                                    backgroundColor: 'primary.main',
-                                    color: 'primary.contrastText',
+                                    backgroundColor: '#00bcd4',
+                                    color: 'white',
                                     borderRadius: '50%',
                                     width: 20,
                                     height: 20,
@@ -397,7 +397,7 @@ export const Workouts: React.FC<WorkoutsProps> = () => {
                             </Box>
                           }
                           secondary={
-                            <GameText variant="body2" textVariant="secondary">
+                            <GameText variant="body2" textVariant="secondary" sx={{ color: '#64748b' }}>
                               {week.workouts
                                 .map(w =>
                                   replaceUnderscoresWithSpaces(w.name || `Workout ${w.day_number}`)

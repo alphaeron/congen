@@ -20,7 +20,6 @@ export const GAME_CLASSES = {
   textMuted: 'game-text-muted',
   textAccent: 'game-text-accent',
   textGlow: 'game-text-glow',
-  textAnimatedGlow: 'game-text-animated-glow',
   textBold: 'game-text-bold',
   textMedium: 'game-text-medium',
   textCenter: 'game-text-center',
@@ -211,7 +210,7 @@ export const GameSkillChip: React.FC<React.ComponentProps<typeof Chip>> = ({
 
 // Game Text Components
 export const GameText: React.FC<React.ComponentProps<typeof Typography> & { 
-  textVariant?: 'primary' | 'secondary' | 'muted' | 'accent' | 'glow' | 'animatedGlow' 
+  textVariant?: 'primary' | 'secondary' | 'muted' | 'accent' | 'glow' 
 }> = ({ 
   className = '', 
   textVariant = 'primary', 
@@ -227,8 +226,6 @@ export const GameText: React.FC<React.ComponentProps<typeof Typography> & {
         return GAME_CLASSES.textAccent;
       case 'glow':
         return GAME_CLASSES.textGlow;
-      case 'animatedGlow':
-        return GAME_CLASSES.textAnimatedGlow;
       default:
         return GAME_CLASSES.text;
     }

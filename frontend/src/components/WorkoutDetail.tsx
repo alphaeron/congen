@@ -31,6 +31,7 @@ import {
 } from '@tanstack/react-table';
 import { useSnackbar } from 'notistack';
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import { motion } from 'framer-motion';
 
 import { ChordChart } from './ChordChart';
 import { ExerciseName } from './ExerciseName';
@@ -625,33 +626,68 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
   }
 
   return (
-    <Box sx={{ height: 'calc(100vh - 48px)', overflow: 'auto', position: 'relative', pl: 4 }}>
-      <Box sx={{ position: 'relative' }}>
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.8, ease: 'easeOut' }}
+      style={{ 
+        height: 'calc(100vh - 48px)', 
+        overflow: 'auto', 
+        position: 'relative', 
+        paddingLeft: '32px',
+      }}
+    >
+      <motion.div
+        initial={{ opacity: 0, x: -30 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.6, ease: 'easeOut', delay: 0.2 }}
+        style={{ position: 'relative' }}
+      >
         {/* Back Button */}
-        <IconButton
-          onClick={onBack}
-          sx={{
+        <motion.div
+          initial={{ opacity: 0, x: -30 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.6, ease: 'easeOut', delay: 0.1 }}
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.95 }}
+          style={{
             position: 'absolute',
             top: 24,
             left: -32,
             zIndex: 9999,
-            backgroundColor: 'background.paper',
-            border: '1px solid',
-            borderColor: 'divider',
-            '&:hover': {
-              backgroundColor: 'action.hover',
-              boxShadow: 4,
-            },
           }}
         >
-          <ArrowBackIcon />
-        </IconButton>
+          <IconButton
+            onClick={onBack}
+            sx={{
+              backgroundColor: 'background.paper',
+              border: '1px solid',
+              borderColor: 'divider',
+              '&:hover': {
+                backgroundColor: 'rgba(0, 188, 212, 0.1)',
+                boxShadow: 4,
+              },
+            }}
+          >
+            <ArrowBackIcon />
+          </IconButton>
+        </motion.div>
 
         {/* Progress Bar and Export Buttons */}
-        <Box sx={{ p: 3, pb: 0 }}>
+        <Box 
+          sx={{ 
+            p: 3, 
+            pb: 0,
+          }}
+        >
           <Box display="flex" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
             {/* Progress Bar on the left */}
-            <Box sx={{ flex: 1, mr: 2 }}>
+            <Box 
+              sx={{ 
+                flex: 1, 
+                mr: 2,
+              }}
+            >
               {progressMetrics && (
                 <ProgressBar
                   value={progressMetrics.completionRate}
@@ -677,7 +713,13 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
             </Box>
 
             {/* Action Buttons on the right */}
-            <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+            <Box 
+              sx={{ 
+                display: 'flex', 
+                gap: 1, 
+                alignItems: 'center',
+              }}
+            >
               <ExportButtons onExportPDF={handleExportPDF} disabled={!workoutData} />
               {isMostRecentWeek && (
                 <Button
@@ -685,6 +727,15 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
                   startIcon={<AddIcon />}
                   onClick={handleOpenAddExerciseDialog}
                   disabled={saving}
+                  sx={{
+                    '&:hover:not(:disabled)': {
+                      transform: 'translateY(-2px)',
+                      boxShadow: '0 8px 25px rgba(0, 188, 212, 0.4)',
+                    },
+                    '&:active:not(:disabled)': {
+                      transform: 'translateY(0)',
+                    },
+                  }}
                 >
                   Add Exercise
                 </Button>
@@ -692,11 +743,22 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
             </Box>
           </Box>
         </Box>
-      </Box>
+      </motion.div>
 
-      <Grid container spacing={3} sx={{ p: 3, pt: 0 }}>
+      <Grid 
+        container 
+        spacing={3} 
+        sx={{ 
+          p: 3, 
+          pt: 0,
+        }}
+      >
         {/* Table Container - 2/3 width */}
-        <Grid size={{ xs: 12, lg: 8 }}>
+        <Grid 
+          size={{ xs: 12, lg: 8 }}
+          sx={{
+          }}
+        >
           <GameCard className={`${GAME_CLASSES.width100} ${GAME_CLASSES.overflowHidden} ${GAME_CLASSES.height100}`}>
             <Box
               sx={{
@@ -827,21 +889,49 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
         </Grid>
 
         {/* Charts - 1/3 width */}
-        <Grid size={{ xs: 12, lg: 4 }}>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+        <Grid 
+          size={{ xs: 12, lg: 4 }}
+          sx={{
+          }}
+        >
+          <Box 
+            sx={{ 
+              display: 'flex', 
+              flexDirection: 'column', 
+              gap: 3,
+            }}
+          >
             {/* Exercise Volume Hierarchy Chart */}
-            <SunburstChart
-              workoutData={workoutData}
-              exerciseMuscleData={exerciseMuscleData}
-              weightUnitPreferences={weightUnitPreferences}
-              selectedExercise="all"
-            />
+            <Box
+              sx={{
+                '&:hover': {
+                  transform: 'translateY(-2px)',
+                  boxShadow: '0 8px 25px rgba(0, 188, 212, 0.1)',
+                }
+              }}
+            >
+              <SunburstChart
+                workoutData={workoutData}
+                exerciseMuscleData={exerciseMuscleData}
+                weightUnitPreferences={weightUnitPreferences}
+                selectedExercise="all"
+              />
+            </Box>
             {/* Exercise Correlations Chord Chart */}
-            <ChordChart
-              workoutData={workoutData as unknown as Record<string, unknown>}
-              title="Exercise Support Correlation"
-              height={300}
-            />
+            <Box
+              sx={{
+                '&:hover': {
+                  transform: 'translateY(-2px)',
+                  boxShadow: '0 8px 25px rgba(0, 188, 212, 0.1)',
+                }
+              }}
+            >
+              <ChordChart
+                workoutData={workoutData as unknown as Record<string, unknown>}
+                title="Exercise Support Correlation"
+                height={300}
+              />
+            </Box>
           </Box>
         </Grid>
       </Grid>
@@ -993,6 +1083,6 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
           </Button>
         </DialogActions>
       </Dialog>
-    </Box>
+    </motion.div>
   );
 };

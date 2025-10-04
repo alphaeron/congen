@@ -15,6 +15,7 @@ import {
 import { useMutation } from '@tanstack/react-query';
 import { useSnackbar } from 'notistack';
 import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 
 import { CustomSvgIcon } from './CustomSvgIcon';
 import { GameCard, GameSubCard, GameText, GameTextSecondary, GAME_CLASSES } from './GameTheme';
@@ -572,24 +573,48 @@ export const CompactQuestCard: React.FC<CompactQuestCardProps> = ({
                 <GameSubCard
                   className={`${GAME_CLASSES.cursorPointer} ${GAME_CLASSES.hoverOpacity80}`}
                   onClick={() => handleEditDailyMetric(metric.key)}
-                  sx={{ height: '100%' }}
+                  sx={{ 
+                    height: '100%',
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                    '&:hover': {
+                      transform: 'translateY(-4px) scale(1.02)',
+                      boxShadow: '0 8px 25px rgba(0, 188, 212, 0.3)',
+                      '& .quest-icon': {
+                        transform: 'scale(1.1) rotate(5deg)',
+                        filter: 'drop-shadow(0 0 8px rgba(0, 188, 212, 0.6))',
+                      },
+                      '& .quest-text': {
+                        color: '#00bcd4',
+                        textShadow: '0 0 8px rgba(0, 188, 212, 0.5)',
+                      }
+                    },
+                    '&:active': {
+                      transform: 'translateY(-2px) scale(0.98)',
+                    }
+                  }}
                 >
                   <CardContent
                     className={`${GAME_CLASSES.padding2} ${GAME_CLASSES.height100} ${GAME_CLASSES.flex} ${GAME_CLASSES.flexColumn} ${GAME_CLASSES.justifyCenter}`}
                   >
                     <Stack spacing={0.1} alignItems="center" className={GAME_CLASSES.rowGap0}>
-                      <Box className={`${GAME_CLASSES.fontSize32} ${GAME_CLASSES.colorCyan} ${GAME_CLASSES.textBold}`}>
+                      <Box 
+                        className={`${GAME_CLASSES.fontSize32} ${GAME_CLASSES.colorCyan} ${GAME_CLASSES.textBold} quest-icon`}
+                        sx={{
+                          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                        }}
+                      >
                         {metric.icon}
                       </Box>
                       <GameText 
                         variant="caption" 
-                        className={`${GAME_CLASSES.textBold} ${GAME_CLASSES.textCenter}`}
+                        className={`${GAME_CLASSES.textBold} ${GAME_CLASSES.textCenter} quest-text`}
                         sx={{ 
                           wordBreak: 'break-word',
                           hyphens: 'auto',
                           lineHeight: 1.2,
                           fontSize: '0.75rem',
-                          marginTop: 0
+                          marginTop: 0,
+                          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                         }}
                       >
                         {metric.label}
@@ -611,24 +636,48 @@ export const CompactQuestCard: React.FC<CompactQuestCardProps> = ({
                 <GameSubCard
                   className={`${GAME_CLASSES.cursorPointer} ${GAME_CLASSES.hoverOpacity80}`}
                   onClick={() => handleEditWeeklyTest(protocol)}
-                  sx={{ height: '100%' }}
+                  sx={{ 
+                    height: '100%',
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                    '&:hover': {
+                      transform: 'translateY(-4px) scale(1.02)',
+                      boxShadow: '0 8px 25px rgba(0, 188, 212, 0.3)',
+                      '& .quest-icon': {
+                        transform: 'scale(1.1) rotate(-5deg)',
+                        filter: 'drop-shadow(0 0 8px rgba(0, 188, 212, 0.6))',
+                      },
+                      '& .quest-text': {
+                        color: '#00bcd4',
+                        textShadow: '0 0 8px rgba(0, 188, 212, 0.5)',
+                      }
+                    },
+                    '&:active': {
+                      transform: 'translateY(-2px) scale(0.98)',
+                    }
+                  }}
                 >
                   <CardContent
                     className={`${GAME_CLASSES.padding2} ${GAME_CLASSES.height100} ${GAME_CLASSES.flex} ${GAME_CLASSES.flexColumn} ${GAME_CLASSES.justifyCenter}`}
                   >
                     <Stack spacing={0.1} alignItems="center" className={GAME_CLASSES.rowGap0}>
-                      <Box className={`${GAME_CLASSES.fontSize32} ${GAME_CLASSES.colorCyan} ${GAME_CLASSES.textBold}`}>
+                      <Box 
+                        className={`${GAME_CLASSES.fontSize32} ${GAME_CLASSES.colorCyan} ${GAME_CLASSES.textBold} quest-icon`}
+                        sx={{
+                          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                        }}
+                      >
                         {getIconForProtocol(protocol.test_name)}
                       </Box>
                       <GameText 
                         variant="caption" 
-                        className={`${GAME_CLASSES.textBold} ${GAME_CLASSES.textCenter}`}
+                        className={`${GAME_CLASSES.textBold} ${GAME_CLASSES.textCenter} quest-text`}
                         sx={{ 
                           wordBreak: 'break-word',
                           hyphens: 'auto',
                           lineHeight: 1.2,
                           fontSize: '0.75rem',
-                          marginTop: 0
+                          marginTop: 0,
+                          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                         }}
                       >
                         {protocol.display_name}
@@ -669,20 +718,60 @@ export const CompactQuestCard: React.FC<CompactQuestCardProps> = ({
 
   return (
     <React.Fragment>
-      <GameCard className={GAME_CLASSES.width100} sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+      <motion.div
+        initial={{ opacity: 0, x: type === 'daily' ? 0 : -30 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.8, ease: 'easeOut' }}
+        whileHover={{ y: -2 }}
+        whileTap={{ y: -1 }}
+        style={{ 
+          height: '100%', 
+          display: 'flex', 
+          flexDirection: 'column',
+          transition: 'box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+        }}
+      >
+        <GameCard 
+          className={GAME_CLASSES.width100} 
+          sx={{ 
+            height: '100%', 
+            display: 'flex', 
+            flexDirection: 'column',
+            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+            '&:hover': {
+              boxShadow: '0 12px 40px rgba(0, 188, 212, 0.2)',
+            }
+          }}
+        >
         <CardHeader
           className={GAME_CLASSES.paddingBottom0}
           title={
-            <GameText variant="h6" textVariant="glow" className={`${GAME_CLASSES.textBold} ${GAME_CLASSES.textTransformUppercase}`}>
+            <GameText 
+              variant="h6" 
+              textVariant="glow" 
+              className={`${GAME_CLASSES.textBold} ${GAME_CLASSES.textTransformUppercase}`}
+              sx={{
+                textShadow: '0 0 10px rgba(0, 188, 212, 0.5)',
+              }}
+            >
               {getTitle()}
             </GameText>
           }
-          subheader={<GameTextSecondary variant="body2">{getSubtitle()}</GameTextSecondary>}
+          subheader={
+            <GameTextSecondary 
+              variant="body2"
+              sx={{
+              }}
+            >
+              {getSubtitle()}
+            </GameTextSecondary>
+          }
         />
         <CardContent className={`${GAME_CLASSES.paddingTop1} ${GAME_CLASSES.flex1}`} sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
           {renderCompactGrid()}
         </CardContent>
       </GameCard>
+      </motion.div>
 
       {/* Metric Detail Dialog */}
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="md" fullWidth sx={{ '& .MuiDialog-paper': { overflow: 'visible' } }}>
@@ -761,9 +850,15 @@ export const CompactQuestCard: React.FC<CompactQuestCardProps> = ({
                   return (
                     <Stack spacing={2}>
                       {isMetricRecordedToday(metric.key) ? (
-                        <Alert severity="info">
+                        <Alert 
+                          severity="success"
+                          sx={{
+                            '& .MuiAlert-icon': {
+                            }
+                          }}
+                        >
                           <GameText variant="body2">
-                            Today&apos;s {metric.label.toLowerCase()} has already been recorded (
+                            ✅ Today&apos;s {metric.label.toLowerCase()} has already been recorded (
                             {displayValue}
                             {metric.unit}). Check back tomorrow to record your next result!
                           </GameText>
@@ -821,9 +916,15 @@ export const CompactQuestCard: React.FC<CompactQuestCardProps> = ({
                   return (
                     <Stack spacing={2}>
                       {isRecordedThisWeek ? (
-                        <Alert severity="info">
+                        <Alert 
+                          severity="success"
+                          sx={{
+                            '& .MuiAlert-icon': {
+                            }
+                          }}
+                        >
                           <GameText variant="body2">
-                            This week&apos;s {editingProtocol.display_name.toLowerCase()} has
+                            🏆 This week&apos;s {editingProtocol.display_name.toLowerCase()} has
                             already been recorded ({result} {editingProtocol.unit}). Check back next
                             week to record your next result!
                           </GameText>
@@ -936,8 +1037,21 @@ export const CompactQuestCard: React.FC<CompactQuestCardProps> = ({
                     variant="contained"
                     disabled={!canSubmit || isPending}
                     className={`${GAME_CLASSES.backgroundColorCyan} ${GAME_CLASSES.hoverBackgroundColorCyan}`}
+                    sx={{
+                      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                      '&:hover:not(:disabled)': {
+                        transform: 'translateY(-2px)',
+                        boxShadow: '0 8px 25px rgba(0, 188, 212, 0.4)',
+                      },
+                      '&:active:not(:disabled)': {
+                        transform: 'translateY(0)',
+                      },
+                      '&:disabled': {
+                        opacity: 0.6,
+                      }
+                    }}
                   >
-                    Submit
+                    {isPending ? 'Submitting...' : 'Submit'}
                   </Button>
                 </Box>
               </Box>

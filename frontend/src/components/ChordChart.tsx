@@ -155,6 +155,8 @@ export const ChordChart: React.FC<ChordChartProps> = ({
               modifiers: [['darker', 1]],
             }}
             colors={{ scheme: 'nivo' }}
+            animate={true}
+            motionConfig="gentle"
             theme={{
               ...nivoTheme,
               tooltip: {

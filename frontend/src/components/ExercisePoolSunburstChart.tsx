@@ -147,6 +147,8 @@ export const ExercisePoolSunburstChart: React.FC<ExercisePoolSunburstChartProps>
               from: 'color',
               modifiers: [['darker', 1.4]],
             }}
+            animate={true}
+            motionConfig="gentle"
             theme={nivoTheme}
           />
         </Box>
