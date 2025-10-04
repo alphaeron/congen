@@ -7,7 +7,7 @@ import Grid from '@mui/material/Grid';
 import Stack from '@mui/material/Stack';
 import { alpha } from '@mui/material/styles';
 import * as React from 'react';
-import { motion, useInView, useScroll, useTransform, useMotionValue, useSpring } from 'framer-motion';
+import { motion, useInView } from 'framer-motion';
 
 import { GameText, GameCard, GAME_CLASSES } from './GameTheme';
 
@@ -28,7 +28,7 @@ export const FEATURE_ITEMS = [
   },
   {
     icon: <AutoFixHighRoundedIcon />,
-    title: 'Equipment Matching',
+    title: 'Smart Personalization',
     description:
       'Every aspect of your program is algorithmically tailored to your equipment, goals, experience level, and physical attributes.',
     color: 'secondary',
@@ -110,29 +110,16 @@ const cardHoverVariants = {
 export function Features() {
   const ref = React.useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
-  
-  // Advanced scroll-triggered animations
-  const { scrollYProgress } = useScroll({
-    target: ref,
-    offset: ["start end", "end start"]
-  });
-  
-  const y = useTransform(scrollYProgress, [0, 1], [100, -100]);
-  const opacity = useTransform(scrollYProgress, [0, 0.2, 0.8, 1], [0, 1, 1, 0]);
 
   return (
-    <motion.div
-      style={{ y, opacity }}
-    >
-      <Container
-        id="features"
+    <motion.div>
+      <Box
         sx={{
           position: 'relative',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: { xs: 4, sm: 8 },
-          py: { xs: 8, sm: 12 },
+          width: '100vw',
+          marginLeft: 'calc(-50vw + 50%)',
+          marginTop: 0,
+          overflow: 'hidden',
           '&::before': {
             content: '""',
             position: 'absolute',
@@ -141,13 +128,53 @@ export function Features() {
             right: 0,
             bottom: 0,
             background: theme =>
-              `radial-gradient(circle at 30% 20%, ${alpha(theme.palette.primary.main, 0.05)} 0%, transparent 50%),
-               radial-gradient(circle at 70% 80%, ${alpha(theme.palette.secondary.main, 0.03)} 0%, transparent 50%)`,
+              `linear-gradient(90deg, transparent 48%, ${alpha('#0ea5e9', 0.03)} 49%, ${alpha('#0ea5e9', 0.03)} 51%, transparent 52%),
+               linear-gradient(0deg, transparent 48%, ${alpha('#f97316', 0.02)} 49%, ${alpha('#f97316', 0.02)} 51%, transparent 52%),
+               radial-gradient(circle at 20% 20%, ${alpha('#22c55e', 0.04)} 1px, transparent 1px),
+               radial-gradient(circle at 80% 80%, ${alpha('#8b5cf6', 0.03)} 1px, transparent 1px)`,
+            backgroundSize: '80px 80px, 80px 80px, 40px 40px, 40px 40px',
             zIndex: 0,
+            animation: 'codeFlow 18s linear infinite',
+            '@keyframes codeFlow': {
+              '0%': { transform: 'translateX(0) translateY(0)' },
+              '100%': { transform: 'translateX(80px) translateY(80px)' },
+            },
+          },
+          '&::after': {
+            content: '""',
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: theme =>
+              `linear-gradient(45deg, transparent 30%, ${alpha('#0ea5e9', 0.05)} 50%, transparent 70%),
+               linear-gradient(-45deg, transparent 30%, ${alpha('#f97316', 0.03)} 50%, transparent 70%)`,
+            backgroundSize: '200px 200px, 300px 300px',
+            opacity: 0.3,
+            zIndex: 0,
+            animation: 'commitFlow 25s linear infinite',
+            '@keyframes commitFlow': {
+              '0%': { transform: 'translateX(0) translateY(0)' },
+              '100%': { transform: 'translateX(-200px) translateY(-200px)' },
+            },
           },
         }}
       >
-      <motion.div
+        <Container
+          id="features"
+          sx={{
+            position: 'relative',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: { xs: 4, sm: 8 },
+            pb: { xs: 8, sm: 12 },
+            zIndex: 1,
+          }}
+        >
+          
+        <motion.div
         ref={ref}
         variants={containerVariants}
         initial="hidden"
@@ -356,8 +383,9 @@ export function Features() {
             </Grid>
           ))}
         </Grid>
-      </motion.div>
-    </Container>
+        </motion.div>
+        </Container>
+      </Box>
     </motion.div>
   );
 }

@@ -3,7 +3,7 @@ import Container from '@mui/material/Container';
 import Stack from '@mui/material/Stack';
 import { alpha } from '@mui/material/styles';
 import * as React from 'react';
-import { motion, useScroll, useTransform, useMotionValue, useSpring } from 'framer-motion';
+import { motion, useScroll, useTransform } from 'framer-motion';
 
 import { useTypewriter } from '../hooks/useTypewriter';
 import { GameText, GameContainer, GAME_CLASSES } from './GameTheme';
@@ -93,7 +93,7 @@ const pulseVariants = {
 export function Hero() {
   const headline = useTypewriter('Conjugate Method Programming, Without the Hassle', 40);
   const { scrollY } = useScroll();
-  const y = useTransform(scrollY, [0, 300], [0, -50]);
+  const y = useTransform(scrollY, [0, 300], [0, 0]);
   const opacity = useTransform(scrollY, [0, 300], [1, 0.8]);
   
 
@@ -239,7 +239,7 @@ export function Hero() {
             alignItems: 'center',
             justifyContent: 'center',
             minHeight: '100vh',
-            py: { xs: 8, sm: 12 },
+            pt: { xs: 8, sm: 12 },
             mx: 'auto',
             width: '100%',
             maxWidth: '1200px',
