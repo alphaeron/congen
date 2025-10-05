@@ -15,7 +15,6 @@ import {
   formatDate,
 } from '../common/utils';
 import { createCongenNivoTheme } from '../theme/nivoTheme';
-import { GameText, GAME_CLASSES } from './GameTheme';
 
 interface StreamChartProps {
   userDataExport: UserDataExport | null;
@@ -44,8 +43,6 @@ export const StreamChart: React.FC<StreamChartProps> = ({
   userDataExport,
   exerciseData,
   weightUnitPreferences,
-  title = 'Volume Flow Over Time',
-  description = 'Training volume distribution across workout types',
   height = 400,
 }) => {
   const theme = useTheme();
@@ -151,14 +148,6 @@ export const StreamChart: React.FC<StreamChartProps> = ({
 
   return (
     <Box>
-      <Box display="flex" alignItems="center" gap={1} sx={{ mb: 1 }}>
-        <GameText variant="subtitle1" className={GAME_CLASSES.textMedium}>
-          {title}
-        </GameText>
-      </Box>
-      <GameText variant="body2" textVariant="secondary" className={GAME_CLASSES.marginBottom2}>
-        {description}
-      </GameText>
       <Box sx={{ height, borderRadius: 1, overflow: 'hidden', border: 1, borderColor: 'divider' }}>
         <ResponsiveStream
           data={streamData}

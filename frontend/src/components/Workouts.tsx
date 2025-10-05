@@ -323,8 +323,6 @@ export const Workouts: React.FC<WorkoutsProps> = () => {
                         userDataExport={userData}
                         exerciseData={exerciseData}
                         weightUnitPreferences={weightUnitPreferences}
-                        title="Volume Flow Over Time"
-                        description="Training volume distribution across workout types"
                         height={300}
                       />
                     </Box>
