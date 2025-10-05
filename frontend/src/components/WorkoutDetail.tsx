@@ -1,20 +1,15 @@
 import {
   ExpandMore as ExpandMoreIcon,
   ExpandLess as ExpandLessIcon,
-  FitnessCenter as FitnessCenterIcon,
-  Save,
-  Add as AddIcon,
   ArrowBack as ArrowBackIcon,
 } from '@mui/icons-material';
 import {
   Box,
   Alert,
   IconButton,
-  Paper,
   useTheme,
   Grid,
   Button,
-  CircularProgress,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -724,7 +719,6 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
               {isMostRecentWeek && (
                 <Button
                   variant="contained"
-                  startIcon={<AddIcon />}
                   onClick={handleOpenAddExerciseDialog}
                   disabled={saving}
                   sx={{
@@ -948,7 +942,6 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
       >
         <DialogTitle>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <FitnessCenterIcon />
             <GameText variant="h6">
               Edit Notes: {selectedExerciseForNotes?.exercise?.exercise_name}
             </GameText>
@@ -980,7 +973,6 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
             onClick={handleSaveNotesFromModal}
             variant="contained"
             disabled={saving}
-            startIcon={saving ? <CircularProgress size={16} /> : <Save />}
           >
             Save Notes
           </Button>
@@ -999,7 +991,6 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
       >
         <DialogTitle>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <AddIcon />
             <GameText variant="h6">Add Exercise to Workout</GameText>
           </Box>
         </DialogTitle>
@@ -1077,7 +1068,6 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
             onClick={() => addExerciseForm.handleSubmit()}
             variant="contained"
             disabled={saving || !selectedExercise || !selectedStageId}
-            startIcon={saving ? <CircularProgress size={16} /> : <AddIcon />}
           >
             Add Exercise
           </Button>

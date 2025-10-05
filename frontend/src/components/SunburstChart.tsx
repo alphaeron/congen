@@ -1,5 +1,4 @@
 import { default as RefreshIcon } from '@mui/icons-material/Refresh';
-import ShowChartIcon from '@mui/icons-material/ShowChart';
 import { Box, useTheme, IconButton, Tooltip, CardContent } from '@mui/material';
 import { ResponsiveSunburst } from '@nivo/sunburst';
 import React, { useState, useMemo } from 'react';
@@ -291,17 +290,12 @@ export const SunburstChart: React.FC<SunburstChartProps> = ({
     >
       <CardContent>
         <Box display="flex" alignItems="center" gap={1} sx={{ mb: 2 }}>
-          <ShowChartIcon color="primary" />
-          <Tooltip title="Volume distribution by muscle groups for this workout" arrow>
-            <GameText variant="h6">Exercise Volume Hierarchy</GameText>
-          </Tooltip>
-        </Box>
-
-        {/* Navigation */}
-        <Box sx={{ display: 'flex', alignItems: 'center' }}>
           <IconButton onClick={handleHomeClick} size="small" title="Reset chart">
             <RefreshIcon />
           </IconButton>
+          <Tooltip title="Volume distribution by muscle groups for this workout" arrow>
+            <GameText variant="h6">Exercise Volume Hierarchy</GameText>
+          </Tooltip>
         </Box>
 
         {/* Sunburst Chart */}

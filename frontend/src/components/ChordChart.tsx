@@ -1,4 +1,3 @@
-import { default as TrendingUpIcon } from '@mui/icons-material/TrendingUp';
 import { Box, useTheme, Tooltip, CardContent } from '@mui/material';
 import { ResponsiveChord } from '@nivo/chord';
 import React, { useMemo } from 'react';
@@ -125,7 +124,6 @@ export const ChordChart: React.FC<ChordChartProps> = ({
     >
       <CardContent>
         <Box display="flex" alignItems="center" gap={1} sx={{ mb: 2 }}>
-          <TrendingUpIcon color="info" />
           <Tooltip title="Exercise pairing patterns in your workouts" arrow>
             <GameText variant="h6">{title}</GameText>
           </Tooltip>

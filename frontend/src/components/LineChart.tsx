@@ -1,4 +1,3 @@
-import { default as BarChartIcon } from '@mui/icons-material/BarChart';
 import { Box, Card, CardContent, useTheme } from '@mui/material';
 import { ResponsiveLine } from '@nivo/line';
 import React, { useState, useMemo } from 'react';
@@ -179,7 +178,6 @@ export const LineChart: React.FC<LineChartProps> = ({
     <Card variant="outlined">
       <CardContent>
         <Box display="flex" alignItems="center" gap={1} sx={{ mb: 2 }}>
-          <BarChartIcon color="primary" />
           <GameText variant="h6">{title}</GameText>
         </Box>
         <GameText variant="body2" textVariant="secondary" className={GAME_CLASSES.marginBottom2}>

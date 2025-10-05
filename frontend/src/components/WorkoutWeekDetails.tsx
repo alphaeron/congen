@@ -1,6 +1,5 @@
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import FitnessCenterIcon from '@mui/icons-material/FitnessCenter';
 import PauseCircleIcon from '@mui/icons-material/PauseCircle';
 import ScheduleIcon from '@mui/icons-material/Schedule';
 import {
@@ -406,7 +405,6 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
                             mb: 2,
                           }}
                         >
-                          <FitnessCenterIcon color="primary" />
                           <GameText variant="h6">Workouts</GameText>
                           {weekWorkouts.length > 0 && (
                             <Box

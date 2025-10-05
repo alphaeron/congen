@@ -1,4 +1,3 @@
-import { default as RadarIcon } from '@mui/icons-material/Radar';
 import { Box, useTheme, Tooltip, CardContent } from '@mui/material';
 import { ResponsiveRadar } from '@nivo/radar';
 import React, { useMemo } from 'react';
@@ -95,7 +94,6 @@ export const RadarChart: React.FC<RadarChartProps> = ({
     >
       <CardContent>
         <Box display="flex" alignItems="center" gap={1} sx={{ mb: 2 }}>
-          <RadarIcon color="secondary" />
           <Tooltip title="Distribution of movement types across the week" arrow>
             <GameText variant="h6">{title}</GameText>
           </Tooltip>

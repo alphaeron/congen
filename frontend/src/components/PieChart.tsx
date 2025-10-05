@@ -1,4 +1,3 @@
-import { default as ShowChartIcon } from '@mui/icons-material/ShowChart';
 import { Box, Card, CardContent, useTheme } from '@mui/material';
 import { ResponsivePie } from '@nivo/pie';
 import React, { useState, useMemo } from 'react';
@@ -144,7 +143,6 @@ export const PieChart: React.FC<PieChartProps> = ({
     <GameCard>
       <CardContent>
         <Box display="flex" alignItems="center" gap={1} sx={{ mb: 2 }}>
-          <ShowChartIcon color="secondary" />
           <GameText variant="h6">{title}</GameText>
         </Box>
         <GameText variant="body2" textVariant="secondary" className={GAME_CLASSES.marginBottom2}>

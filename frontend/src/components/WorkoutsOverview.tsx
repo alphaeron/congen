@@ -1,9 +1,3 @@
-import {
-  Add as AddIcon,
-  Tune as TuneIcon,
-  RotateRight as RotateRightIcon,
-  FitnessCenter as FitnessCenterIcon,
-} from '@mui/icons-material';
 import { Box, Tabs, Tab } from '@mui/material';
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router';
@@ -16,7 +10,7 @@ import { WorkoutDetail } from './WorkoutDetail';
 import { WorkoutPreferencesSection } from './WorkoutPreferencesSection';
 import { Workouts } from './Workouts';
 import { WorkoutWeekDetails } from './WorkoutWeekDetails';
-import { GameText, GAME_CLASSES } from './GameTheme';
+import { GAME_CLASSES } from './GameTheme';
 import type { User } from '../api/types';
 
 interface WorkoutsOverviewProps {
@@ -75,13 +69,6 @@ export const WorkoutsOverview: React.FC<WorkoutsOverviewProps> = ({ user, select
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState(0);
   const [slideDirection, setSlideDirection] = useState<'left' | 'right'>('left');
-  const [workoutsSlideDirection, setWorkoutsSlideDirection] = useState<'left' | 'right'>('left');
-  const [weekDetailsSlideDirection, setWeekDetailsSlideDirection] = useState<'left' | 'right'>(
-    'left'
-  );
-  const [workoutDetailSlideDirection, setWorkoutDetailSlideDirection] = useState<'left' | 'right'>(
-    'left'
-  );
 
   // Set initial slide direction based on current state
   useEffect(() => {
@@ -221,36 +208,26 @@ export const WorkoutsOverview: React.FC<WorkoutsOverviewProps> = ({ user, select
         >
           <Tab
             label="Workout Calendar"
-            icon={<AddIcon />}
-            iconPosition="start"
             id="workout-tab-0"
             aria-controls="workout-tabpanel-0"
           />
           <Tab
             label="Conjugate Progression"
-            icon={<RotateRightIcon />}
-            iconPosition="start"
             id="workout-tab-1"
             aria-controls="workout-tabpanel-1"
           />
           <Tab
             label="Exercise Rotation"
-            icon={<RotateRightIcon />}
-            iconPosition="start"
             id="workout-tab-2"
             aria-controls="workout-tabpanel-2"
           />
           <Tab
             label="1RM Records"
-            icon={<FitnessCenterIcon />}
-            iconPosition="start"
             id="workout-tab-3"
             aria-controls="workout-tabpanel-3"
           />
           <Tab
             label="Workout Preferences"
-            icon={<TuneIcon />}
-            iconPosition="start"
             id="workout-tab-4"
             aria-controls="workout-tabpanel-4"
           />

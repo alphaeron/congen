@@ -1,4 +1,3 @@
-import { default as ShowChartIcon } from '@mui/icons-material/ShowChart';
 import { Box, useTheme } from '@mui/material';
 import { ResponsiveStream } from '@nivo/stream';
 import React, { useMemo } from 'react';
@@ -153,7 +152,6 @@ export const StreamChart: React.FC<StreamChartProps> = ({
   return (
     <Box>
       <Box display="flex" alignItems="center" gap={1} sx={{ mb: 1 }}>
-        <ShowChartIcon color="secondary" fontSize="small" />
         <GameText variant="subtitle1" className={GAME_CLASSES.textMedium}>
           {title}
         </GameText>

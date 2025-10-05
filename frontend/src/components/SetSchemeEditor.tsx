@@ -1,4 +1,4 @@
-import { Edit, Save, Cancel, FitnessCenter, Delete } from '@mui/icons-material';
+import { Edit } from '@mui/icons-material';
 import {
   Box,
   IconButton,
@@ -220,9 +220,8 @@ export const SetSchemeEditor: React.FC<SetSchemeEditorProps> = ({
       >
         <Box sx={{ p: 2 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-            <FitnessCenter fontSize="small" />
             <GameText variant="subtitle1">
-              Edit Exercise: {exercise.exercise.exercise_name}
+              {exercise.exercise.exercise_name}
             </GameText>
           </Box>
 
@@ -264,20 +263,18 @@ export const SetSchemeEditor: React.FC<SetSchemeEditorProps> = ({
                 disabled={saving}
                 color="error"
                 variant="contained"
-                startIcon={<Delete />}
               >
                 Delete Exercise
               </Button>
 
               <Box sx={{ display: 'flex', gap: 1 }}>
-                <Button onClick={handleClose} disabled={saving} startIcon={<Cancel />}>
+                <Button onClick={handleClose} disabled={saving}>
                   Cancel
                 </Button>
                 <Button
                   type="submit"
                   variant="contained"
                   disabled={saving}
-                  startIcon={saving ? <CircularProgress size={16} /> : <Save />}
                 >
                   Submit
                 </Button>

@@ -2,7 +2,6 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import InfoIcon from '@mui/icons-material/Info';
 import {
   Box,
-  Card,
   CardContent,
   Chip,
   Grid,
