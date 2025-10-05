@@ -12,6 +12,18 @@ import { BACKEND_URL } from '../globals';
 import type { AxiosError, AxiosRequestConfig, AxiosResponse } from 'axios';
 
 /**
+ * Custom encoding function that properly encodes exercise names including parentheses and slashes.
+ * encodeURIComponent() doesn't encode parentheses, but they can cause issues in URLs.
+ * Slashes also need to be encoded to avoid path conflicts.
+ */
+export const encodeExerciseName = (exerciseName: string): string => {
+  return encodeURIComponent(exerciseName)
+    .replace(/\(/g, '%28')
+    .replace(/\)/g, '%29')
+    .replace(/\//g, '%2F');
+};
+
+/**
  * Converts Unix timestamps (in seconds) to Date objects.
  * Recursively processes objects and arrays to find timestamp fields.
  */
@@ -94,14 +106,14 @@ ENDPOINT.interceptors.request.use(async config => {
       // Sanitize token to prevent XSS
       const sanitizedToken = sanitizeToken(token);
       if (!sanitizedToken) {
-        handleAuthenticationFailure('Invalid token format');
+        handleAuthenticationFailure();
         return Promise.reject(new Error('Invalid token format'));
       }
 
       // Check if token is malformed first
       if (isTokenMalformed(sanitizedToken)) {
         // Token is malformed, clear authentication state and redirect to login
-        handleAuthenticationFailure('Invalid token');
+        handleAuthenticationFailure();
 
         // Return a rejected promise to prevent the request
         return Promise.reject(new Error('Invalid token'));
@@ -110,7 +122,7 @@ ENDPOINT.interceptors.request.use(async config => {
       // Check if token is expired
       if (isTokenExpired(sanitizedToken)) {
         // Token is expired, clear authentication state and redirect to login
-        handleAuthenticationFailure('Token expired');
+        handleAuthenticationFailure();
 
         // Return a rejected promise to prevent the request
         return Promise.reject(new Error('Token expired'));
@@ -138,7 +150,7 @@ ENDPOINT.interceptors.response.use(
   async error => {
     if (error.response?.status === 401) {
       // Authentication failed - clear any stored tokens and redirect to login
-      handleAuthenticationFailure('API request returned 401');
+      handleAuthenticationFailure();
     }
     return Promise.reject(error);
   }

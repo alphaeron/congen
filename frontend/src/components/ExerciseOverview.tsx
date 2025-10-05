@@ -15,7 +15,8 @@ import { ExerciseCard } from './ExerciseCard';
 import { ExerciseSearchDrawer } from './ExerciseSearchDrawer';
 import { LoadingSpinner } from './LoadingSpinner';
 import { GameText, GAME_CLASSES } from './GameTheme';
-import type { Equipment, Exercise, Muscle } from '../api/types';
+import type { Exercise } from '../api/types';
+import { encodeExerciseName } from '../api/endpoint';
 import { useData } from '../contexts/DataContext';
 
 import '../styles/Form.css';
@@ -31,7 +32,11 @@ export function ExerciseOverview(): React.ReactElement {
 
   // Helper functions for URL query parameters
   const parseArrayParam = (param: string | null): string[] => {
-    return param ? param.split(',').filter(Boolean) : [];
+    return param ? param.split(',').filter(Boolean).map(decodeURIComponent) : [];
+  };
+
+  const parseExerciseArrayParam = (param: string | null): string[] => {
+    return param ? param.split(',').filter(Boolean).map(name => decodeURIComponent(name)) : [];
   };
 
   const parseBooleanParam = (param: string | null): boolean | null => {
@@ -44,7 +49,7 @@ export function ExerciseOverview(): React.ReactElement {
     const params = new URLSearchParams();
     
     if (filters.selectedExercises.length > 0) {
-      params.set('exercises', filters.selectedExercises.join(','));
+      params.set('exercises', filters.selectedExercises.map(encodeExerciseName).join(','));
     }
     if (filters.movementTypes.length > 0) {
       params.set('movementTypes', filters.movementTypes.join(','));
@@ -70,7 +75,7 @@ export function ExerciseOverview(): React.ReactElement {
 
   // Single source of truth: derive filters from URL parameters
   const appliedFilters = React.useMemo(() => ({
-    selectedExercises: parseArrayParam(searchParams.get('exercises')),
+    selectedExercises: parseExerciseArrayParam(searchParams.get('exercises')),
     movementTypes: parseArrayParam(searchParams.get('movementTypes')),
     equipment: parseArrayParam(searchParams.get('equipment')),
     targetMuscles: parseArrayParam(searchParams.get('targetMuscles')),

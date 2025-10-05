@@ -20,108 +20,108 @@ ON CONFLICT (name) DO NOTHING;
 
 -- Add new exercises
 -- PLYOMETRIC EXERCISES
-INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES 
+INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES
 ('Rotational Throw (Punch Emphasis)', 'Stand with feet shoulder-width apart, holding a medicine ball. Rotate your torso and explosively throw the ball forward with a punching motion, emphasizing power and rotation.', 'plyometric', false, true, true);
 
-INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES 
-('Weighted Box Jumps (non-countermovement)', 'Perform box jumps while holding weights, starting from a static position without the pre-stretch countermovement for maximum power output.', 'plyometric', false, false, true);
+INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES
+('Weighted Box Jumps', 'Perform box jumps while holding weights, starting from a static position without the pre-stretch countermovement for maximum power output.', 'plyometric', false, false, true);
 
-INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES 
+INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES
 ('Broad Jump (weighted)', 'Perform a standing broad jump while holding weights, focusing on explosive power and proper landing mechanics.', 'plyometric', false, false, true);
 
-INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES 
+INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES
 ('Split Stance Jump', 'Start in a split stance position and explosively jump, switching leg positions in mid-air and landing in the opposite split stance.', 'plyometric', false, false, true);
 
-INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES 
+INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES
 ('Dumbbell Explosive Lunge Jump', 'Perform a lunge with dumbbells, then explosively jump up, switching leg positions in mid-air.', 'plyometric', false, false, true);
 
-INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES 
+INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES
 ('Lateral Step Ups On Box', 'Step up onto a box laterally, focusing on explosive power and proper form.', 'plyometric', true, false, true);
 
-INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES 
+INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES
 ('Lateral Single Leg Hops', 'Hop laterally on one leg, focusing on explosive power and stability.', 'plyometric', true, false, true);
 
-INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES 
+INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES
 ('Front High Knees', 'Run in place, bringing your knees up to waist level, focusing on explosive movement and proper form.', 'plyometric', false, false, true);
 
-INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES 
+INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES
 ('Ice Skaters', 'Jump laterally from side to side, landing on one foot and then the other, mimicking ice skating movements.', 'plyometric', false, false, true);
 
-INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES 
+INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES
 ('Tempo Runs', 'Perform running drills at various tempos, focusing on speed, power, and proper running mechanics.', 'plyometric', false, false, true);
 
 -- JOINT INTEGRITY EXERCISES
-INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES 
+INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES
 ('Band Pull Aparts', 'Hold a resistance band in front of you and pull it apart horizontally, focusing on shoulder and upper back strength.', 'isolation', false, true, true);
 
-INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES 
+INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES
 ('Hip Thrusts', 'Lie on your back with your feet on the ground and thrust your hips up, focusing on glute activation and strength.', 'hinge', false, false, true);
 
-INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES 
+INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES
 ('Banded Tricep Extension', 'Perform tricep extensions using a resistance band, focusing on proper form and muscle activation.', 'isolation', false, true, true);
 
-INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES 
+INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES
 ('Valslide Hamstring Curls', 'Lie on your back with your feet on Valslides and perform hamstring curls, focusing on proper form and muscle activation.', 'isolation', false, false, true);
 
-INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES 
+INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES
 ('Neck Flexion Extension With Harness', 'Use a neck harness to perform flexion and extension exercises, focusing on neck strength and stability.', 'isolation', false, true, true);
 
-INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES 
+INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES
 ('Plate Holds (fingertips)', 'Hold weight plates using only your fingertips, focusing on grip strength and forearm development.', 'isolation', false, true, true);
 
-INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES 
+INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES
 ('4 Way Neck', 'Perform neck exercises in four directions (flexion, extension, lateral flexion left and right) using resistance.', 'isolation', false, true, true);
 
 -- AUXILIARY EXERCISES
-INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES 
+INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES
 ('Kettlebell Pull Through', 'Stand with your feet shoulder-width apart and a kettlebell between your legs. Hinge at the hips and pull the kettlebell through your legs, focusing on hip hinge mechanics.', 'hinge', false, false, true);
 
-INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES 
+INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES
 ('Hanging Leg Raises', 'Hang from a pull-up bar and raise your legs up to parallel or higher, focusing on core strength and control.', 'core', false, true, true);
 
-INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES 
+INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES
 ('Banded Kettlebell Swing', 'Perform kettlebell swings while wearing a resistance band around your waist, focusing on explosive power and proper form.', 'hinge', false, false, true);
 
-INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES 
+INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES
 ('Plank', 'Hold a plank position with your body in a straight line from head to heels, focusing on core stability and endurance.', 'core', false, false, true);
 
-INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES 
+INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES
 ('Banded Hamstring Curls', 'Perform hamstring curls using a resistance band, focusing on proper form and muscle activation.', 'isolation', false, false, true);
 
-INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES 
+INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES
 ('Suitcase Carry', 'Hold a heavy weight in one hand and walk, focusing on core stability and unilateral strength.', 'carry', true, false, true);
 
-INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES 
+INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES
 ('Thumbs Up Battle Rope', 'Hold battle ropes with thumbs up and perform various wave patterns, focusing on upper body strength and conditioning.', 'isolation', false, true, true);
 
-INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES 
+INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES
 ('Decline Sit Up', 'Perform sit-ups on a decline bench, focusing on proper form and core strength.', 'core', false, false, true);
 
-INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES 
+INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES
 ('Sit Ups', 'Perform traditional sit-ups, focusing on proper form and core strength.', 'core', false, false, true);
 
-INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES 
+INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES
 ('Decline Single Arm Sit Ups', 'Perform sit-ups on a decline bench while holding a weight in one hand, focusing on core strength and unilateral development.', 'core', true, false, true);
 
-INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES 
+INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES
 ('Medicine Ball Decline Russian Twist', 'Perform Russian twists on a decline bench while holding a medicine ball, focusing on core strength and rotation.', 'core', false, false, true);
 
-INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES 
+INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES
 ('Palloff Press', 'Stand sideways to a cable machine and perform a press movement, focusing on anti-rotation and core stability.', 'core', false, false, true);
 
-INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES 
+INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES
 ('Sled Marches', 'Push a sled while marching in place, focusing on lower body strength and conditioning.', 'hinge', false, false, true);
 
-INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES 
+INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES
 ('Thumbs Down Battle Rope', 'Hold battle ropes with thumbs down and perform various wave patterns, focusing on upper body strength and conditioning.', 'isolation', false, true, true);
 
-INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES 
+INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES
 ('Swiss Ball Leg Curl Glute HAM', 'Lie on your back with your feet on a Swiss ball and perform leg curls, focusing on hamstring and glute strength.', 'isolation', false, false, true);
 
-INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES 
+INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES
 ('1/2 Turkish Get Up', 'Perform the first half of a Turkish get-up, focusing on shoulder stability and core strength.', 'core', false, false, true);
 
-INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES 
+INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES
 ('Deadman Hangs', 'Hang from a pull-up bar in a relaxed position, focusing on grip strength and shoulder mobility.', 'isolation', false, true, true);
 
 -- Add muscle relationships for exercises
@@ -132,10 +132,10 @@ INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Rotational Thr
 INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Rotational Throw (Punch Emphasis)', 'pec major');
 INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Rotational Throw (Punch Emphasis)', 'anterior deltoid');
 
-INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Weighted Box Jumps (non-countermovement)', 'quadriceps');
-INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Weighted Box Jumps (non-countermovement)', 'glutes');
-INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Weighted Box Jumps (non-countermovement)', 'hamstrings');
-INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Weighted Box Jumps (non-countermovement)', 'calves');
+INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Weighted Box Jumps', 'quadriceps');
+INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Weighted Box Jumps', 'glutes');
+INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Weighted Box Jumps', 'hamstrings');
+INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Weighted Box Jumps', 'calves');
 
 INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Broad Jump (weighted)', 'quadriceps');
 INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Broad Jump (weighted)', 'glutes');
@@ -263,8 +263,8 @@ INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Deadman Hangs'
 -- PLYOMETRIC EXERCISES
 INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('Rotational Throw (Punch Emphasis)', 'med ball');
 
-INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('Weighted Box Jumps (non-countermovement)', 'box');
-INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('Weighted Box Jumps (non-countermovement)', 'dumbbells');
+INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('Weighted Box Jumps', 'box');
+INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('Weighted Box Jumps', 'dumbbells');
 
 INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('Broad Jump (weighted)', 'dumbbells');
 
@@ -318,8 +318,8 @@ INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('Swiss Ba
 INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Rotational Throw (Punch Emphasis)', 'plyometric', 'dynamic_effort');
 INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Rotational Throw (Punch Emphasis)', 'plyometric', 'maximal_effort');
 
-INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Weighted Box Jumps (non-countermovement)', 'plyometric', 'dynamic_effort');
-INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Weighted Box Jumps (non-countermovement)', 'plyometric', 'maximal_effort');
+INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Weighted Box Jumps', 'plyometric', 'dynamic_effort');
+INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Weighted Box Jumps', 'plyometric', 'maximal_effort');
 
 INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Broad Jump (weighted)', 'plyometric', 'dynamic_effort');
 INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Broad Jump (weighted)', 'plyometric', 'maximal_effort');

@@ -1,13 +1,11 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   Box,
-  Card,
   CardContent,
   InputAdornment,
   useTheme,
   Button,
 } from '@mui/material';
-import { Search as SearchIcon, Add as AddIcon } from '@mui/icons-material';
 import {
   useReactTable,
   getCoreRowModel,
@@ -43,7 +41,6 @@ interface OneRepMaxRecordsProps {}
 export const OneRepMaxRecords: React.FC<OneRepMaxRecordsProps> = () => {
   const { userData, weightUnitPreferences, isLoading: isDataLoading, upsertUserOneRepMax, allExercises, loadAllExercises, userOneRepMaxes, loadUserOneRepMaxes } = useData();
   const { enqueueSnackbar } = useSnackbar();
-  const theme = useTheme();
 
   // State for loaded data
   const [oneRepMaxes, setOneRepMaxes] = useState<UserOneRepMax[]>([]);
@@ -278,7 +275,6 @@ export const OneRepMaxRecords: React.FC<OneRepMaxRecordsProps> = () => {
             </Box>
             <Button
               variant="contained"
-              startIcon={<AddIcon />}
               onClick={() => setRecordDialogOpen(true)}
               sx={{ ml: 2 }}
             >
@@ -306,13 +302,6 @@ export const OneRepMaxRecords: React.FC<OneRepMaxRecordsProps> = () => {
                 placeholder="Search exercises..."
                 value={globalFilter}
                 onChange={e => setGlobalFilter(e.target.value)}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <SearchIcon />
-                    </InputAdornment>
-                  ),
-                }}
                 sx={{ mb: 2 }}
               />
               <Box

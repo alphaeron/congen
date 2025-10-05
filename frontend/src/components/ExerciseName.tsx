@@ -3,6 +3,7 @@ import React from 'react';
 import { Link } from 'react-router';
 
 import type { Exercise, Muscle } from '../api/types';
+import { encodeExerciseName } from '../api/endpoint';
 import { capitalizeEachWord } from '../common/utils';
 import { useData } from '../contexts/DataContext';
 import { GameText, GAME_CLASSES } from './GameTheme';
@@ -110,7 +111,7 @@ export function ExerciseName({
   return (
     <Tooltip title={tooltipContent} arrow placement="top">
       <Link
-        to={`/exercises/${encodeURIComponent(exerciseName)}`}
+        to={`/exercises/${encodeExerciseName(exerciseName)}`}
         style={{ textDecoration: 'none', color: 'inherit' }}
       >
         <GameText

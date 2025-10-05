@@ -1,6 +1,6 @@
 import MockAdapter from 'axios-mock-adapter';
 
-import { ENDPOINT } from './endpoint';
+import { ENDPOINT, encodeExerciseName } from './endpoint';
 import type { UserOneRepMax } from './types';
 import {
   getUserOneRepMaxes,
@@ -64,7 +64,7 @@ describe('UserOneRepMax API', () => {
     it('should get a specific one rep max successfully', async () => {
       const exerciseName = 'Bench Press';
       mock
-        .onGet(`/user_one_rep_max/user/${mockUserId}/exercise/${encodeURIComponent(exerciseName)}`)
+        .onGet(`/user_one_rep_max/user/${mockUserId}/exercise/${encodeExerciseName(exerciseName)}`)
         .reply(200, mockOneRepMax);
 
       const result = await getUserOneRepMax(mockUserId, exerciseName);
@@ -80,7 +80,7 @@ describe('UserOneRepMax API', () => {
       const exerciseName = 'Bench Press';
       mock
         .onGet(
-          `/user_one_rep_max/user/${mockUserId}/exercise/${encodeURIComponent(exerciseName)}`,
+          `/user_one_rep_max/user/${mockUserId}/exercise/${encodeExerciseName(exerciseName)}`,
           {
             params: { unit: 'KG' },
           }
@@ -100,7 +100,7 @@ describe('UserOneRepMax API', () => {
       const exerciseName = 'Bench Press';
       const errorResponse = { message: 'Not found' };
       mock
-        .onGet(`/user_one_rep_max/user/${mockUserId}/exercise/${encodeURIComponent(exerciseName)}`)
+        .onGet(`/user_one_rep_max/user/${mockUserId}/exercise/${encodeExerciseName(exerciseName)}`)
         .reply(404, errorResponse);
 
       await expect(getUserOneRepMax(mockUserId, exerciseName)).rejects.toEqual(errorResponse);

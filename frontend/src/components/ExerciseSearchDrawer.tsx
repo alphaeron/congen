@@ -9,7 +9,7 @@ import {
   MenuItem,
   Autocomplete,
 } from '@mui/material';
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 
 import { GameText, GameTextField, GAME_CLASSES } from './GameTheme';
 import type { Exercise, Equipment, Muscle } from '../api/types';
@@ -59,33 +59,17 @@ export const ExerciseSearchDrawer: React.FC<ExerciseSearchDrawerProps> = ({
   onFiltersChange,
   appliedFilters,
 }) => {
-  const [localFilters, setLocalFilters] = useState<ExerciseFilters>(appliedFilters);
-
-  // Sync local filters with parent filters when they change
-  React.useEffect(() => {
-    setLocalFilters(appliedFilters);
-  }, [appliedFilters]);
-
   // Extract unique values for filter options
-  const exerciseNames = useMemo(() => {
-    return exercises.map(e => e.name).sort();
-  }, [exercises]);
+  const exerciseNames = exercises.map(e => e.name).sort();
 
-  const movementTypes = useMemo(() => {
-    return Array.from(new Set(exercises.map(e => e.movement_type))).sort();
-  }, [exercises]);
+  const movementTypes = Array.from(new Set(exercises.map(e => e.movement_type))).sort();
 
-  const equipmentOptions = useMemo(() => {
-    return equipment.map(e => e.name).sort();
-  }, [equipment]);
+  const equipmentOptions = equipment.map(e => e.name).sort();
 
-  const muscleOptions = useMemo(() => {
-    return muscles.map(m => m.name).sort();
-  }, [muscles]);
+  const muscleOptions = muscles.map(m => m.name).sort();
 
   const handleFilterChange = (filterType: keyof ExerciseFilters, value: any) => {
-    const newFilters = { ...localFilters, [filterType]: value };
-    setLocalFilters(newFilters);
+    const newFilters = { ...appliedFilters, [filterType]: value };
     onFiltersChange(newFilters);
   };
 
@@ -129,7 +113,7 @@ export const ExerciseSearchDrawer: React.FC<ExerciseSearchDrawerProps> = ({
               multiple
               id="exercise-autocomplete"
               options={exerciseNames}
-              value={localFilters.selectedExercises}
+              value={appliedFilters.selectedExercises}
               onChange={(_, newValue) => handleFilterChange('selectedExercises', newValue)}
               renderTags={(value, getTagProps) =>
                 value.map((option, index) => (
@@ -170,7 +154,7 @@ export const ExerciseSearchDrawer: React.FC<ExerciseSearchDrawerProps> = ({
               multiple
               id="movement-types-autocomplete"
               options={movementTypes}
-              value={localFilters.movementTypes}
+              value={appliedFilters.movementTypes}
               onChange={(_, newValue) => handleFilterChange('movementTypes', newValue)}
               renderTags={(value, getTagProps) =>
                 value.map((option, index) => (
@@ -211,7 +195,7 @@ export const ExerciseSearchDrawer: React.FC<ExerciseSearchDrawerProps> = ({
               multiple
               id="equipment-autocomplete"
               options={equipmentOptions}
-              value={localFilters.equipment}
+              value={appliedFilters.equipment}
               onChange={(_, newValue) => handleFilterChange('equipment', newValue)}
               renderTags={(value, getTagProps) =>
                 value.map((option, index) => (
@@ -252,7 +236,7 @@ export const ExerciseSearchDrawer: React.FC<ExerciseSearchDrawerProps> = ({
               multiple
               id="target-muscles-autocomplete"
               options={muscleOptions}
-              value={localFilters.targetMuscles}
+              value={appliedFilters.targetMuscles}
               onChange={(_, newValue) => handleFilterChange('targetMuscles', newValue)}
               renderTags={(value, getTagProps) =>
                 value.map((option, index) => (
@@ -293,7 +277,7 @@ export const ExerciseSearchDrawer: React.FC<ExerciseSearchDrawerProps> = ({
             </GameText>
             <FormControl fullWidth size="small">
               <Select
-                value={localFilters.isUnilateral === null ? 'both' : localFilters.isUnilateral ? 'unilateral' : 'bilateral'}
+                value={appliedFilters.isUnilateral === null ? 'both' : appliedFilters.isUnilateral ? 'unilateral' : 'bilateral'}
                 onChange={(e) => {
                   const value = e.target.value;
                   if (value === 'both') {
@@ -336,7 +320,7 @@ export const ExerciseSearchDrawer: React.FC<ExerciseSearchDrawerProps> = ({
             </GameText>
             <FormControl fullWidth size="small">
               <Select
-                value={localFilters.isAccessory === null ? 'both' : localFilters.isAccessory ? 'accessory' : 'primary'}
+                value={appliedFilters.isAccessory === null ? 'both' : appliedFilters.isAccessory ? 'accessory' : 'primary'}
                 onChange={(e) => {
                   const value = e.target.value;
                   if (value === 'both') {
@@ -379,7 +363,7 @@ export const ExerciseSearchDrawer: React.FC<ExerciseSearchDrawerProps> = ({
             </GameText>
             <FormControl fullWidth size="small">
               <Select
-                value={localFilters.isUpper === null ? 'both' : localFilters.isUpper ? 'upper' : 'lower'}
+                value={appliedFilters.isUpper === null ? 'both' : appliedFilters.isUpper ? 'upper' : 'lower'}
                 onChange={(e) => {
                   const value = e.target.value;
                   if (value === 'both') {

@@ -1,4 +1,4 @@
-import { REQUEST } from './endpoint';
+import { REQUEST, encodeExerciseName } from './endpoint';
 import type { Exercise, ExerciseEquipment, ExerciseMuscle } from './types';
 
 /**
@@ -21,7 +21,7 @@ export const getExercises = (): Promise<Exercise[]> =>
  */
 export const getIndividualExercise = (exerciseName: string): Promise<Exercise> =>
   REQUEST({
-    url: `/exercise/${encodeURIComponent(exerciseName)}`,
+    url: `/exercise/${encodeExerciseName(exerciseName)}`,
     method: 'GET',
   });
 
@@ -34,7 +34,7 @@ export const getIndividualExercise = (exerciseName: string): Promise<Exercise> =
  */
 export const getExerciseMuscles = (exerciseName: string): Promise<ExerciseMuscle[]> =>
   REQUEST({
-    url: `/exercise/${encodeURIComponent(exerciseName)}/muscle`,
+    url: `/exercise/${encodeExerciseName(exerciseName)}/muscle`,
     method: 'GET',
   });
 
@@ -47,6 +47,6 @@ export const getExerciseMuscles = (exerciseName: string): Promise<ExerciseMuscle
  */
 export const getExerciseEquipment = (exerciseName: string): Promise<ExerciseEquipment[]> =>
   REQUEST({
-    url: `/exercise/${encodeURIComponent(exerciseName)}/equipment`,
+    url: `/exercise/${encodeExerciseName(exerciseName)}/equipment`,
     method: 'GET',
   });

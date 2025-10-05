@@ -38,7 +38,7 @@ export const PreferenceSection: React.FC<PreferenceSectionProps> = ({
   hasItems,
 }) => {
   return (
-    <GameCard className={GAME_CLASSES.marginBottom3}>
+    <GameCard className={GAME_CLASSES.marginBottom3} sx={{ marginTop: 3 }}>
       <CardContent>
         <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
           <GameText variant="h6">{title}</GameText>

@@ -25,7 +25,9 @@ import type {
   UserExercisePoolResponse,
   WorkoutGenerationWizardData,
   Exercise,
+  UserOneRepMax,
 } from '../api/types';
+import { generateNextWeek, getUserExercisePool, updateWorkoutWithOneRepMax } from '../api/conjugateWorkoutGenerator';
 import { useData } from '../contexts/DataContext';
 
 interface WorkoutGenerationWizardProps {
@@ -52,8 +54,7 @@ export const WorkoutGenerationWizard: React.FC<WorkoutGenerationWizardProps> = (
   program,
 }) => {
   const { enqueueSnackbar } = useSnackbar();
-  const { refreshData, generateWorkout, updateWorkoutWithOneRepMax, loadUserExercisePool } =
-    useData();
+  const { userData } = useData(); // Only get userData for 1RM check, no other DataContext functions
   const [currentStep, setCurrentStep] = useState<WizardStep>(WizardStep.WORKOUT_GENERATION);
   const [generatedWorkout, setGeneratedWorkout] = useState<Program | null>(null);
   const [exercisePool, setExercisePool] = useState<UserExercisePoolResponse | null>(null);
@@ -85,7 +86,7 @@ export const WorkoutGenerationWizard: React.FC<WorkoutGenerationWizardProps> = (
   };
 
   // TanStack Form for wizard data
-  const form = useForm<WorkoutGenerationWizardData>({
+  const form = useForm({
     defaultValues: {
       programId: program.id,
       currentStep: WizardStep.WORKOUT_GENERATION,
@@ -109,7 +110,7 @@ export const WorkoutGenerationWizard: React.FC<WorkoutGenerationWizardProps> = (
 
       const loadExercisePool = async () => {
         try {
-          const pool = await loadUserExercisePool();
+          const pool = await getUserExercisePool();
           if (isMounted) {
             setExercisePool(pool);
           }
@@ -130,7 +131,7 @@ export const WorkoutGenerationWizard: React.FC<WorkoutGenerationWizardProps> = (
         clearTimeout(timeoutId);
       };
     }
-  }, [open, loadUserExercisePool, enqueueSnackbar]);
+  }, [open, enqueueSnackbar]);
 
   // Handle workout update when reaching UPDATING_WORKOUT_WITH_1RM stage
   useEffect(() => {
@@ -144,7 +145,7 @@ export const WorkoutGenerationWizard: React.FC<WorkoutGenerationWizardProps> = (
     setCurrentStep(WizardStep.GENERATION_LOADING);
 
     try {
-      const workout = await generateWorkout(program.id);
+      const workout = await generateNextWeek(program.id);
       setGeneratedWorkout(workout);
 
       // Check if there are exercises that need 1RM input
@@ -154,9 +155,7 @@ export const WorkoutGenerationWizard: React.FC<WorkoutGenerationWizardProps> = (
         setCurrentStep(WizardStep.ONE_REP_MAX_INPUT);
       } else {
         setCurrentStep(WizardStep.UPDATING_WORKOUT_WITH_1RM);
-        // Refresh DataContext to ensure all components have the latest data
-        await refreshData();
-        onComplete(workout);
+        // Don't refresh data here - let the UPDATING_WORKOUT_WITH_1RM stage handle it
       }
     } catch {
       enqueueSnackbar('Failed to generate workouts', { variant: 'error' });
@@ -178,10 +177,7 @@ export const WorkoutGenerationWizard: React.FC<WorkoutGenerationWizardProps> = (
       // Make API call to update workout with 1RM data (backend will fetch from database)
       const updatedWorkout = await updateWorkoutWithOneRepMax(program.id);
 
-      // Refresh DataContext to ensure all components have the latest data
-      await refreshData();
-
-      // Show success message and close
+      // Show success message and close - no DataContext refresh needed
       enqueueSnackbar('Workout updated successfully!', { variant: 'success' });
       onComplete(updatedWorkout);
     } catch {
@@ -198,25 +194,19 @@ export const WorkoutGenerationWizard: React.FC<WorkoutGenerationWizardProps> = (
   ): Exercise[] => {
     if (!pool || !workout) return [];
 
-    // Get all exercises from the generated workout
-    const workoutExercises = new Set<string>();
-
-    // Extract exercise names from workout data structure
-    if (workout.workouts) {
-      workout.workouts.forEach(workoutItem => {
-        if (workoutItem.exercises) {
-          workoutItem.exercises.forEach(exercise => {
-            workoutExercises.add(exercise.exercise_name);
-          });
-        }
-      });
-    }
-
-    // For now, let's return all exercises from the pool that don't have 1RM data
-    // This ensures we always show the 1RM input step for testing
+    // Since generateWorkout returns a Program type without workout data,
+    // we need to get the exercise data from the userData which should be refreshed
+    // after workout generation. We'll use the exercise pool to determine which
+    // exercises might need 1RM input based on the program's current week.
+    
+    // Get user's 1RM data from userData to check which exercises already have 1RM records
+    const userOneRepMaxes = userData?.user_one_rep_max as unknown as UserOneRepMax[] || [];
+    const exerciseNamesWithOneRepMax = new Set(userOneRepMaxes.map(orm => orm.exercise_name));
+    
+    // Return exercises from the pool that don't have 1RM data
     const exercisesWithoutOneRepMax = pool.primary_exercises
       .concat(pool.accessory_exercises)
-      .filter(exercise => !exercise.one_rep_max);
+      .filter(exercise => !exerciseNamesWithOneRepMax.has(exercise.name));
 
     return exercisesWithoutOneRepMax;
   };
@@ -360,7 +350,7 @@ export const WorkoutGenerationWizard: React.FC<WorkoutGenerationWizardProps> = (
     >
       <DialogTitle>
         <Box>
-          <GameText variant="h6" component="div">
+          <GameText variant="h6">
             Generate Workouts
           </GameText>
           <Box mt={2}>

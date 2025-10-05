@@ -6,13 +6,13 @@ import {
   Chip,
   Grid,
   Alert,
-  Slide,
   Tooltip,
   IconButton,
 } from '@mui/material';
 import { useSnackbar } from 'notistack';
 import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
+import { motion, AnimatePresence } from 'framer-motion';
 
 import { ExerciseCategoryDetails } from './ExerciseCategoryDetails';
 import { ExerciseName } from './ExerciseName';
@@ -169,8 +169,16 @@ export const ExerciseRotationVisualization: React.FC = () => {
       {renderBackButton()}
 
       {/* Main Exercise Rotation - Slides right when category is selected */}
-      <Slide direction="right" in={!showCategoryDetails} mountOnEnter unmountOnExit>
-        <Box sx={{ p: 3 }}>
+      <AnimatePresence mode="wait">
+        {!showCategoryDetails && (
+          <motion.div
+            key="main-exercise-rotation"
+            initial={{ opacity: 0, x: 50 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 50 }}
+            transition={{ duration: 0.3, ease: 'easeInOut' }}
+          >
+            <Box sx={{ p: 3 }}>
           <Grid container spacing={3}>
             {/* Exercise Insights Charts */}
             {exercisePoolAnalysis && (
@@ -512,13 +520,22 @@ export const ExerciseRotationVisualization: React.FC = () => {
               )}
             </Grid>
           </Grid>
-        </Box>
-      </Slide>
+            </Box>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Category Details - Slides in from left when category is selected */}
-      {selectedCategory && (
-        <Slide direction="left" in={showCategoryDetails} mountOnEnter unmountOnExit>
-          <Box sx={{ p: 3 }}>
+      <AnimatePresence mode="wait">
+        {selectedCategory && showCategoryDetails && (
+          <motion.div
+            key="category-details"
+            initial={{ opacity: 0, x: -50 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -50 }}
+            transition={{ duration: 0.3, ease: 'easeInOut' }}
+          >
+            <Box sx={{ p: 3 }}>
             {/* Horizontal layout for alert - positioned to align with back button */}
             <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, mb: 3, ml: 5 }}>
               <Alert severity="info" sx={{ flex: 1 }}>
@@ -528,9 +545,10 @@ export const ExerciseRotationVisualization: React.FC = () => {
               </Alert>
             </Box>
             <ExerciseCategoryDetails category={selectedCategory} />
-          </Box>
-        </Slide>
-      )}
+            </Box>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </Box>
   );
 };

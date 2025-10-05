@@ -155,7 +155,6 @@ export const LineChart: React.FC<LineChartProps> = ({
       <GameCard>
         <CardContent>
           <Box display="flex" alignItems="center" gap={1} sx={{ mb: 2 }}>
-            <BarChartIcon color="primary" />
             <GameText variant="h6">{title}</GameText>
           </Box>
           <GameText variant="body2" textVariant="secondary" className={GAME_CLASSES.marginBottom2}>

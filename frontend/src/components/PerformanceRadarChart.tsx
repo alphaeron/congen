@@ -285,19 +285,15 @@ export const PerformanceRadarChart: React.FC<PerformanceRadarChartProps> = ({
           </Tooltip>
         </Box>
       )}
-      <motion.div
+      <Box
         ref={ref}
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={isInView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.95 }}
-        transition={{ duration: 0.3, ease: "easeOut" }}
-        style={{
+        sx={{
           height,
           width: '100%',
           minHeight: 300,
           minWidth: 300,
           position: 'relative',
           overflow: 'visible',
-          zIndex: 5,
         }}
       >
         <ResponsiveRadar
@@ -309,8 +305,7 @@ export const PerformanceRadarChart: React.FC<PerformanceRadarChartProps> = ({
           maxValue={100}
           curve="linearClosed"
           fillOpacity={0.1}
-          animate={true}
-          motionConfig="wobbly"
+          animate={false}
           gridLevels={5}
           gridShape="circular"
           gridLabelOffset={36}
@@ -322,7 +317,7 @@ export const PerformanceRadarChart: React.FC<PerformanceRadarChartProps> = ({
           dotBorderWidth={2}
           theme={createCongenNivoTheme(theme.palette.mode)}
         />
-      </motion.div>
+      </Box>
     </Box>
   );
 };

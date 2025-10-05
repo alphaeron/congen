@@ -8,9 +8,11 @@ import { alpha } from '@mui/material/styles';
 import * as React from 'react';
 import { Link } from 'react-router';
 
+import { encodeExerciseName } from '../api/endpoint';
+
 import { BinaryTag } from './BinaryTag';
 import { ExercisePreferenceControls } from './ExercisePreferenceControls';
-import { GameCard, GameText, GAME_CLASSES } from './GameTheme';
+import { GameCard, GameText } from './GameTheme';
 import type { Exercise } from '../api/types';
 import { capitalizeEachWord } from '../common/utils';
 
@@ -43,7 +45,7 @@ export function ExerciseCard(props: ExerciseCardProps): React.ReactElement<Exerc
       <CardContent sx={{ p: 3, height: '100%', display: 'flex', flexDirection: 'column' }}>
         <Link
           className="undecoratedLink"
-          to={`/exercises/${exercise.name}`}
+          to={`/exercises/${encodeExerciseName(exercise.name)}`}
           style={{ textDecoration: 'none' }}
         >
           <GameText

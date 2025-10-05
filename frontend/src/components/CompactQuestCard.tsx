@@ -570,41 +570,51 @@ export const CompactQuestCard: React.FC<CompactQuestCardProps> = ({
           {dailyMetricsConfig.map((metric, index) => {
             return (
               <Grid size={{ xs: 6 }} key={index} sx={{ height: '50%' }}>
-                <GameSubCard
-                  className={`${GAME_CLASSES.cursorPointer} ${GAME_CLASSES.hoverOpacity80}`}
-                  onClick={() => handleEditDailyMetric(metric.key)}
-                  sx={{ 
-                    height: '100%',
-                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                    '&:hover': {
-                      transform: 'translateY(-4px) scale(1.02)',
-                      boxShadow: '0 8px 25px rgba(0, 188, 212, 0.3)',
-                      '& .quest-icon': {
-                        transform: 'scale(1.1) rotate(5deg)',
-                        filter: 'drop-shadow(0 0 8px rgba(0, 188, 212, 0.6))',
-                      },
-                      '& .quest-text': {
-                        color: '#00bcd4',
-                        textShadow: '0 0 8px rgba(0, 188, 212, 0.5)',
-                      }
-                    },
-                    '&:active': {
-                      transform: 'translateY(-2px) scale(0.98)',
-                    }
+                <motion.div
+                  whileHover={{ 
+                    y: -4, 
+                    scale: 1.02,
+                    transition: { duration: 0.3, ease: "easeOut" }
                   }}
+                  whileTap={{ 
+                    y: -2, 
+                    scale: 0.98,
+                    transition: { duration: 0.1 }
+                  }}
+                  style={{ height: '100%' }}
                 >
+                  <GameSubCard
+                    className={`${GAME_CLASSES.cursorPointer} ${GAME_CLASSES.hoverOpacity80}`}
+                    onClick={() => handleEditDailyMetric(metric.key)}
+                    sx={{ 
+                      height: '100%',
+                      transition: 'box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                      '&:hover': {
+                        boxShadow: '0 8px 25px rgba(0, 188, 212, 0.3)',
+                        '& .quest-icon': {
+                          filter: 'drop-shadow(0 0 8px rgba(0, 188, 212, 0.6))',
+                        },
+                        '& .quest-text': {
+                          color: '#00bcd4',
+                          textShadow: '0 0 8px rgba(0, 188, 212, 0.5)',
+                        }
+                      }
+                    }}
+                  >
                   <CardContent
                     className={`${GAME_CLASSES.padding2} ${GAME_CLASSES.height100} ${GAME_CLASSES.flex} ${GAME_CLASSES.flexColumn} ${GAME_CLASSES.justifyCenter}`}
                   >
                     <Stack spacing={0.1} alignItems="center" className={GAME_CLASSES.rowGap0}>
-                      <Box 
+                      <motion.div
                         className={`${GAME_CLASSES.fontSize32} ${GAME_CLASSES.colorCyan} ${GAME_CLASSES.textBold} quest-icon`}
-                        sx={{
-                          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                        whileHover={{ 
+                          scale: 1.1, 
+                          rotate: 5,
+                          transition: { duration: 0.3, ease: "easeOut" }
                         }}
                       >
                         {metric.icon}
-                      </Box>
+                      </motion.div>
                       <GameText 
                         variant="caption" 
                         className={`${GAME_CLASSES.textBold} ${GAME_CLASSES.textCenter} quest-text`}
@@ -621,7 +631,8 @@ export const CompactQuestCard: React.FC<CompactQuestCardProps> = ({
                       </GameText>
                     </Stack>
                   </CardContent>
-                </GameSubCard>
+                  </GameSubCard>
+                </motion.div>
               </Grid>
             );
           })}
@@ -633,41 +644,51 @@ export const CompactQuestCard: React.FC<CompactQuestCardProps> = ({
           {testProtocols.slice(0, 4).map((protocol, index) => {
             return (
               <Grid size={{ xs: 6 }} key={index} sx={{ height: '50%' }}>
-                <GameSubCard
-                  className={`${GAME_CLASSES.cursorPointer} ${GAME_CLASSES.hoverOpacity80}`}
-                  onClick={() => handleEditWeeklyTest(protocol)}
-                  sx={{ 
-                    height: '100%',
-                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                    '&:hover': {
-                      transform: 'translateY(-4px) scale(1.02)',
-                      boxShadow: '0 8px 25px rgba(0, 188, 212, 0.3)',
-                      '& .quest-icon': {
-                        transform: 'scale(1.1) rotate(-5deg)',
-                        filter: 'drop-shadow(0 0 8px rgba(0, 188, 212, 0.6))',
-                      },
-                      '& .quest-text': {
-                        color: '#00bcd4',
-                        textShadow: '0 0 8px rgba(0, 188, 212, 0.5)',
-                      }
-                    },
-                    '&:active': {
-                      transform: 'translateY(-2px) scale(0.98)',
-                    }
+                <motion.div
+                  whileHover={{ 
+                    y: -4, 
+                    scale: 1.02,
+                    transition: { duration: 0.3, ease: "easeOut" }
                   }}
+                  whileTap={{ 
+                    y: -2, 
+                    scale: 0.98,
+                    transition: { duration: 0.1 }
+                  }}
+                  style={{ height: '100%' }}
                 >
+                  <GameSubCard
+                    className={`${GAME_CLASSES.cursorPointer} ${GAME_CLASSES.hoverOpacity80}`}
+                    onClick={() => handleEditWeeklyTest(protocol)}
+                    sx={{ 
+                      height: '100%',
+                      transition: 'box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                      '&:hover': {
+                        boxShadow: '0 8px 25px rgba(0, 188, 212, 0.3)',
+                        '& .quest-icon': {
+                          filter: 'drop-shadow(0 0 8px rgba(0, 188, 212, 0.6))',
+                        },
+                        '& .quest-text': {
+                          color: '#00bcd4',
+                          textShadow: '0 0 8px rgba(0, 188, 212, 0.5)',
+                        }
+                      }
+                    }}
+                  >
                   <CardContent
                     className={`${GAME_CLASSES.padding2} ${GAME_CLASSES.height100} ${GAME_CLASSES.flex} ${GAME_CLASSES.flexColumn} ${GAME_CLASSES.justifyCenter}`}
                   >
                     <Stack spacing={0.1} alignItems="center" className={GAME_CLASSES.rowGap0}>
-                      <Box 
+                      <motion.div
                         className={`${GAME_CLASSES.fontSize32} ${GAME_CLASSES.colorCyan} ${GAME_CLASSES.textBold} quest-icon`}
-                        sx={{
-                          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                        whileHover={{ 
+                          scale: 1.1, 
+                          rotate: -5,
+                          transition: { duration: 0.3, ease: "easeOut" }
                         }}
                       >
                         {getIconForProtocol(protocol.test_name)}
-                      </Box>
+                      </motion.div>
                       <GameText 
                         variant="caption" 
                         className={`${GAME_CLASSES.textBold} ${GAME_CLASSES.textCenter} quest-text`}
@@ -684,7 +705,8 @@ export const CompactQuestCard: React.FC<CompactQuestCardProps> = ({
                       </GameText>
                     </Stack>
                   </CardContent>
-                </GameSubCard>
+                  </GameSubCard>
+                </motion.div>
               </Grid>
             );
           })}
@@ -1032,27 +1054,34 @@ export const CompactQuestCard: React.FC<CompactQuestCardProps> = ({
                   >
                     Cancel
                   </Button>
-                  <Button
-                    onClick={onSubmit}
-                    variant="contained"
-                    disabled={!canSubmit || isPending}
-                    className={`${GAME_CLASSES.backgroundColorCyan} ${GAME_CLASSES.hoverBackgroundColorCyan}`}
-                    sx={{
-                      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                      '&:hover:not(:disabled)': {
-                        transform: 'translateY(-2px)',
-                        boxShadow: '0 8px 25px rgba(0, 188, 212, 0.4)',
-                      },
-                      '&:active:not(:disabled)': {
-                        transform: 'translateY(0)',
-                      },
-                      '&:disabled': {
-                        opacity: 0.6,
-                      }
-                    }}
+                  <motion.div
+                    whileHover={!isPending && canSubmit ? { 
+                      y: -2,
+                      transition: { duration: 0.3, ease: "easeOut" }
+                    } : {}}
+                    whileTap={!isPending && canSubmit ? { 
+                      y: 0,
+                      transition: { duration: 0.1 }
+                    } : {}}
                   >
-                    {isPending ? 'Submitting...' : 'Submit'}
-                  </Button>
+                    <Button
+                      onClick={onSubmit}
+                      variant="contained"
+                      disabled={!canSubmit || isPending}
+                      className={`${GAME_CLASSES.backgroundColorCyan} ${GAME_CLASSES.hoverBackgroundColorCyan}`}
+                      sx={{
+                        transition: 'box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                        '&:hover:not(:disabled)': {
+                          boxShadow: '0 8px 25px rgba(0, 188, 212, 0.4)',
+                        },
+                        '&:disabled': {
+                          opacity: 0.6,
+                        }
+                      }}
+                    >
+                      {isPending ? 'Submitting...' : 'Submit'}
+                    </Button>
+                  </motion.div>
                 </Box>
               </Box>
             );

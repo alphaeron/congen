@@ -12,7 +12,9 @@ import { ExerciseDetails } from '../components/ExerciseDetails';
 export function ExerciseDetailsPage(): React.ReactElement {
   const { exerciseName } = useParams();
   if (exerciseName) {
-    return <ExerciseDetails exerciseName={exerciseName} />;
+    // Decode the exercise name from the URL parameter
+    const decodedExerciseName = decodeURIComponent(exerciseName);
+    return <ExerciseDetails exerciseName={decodedExerciseName} />;
   } else {
     return (
       <Alert severity="error">

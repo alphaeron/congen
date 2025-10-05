@@ -1,4 +1,4 @@
-import { REQUEST } from './endpoint';
+import { REQUEST, encodeExerciseName } from './endpoint';
 import type { UserOneRepMax } from './types';
 
 /**
@@ -31,7 +31,7 @@ export const getUserOneRepMax = (
 ): Promise<UserOneRepMax> => {
   return REQUEST({
     method: 'GET',
-    url: `/user_one_rep_max/user/${userId}/exercise/${encodeURIComponent(exerciseName)}`,
+    url: `/user_one_rep_max/user/${userId}/exercise/${encodeExerciseName(exerciseName)}`,
     params: unit ? { unit } : undefined,
   });
 };
@@ -76,6 +76,6 @@ export const deleteUserOneRepMax = (
 ): Promise<UserOneRepMax> => {
   return REQUEST({
     method: 'DELETE',
-    url: `/user_one_rep_max/user/${userId}/exercise/${encodeURIComponent(exerciseName)}`,
+    url: `/user_one_rep_max/user/${userId}/exercise/${encodeExerciseName(exerciseName)}`,
   });
 };

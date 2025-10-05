@@ -69,6 +69,9 @@ export const WorkoutsOverview: React.FC<WorkoutsOverviewProps> = ({ user, select
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState(0);
   const [slideDirection, setSlideDirection] = useState<'left' | 'right'>('left');
+  const [workoutsSlideDirection, setWorkoutsSlideDirection] = useState<'left' | 'right'>('left');
+  const [weekDetailsSlideDirection, setWeekDetailsSlideDirection] = useState<'left' | 'right'>('left');
+  const [workoutDetailSlideDirection, setWorkoutDetailSlideDirection] = useState<'left' | 'right'>('left');
 
   // Set initial slide direction based on current state
   useEffect(() => {
@@ -241,6 +244,7 @@ export const WorkoutsOverview: React.FC<WorkoutsOverviewProps> = ({ user, select
         transition={{ duration: 0.6, ease: 'easeOut', delay: 0.6 }}
       >
         <TabPanel value={activeTab} index={0} slideDirection={slideDirection}>
+        <AnimatePresence mode="wait">
         {(() => {
           const selectedWeek = searchParams.get('week');
           const selectedWorkoutId = searchParams.get('workout');
@@ -248,58 +252,83 @@ export const WorkoutsOverview: React.FC<WorkoutsOverviewProps> = ({ user, select
           // If both week and workout are selected, show WorkoutDetail
           if (selectedWeek && selectedWorkoutId) {
             return (
-              <WorkoutDetail
-                workoutId={parseInt(selectedWorkoutId)}
-                onBack={() => {
-                  setWorkoutDetailSlideDirection('right'); // WorkoutDetail slides out to the right
-                  setWeekDetailsSlideDirection('left'); // WorkoutWeekDetails slides in from the left (going back)
-                  const newSearchParams = new URLSearchParams(searchParams);
-                  newSearchParams.set('section', 'workouts');
-                  newSearchParams.set('subsection', 'calendar');
-                  newSearchParams.set('week', selectedWeek);
-                  newSearchParams.delete('workout');
-                  navigate(`/dashboard?${newSearchParams.toString()}`);
-                }}
-              />
+              <motion.div
+                key="workout-detail"
+                initial={{ opacity: 0, x: workoutDetailSlideDirection === 'left' ? -50 : 50 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: workoutDetailSlideDirection === 'left' ? 50 : -50 }}
+                transition={{ duration: 0.3, ease: 'easeInOut' }}
+              >
+                <WorkoutDetail
+                  workoutId={parseInt(selectedWorkoutId)}
+                  onBack={() => {
+                    setWorkoutDetailSlideDirection('right'); // WorkoutDetail slides out to the right
+                    setWeekDetailsSlideDirection('left'); // WorkoutWeekDetails slides in from the left (going back)
+                    const newSearchParams = new URLSearchParams(searchParams);
+                    newSearchParams.set('section', 'workouts');
+                    newSearchParams.set('subsection', 'calendar');
+                    newSearchParams.set('week', selectedWeek);
+                    newSearchParams.delete('workout');
+                    navigate(`/dashboard?${newSearchParams.toString()}`);
+                  }}
+                />
+              </motion.div>
             );
           }
 
           // If only week is selected, show WorkoutWeekDetails
           if (selectedWeek) {
             return (
-              <WorkoutWeekDetails
-                selectedWorkout={selectedWorkoutId}
-                weekNumber={parseInt(selectedWeek)}
-                showBackButton={true}
-                onBack={() => {
-                  setWeekDetailsSlideDirection('right'); // WorkoutWeekDetails slides out to the right
-                  setWorkoutsSlideDirection('right'); // Workouts slides in from the right
-                  const newSearchParams = new URLSearchParams(searchParams);
-                  newSearchParams.set('section', 'workouts');
-                  newSearchParams.set('subsection', 'calendar');
-                  newSearchParams.delete('week');
-                  newSearchParams.delete('workout');
-                  navigate(`/dashboard?${newSearchParams.toString()}`);
-                }}
-                onWorkoutClick={workoutId => {
-                  setWeekDetailsSlideDirection('left'); // WorkoutWeekDetails slides out to the left
-                  setWorkoutDetailSlideDirection('left'); // WorkoutDetail slides in from the left
-                  const newSearchParams = new URLSearchParams(searchParams);
-                  newSearchParams.set('section', 'workouts');
-                  newSearchParams.set('subsection', 'calendar');
-                  newSearchParams.set('week', selectedWeek);
-                  newSearchParams.set('workout', workoutId.toString());
-                  navigate(`/dashboard?${newSearchParams.toString()}`);
-                }}
-              />
+              <motion.div
+                key="workout-week-details"
+                initial={{ opacity: 0, x: weekDetailsSlideDirection === 'left' ? -50 : 50 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: weekDetailsSlideDirection === 'left' ? 50 : -50 }}
+                transition={{ duration: 0.3, ease: 'easeInOut' }}
+              >
+                <WorkoutWeekDetails
+                  selectedWorkout={selectedWorkoutId}
+                  weekNumber={parseInt(selectedWeek)}
+                  showBackButton={true}
+                  onBack={() => {
+                    setWeekDetailsSlideDirection('right'); // WorkoutWeekDetails slides out to the right
+                    setWorkoutsSlideDirection('right'); // Workouts slides in from the right
+                    const newSearchParams = new URLSearchParams(searchParams);
+                    newSearchParams.set('section', 'workouts');
+                    newSearchParams.set('subsection', 'calendar');
+                    newSearchParams.delete('week');
+                    newSearchParams.delete('workout');
+                    navigate(`/dashboard?${newSearchParams.toString()}`);
+                  }}
+                  onWorkoutClick={workoutId => {
+                    setWeekDetailsSlideDirection('left'); // WorkoutWeekDetails slides out to the left
+                    setWorkoutDetailSlideDirection('left'); // WorkoutDetail slides in from the left
+                    const newSearchParams = new URLSearchParams(searchParams);
+                    newSearchParams.set('section', 'workouts');
+                    newSearchParams.set('subsection', 'calendar');
+                    newSearchParams.set('week', selectedWeek);
+                    newSearchParams.set('workout', workoutId.toString());
+                    navigate(`/dashboard?${newSearchParams.toString()}`);
+                  }}
+                />
+              </motion.div>
             );
           }
 
           // No week selected, show the main Workouts calendar
           return (
-            <Workouts selectedWorkout={selectedWorkout} />
+            <motion.div
+              key="workouts"
+              initial={{ opacity: 0, x: workoutsSlideDirection === 'left' ? -50 : 50 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: workoutsSlideDirection === 'left' ? 50 : -50 }}
+              transition={{ duration: 0.3, ease: 'easeInOut' }}
+            >
+              <Workouts selectedWorkout={selectedWorkout} />
+            </motion.div>
           );
         })()}
+        </AnimatePresence>
       </TabPanel>
 
       <TabPanel value={activeTab} index={1} slideDirection={slideDirection}>

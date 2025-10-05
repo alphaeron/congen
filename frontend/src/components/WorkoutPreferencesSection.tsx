@@ -451,7 +451,7 @@ export function WorkoutPreferencesSection(): React.ReactElement {
             '& .MuiTabs-indicator': {
               backgroundColor: '#00bcd4',
               boxShadow: '0 0 10px rgba(0, 188, 212, 0.5)',
-            }
+            },
           }}
         >
           <Tab 

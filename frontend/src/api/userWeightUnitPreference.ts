@@ -1,4 +1,4 @@
-import { REQUEST } from './endpoint';
+import { REQUEST, encodeExerciseName } from './endpoint';
 import type { UserWeightUnitPreference, WeightUnit } from './types';
 
 /**
@@ -56,7 +56,7 @@ export const getUserWeightUnitPreference = async (
 ): Promise<UserWeightUnitPreference> => {
   return REQUEST({
     method: 'GET',
-    url: `/user_weight_unit_preference/${userId}/${encodeURIComponent(exerciseName)}`,
+    url: `/user_weight_unit_preference/${userId}/${encodeExerciseName(exerciseName)}`,
   });
 };
 
@@ -73,6 +73,6 @@ export const deleteUserWeightUnitPreference = async (
 ): Promise<UserWeightUnitPreference> => {
   return REQUEST({
     method: 'DELETE',
-    url: `/user_weight_unit_preference/${userId}/${encodeURIComponent(exerciseName)}`,
+    url: `/user_weight_unit_preference/${userId}/${encodeExerciseName(exerciseName)}`,
   });
 };

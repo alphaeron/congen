@@ -40,8 +40,8 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ user }) =>
       {/* Main Dashboard Layout: 3/4 Status Card + 1/4 Sidebar */}
       {performanceScores ? (
         <Grid container spacing={3} className={GAME_CLASSES.marginBottom3}>
-          {/* Status Card - 3/4 width */}
           <Grid size={{ xs: 12, lg: 9 }}>
+          {/* Status Card - 3/4 width */}
             <AdventurerStatusCard
               scores={performanceScores}
               metrics={performanceMetrics}

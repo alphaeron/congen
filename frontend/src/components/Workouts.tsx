@@ -1,4 +1,3 @@
-import { Add as AddIcon } from '@mui/icons-material';
 import {
   Box,
   Card,
@@ -180,6 +179,10 @@ export const Workouts: React.FC<WorkoutsProps> = () => {
   };
 
   const handleWizardComplete = async () => {
+    // Close the wizard first
+    setWizardOpen(false);
+    setSelectedProgram(null);
+    
     setIsGenerating(true);
     try {
       // Refresh all data after generation
@@ -189,8 +192,6 @@ export const Workouts: React.FC<WorkoutsProps> = () => {
       enqueueSnackbar('Failed to refresh workout data', { variant: 'error' });
     } finally {
       setIsGenerating(false);
-      setWizardOpen(false);
-      setSelectedProgram(null);
     }
   };
 
@@ -304,7 +305,6 @@ export const Workouts: React.FC<WorkoutsProps> = () => {
                   <Box display="flex" gap={1}>
                     <Button
                       variant="contained"
-                      startIcon={<AddIcon />}
                       onClick={() => openWizard(activeProgram.program)}
                       disabled={isGenerating}
                       size="large"
@@ -397,13 +397,13 @@ export const Workouts: React.FC<WorkoutsProps> = () => {
                             </Box>
                           }
                           secondary={
-                            <GameText variant="body2" textVariant="secondary" sx={{ color: '#64748b' }}>
+                            <span className={GAME_CLASSES.textSecondary} style={{ color: '#64748b' }}>
                               {week.workouts
                                 .map(w =>
                                   replaceUnderscoresWithSpaces(w.name || `Workout ${w.day_number}`)
                                 )
                                 .join(' • ')}
-                            </GameText>
+                            </span>
                           }
                         />
                       </ListItem>

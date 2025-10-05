@@ -1,4 +1,3 @@
-import { default as AddIcon } from '@mui/icons-material/Add';
 import { default as DeleteIcon } from '@mui/icons-material/Delete';
 import { default as EditIcon } from '@mui/icons-material/Edit';
 import { default as PauseIcon } from '@mui/icons-material/Pause';
@@ -295,7 +294,6 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
           <ButtonPress>
             <Button
               variant="contained"
-              startIcon={<AddIcon />}
               onClick={() => setCreateDialogOpen(true)}
               sx={{
                 '&:hover': {
