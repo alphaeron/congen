@@ -268,18 +268,13 @@ export default function Account({ kcContext, i18n: _i18n }: AccountProps) {
                 }}
               >
                 <Grid container spacing={3}>
-                  {/* Profile Editing Form - Takes up more space */}
-                  <motion.div
-                    initial={{ opacity: 0, x: -30 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.6, ease: 'easeOut', delay: 0.8 }}
-                    style={{ 
-                      gridColumn: 'span 8',
-                      '@media (max-width: 1200px)': {
-                        gridColumn: 'span 12',
-                      }
-                    }}
-                  >
+                  {/* Profile Editing Form - Takes up 3/4 of the width */}
+                  <Grid size={{ xs: 12, md: 9 }}>
+                    <motion.div
+                      initial={{ opacity: 0, x: -30 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.6, ease: 'easeOut', delay: 0.8 }}
+                    >
                     <HoverCard 
                       style={{ height: '100%' }}
                     >
@@ -409,20 +404,16 @@ export default function Account({ kcContext, i18n: _i18n }: AccountProps) {
                       </CardContent>
                       </GameCard>
                     </HoverCard>
-                  </motion.div>
+                    </motion.div>
+                  </Grid>
 
-                  {/* Password Change Section - Sidebar style */}
-                  <motion.div
-                    initial={{ opacity: 0, x: 30 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.6, ease: 'easeOut', delay: 0.8 }}
-                    style={{ 
-                      gridColumn: 'span 4',
-                      '@media (max-width: 1200px)': {
-                        gridColumn: 'span 12',
-                      }
-                    }}
-                  >
+                  {/* Password Change Section - Takes up 1/4 of the width */}
+                  <Grid size={{ xs: 12, md: 3 }}>
+                    <motion.div
+                      initial={{ opacity: 0, x: 30 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.6, ease: 'easeOut', delay: 0.8 }}
+                    >
                     <HoverCard>
                       <GameCard>
                       <CardContent sx={{ p: 4 }}>
@@ -474,7 +465,8 @@ export default function Account({ kcContext, i18n: _i18n }: AccountProps) {
                       </CardContent>
                       </GameCard>
                     </HoverCard>
-                  </motion.div>
+                    </motion.div>
+                  </Grid>
                 </Grid>
               </form>
             )}
