@@ -156,7 +156,7 @@ export const ExerciseRotationVisualization: React.FC = () => {
 
   if (!exercisePoolAnalysis) {
     return (
-      <Box sx={{ p: 3 }}>
+      <Box sx={{ px: 3, pt: 3 }}>
         <Alert severity="info">
           No exercise pool data available. Please check your preferences and equipment settings.
         </Alert>
@@ -178,7 +178,7 @@ export const ExerciseRotationVisualization: React.FC = () => {
             exit={{ opacity: 0, x: 50 }}
             transition={{ duration: 0.3, ease: 'easeInOut' }}
           >
-            <Box sx={{ p: 3 }}>
+            <Box sx={{ px: 3, pt: 3 }}>
           <Grid container spacing={3}>
             {/* Exercise Insights Charts */}
             {exercisePoolAnalysis && (
@@ -535,7 +535,7 @@ export const ExerciseRotationVisualization: React.FC = () => {
             exit={{ opacity: 0, x: -50 }}
             transition={{ duration: 0.3, ease: 'easeInOut' }}
           >
-            <Box sx={{ p: 3 }}>
+            <Box sx={{ px: 3, pt: 3 }}>
             {/* Horizontal layout for alert - positioned to align with back button */}
             <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, mb: 3, ml: 5 }}>
               <Alert severity="info" sx={{ flex: 1 }}>

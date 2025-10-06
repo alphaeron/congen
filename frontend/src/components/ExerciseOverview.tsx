@@ -275,14 +275,7 @@ export function ExerciseOverview(): React.ReactElement {
     <Box
       sx={{
         display: 'flex',
-        height: 'calc(100vh - 64px)', // Account for app bar height
-        position: 'fixed',
-        top: 64, // Start below the app bar
-        left: 0,
-        right: 0,
-        bottom: 0,
-        overflow: 'hidden', // Prevent overflow
-        zIndex: 1,
+        height: '100%',
       }}
     >
       {/* Search Drawer */}

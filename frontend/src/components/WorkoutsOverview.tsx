@@ -242,6 +242,7 @@ export const WorkoutsOverview: React.FC<WorkoutsOverviewProps> = ({ user, select
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: 'easeOut', delay: 0.6 }}
+        style={{ overflow: 'visible' }}
       >
         <TabPanel value={activeTab} index={0} slideDirection={slideDirection}>
         <AnimatePresence mode="wait">

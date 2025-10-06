@@ -1,20 +1,13 @@
-import Alert from '@mui/material/Alert';
-import AlertTitle from '@mui/material/AlertTitle';
-import Box from '@mui/material/Box';
-import Chip from '@mui/material/Chip';
-import Divider from '@mui/material/Divider';
-import Grid from '@mui/material/Grid';
-import Skeleton from '@mui/material/Skeleton';
-import Stack from '@mui/material/Stack';
-import Tooltip from '@mui/material/Tooltip';
-import * as React from 'react';
+import { Alert, AlertTitle, Box, Chip, Divider, Grid, Skeleton, Stack, Tooltip } from '@mui/material';
+import React from 'react';
+import { motion } from 'framer-motion';
 import { createEditor } from 'slate';
 import { Slate, Editable, withReact } from 'slate-react';
 
 import { BinaryTag } from './BinaryTag';
 import { ExercisePreferenceControls } from './ExercisePreferenceControls';
 import { LoadingSpinner } from './LoadingSpinner';
-import { GameText, GAME_CLASSES } from './GameTheme';
+import { GameCard, GameText, GAME_CLASSES } from './GameTheme';
 import type { Exercise, ExerciseEquipment, ExerciseMuscle, Equipment, Muscle } from '../api/types';
 import { capitalizeEachWord } from '../common/utils';
 import { useData } from '../contexts/DataContext';
@@ -112,49 +105,88 @@ export function ExerciseDetails(
 
     if (isNetworkError) {
       return (
-        <Alert severity="warning">
-          <AlertTitle>Connection Error</AlertTitle>
-          <GameText>
-            Unable to connect to the server. Please check your internet connection and try again.
-          </GameText>
-          <GameText variant="body2" textVariant="secondary" className={GAME_CLASSES.marginTop1}>
-            Error: {error?.message || 'Network error'}
-          </GameText>
-        </Alert>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: 'easeOut' }}
+        >
+          <GameCard className="glassmorphism-card">
+            <Alert severity="warning" sx={{ backgroundColor: 'transparent' }}>
+              <AlertTitle>Connection Error</AlertTitle>
+              <GameText>
+                Unable to connect to the server. Please check your internet connection and try again.
+              </GameText>
+              <GameText variant="body2" textVariant="secondary" className={GAME_CLASSES.marginTop1}>
+                Error: {error?.message || 'Network error'}
+              </GameText>
+            </Alert>
+          </GameCard>
+        </motion.div>
       );
     } else {
       return (
-        <Alert severity="error">
-          <AlertTitle>Exercise Not Found</AlertTitle>
-          <GameText>The specified exercise could not be found.</GameText>
-          {error && (
-            <GameText variant="body2" textVariant="secondary" className={GAME_CLASSES.marginTop1}>
-              {error.toString()}
-            </GameText>
-          )}
-        </Alert>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: 'easeOut' }}
+        >
+          <GameCard className="glassmorphism-card">
+            <Alert severity="error" sx={{ backgroundColor: 'transparent' }}>
+              <AlertTitle>Exercise Not Found</AlertTitle>
+              <GameText>The specified exercise could not be found.</GameText>
+              {error && (
+                <GameText variant="body2" textVariant="secondary" className={GAME_CLASSES.marginTop1}>
+                  {error.toString()}
+                </GameText>
+              )}
+            </Alert>
+          </GameCard>
+        </motion.div>
       );
     }
   } else {
     return (
-      <React.Fragment>
-        <Box sx={{ p: 3 }}>
-          <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
-            <GameText variant="h1" gutterBottom={true}>
-              {exercise.name}
-            </GameText>
-          <ExercisePreferenceControls
-            exerciseName={exercise.name}
-            variant="segmented"
-            size="medium"
-          />
-        </Box>
-          <Grid container={true} spacing={2}>
-            <Grid size={{ xs: 12 }}>
-              <Stack direction="row" spacing={2}>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, ease: 'easeOut' }}
+      >
+        <GameCard className="glassmorphism-card">
+          <Box sx={{ p: 3 }}>
+            {/* Header Section */}
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.1 }}
+            >
+              <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={3}>
+                <GameText variant="h1" className={GAME_CLASSES.textBold}>
+                  {exercise.name}
+                </GameText>
+                <ExercisePreferenceControls
+                  exerciseName={exercise.name}
+                  variant="segmented"
+                  size="medium"
+                />
+              </Box>
+            </motion.div>
+
+            {/* Exercise Tags */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.2 }}
+            >
+              <Stack direction="row" spacing={2} sx={{ mb: 3 }}>
                 <Chip
                   label={`${capitalizeEachWord(exercise.movement_type)} Exercise`}
-                  color="primary"
+                  sx={{
+                    backgroundColor: 'var(--game-cyan)',
+                    color: 'var(--game-white)',
+                    '&:hover': {
+                      backgroundColor: 'var(--game-cyan-light)',
+                    },
+                  }}
                 />
                 <BinaryTag
                   isOn={exercise.is_upper}
@@ -175,67 +207,136 @@ export function ExerciseDetails(
                   color="primary"
                 />
               </Stack>
-            </Grid>
-          <Grid size={{ xs: 9 }}>
-            <Stack spacing={2}>
-              <Skeleton variant="rectangular" height={360} />
-              <Slate
-                editor={editor}
-                initialValue={[
-                  {
-                    children: [
-                      {
-                        text: exercise.description,
-                      },
-                    ],
-                  },
-                ]}
-              >
-                <Editable readOnly={true} placeholder="No description provided." />
-              </Slate>
-            </Stack>
-          </Grid>
-          <Grid size={{ xs: 3 }}>
-            <Grid container={true} spacing={2}>
-              <Grid size={{ xs: 12 }}>
-                <Divider textAlign="left" sx={{ marginBottom: '16px' }}>
-                  <GameText variant="h3">Muscles Worked</GameText>
-                </Divider>
-                <Grid container={true} spacing={2}>
-                  {exerciseMuscles?.map(em => {
-                    const muscle = muscles.find(elem => elem.name === em.muscle_name);
-                    return (
-                      <Grid size={{ xs: 12 }} key={em.muscle_name}>
-                        <Tooltip arrow={true} title={muscle?.description}>
-                          <Chip label={`${capitalizeEachWord(em.muscle_name)}`} />
-                        </Tooltip>
-                      </Grid>
-                    );
-                  })}
-                </Grid>
+            </motion.div>
+
+            <Grid container spacing={3}>
+              {/* Main Content */}
+              <Grid size={{ xs: 12, md: 8 }}>
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.4, delay: 0.3 }}
+                >
+                  <GameCard className="glassmorphism-card">
+                    <Box sx={{ p: 3 }}>
+                      <GameText variant="h4" className={GAME_CLASSES.textMedium} sx={{ mb: 2 }}>
+                        Exercise Description
+                      </GameText>
+                      <Skeleton variant="rectangular" height={200} sx={{ mb: 2 }} />
+                      <Slate
+                        editor={editor}
+                        initialValue={[
+                          {
+                            children: [
+                              {
+                                text: exercise.description,
+                              },
+                            ],
+                          },
+                        ]}
+                      >
+                        <Editable 
+                          readOnly={true} 
+                          placeholder="No description provided."
+                          style={{
+                            minHeight: '100px',
+                            padding: '12px',
+                            backgroundColor: 'var(--game-gray-dark)',
+                            borderRadius: '8px',
+                            color: 'var(--game-white)',
+                            border: '1px solid var(--game-cyan-border)',
+                          }}
+                        />
+                      </Slate>
+                    </Box>
+                  </GameCard>
+                </motion.div>
               </Grid>
-              <Grid size={{ xs: 12 }}>
-                <Divider textAlign="left" sx={{ marginBottom: '16px' }}>
-                  <GameText variant="h3">Equipment Needed</GameText>
-                </Divider>
-                <Grid container={true} spacing={2}>
-                  {exerciseEquipment?.map(ee => {
-                    const equip = equipment.find(elem => elem.name === ee.equipment_name);
-                    return (
-                      <Grid size={{ xs: 12 }} key={ee.equipment_name}>
-                        <Tooltip arrow={true} title={equip?.description}>
-                          <Chip label={`${capitalizeEachWord(ee.equipment_name)}`} />
-                        </Tooltip>
-                      </Grid>
-                    );
-                  })}
-                </Grid>
+
+              {/* Sidebar */}
+              <Grid size={{ xs: 12, md: 4 }}>
+                <motion.div
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.4, delay: 0.4 }}
+                >
+                  <Stack spacing={3}>
+                    {/* Muscles Worked */}
+                    <GameCard className="glassmorphism-card">
+                      <Box sx={{ p: 3 }}>
+                        <GameText variant="h4" className={GAME_CLASSES.textMedium} sx={{ mb: 2 }}>
+                          Muscles Worked
+                        </GameText>
+                        <Stack spacing={1}>
+                          {exerciseMuscles?.map((em, index) => {
+                            const muscle = muscles.find(elem => elem.name === em.muscle_name);
+                            return (
+                              <motion.div
+                                key={em.muscle_name}
+                                initial={{ opacity: 0, x: 20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ duration: 0.3, delay: 0.5 + index * 0.1 }}
+                              >
+                                <Tooltip arrow={true} title={muscle?.description}>
+                                  <Chip 
+                                    label={`${capitalizeEachWord(em.muscle_name)}`}
+                                    sx={{
+                                      backgroundColor: 'var(--game-cyan-light)',
+                                      color: 'var(--game-white)',
+                                      '&:hover': {
+                                        backgroundColor: 'var(--game-cyan)',
+                                      },
+                                    }}
+                                  />
+                                </Tooltip>
+                              </motion.div>
+                            );
+                          })}
+                        </Stack>
+                      </Box>
+                    </GameCard>
+
+                    {/* Equipment Needed */}
+                    <GameCard className="glassmorphism-card">
+                      <Box sx={{ p: 3 }}>
+                        <GameText variant="h4" className={GAME_CLASSES.textMedium} sx={{ mb: 2 }}>
+                          Equipment Needed
+                        </GameText>
+                        <Stack spacing={1}>
+                          {exerciseEquipment?.map((ee, index) => {
+                            const equip = equipment.find(elem => elem.name === ee.equipment_name);
+                            return (
+                              <motion.div
+                                key={ee.equipment_name}
+                                initial={{ opacity: 0, x: 20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ duration: 0.3, delay: 0.6 + index * 0.1 }}
+                              >
+                                <Tooltip arrow={true} title={equip?.description}>
+                                  <Chip 
+                                    label={`${capitalizeEachWord(ee.equipment_name)}`}
+                                    sx={{
+                                      backgroundColor: 'var(--game-gray)',
+                                      color: 'var(--game-white)',
+                                      '&:hover': {
+                                        backgroundColor: 'var(--game-gray-light)',
+                                      },
+                                    }}
+                                  />
+                                </Tooltip>
+                              </motion.div>
+                            );
+                          })}
+                        </Stack>
+                      </Box>
+                    </GameCard>
+                  </Stack>
+                </motion.div>
               </Grid>
             </Grid>
-          </Grid>
-        </Grid>
-        </Box>
-      </React.Fragment>
+          </Box>
+        </GameCard>
+      </motion.div>
     );
   }
 } // end component ExerciseOverview

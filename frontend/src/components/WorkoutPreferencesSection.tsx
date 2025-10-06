@@ -413,7 +413,7 @@ export function WorkoutPreferencesSection(): React.ReactElement {
   }
 
   return (
-    <Box sx={{ height: '100vh', overflow: 'hidden' }}>
+    <Box sx={{ height: '100%' }}>
       {/* Horizontal Tabs */}
       <motion.div
         initial={{ opacity: 0 }}
@@ -482,7 +482,7 @@ export function WorkoutPreferencesSection(): React.ReactElement {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: 'easeOut', delay: 0.6 }}
-        style={{ flex: 1, overflow: 'auto', height: 'calc(100vh - 48px)' }}
+        style={{ flex: 1, overflow: 'auto' }}
       >
         <TabPanel value={activeTab} index={0} slideDirection={slideDirection}>
           <PreferenceSection

@@ -26,7 +26,7 @@ module.exports = merge(common, {
   },
 
   output: {
-    sourceMapFilename: '[name].map',
+    sourceMapFilename: '[name].[contenthash].map',
     // Development-specific output settings
     filename: '[name].js',
     chunkFilename: '[name].chunk.js',
@@ -118,8 +118,10 @@ module.exports = merge(common, {
         },
       },
     },
-    // Keep runtime in a separate chunk
-    runtimeChunk: 'single',
+    // Keep runtime in a separate chunk with unique name
+    runtimeChunk: {
+      name: 'runtime-dev',
+    },
     // Better error handling in development
     emitOnErrors: false,
   },

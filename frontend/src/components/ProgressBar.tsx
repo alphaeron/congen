@@ -385,7 +385,7 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
       aria-valuemax={max}
       aria-label={ariaLabel}
       style={style}
-      sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
+      sx={{ display: 'flex', width: '100%', alignItems: 'center', gap: 0.5 }}
     >
       {renderProgressContent()}
       {renderTextContent()}

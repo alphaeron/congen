@@ -30,14 +30,13 @@ import { motion } from 'framer-motion';
 
 import { ChordChart } from './ChordChart';
 import { ExerciseName } from './ExerciseName';
-import { ExportButtons } from './ExportButtons';
 import { LoadingSpinner } from './LoadingSpinner';
-import { ProgressBar } from './ProgressBar';
 import { RichTextDisplay } from './RichTextDisplay';
 import { RichTextEditor } from './RichTextEditor';
 import { SetSchemeEditor } from './SetSchemeEditor';
 import { SetSchemeForm } from './SetSchemeForm';
 import { SunburstChart } from './SunburstChart';
+import { WorkoutHeader } from './WorkoutHeader';
 import { GameCard, GameText, GameTextField, GameFormControl, GameInputLabel, GameSelect, GameMenuItem, GAME_CLASSES } from './GameTheme';
 import type {
   Exercise,
@@ -625,126 +624,36 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.8, ease: 'easeOut' }}
-      style={{ 
-        height: 'calc(100vh - 48px)', 
-        overflow: 'auto', 
-        position: 'relative', 
-        paddingLeft: '32px',
+      style={{
+        marginTop: '24px',
       }}
     >
       <motion.div
         initial={{ opacity: 0, x: -30 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.6, ease: 'easeOut', delay: 0.2 }}
-        style={{ position: 'relative' }}
+        style={{ position: 'relative', marginBottom: '24px' }}
       >
-        {/* Back Button */}
-        <motion.div
-          initial={{ opacity: 0, x: -30 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.6, ease: 'easeOut', delay: 0.1 }}
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.95 }}
-          style={{
-            position: 'absolute',
-            top: 24,
-            left: -32,
-            zIndex: 9999,
-          }}
-        >
-          <IconButton
-            onClick={onBack}
-            sx={{
-              backgroundColor: 'background.paper',
-              border: '1px solid',
-              borderColor: 'divider',
-              '&:hover': {
-                backgroundColor: 'rgba(0, 188, 212, 0.1)',
-                boxShadow: 4,
-              },
-            }}
-          >
-            <ArrowBackIcon />
-          </IconButton>
-        </motion.div>
-
-        {/* Progress Bar and Export Buttons */}
-        <Box 
-          sx={{ 
-            p: 3, 
-            pb: 0,
-          }}
-        >
-          <Box display="flex" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
-            {/* Progress Bar on the left */}
-            <Box 
-              sx={{ 
-                flex: 1, 
-                mr: 2,
-              }}
-            >
-              {progressMetrics && (
-                <ProgressBar
-                  value={progressMetrics.completionRate}
-                  status={progressMetrics.status}
-                  current={progressMetrics.completedExercises}
-                  total={progressMetrics.totalExercises}
-                  showTooltip={true}
-                  showTicks={true}
-                  steps={Array.from(
-                    { length: progressMetrics.totalExercises + 1 },
-                    (_, i) => (i / progressMetrics.totalExercises) * 100
-                  )}
-                  ticks={Array.from(
-                    { length: progressMetrics.totalExercises + 1 },
-                    (_, i) => (i / progressMetrics.totalExercises) * 100
-                  )}
-                  width="100%"
-                  height={8}
-                  smooth={true}
-                  animationDuration={400}
-                />
-              )}
-            </Box>
-
-            {/* Action Buttons on the right */}
-            <Box 
-              sx={{ 
-                display: 'flex', 
-                gap: 1, 
-                alignItems: 'center',
-              }}
-            >
-              <ExportButtons onExportPDF={handleExportPDF} disabled={!workoutData} />
-              {isMostRecentWeek && (
-                <Button
-                  variant="contained"
-                  onClick={handleOpenAddExerciseDialog}
-                  disabled={saving}
-                  sx={{
-                    '&:hover:not(:disabled)': {
-                      transform: 'translateY(-2px)',
-                      boxShadow: '0 8px 25px rgba(0, 188, 212, 0.4)',
-                    },
-                    '&:active:not(:disabled)': {
-                      transform: 'translateY(0)',
-                    },
-                  }}
-                >
-                  Add Exercise
-                </Button>
-              )}
-            </Box>
-          </Box>
-        </Box>
+        {/* Header Section */}
+        <WorkoutHeader
+          context="day"
+          dayNumber={workoutData?.workout.day_number}
+          workoutName={workoutData?.workout.workout_name}
+          totalExercises={progressMetrics?.totalExercises}
+          completedExercises={progressMetrics?.completedExercises}
+          onExportPDF={handleExportPDF}
+          onBack={onBack}
+          onAddExercise={handleOpenAddExerciseDialog}
+          disabled={!workoutData}
+          saving={saving}
+        />
       </motion.div>
 
       <Grid 
         container 
         spacing={3} 
         sx={{ 
-          p: 3, 
-          pt: 0,
+          px: 3,
         }}
       >
         {/* Table Container - 2/3 width */}
@@ -753,12 +662,10 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
           sx={{
           }}
         >
-          <GameCard className={`${GAME_CLASSES.width100} ${GAME_CLASSES.overflowHidden} ${GAME_CLASSES.height100}`}>
+          <GameCard className="glassmorphism-card" sx={{ width: '100%', height: '100%', overflow: 'hidden' }}>
             <Box
               sx={{
                 overflow: 'auto',
-                maxHeight: 'calc(100vh - 48px)',
-                height: '100%',
               }}
             >
               <table
@@ -774,8 +681,8 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
                     position: 'sticky',
                     top: 0,
                     zIndex: 999,
-                    backgroundColor: 'rgba(0, 188, 212, 0.1)',
-                    borderBottom: '2px solid rgba(0, 188, 212, 0.3)',
+                    backgroundColor: 'var(--game-cyan-light)',
+                    borderBottom: '2px solid var(--game-cyan-border)',
                   }}
                 >
                   {table.getHeaderGroups().map(headerGroup => (
@@ -787,9 +694,9 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
                             padding: '12px 8px',
                             textAlign: 'left',
                             fontWeight: 'bold',
-                            borderBottom: '1px solid rgba(0, 188, 212, 0.3)',
-                            backgroundColor: 'rgba(0, 188, 212, 0.1)',
-                            color: '#00bcd4',
+                            borderBottom: '1px solid var(--game-cyan-border)',
+                            backgroundColor: 'var(--game-cyan-light)',
+                            color: 'var(--game-cyan)',
                             width: `${(header.getSize() / 860) * 100}%`,
                             minWidth: `${((header.column.columnDef.minSize || 50) / 860) * 100}%`,
                           }}
@@ -809,10 +716,10 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
                       style={{
                         backgroundColor:
                           row.original.type === 'stage'
-                            ? 'rgba(0, 188, 212, 0.15)'
+                            ? 'var(--game-cyan-light)'
                             : 'transparent',
-                        borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-                        color: '#ffffff',
+                        borderBottom: '1px solid var(--game-cyan-light)',
+                        color: 'var(--game-white)',
                       }}
                     >
                       {row.original.type === 'stage' ? (
@@ -823,9 +730,9 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
                             padding: '12px 16px',
                             textAlign: 'left',
                             fontWeight: 'bold',
-                            color: '#00bcd4',
-                            backgroundColor: 'rgba(0, 188, 212, 0.15)',
-                            borderBottom: '1px solid rgba(0, 188, 212, 0.3)',
+                            color: 'var(--game-cyan)',
+                            backgroundColor: 'var(--game-cyan-light)',
+                            borderBottom: '1px solid var(--game-cyan-border)',
                             cursor: 'pointer',
                           }}
                           onClick={() => row.original.stageId && toggleStage(row.original.stageId)}
@@ -842,7 +749,7 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
                                   toggleStage(row.original.stageId);
                                 }
                               }}
-                              sx={{ color: '#00bcd4' }}
+                              sx={{ color: 'var(--game-cyan)' }}
                             >
                               {row.original.stageId && collapsedStages.has(row.original.stageId) ? (
                                 <ExpandMoreIcon />
@@ -896,13 +803,11 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
             }}
           >
             {/* Exercise Volume Hierarchy Chart */}
-            <Box
-              sx={{
-                '&:hover': {
-                  transform: 'translateY(-2px)',
-                  boxShadow: '0 8px 25px rgba(0, 188, 212, 0.1)',
-                }
-              }}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.2 }}
+              whileHover={{ y: -8 }}
             >
               <SunburstChart
                 workoutData={workoutData}
@@ -910,22 +815,20 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
                 weightUnitPreferences={weightUnitPreferences}
                 selectedExercise="all"
               />
-            </Box>
+            </motion.div>
             {/* Exercise Correlations Chord Chart */}
-            <Box
-              sx={{
-                '&:hover': {
-                  transform: 'translateY(-2px)',
-                  boxShadow: '0 8px 25px rgba(0, 188, 212, 0.1)',
-                }
-              }}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.3 }}
+              whileHover={{ y: -8 }}
             >
               <ChordChart
                 workoutData={workoutData as unknown as Record<string, unknown>}
                 title="Exercise Support Correlation"
                 height={300}
               />
-            </Box>
+            </motion.div>
           </Box>
         </Grid>
       </Grid>

@@ -278,7 +278,7 @@ module.exports = merge(common, {
     },
 
     runtimeChunk: {
-      name: 'runtime',
+      name: 'runtime-prod',
     },
   },
 

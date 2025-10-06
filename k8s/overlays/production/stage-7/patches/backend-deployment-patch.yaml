@@ -37,6 +37,14 @@ spec:
           value: "true"
         - name: DATA_RETENTION_CHECK_ENABLED
           value: "true"
+        - name: JVM_HEAP_MIN
+          value: "2048m"
+        - name: JVM_HEAP_MAX
+          value: "3072m"
+        - name: JVM_METASPACE_MIN
+          value: "256M"
+        - name: JVM_METASPACE_MAX
+          value: "512M"
         securityContext:
           runAsNonRoot: true
           runAsUser: 1000

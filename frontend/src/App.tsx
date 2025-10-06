@@ -482,8 +482,8 @@ function AppContent(): React.ReactElement {
           component="main"
           sx={{
             flexGrow: 1,
-            minHeight: 'calc(100vh - 64px)',
-            overflow: 'hidden',
+            height: 'calc(100vh - 64px)',
+            overflow: 'auto',
           }}
         >
           <Routes>

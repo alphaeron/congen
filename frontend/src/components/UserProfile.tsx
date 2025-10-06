@@ -87,9 +87,8 @@ export const UserProfile: React.FC<UserProfileProps> = ({ initialSection = 'phys
       transition={{ duration: 0.8, ease: 'easeOut' }}
       style={{
         display: 'flex',
-        height: '100vh', // Use full viewport height
+        height: '100%',
         position: 'relative',
-        overflow: 'hidden', // Prevent overflow
         maxWidth: '100%', // Ensure it doesn't exceed container width
       }}
     >

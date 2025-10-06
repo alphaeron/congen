@@ -1,4 +1,4 @@
-import { PictureAsPdf as PdfIcon } from '@mui/icons-material';
+import { Download as DownloadIcon } from '@mui/icons-material';
 import { IconButton, Tooltip } from '@mui/material';
 import { useSnackbar } from 'notistack';
 import React, { useState } from 'react';
@@ -43,7 +43,7 @@ export const ExportButtons: React.FC<ExportButtonsProps> = ({ onExportPDF, disab
             },
           }}
         >
-          <PdfIcon />
+          <DownloadIcon />
         </IconButton>
       </span>
     </Tooltip>

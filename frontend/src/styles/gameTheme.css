@@ -10,6 +10,15 @@
   --game-cyan-glow: 0 0 5px #00bcd4;
   --game-cyan-shadow: 0 0 10px rgba(0, 188, 212, 0.3);
   
+  /* Status Colors */
+  --game-gray: #374151;
+  --game-gray-light: #6b7280;
+  --game-gray-dark: #1f2937;
+  --game-success: #22c55e;
+  --game-warning: #f59e0b;
+  --game-error: #ef4444;
+  --game-info: #3b82f6;
+  
   --game-white: #ffffff;
   --game-white-secondary: rgba(255, 255, 255, 0.8);
   --game-white-muted: rgba(255, 255, 255, 0.6);

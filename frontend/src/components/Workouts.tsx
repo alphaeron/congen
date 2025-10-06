@@ -1,34 +1,27 @@
 import {
   Box,
-  Card,
   CardContent,
-  Button,
-  List,
-  ListItem,
-  ListItemText,
 } from '@mui/material';
 import { useSnackbar } from 'notistack';
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 
-import { ExportButtons } from './ExportButtons';
 import { LoadingBackdrop } from './LoadingBackdrop';
 import { LoadingSpinner } from './LoadingSpinner';
-import { ProgressBar } from './ProgressBar';
-import { StreamChart } from './StreamChart';
+import { VolumeOverviewCards } from './VolumeOverviewCards';
 import { WorkoutGenerationWizard } from './WorkoutGenerationWizard';
+import { WorkoutHeader } from './WorkoutHeader';
+import { HeroCTA } from './HeroCTA';
+import { TrainingTimeline } from './TrainingTimeline';
 import { GameCard, GameText, GAME_CLASSES } from './GameTheme';
 import type {
   Program,
-  ProgrammedWorkout,
-  User,
   ProgramWithPreferences,
   Exercise,
 } from '../api/types';
-import { replaceUnderscoresWithSpaces } from '../common/utils';
 import { useData } from '../contexts/DataContext';
 import { exportProgramToPDF } from '../utils/exportUtils';
-import { calculateProgramProgress } from '../utils/progressUtils';
+import { calculateProgramProgress, calculateWorkoutProgress } from '../utils/progressUtils';
 
 interface WorkoutsProps {
   selectedWorkout?: string | null;
@@ -147,22 +140,37 @@ export const Workouts: React.FC<WorkoutsProps> = () => {
     // Use program preferences
     const workoutsPerWeek = activeProgramPreferences.program_preferences.program_days_per_week;
 
-    const weekMap = new Map<number, ProgrammedWorkout[]>();
+    const weekMap = new Map<number, typeof activeProgramData.workouts>();
 
     activeProgramData.workouts.forEach(workoutWithStages => {
       const weekNum = Math.ceil(workoutWithStages.workout.day_number / workoutsPerWeek);
       if (!weekMap.has(weekNum)) {
         weekMap.set(weekNum, []);
       }
-      weekMap.get(weekNum)!.push(workoutWithStages.workout);
+      weekMap.get(weekNum)!.push(workoutWithStages);
     });
 
     return Array.from(weekMap.entries())
-      .map(([weekNumber, weekWorkouts]) => ({
-        weekNumber,
-        workoutCount: weekWorkouts.length,
-        workouts: weekWorkouts.sort((a, b) => a.day_number - b.day_number),
-      }))
+      .map(([weekNumber, weekWorkoutsWithStages]) => {
+        // Calculate completion for each workout
+        const workoutProgresses = weekWorkoutsWithStages.map(workoutWithStages => 
+          calculateWorkoutProgress(workoutWithStages)
+        );
+        
+        // A week is completed if all workouts in the week are completed
+        const isCompleted = workoutProgresses.every(progress => progress.status === 'completed');
+        
+        // Count completed workouts
+        const completedWorkouts = workoutProgresses.filter(progress => progress.status === 'completed').length;
+        
+        return {
+          weekNumber,
+          workoutCount: weekWorkoutsWithStages.length,
+          workouts: weekWorkoutsWithStages.map(w => w.workout).sort((a, b) => a.day_number - b.day_number),
+          isCompleted,
+          completedWorkouts,
+        };
+      })
       .sort((a, b) => a.weekNumber - b.weekNumber);
   }, [activeProgramData, activeProgramPreferences]);
 
@@ -236,7 +244,7 @@ export const Workouts: React.FC<WorkoutsProps> = () => {
   // Show workout calendar
   return (
     <React.Fragment>
-      <Box sx={{ p: 3 }}>
+      <Box sx={{ px: 3, pt: 3 }}>
         {!activeProgram ? (
           <GameCard className={`${GAME_CLASSES.marginBottom3} ${GAME_CLASSES.marginTop3}`}>
             <CardContent>
@@ -250,166 +258,55 @@ export const Workouts: React.FC<WorkoutsProps> = () => {
             </CardContent>
           </GameCard>
         ) : (
-          <Box>
-            {/* Top Section: Progress Bar and Export Buttons */}
-            <Box sx={{ mb: 3 }}>
-              <Box display="flex" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
-                {/* Progress Bar on the left */}
-                <Box sx={{ flex: 1, mr: 2 }}>
-                  {progressMetrics && (
-                    <ProgressBar
-                      value={progressMetrics.completionRate}
-                      status={progressMetrics.status}
-                      current={progressMetrics.completedWeeks}
-                      total={progressMetrics.totalWeeks}
-                      showTooltip={true}
-                      showTicks={true}
-                      steps={Array.from(
-                        { length: progressMetrics.totalWeeks + 1 },
-                        (_, i) => (i / progressMetrics.totalWeeks) * 100
-                      )}
-                      ticks={Array.from(
-                        { length: progressMetrics.totalWeeks + 1 },
-                        (_, i) => (i / progressMetrics.totalWeeks) * 100
-                      )}
-                      width="100%"
-                      height={8}
-                      smooth={true}
-                      animationDuration={400}
-                    />
-                  )}
-                </Box>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, overflow: 'visible' }}>
+            {/* Header Section */}
+            {progressMetrics && (
+              <WorkoutHeader
+                context="program"
+                currentWeek={Math.max(activeProgram.program.current_week_number, 1)}
+                progressValue={progressMetrics.completedWeeks}
+                progressMax={progressMetrics.totalWeeks}
+                onExportPDF={handleExportPDF}
+                disabled={weeks.length === 0}
+                currentWeekWorkouts={weeks.find(w => w.weekNumber === Math.max(activeProgram.program.current_week_number, 1))?.workoutCount || 0}
+                completedWorkouts={weeks.find(w => w.weekNumber === Math.max(activeProgram.program.current_week_number, 1))?.completedWorkouts || 0}
+              />
+            )}
 
-                {/* Export Buttons on the right */}
-                <ExportButtons onExportPDF={handleExportPDF} disabled={weeks.length === 0} />
-              </Box>
-            </Box>
+            {/* Hero CTA Section */}
+            <HeroCTA
+              onClick={() => openWizard(activeProgram.program)}
+              disabled={isGenerating}
+              loading={isGenerating}
+              title="Generate Next Week"
+              subtitle="Ready to level up your training? Create your next workout week and keep progressing!"
+              icon="🎯"
+              variant="primary"
+            />
 
-            {/* Current Week Section */}
-            <GameCard className={GAME_CLASSES.marginBottom3}>
-              <CardContent>
-                <Box
-                  display="flex"
-                  justifyContent="space-between"
-                  alignItems="flex-start"
-                  sx={{ mb: 2 }}
-                >
-                  <Box>
-                    <GameText variant="h6" gutterBottom>
-                      {`Current Week: Week ${Math.max(activeProgram.program.current_week_number, 1)}`}
-                    </GameText>
-                    <GameText variant="body2" textVariant="secondary">
-                      Track your progress and generate new workout weeks
-                    </GameText>
-                  </Box>
-                  <Box display="flex" gap={1}>
-                    <Button
-                      variant="contained"
-                      onClick={() => openWizard(activeProgram.program)}
-                      disabled={isGenerating}
-                      size="large"
-                    >
-                      {isGenerating ? 'Generating...' : 'Generate Next Week'}
-                    </Button>
-                  </Box>
-                </Box>
+            {/* Stats Dashboard */}
+            {userData?.training_programs &&
+              userData.training_programs.length > 0 &&
+              userData.training_programs.some(program => program.workouts.length > 0) && (
+                <VolumeOverviewCards
+                  userDataExport={userData}
+                  exerciseData={exerciseData}
+                  weightUnitPreferences={weightUnitPreferences}
+                  height={200}
+                />
+              )}
 
-                {/* Volume Flow Chart */}
-                {userData?.training_programs &&
-                  userData.training_programs.length > 0 &&
-                  userData.training_programs.some(program => program.workouts.length > 0) && (
-                    <Box sx={{ mt: 2 }}>
-                      <StreamChart
-                        userDataExport={userData}
-                        exerciseData={exerciseData}
-                        weightUnitPreferences={weightUnitPreferences}
-                        height={300}
-                      />
-                    </Box>
-                  )}
-              </CardContent>
-            </GameCard>
-
-            {/* Training Weeks Section */}
-            <GameCard className="glassmorphism-card">
-              <CardContent>
-                <GameText variant="h6" gutterBottom sx={{ color: '#1e293b' }}>
-                  Training Weeks
-                </GameText>
-                <GameText variant="body2" className={`${GAME_CLASSES.opacity80} ${GAME_CLASSES.marginBottom2}`} sx={{ color: '#64748b' }}>
-                  Click on any week to view detailed workout information
-                </GameText>
-                {isLoading ? (
-                  <Box display="flex" justifyContent="center" p={3}>
-                    <LoadingSpinner message="Loading weeks..." size={40} />
-                  </Box>
-                ) : weeks.length === 0 ? (
-                  <Box sx={{ textAlign: 'center', py: 4 }}>
-                    <GameText variant="body2" textVariant="secondary" className={GAME_CLASSES.marginBottom2} sx={{ color: '#64748b' }}>
-                      No workouts generated yet. Click &quot;Generate Next Week&quot; to create your
-                      first workout week.
-                    </GameText>
-                  </Box>
-                ) : (
-                  <List>
-                    {weeks.map(week => (
-                      <ListItem
-                        key={week.weekNumber}
-                        disablePadding
-                        className="modern-list-item"
-                        sx={{
-                          cursor: 'pointer',
-                          borderRadius: 1,
-                          mb: 1,
-                          '&:hover': {
-                            backgroundColor: 'rgba(0, 188, 212, 0.05)',
-                            transform: 'translateX(4px)',
-                          },
-                        }}
-                        onClick={() => handleWeekClick(week.weekNumber)}
-                      >
-                        <ListItemText
-                          primary={
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                              <GameText variant="subtitle1" className={GAME_CLASSES.textMedium} sx={{ color: '#1e293b' }}>
-                                Week {week.weekNumber}
-                              </GameText>
-                              {week.workoutCount > 0 && (
-                                <Box
-                                  sx={{
-                                    backgroundColor: '#00bcd4',
-                                    color: 'white',
-                                    borderRadius: '50%',
-                                    width: 20,
-                                    height: 20,
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    fontSize: '0.75rem',
-                                    fontWeight: 'bold',
-                                  }}
-                                >
-                                  {week.workoutCount}
-                                </Box>
-                              )}
-                            </Box>
-                          }
-                          secondary={
-                            <span className={GAME_CLASSES.textSecondary} style={{ color: '#64748b' }}>
-                              {week.workouts
-                                .map(w =>
-                                  replaceUnderscoresWithSpaces(w.name || `Workout ${w.day_number}`)
-                                )
-                                .join(' • ')}
-                            </span>
-                          }
-                        />
-                      </ListItem>
-                    ))}
-                  </List>
-                )}
-              </CardContent>
-            </GameCard>
+            {/* Training Timeline */}
+            <TrainingTimeline
+              weeks={weeks.map(week => ({
+                weekNumber: week.weekNumber,
+                workouts: week.workouts,
+                isCompleted: week.isCompleted,
+                completedWorkouts: week.completedWorkouts,
+              }))}
+              onWeekClick={handleWeekClick}
+              currentWeek={Math.max(activeProgram.program.current_week_number, 1)}
+            />
           </Box>
         )}
       </Box>

@@ -17,11 +17,10 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 import { motion } from 'framer-motion';
 
-import { ExportButtons } from './ExportButtons';
 import { LoadingSpinner } from './LoadingSpinner';
-import { ProgressBar } from './ProgressBar';
 import { RadarChart } from './RadarChart';
 import { SunburstChart } from './SunburstChart';
+import { WorkoutHeader } from './WorkoutHeader';
 import { GameCard, GameText, GAME_CLASSES } from './GameTheme';
 import type {
   ProgramWithPreferences,
@@ -252,6 +251,9 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
       initial={{ opacity: 0, x: -50 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.6, ease: 'easeOut' }}
+      style={{
+        marginTop: '24px',
+      }}
     >
         {!activeProgram ? (
           <GameCard>
@@ -291,112 +293,34 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
             transition={{ duration: 0.8, ease: 'easeOut' }}
             style={{ position: 'relative' }}
           >
-            {/* Back button for week details */}
-            {showBackButton && (
-              <motion.div
-                initial={{ opacity: 0, x: -30 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.6, ease: 'easeOut', delay: 0.1 }}
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.95 }}
-                style={{
-                  position: 'absolute',
-                  top: 24,
-                  left: -32,
-                  zIndex: 1001,
-                }}
-              >
-                <IconButton
-                  onClick={onBack || handleBackToWeekList}
-                  sx={{
-                    backgroundColor: 'background.paper',
-                    boxShadow: 2,
-                    '&:hover': {
-                      backgroundColor: 'rgba(0, 188, 212, 0.1)',
-                      boxShadow: 4,
-                    },
-                  }}
-                >
-                  <ArrowBackIcon />
-                </IconButton>
-              </motion.div>
-            )}
-
-            {/* Progress Bar and Export Buttons */}
-            <Box 
-              sx={{ 
-                p: 3, 
-                pb: 0,
-              }}
-            >
-              <Box display="flex" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
-                {/* Progress Bar on the left */}
-                <Box 
-                  sx={{ 
-                    flex: 1, 
-                    mr: 2,
-                  }}
-                >
-                  {progressMetrics && (
-                    <ProgressBar
-                      value={progressMetrics.completionRate}
-                      status={progressMetrics.status}
-                      current={progressMetrics.completedWorkouts}
-                      total={progressMetrics.totalWorkouts}
-                      showTooltip={true}
-                      showTicks={true}
-                      steps={Array.from(
-                        { length: progressMetrics.totalWorkouts + 1 },
-                        (_, i) => (i / progressMetrics.totalWorkouts) * 100
-                      )}
-                      ticks={Array.from(
-                        { length: progressMetrics.totalWorkouts + 1 },
-                        (_, i) => (i / progressMetrics.totalWorkouts) * 100
-                      )}
-                      width="100%"
-                      height={8}
-                      smooth={true}
-                      animationDuration={400}
-                    />
-                  )}
-                </Box>
-
-                {/* Export Buttons on the right */}
-                <Box
-                  sx={{
-                  }}
-                >
-                  <ExportButtons onExportPDF={handleExportPDF} disabled={weekWorkouts.length === 0} />
-                </Box>
-              </Box>
-            </Box>
+            {/* Header Section */}
+            <WorkoutHeader
+              context="week"
+              weekNumber={weekNumber}
+              totalWorkouts={weekWorkouts.length}
+              completedWeekWorkouts={progressMetrics?.completedWorkouts || 0}
+              onExportPDF={handleExportPDF}
+              onBack={showBackButton ? (onBack || handleBackToWeekList) : undefined}
+              disabled={weekWorkouts.length === 0}
+            />
 
             <Box 
               id="week-details-content" 
               sx={{ 
-                p: 3, 
-                pt: 0,
+                px: 3,
               }}
             >
-              <Grid container spacing={3} sx={{ height: 'calc(100vh - 200px)' }}>
+              <Grid container spacing={3}>
                 {/* Workout List - 2/3 width */}
                 <Grid size={{ xs: 12, lg: 8 }}>
-                  <Box 
-                    sx={{ 
-                      height: '100%',
-                    }}
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4, delay: 0.2 }}
+                    whileHover={{ y: -8 }}
                   >
-                    <Card
-                      sx={{
-                        mt: 3,
-                        height: '100%',
-                        '&:hover': {
-                          transform: 'translateY(-2px)',
-                          boxShadow: '0 8px 25px rgba(0, 188, 212, 0.15)',
-                        },
-                      }}
-                    >
-                      <CardContent>
+                      <GameCard className="glassmorphism-card" sx={{ mt: 3 }}>
+                        <Box sx={{ p: 2 }}>
                         <Box
                           sx={{
                             display: 'flex',
@@ -445,23 +369,29 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
                               // Calculate workout progress using proper logic
                               const workoutProgress = calculateWorkoutProgress(weekWorkout.workout);
                               return (
-                                <ListItem
+                                <motion.div
                                   key={weekWorkout.workout.workout.id}
-                                  disablePadding
-                                  sx={{
-                                    cursor: 'pointer',
-                                    borderRadius: 1,
-                                    mb: 1,
-                                    border: 1,
-                                    borderColor: 'divider',
-                                    backgroundColor: 'transparent',
-                                    '&:hover': {
-                                      backgroundColor: 'action.hover',
-                                      transform: 'translateX(4px) scale(1.02)',
-                                      boxShadow: '0 4px 15px rgba(0, 188, 212, 0.2)',
-                                      borderColor: '#00bcd4',
-                                    },
-                                  }}
+                                  initial={{ opacity: 0, x: -20 }}
+                                  animate={{ opacity: 1, x: 0 }}
+                                  transition={{ duration: 0.3, delay: index * 0.1 }}
+                                  whileHover={{ x: 4, scale: 1.02 }}
+                                  whileTap={{ scale: 0.98 }}
+                                >
+                                  <ListItem
+                                    disablePadding
+                                    sx={{
+                                      cursor: 'pointer',
+                                      borderRadius: 1,
+                                      mb: 1,
+                                      border: 1,
+                                      borderColor: 'divider',
+                                      backgroundColor: 'transparent',
+                                      '&:hover': {
+                                        backgroundColor: 'action.hover',
+                                        boxShadow: 'var(--game-cyan-shadow)',
+                                        borderColor: 'var(--game-cyan)',
+                                      },
+                                    }}
                                   onClick={() =>
                                     (onWorkoutClick || handleWorkoutClick)(
                                       weekWorkout.workout.workout.id
@@ -523,13 +453,14 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
                                     }
                                   />
                                 </ListItem>
+                                </motion.div>
                               );
                             })}
                           </List>
                         )}
-                      </CardContent>
-                    </Card>
-                  </Box>
+                        </Box>
+                      </GameCard>
+                    </motion.div>
                 </Grid>
 
                 {/* Charts - 1/3 width */}
@@ -544,13 +475,11 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
                   >
                     {weekWorkouts.length > 0 && aggregatedWorkoutData && (
                       <React.Fragment>
-                        <Box
-                          sx={{
-                            '&:hover': {
-                              transform: 'translateY(-2px)',
-                              boxShadow: '0 8px 25px rgba(0, 188, 212, 0.1)',
-                            }
-                          }}
+                        <motion.div
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.4, delay: 0.3 }}
+                          whileHover={{ y: -8 }}
                         >
                           <SunburstChart
                             workoutData={aggregatedWorkoutData}
@@ -558,14 +487,12 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
                             weightUnitPreferences={weightUnitPreferences}
                             selectedExercise="all"
                           />
-                        </Box>
-                        <Box
-                          sx={{
-                            '&:hover': {
-                              transform: 'translateY(-2px)',
-                              boxShadow: '0 8px 25px rgba(0, 188, 212, 0.1)',
-                            }
-                          }}
+                        </motion.div>
+                        <motion.div
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.4, delay: 0.4 }}
+                          whileHover={{ y: -8 }}
                         >
                           <RadarChart
                             weekWorkouts={weekWorkouts.map(ww => ww.workout)}
@@ -573,7 +500,7 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
                             title="Exercise Movement Type"
                             height={300}
                           />
-                        </Box>
+                        </motion.div>
                       </React.Fragment>
                     )}
                   </Box>
