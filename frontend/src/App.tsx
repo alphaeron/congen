@@ -38,7 +38,7 @@ import { LoginPage } from './pages/LoginPage';
 import { PrivacyPolicyPage } from './pages/PrivacyPolicyPage';
 import { RootPage } from './pages/RootPage';
 import { UserProfilePage } from './pages/UserProfilePage';
-import ConGenIcon from './resources/congen-icon.svg';
+import ConGenIcon from './resources/icon.png';
 import { getTheme } from './theme';
 
 import './App.css';
@@ -190,13 +190,13 @@ function AppContent(): React.ReactElement {
               }}
             >
               <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                <img 
-                  src={ConGenIcon} 
+                <img
+                  src={ConGenIcon}
                   style={{
                     ...logoStyle,
                     filter: 'brightness(0) saturate(100%) invert(70%) sepia(100%) saturate(1000%) hue-rotate(180deg) brightness(1.2) contrast(1.2)',
                     cursor: 'pointer',
-                  }} 
+                  }}
                   alt="ConGen"
                   onClick={() => navigate('/')}
                 />

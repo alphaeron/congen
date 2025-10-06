@@ -13,8 +13,7 @@ import { alpha } from '@mui/material/styles';
 import type { KcContext } from './KcContext';
 import { handleLogout, navigateToFrontend } from './utils';
 import { GameText } from '../../components/GameTheme';
-
-import ConGenIcon from '../../resources/congen-icon.svg';
+import ConGenIcon from '../../resources/icon.png';
 
 interface CongenAppBarProps {
   kcContext: KcContext;
