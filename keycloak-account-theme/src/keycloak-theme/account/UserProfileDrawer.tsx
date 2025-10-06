@@ -97,28 +97,25 @@ export const UserProfileDrawer: React.FC<UserProfileDrawerProps> = ({
           initial={{ opacity: 0, x: -30 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.6, ease: 'easeOut', delay: 0.2 }}
-          style={{ 
-            padding: '16px', 
+          style={{
+            padding: '16px',
             borderBottom: '1px solid',
-            borderColor: 'var(--mui-palette-divider)', 
+            borderColor: 'var(--mui-palette-divider)',
             flexShrink: 0,
           }}
         >
           <motion.div
             animate={{
               scale: [1, 1.02, 1],
-              opacity: [1, 0.8, 1]
+              opacity: [1, 0.8, 1],
             }}
             transition={{
               duration: 2,
               repeat: Infinity,
-              ease: 'easeInOut'
+              ease: 'easeInOut',
             }}
           >
-            <GameText 
-              variant="h6" 
-              textVariant="glow"
-            >
+            <GameText variant="h6" textVariant="glow">
               User Profile
             </GameText>
           </motion.div>

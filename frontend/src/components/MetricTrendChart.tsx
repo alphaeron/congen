@@ -51,7 +51,7 @@ export const MetricTrendChart: React.FC<MetricTrendChartProps> = ({
     }
 
     const processedData = data
-      .map((point) => ({
+      .map(point => ({
         x: getDateInBrowserTimezone(point.date),
         y: Math.round(point.value * 10) / 10,
       }))
@@ -113,12 +113,12 @@ export const MetricTrendChart: React.FC<MetricTrendChartProps> = ({
         margin={{ top: 20, right: 40, bottom: 50, left: 60 }}
         xScale={{ type: 'time', format: '%Y-%m-%d', useUTC: false }}
         xFormat="time:%Y-%m-%d"
-        yScale={{ 
-          type: 'linear', 
-          min: 'auto', 
+        yScale={{
+          type: 'linear',
+          min: 'auto',
           max: 'auto',
           stacked: false,
-          reverse: false
+          reverse: false,
         }}
         axisTop={null}
         axisRight={null}

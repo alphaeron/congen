@@ -35,10 +35,7 @@ export const ActionCard: React.FC<ActionCardProps> = ({
   clickable = false,
 }) => {
   return (
-    <GameCard
-      interactive={clickable}
-      onClick={clickable ? onClick : undefined}
-    >
+    <GameCard interactive={clickable} onClick={clickable ? onClick : undefined}>
       <CardContent>
         <Box
           display="flex"
@@ -47,9 +44,7 @@ export const ActionCard: React.FC<ActionCardProps> = ({
           sx={{ mb: children ? 2 : 0 }}
         >
           <Box>
-            <GameText variant="h6">
-              {title}
-            </GameText>
+            <GameText variant="h6">{title}</GameText>
             {subtitle && (
               <GameText variant="body2" className={GAME_CLASSES.opacity80}>
                 {subtitle}

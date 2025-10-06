@@ -3,6 +3,7 @@ import { Box, useTheme, IconButton, Tooltip, CardContent } from '@mui/material';
 import { ResponsiveSunburst } from '@nivo/sunburst';
 import React, { useState, useMemo } from 'react';
 
+import { GameText, GameCard } from './GameTheme';
 import {
   WeightUnit,
   type ProgrammedWorkoutWithStages,
@@ -10,7 +11,6 @@ import {
   type UserWeightUnitPreference,
 } from '../api/types';
 import { createCongenNivoTheme } from '../theme/nivoTheme';
-import { GameText, GameCard, GAME_CLASSES } from './GameTheme';
 
 // Custom layer to display total volume in the center
 interface CenterMetricProps {

@@ -3,8 +3,8 @@ import { useSnackbar } from 'notistack';
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 
+import { GameText } from './GameTheme';
 import { LoadingSpinner } from './LoadingSpinner';
-import { GameText, GAME_CLASSES } from './GameTheme';
 
 /**
  * Component to handle redirects back from Keycloak after password changes.

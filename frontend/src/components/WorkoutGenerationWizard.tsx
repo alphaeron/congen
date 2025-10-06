@@ -17,17 +17,15 @@ import { useForm } from '@tanstack/react-form';
 import { useSnackbar } from 'notistack';
 import React, { useEffect, useState } from 'react';
 
-import { OneRepMaxInputStep } from './OneRepMaxInputStep';
 import { GameText } from './GameTheme';
+import { OneRepMaxInputStep } from './OneRepMaxInputStep';
+import {
+  generateNextWeek,
+  getUserExercisePool,
+  updateWorkoutWithOneRepMax,
+} from '../api/conjugateWorkoutGenerator';
 import { WizardStep } from '../api/types';
-import type {
-  Program,
-  UserExercisePoolResponse,
-  WorkoutGenerationWizardData,
-  Exercise,
-  UserOneRepMax,
-} from '../api/types';
-import { generateNextWeek, getUserExercisePool, updateWorkoutWithOneRepMax } from '../api/conjugateWorkoutGenerator';
+import type { Program, UserExercisePoolResponse, Exercise, UserOneRepMax } from '../api/types';
 import { useData } from '../contexts/DataContext';
 
 interface WorkoutGenerationWizardProps {
@@ -198,11 +196,11 @@ export const WorkoutGenerationWizard: React.FC<WorkoutGenerationWizardProps> = (
     // we need to get the exercise data from the userData which should be refreshed
     // after workout generation. We'll use the exercise pool to determine which
     // exercises might need 1RM input based on the program's current week.
-    
+
     // Get user's 1RM data from userData to check which exercises already have 1RM records
-    const userOneRepMaxes = userData?.user_one_rep_max as unknown as UserOneRepMax[] || [];
+    const userOneRepMaxes = (userData?.user_one_rep_max as unknown as UserOneRepMax[]) || [];
     const exerciseNamesWithOneRepMax = new Set(userOneRepMaxes.map(orm => orm.exercise_name));
-    
+
     // Return exercises from the pool that don't have 1RM data
     const exercisesWithoutOneRepMax = pool.primary_exercises
       .concat(pool.accessory_exercises)
@@ -350,9 +348,7 @@ export const WorkoutGenerationWizard: React.FC<WorkoutGenerationWizardProps> = (
     >
       <DialogTitle>
         <Box>
-          <GameText variant="h6">
-            Generate Workouts
-          </GameText>
+          <GameText variant="h6">Generate Workouts</GameText>
           <Box mt={2}>
             <Stepper activeStep={getActiveStep()} alternativeLabel>
               <Step>

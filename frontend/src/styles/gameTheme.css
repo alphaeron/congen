@@ -9,7 +9,7 @@
   --game-cyan-hover: rgba(0, 188, 212, 0.2);
   --game-cyan-glow: 0 0 5px #00bcd4;
   --game-cyan-shadow: 0 0 10px rgba(0, 188, 212, 0.3);
-  
+
   /* Status Colors */
   --game-gray: #374151;
   --game-gray-light: #6b7280;
@@ -18,19 +18,19 @@
   --game-warning: #f59e0b;
   --game-error: #ef4444;
   --game-info: #3b82f6;
-  
+
   --game-white: #ffffff;
   --game-white-secondary: rgba(255, 255, 255, 0.8);
   --game-white-muted: rgba(255, 255, 255, 0.6);
-  
+
   --game-border-radius: 16px;
   --game-border-radius-small: 12px;
   --game-border-radius-chip: 20px;
-  
+
   --game-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
   --game-shadow-hover: 0 20px 40px rgba(0, 188, 212, 0.15);
   --game-backdrop-filter: blur(20px);
-  
+
   --game-transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   --game-transition-slow: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -38,25 +38,25 @@
 /* Base Game Text Styles */
 .game-text {
   color: var(--game-white) !important;
-  font-family: "Inter", "system-ui", "sans-serif" !important;
+  font-family: 'Inter', 'system-ui', 'sans-serif' !important;
   font-weight: 400 !important;
 }
 
 .game-text-secondary {
   color: var(--game-white-secondary) !important;
-  font-family: "Inter", "system-ui", "sans-serif" !important;
+  font-family: 'Inter', 'system-ui', 'sans-serif' !important;
   font-weight: 400 !important;
 }
 
 .game-text-muted {
   color: var(--game-white-muted) !important;
-  font-family: "Inter", "system-ui", "sans-serif" !important;
+  font-family: 'Inter', 'system-ui', 'sans-serif' !important;
   font-weight: 400 !important;
 }
 
 .game-text-accent {
   color: var(--game-cyan) !important;
-  font-family: "Inter", "system-ui", "sans-serif" !important;
+  font-family: 'Inter', 'system-ui', 'sans-serif' !important;
   font-weight: 600 !important;
 }
 
@@ -434,12 +434,12 @@
   .game-card {
     border-radius: var(--game-border-radius-small);
   }
-  
+
   .game-button {
     padding: 10px 20px;
     font-size: 0.8rem;
   }
-  
+
   .game-text-glow {
     font-size: 0.9rem;
   }

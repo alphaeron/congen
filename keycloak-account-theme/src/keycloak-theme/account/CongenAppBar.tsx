@@ -1,18 +1,8 @@
 import React from 'react';
-import {
-  AppBar,
-  Avatar,
-  Box,
-  Divider,
-  IconButton,
-  Menu,
-  MenuItem,
-  Toolbar,
-} from '@mui/material';
+import { AppBar, Avatar, Box, Divider, IconButton, Menu, MenuItem, Toolbar } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import type { KcContext } from './KcContext';
 import { handleLogout, navigateToFrontend } from './utils';
-import { GameText } from '../../components/GameTheme';
 import ConGenIcon from '../../resources/icon.png';
 
 interface CongenAppBarProps {
@@ -91,7 +81,8 @@ export const CongenAppBar: React.FC<CongenAppBarProps> = ({
                 width: '72px',
                 height: 'auto',
                 cursor: 'pointer',
-                filter: 'brightness(0) saturate(100%) invert(70%) sepia(100%) saturate(1000%) hue-rotate(180deg) brightness(1.2) contrast(1.2)',
+                filter:
+                  'brightness(0) saturate(100%) invert(70%) sepia(100%) saturate(1000%) hue-rotate(180deg) brightness(1.2) contrast(1.2)',
               }}
               onClick={handleHomeClick}
             />

@@ -12,6 +12,7 @@ import com.congen.service.GdprComplianceService
 import com.congen.service.PerformanceTrackingService
 import com.congen.util.KeycloakUtil
 import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.media.Content
 import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.responses.ApiResponse
@@ -19,11 +20,9 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
-import org.springframework.security.access.AccessDeniedException
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PutMapping
-import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
@@ -69,7 +68,14 @@ class PerformanceTrackingController(
      * This endpoint allows users to submit their performance test results and wearable data.
      * The system will automatically calculate updated scores and HP/MP/Fatigue values.
      *
-     * @param metrics The performance metrics to submit
+     * @param vo2Max VO2 Max value
+     * @param strain Training strain value
+     * @param recovery Recovery score
+     * @param hrv Heart rate variability
+     * @param sleepScore Sleep quality score
+     * @param remSleepMinutes REM sleep duration in minutes
+     * @param deepSleepMinutes Deep sleep duration in minutes
+     * @param subjectiveTiredness Subjective tiredness level (1-10)
      * @return The updated performance scores
      *
      * @throws ValidationException if metrics data fails validation
@@ -79,7 +85,17 @@ class PerformanceTrackingController(
     @PreAuthorize("isAuthenticated()")
     @Operation(
         summary = "Submit performance metrics",
-        description = "Submit performance test results and wearable data. Automatically calculates updated scores."
+        description = "Submit performance test results and wearable data. Automatically calculates updated scores.",
+        parameters = [
+            Parameter(name = "vo2_max", description = "VO2 Max value", required = false),
+            Parameter(name = "strain", description = "Training strain value", required = false),
+            Parameter(name = "recovery", description = "Recovery score", required = false),
+            Parameter(name = "hrv", description = "Heart rate variability", required = false),
+            Parameter(name = "sleep_score", description = "Sleep quality score", required = false),
+            Parameter(name = "rem_sleep_minutes", description = "REM sleep duration in minutes", required = false),
+            Parameter(name = "deep_sleep_minutes", description = "Deep sleep duration in minutes", required = false),
+            Parameter(name = "subjective_tiredness", description = "Subjective tiredness level (1-10)", required = false)
+        ]
     )
     @ApiResponses(
         value = [
@@ -125,19 +141,20 @@ class PerformanceTrackingController(
             consentUserIdMono.flatMap { ownerId ->
                 gdprComplianceService.withUserConsent(ownerId) {
                     // Create metrics object with only the provided fields
-                    val fullMetrics = UserPerformanceMetrics(
-                        keycloakId = ownerId,
-                        vo2Max = vo2Max,
-                        strain = strain,
-                        recovery = recovery,
-                        hrv = hrv,
-                        sleepScore = sleepScore,
-                        remSleepMinutes = remSleepMinutes,
-                        deepSleepMinutes = deepSleepMinutes,
-                        subjectiveTiredness = subjectiveTiredness,
-                        createdAt = Instant.now(),
-                        updatedAt = Instant.now()
-                    )
+                    val fullMetrics =
+                        UserPerformanceMetrics(
+                            keycloakId = ownerId,
+                            vo2Max = vo2Max,
+                            strain = strain,
+                            recovery = recovery,
+                            hrv = hrv,
+                            sleepScore = sleepScore,
+                            remSleepMinutes = remSleepMinutes,
+                            deepSleepMinutes = deepSleepMinutes,
+                            subjectiveTiredness = subjectiveTiredness,
+                            createdAt = Instant.now(),
+                            updatedAt = Instant.now()
+                        )
                     performanceTrackingService.submitPerformanceMetrics(fullMetrics)
                         .map { ResponseEntity.ok(it) }
                 }
@@ -238,7 +255,7 @@ class PerformanceTrackingController(
                 gdprComplianceService.withUserConsent(keycloakId) {
                     val startTimestamp = startDate?.let { Instant.parse(it) }
                     val endTimestamp = endDate?.let { Instant.parse(it) }
-                    
+
                     performanceTrackingService.getPerformanceScoresHistory(keycloakId, startTimestamp, endTimestamp)
                         .map { ResponseEntity.ok(it) }
                 }
@@ -298,7 +315,10 @@ class PerformanceTrackingController(
      * This endpoint handles the structured weekly testing protocol and automatically
      * integrates results into the overall performance tracking system.
      *
-     * @param testResults The list of weekly test results to submit
+     * @param weekStartTimestamp Start timestamp of the test week
+     * @param testName Name of the test performed
+     * @param status Status of the test result
+     * @param resultValue Numerical result value of the test
      * @return The updated test results
      *
      * @throws ValidationException if weekly test data fails validation
@@ -308,7 +328,13 @@ class PerformanceTrackingController(
     @PreAuthorize("isAuthenticated()")
     @Operation(
         summary = "Submit weekly test results",
-        description = "Submit results from the weekly testing protocol. Automatically integrates into performance tracking."
+        description = "Submit results from the weekly testing protocol. Automatically integrates into performance tracking.",
+        parameters = [
+            Parameter(name = "week_start_timestamp", description = "Start timestamp of the test week", required = true),
+            Parameter(name = "test_name", description = "Name of the test performed", required = true),
+            Parameter(name = "status", description = "Status of the test result", required = true),
+            Parameter(name = "result_value", description = "Numerical result value of the test", required = false)
+        ]
     )
     @ApiResponses(
         value = [
@@ -350,16 +376,17 @@ class PerformanceTrackingController(
             consentUserIdMono.flatMap { ownerId ->
                 gdprComplianceService.withUserConsent(ownerId) {
                     // Create the test result with the authenticated user's keycloak_id
-                    val testResult = UserTestResult(
-                        id = null,
-                        keycloakId = ownerId,
-                        weekStartTimestamp = weekStartTimestamp,
-                        testName = testName,
-                        status = status,
-                        resultValue = resultValue,
-                        createdAt = Instant.now(),
-                        updatedAt = Instant.now()
-                    )
+                    val testResult =
+                        UserTestResult(
+                            id = null,
+                            keycloakId = ownerId,
+                            weekStartTimestamp = weekStartTimestamp,
+                            testName = testName,
+                            status = status,
+                            resultValue = resultValue,
+                            createdAt = Instant.now(),
+                            updatedAt = Instant.now()
+                        )
                     performanceTrackingService.submitWeeklyTest(listOf(testResult))
                         .map { ResponseEntity.ok(it) }
                 }

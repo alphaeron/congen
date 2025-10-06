@@ -1,8 +1,4 @@
-import {
-  ExpandMore as ExpandMoreIcon,
-  ExpandLess as ExpandLessIcon,
-  ArrowBack as ArrowBackIcon,
-} from '@mui/icons-material';
+import { ExpandMore as ExpandMoreIcon, ExpandLess as ExpandLessIcon } from '@mui/icons-material';
 import {
   Box,
   Alert,
@@ -17,19 +13,28 @@ import {
   Autocomplete,
 } from '@mui/material';
 import { useForm } from '@tanstack/react-form';
-
 import {
   useReactTable,
   getCoreRowModel,
   flexRender,
   createColumnHelper,
 } from '@tanstack/react-table';
+import { motion } from 'framer-motion';
 import { useSnackbar } from 'notistack';
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
-import { motion } from 'framer-motion';
 
 import { ChordChart } from './ChordChart';
 import { ExerciseName } from './ExerciseName';
+import {
+  GameCard,
+  GameText,
+  GameTextField,
+  GameFormControl,
+  GameInputLabel,
+  GameSelect,
+  GameMenuItem,
+  GAME_CLASSES,
+} from './GameTheme';
 import { LoadingSpinner } from './LoadingSpinner';
 import { RichTextDisplay } from './RichTextDisplay';
 import { RichTextEditor } from './RichTextEditor';
@@ -37,7 +42,6 @@ import { SetSchemeEditor } from './SetSchemeEditor';
 import { SetSchemeForm } from './SetSchemeForm';
 import { SunburstChart } from './SunburstChart';
 import { WorkoutHeader } from './WorkoutHeader';
-import { GameCard, GameText, GameTextField, GameFormControl, GameInputLabel, GameSelect, GameMenuItem, GAME_CLASSES } from './GameTheme';
 import type {
   Exercise,
   ProgramWithWorkouts,
@@ -585,7 +589,11 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
                     }}
                   />
                 ) : (
-                  <GameText variant="body2" textVariant="secondary" className={GAME_CLASSES.textItalic}>
+                  <GameText
+                    variant="body2"
+                    textVariant="secondary"
+                    className={GAME_CLASSES.textItalic}
+                  >
                     {canEdit ? 'Click to add notes...' : 'No notes'}
                   </GameText>
                 )}
@@ -649,20 +657,19 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
         />
       </motion.div>
 
-      <Grid 
-        container 
-        spacing={3} 
-        sx={{ 
+      <Grid
+        container
+        spacing={3}
+        sx={{
           px: 3,
         }}
       >
         {/* Table Container - 2/3 width */}
-        <Grid 
-          size={{ xs: 12, lg: 8 }}
-          sx={{
-          }}
-        >
-          <GameCard className="glassmorphism-card" sx={{ width: '100%', height: '100%', overflow: 'hidden' }}>
+        <Grid size={{ xs: 12, lg: 8 }} sx={{}}>
+          <GameCard
+            className="glassmorphism-card"
+            sx={{ width: '100%', height: '100%', overflow: 'hidden' }}
+          >
             <Box
               sx={{
                 overflow: 'auto',
@@ -715,9 +722,7 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
                       key={row.id}
                       style={{
                         backgroundColor:
-                          row.original.type === 'stage'
-                            ? 'var(--game-cyan-light)'
-                            : 'transparent',
+                          row.original.type === 'stage' ? 'var(--game-cyan-light)' : 'transparent',
                         borderBottom: '1px solid var(--game-cyan-light)',
                         color: 'var(--game-white)',
                       }}
@@ -738,7 +743,11 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
                           onClick={() => row.original.stageId && toggleStage(row.original.stageId)}
                         >
                           <Box display="flex" alignItems="center" justifyContent="space-between">
-                            <GameText variant="h6" textVariant="accent" className={GAME_CLASSES.textBold}>
+                            <GameText
+                              variant="h6"
+                              textVariant="accent"
+                              className={GAME_CLASSES.textBold}
+                            >
                               {row.original.stageName}
                             </GameText>
                             <IconButton
@@ -790,15 +799,11 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
         </Grid>
 
         {/* Charts - 1/3 width */}
-        <Grid 
-          size={{ xs: 12, lg: 4 }}
-          sx={{
-          }}
-        >
-          <Box 
-            sx={{ 
-              display: 'flex', 
-              flexDirection: 'column', 
+        <Grid size={{ xs: 12, lg: 4 }} sx={{}}>
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
               gap: 3,
             }}
           >
@@ -872,11 +877,7 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
           <Button onClick={handleCloseNotesEditor} disabled={saving}>
             Cancel
           </Button>
-          <Button
-            onClick={handleSaveNotesFromModal}
-            variant="contained"
-            disabled={saving}
-          >
+          <Button onClick={handleSaveNotesFromModal} variant="contained" disabled={saving}>
             Save Notes
           </Button>
         </DialogActions>

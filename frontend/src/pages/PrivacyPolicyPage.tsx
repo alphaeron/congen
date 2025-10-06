@@ -1,21 +1,13 @@
-import {
-  Container,
-  Box,
-  List,
-  ListItem,
-  ListItemText,
-  Divider,
-  Alert,
-} from '@mui/material';
+import { Container, Box, List, ListItem, ListItemText, Divider, Alert } from '@mui/material';
+import { motion } from 'framer-motion';
 import { useSnackbar } from 'notistack';
 import React from 'react';
-import { motion } from 'framer-motion';
 
 import { getPrivacyPolicy } from '../api/gdpr';
 import type { PrivacyPolicy } from '../api/types';
 import { formatDate } from '../common/utils';
-import { LoadingSpinner } from '../components/LoadingSpinner';
 import { GameCard, GameText, GAME_CLASSES } from '../components/GameTheme';
+import { LoadingSpinner } from '../components/LoadingSpinner';
 
 import type { AxiosError } from 'axios';
 
@@ -69,59 +61,63 @@ export function PrivacyPolicyPage(): React.ReactElement {
 
   if (!privacyPolicy) {
     return (
-        <Container maxWidth="md" sx={{ py: 4 }}>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, ease: 'easeOut' }}
-          >
-            <GameCard className="glassmorphism-card">
-              <Alert severity="error" sx={{ backgroundColor: 'transparent' }}>
-                Privacy policy not available
-              </Alert>
-            </GameCard>
-          </motion.div>
-        </Container>
+      <Container maxWidth="md" sx={{ py: 4 }}>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: 'easeOut' }}
+        >
+          <GameCard className="glassmorphism-card">
+            <Alert severity="error" sx={{ backgroundColor: 'transparent' }}>
+              Privacy policy not available
+            </Alert>
+          </GameCard>
+        </motion.div>
+      </Container>
     );
   }
 
   return (
     <Container maxWidth="md" sx={{ py: 4 }}>
-        {/* Header Section */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.1 }}
-        >
-          <GameCard className="glassmorphism-card">
-            <Box sx={{ p: 3, textAlign: 'center' }}>
-              <GameText variant="h1" className={GAME_CLASSES.textBold} sx={{ mb: 2 }}>
-                Privacy Policy
-              </GameText>
-              <GameText variant="body1" className={GAME_CLASSES.textMuted}>
-                Last updated: {formatDate(privacyPolicy.last_updated)} (Version {privacyPolicy.version})
-              </GameText>
-            </Box>
-          </GameCard>
-        </motion.div>
+      {/* Header Section */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.1 }}
+      >
+        <GameCard className="glassmorphism-card">
+          <Box sx={{ p: 3, textAlign: 'center' }}>
+            <GameText variant="h1" className={GAME_CLASSES.textBold} sx={{ mb: 2 }}>
+              Privacy Policy
+            </GameText>
+            <GameText variant="body1" className={GAME_CLASSES.textMuted}>
+              Last updated: {formatDate(privacyPolicy.last_updated)} (Version{' '}
+              {privacyPolicy.version})
+            </GameText>
+          </Box>
+        </GameCard>
+      </motion.div>
 
-        {/* Contact Information */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.2 }}
-          style={{ marginTop: '24px' }}
-        >
-          <GameCard className="glassmorphism-card">
-            <Alert severity="info" sx={{ backgroundColor: 'transparent', border: '1px solid var(--game-cyan-border)' }}>
-              <GameText variant="body2" className={GAME_CLASSES.textMedium}>
-                <strong>Questions about this privacy policy?</strong>
-                <br />
-                Contact us at: {privacyPolicy.data_controller.contact}
-              </GameText>
-            </Alert>
-          </GameCard>
-        </motion.div>
+      {/* Contact Information */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.2 }}
+        style={{ marginTop: '24px' }}
+      >
+        <GameCard className="glassmorphism-card">
+          <Alert
+            severity="info"
+            sx={{ backgroundColor: 'transparent', border: '1px solid var(--game-cyan-border)' }}
+          >
+            <GameText variant="body2" className={GAME_CLASSES.textMedium}>
+              <strong>Questions about this privacy policy?</strong>
+              <br />
+              Contact us at: {privacyPolicy.data_controller.contact}
+            </GameText>
+          </Alert>
+        </GameCard>
+      </motion.div>
 
       {/* Data Controller Section */}
       <motion.div
@@ -193,12 +189,12 @@ export function PrivacyPolicyPage(): React.ReactElement {
                     transition={{ duration: 0.3, delay: 0.5 + index * 0.1 }}
                   >
                     <ListItem sx={{ py: 0.5 }}>
-                      <ListItemText 
+                      <ListItemText
                         primary={
                           <GameText variant="body2" className={GAME_CLASSES.textMedium}>
                             {purpose}
                           </GameText>
-                        } 
+                        }
                       />
                     </ListItem>
                   </motion.div>
@@ -219,12 +215,12 @@ export function PrivacyPolicyPage(): React.ReactElement {
                     transition={{ duration: 0.3, delay: 0.6 + index * 0.1 }}
                   >
                     <ListItem sx={{ py: 0.5 }}>
-                      <ListItemText 
+                      <ListItemText
                         primary={
                           <GameText variant="body2" className={GAME_CLASSES.textMedium}>
                             {basis}
                           </GameText>
-                        } 
+                        }
                       />
                     </ListItem>
                   </motion.div>
@@ -245,12 +241,12 @@ export function PrivacyPolicyPage(): React.ReactElement {
                     transition={{ duration: 0.3, delay: 0.7 + index * 0.1 }}
                   >
                     <ListItem sx={{ py: 0.5 }}>
-                      <ListItemText 
+                      <ListItemText
                         primary={
                           <GameText variant="body2" className={GAME_CLASSES.textMedium}>
                             {dataType}
                           </GameText>
-                        } 
+                        }
                       />
                     </ListItem>
                   </motion.div>
@@ -275,7 +271,8 @@ export function PrivacyPolicyPage(): React.ReactElement {
                         {dataType.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}:
                       </GameText>
                       <GameText variant="body2" className={GAME_CLASSES.textMedium}>
-                        {' '}{period}
+                        {' '}
+                        {period}
                       </GameText>
                     </Box>
                   </motion.div>
@@ -365,6 +362,6 @@ export function PrivacyPolicyPage(): React.ReactElement {
           </Box>
         </GameCard>
       </motion.div>
-      </Container>
+    </Container>
   );
 }

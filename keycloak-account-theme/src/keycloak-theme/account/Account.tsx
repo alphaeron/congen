@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 // Import only the specific components we need to reduce bundle size
-import Container from '@mui/material/Container';
 import CardContent from '@mui/material/CardContent';
 import Button from '@mui/material/Button';
 import Box from '@mui/material/Box';
@@ -17,7 +16,7 @@ import { useAuth as useOidcAuth } from 'react-oidc-context';
 import { FormField } from '../../components/FormField';
 import { createApiClient } from './api/client';
 import { GameText, GameCard } from '../../components/GameTheme';
-import { HoverCard, HoverLift, ButtonPress } from '../../components/AnimatedWrapper';
+import { HoverCard, HoverLift } from '../../components/AnimatedWrapper';
 
 // Global type declaration for OIDC user
 declare global {
@@ -224,8 +223,8 @@ export default function Account({ kcContext, i18n: _i18n }: AccountProps) {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.8, ease: 'easeOut' }}
-        style={{ 
-          display: 'flex', 
+        style={{
+          display: 'flex',
           height: 'calc(100vh - 64px)',
         }}
       >
@@ -252,8 +251,8 @@ export default function Account({ kcContext, i18n: _i18n }: AccountProps) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.6, ease: 'easeOut', delay: 0.6 }}
-            style={{ 
-              paddingTop: '24px', 
+            style={{
+              paddingTop: '24px',
               paddingBottom: '24px',
               paddingLeft: '32px',
               paddingRight: '32px',
@@ -275,135 +274,127 @@ export default function Account({ kcContext, i18n: _i18n }: AccountProps) {
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ duration: 0.6, ease: 'easeOut', delay: 0.8 }}
                     >
-                    <HoverCard 
-                      style={{ height: '100%' }}
-                    >
-                      <GameCard>
-                      <CardContent sx={{ p: 4 }}>
-                        <GameText 
-                          variant="h6" 
-                          textVariant="glow" 
-                          gutterBottom 
-                          sx={{ 
-                            mb: 3, 
-                            fontWeight: 600,
-                          }}
-                        >
-                          Edit Profile
-                        </GameText>
+                      <HoverCard style={{ height: '100%' }}>
+                        <GameCard>
+                          <CardContent sx={{ p: 4 }}>
+                            <GameText
+                              variant="h6"
+                              textVariant="glow"
+                              gutterBottom
+                              sx={{
+                                mb: 3,
+                                fontWeight: 600,
+                              }}
+                            >
+                              Edit Profile
+                            </GameText>
 
-                        {authLoading ? (
-                          <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-                            <LoadingSpinner size={20} />
-                          </Box>
-                        ) : (
-                          <Grid container spacing={3}>
-                            <Grid 
-                              size={{ xs: 12, sm: 6 }}
-                              sx={{
-                              }}
-                            >
-                              <FormField
-                                name="firstName"
-                                form={form}
-                                type="text"
-                                label="First name"
-                                required
-                                fullWidth
-                              />
-                            </Grid>
-                            <Grid 
-                              size={{ xs: 12, sm: 6 }}
-                              sx={{
-                              }}
-                            >
-                              <FormField
-                                name="lastName"
-                                form={form}
-                                type="text"
-                                label="Last name"
-                                required
-                                fullWidth
-                              />
-                            </Grid>
-                            <Grid 
-                              size={12}
-                              sx={{
-                              }}
-                            >
-                              <FormField
-                                name="email"
-                                form={form}
-                                type="email"
-                                label="Email"
-                                required
-                                fullWidth
-                              />
-                            </Grid>
-                          </Grid>
-                        )}
-
-                        <Box 
-                          sx={{ 
-                            display: 'flex', 
-                            gap: 2, 
-                            mt: 4, 
-                            justifyContent: 'flex-end',
-                          }}
-                        >
-                          <HoverLift>
-                            <Button
-                              type="button"
-                              variant="outlined"
-                              sx={{ 
-                                borderRadius: '12px', 
-                                px: 3,
-                                '&:hover:not(:disabled)': {
-                                  boxShadow: '0 4px 15px rgba(0, 188, 212, 0.3)',
-                                },
-                              }}
-                            onClick={() => {
-                              if (user) {
-                                form.setFieldValue(
-                                  'firstName',
-                                  (user.firstName as string) || (user.given_name as string) || ''
-                                );
-                                form.setFieldValue(
-                                  'lastName',
-                                  (user.lastName as string) || (user.family_name as string) || ''
-                                );
-                                form.setFieldValue('email', (user.email as string) || '');
-                              }
-                            }}
-                            disabled={authLoading}
-                          >
-                            Reset
-                          </Button>
-                          </HoverLift>
-                          <HoverLift>
-                            <Button
-                              type="submit"
-                              variant="contained"
-                              sx={{ 
-                                borderRadius: '12px', 
-                                px: 3,
-                                '&:hover:not(:disabled)': {
-                                  boxShadow: '0 4px 15px rgba(0, 188, 212, 0.4)',
-                                },
-                              }}
-                            disabled={authLoading || !form.state.isValid || form.state.isSubmitting}
-                          >
-                            {form.state.isSubmitting ? (
-                              <LoadingSpinner size={20} />
+                            {authLoading ? (
+                              <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+                                <LoadingSpinner size={20} />
+                              </Box>
                             ) : (
-                              'Save Changes'
+                              <Grid container spacing={3}>
+                                <Grid size={{ xs: 12, sm: 6 }} sx={{}}>
+                                  <FormField
+                                    name="firstName"
+                                    form={form}
+                                    type="text"
+                                    label="First name"
+                                    required
+                                    fullWidth
+                                  />
+                                </Grid>
+                                <Grid size={{ xs: 12, sm: 6 }} sx={{}}>
+                                  <FormField
+                                    name="lastName"
+                                    form={form}
+                                    type="text"
+                                    label="Last name"
+                                    required
+                                    fullWidth
+                                  />
+                                </Grid>
+                                <Grid size={12} sx={{}}>
+                                  <FormField
+                                    name="email"
+                                    form={form}
+                                    type="email"
+                                    label="Email"
+                                    required
+                                    fullWidth
+                                  />
+                                </Grid>
+                              </Grid>
                             )}
-                          </Button>
-                          </HoverLift>
-                        </Box>
-                      </CardContent>
-                      </GameCard>
-                    </HoverCard>
+
+                            <Box
+                              sx={{
+                                display: 'flex',
+                                gap: 2,
+                                mt: 4,
+                                justifyContent: 'flex-end',
+                              }}
+                            >
+                              <HoverLift>
+                                <Button
+                                  type="button"
+                                  variant="outlined"
+                                  sx={{
+                                    borderRadius: '12px',
+                                    px: 3,
+                                    '&:hover:not(:disabled)': {
+                                      boxShadow: '0 4px 15px rgba(0, 188, 212, 0.3)',
+                                    },
+                                  }}
+                                  onClick={() => {
+                                    if (user) {
+                                      form.setFieldValue(
+                                        'firstName',
+                                        (user.firstName as string) ||
+                                          (user.given_name as string) ||
+                                          ''
+                                      );
+                                      form.setFieldValue(
+                                        'lastName',
+                                        (user.lastName as string) ||
+                                          (user.family_name as string) ||
+                                          ''
+                                      );
+                                      form.setFieldValue('email', (user.email as string) || '');
+                                    }
+                                  }}
+                                  disabled={authLoading}
+                                >
+                                  Reset
+                                </Button>
+                              </HoverLift>
+                              <HoverLift>
+                                <Button
+                                  type="submit"
+                                  variant="contained"
+                                  sx={{
+                                    borderRadius: '12px',
+                                    px: 3,
+                                    '&:hover:not(:disabled)': {
+                                      boxShadow: '0 4px 15px rgba(0, 188, 212, 0.4)',
+                                    },
+                                  }}
+                                  disabled={
+                                    authLoading || !form.state.isValid || form.state.isSubmitting
+                                  }
+                                >
+                                  {form.state.isSubmitting ? (
+                                    <LoadingSpinner size={20} />
+                                  ) : (
+                                    'Save Changes'
+                                  )}
+                                </Button>
+                              </HoverLift>
+                            </Box>
+                          </CardContent>
+                        </GameCard>
+                      </HoverCard>
                     </motion.div>
                   </Grid>
 
@@ -414,57 +405,57 @@ export default function Account({ kcContext, i18n: _i18n }: AccountProps) {
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ duration: 0.6, ease: 'easeOut', delay: 0.8 }}
                     >
-                    <HoverCard>
-                      <GameCard>
-                      <CardContent sx={{ p: 4 }}>
-                        <GameText 
-                          variant="h6" 
-                          textVariant="glow" 
-                          gutterBottom 
-                          sx={{ 
-                            mb: 3, 
-                            fontWeight: 600,
-                          }}
-                        >
-                          Security
-                        </GameText>
-
-                        <GameText 
-                          variant="body2" 
-                          textVariant="secondary" 
-                          sx={{ 
-                            mb: 3,
-                          }}
-                        >
-                          Change your password to keep your account secure
-                        </GameText>
-
-                        <Box 
-                          sx={{ 
-                            display: 'flex', 
-                            justifyContent: 'flex-end',
-                          }}
-                        >
-                          <HoverLift>
-                            <Button
-                              variant="outlined"
-                              sx={{ 
-                                borderRadius: '12px', 
-                                px: 3,
-                                '&:hover:not(:disabled)': {
-                                  boxShadow: '0 4px 15px rgba(0, 188, 212, 0.3)',
-                                },
+                      <HoverCard>
+                        <GameCard>
+                          <CardContent sx={{ p: 4 }}>
+                            <GameText
+                              variant="h6"
+                              textVariant="glow"
+                              gutterBottom
+                              sx={{
+                                mb: 3,
+                                fontWeight: 600,
                               }}
-                              onClick={handlePasswordChange}
-                              disabled={authLoading}
                             >
-                              Change Password
-                            </Button>
-                          </HoverLift>
-                        </Box>
-                      </CardContent>
-                      </GameCard>
-                    </HoverCard>
+                              Security
+                            </GameText>
+
+                            <GameText
+                              variant="body2"
+                              textVariant="secondary"
+                              sx={{
+                                mb: 3,
+                              }}
+                            >
+                              Change your password to keep your account secure
+                            </GameText>
+
+                            <Box
+                              sx={{
+                                display: 'flex',
+                                justifyContent: 'flex-end',
+                              }}
+                            >
+                              <HoverLift>
+                                <Button
+                                  variant="outlined"
+                                  sx={{
+                                    borderRadius: '12px',
+                                    px: 3,
+                                    '&:hover:not(:disabled)': {
+                                      boxShadow: '0 4px 15px rgba(0, 188, 212, 0.3)',
+                                    },
+                                  }}
+                                  onClick={handlePasswordChange}
+                                  disabled={authLoading}
+                                >
+                                  Change Password
+                                </Button>
+                              </HoverLift>
+                            </Box>
+                          </CardContent>
+                        </GameCard>
+                      </HoverCard>
                     </motion.div>
                   </Grid>
                 </Grid>

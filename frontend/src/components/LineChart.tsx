@@ -2,6 +2,7 @@ import { Box, Card, CardContent, useTheme } from '@mui/material';
 import { ResponsiveLine } from '@nivo/line';
 import React, { useState, useMemo } from 'react';
 
+import { GameText, GameCard, GAME_CLASSES } from './GameTheme';
 import type {
   UserDataExport,
   Exercise,
@@ -10,7 +11,6 @@ import type {
 } from '../api/types';
 import { formatDate } from '../common/utils';
 import { createCongenNivoTheme, congenColorSchemes } from '../theme/nivoTheme';
-import { GameText, GameCard, GAME_CLASSES } from './GameTheme';
 
 interface LineChartProps {
   userDataExport: UserDataExport | null;

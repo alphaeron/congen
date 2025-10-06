@@ -2,13 +2,13 @@ import { Box, useTheme, Tooltip, CardContent } from '@mui/material';
 import { ResponsiveRadar } from '@nivo/radar';
 import React, { useMemo } from 'react';
 
+import { GameText, GameCard } from './GameTheme';
 import type {
   Exercise,
   ProgrammedWorkoutWithStages,
   WorkoutStageWithExercises,
 } from '../api/types';
 import { createCongenNivoTheme } from '../theme/nivoTheme';
-import { GameText, GameCard, GAME_CLASSES } from './GameTheme';
 
 interface RadarChartProps {
   weekWorkouts: ProgrammedWorkoutWithStages[]; // Array of week workout data

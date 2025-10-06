@@ -11,9 +11,10 @@ import { createEditor, Editor, Transforms, Text } from 'slate';
 import { withHistory } from 'slate-history';
 import { Slate, Editable, withReact } from 'slate-react';
 
+import { GameText, GAME_CLASSES } from './GameTheme';
+
 import type { Descendant } from 'slate';
 import type { RenderElementProps, RenderLeafProps } from 'slate-react';
-import { GameText, GAME_CLASSES } from './GameTheme';
 
 // Define custom types for our text formatting
 interface CustomText {
@@ -491,7 +492,12 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
       </Paper>
 
       {!readOnly && (
-        <GameText variant="caption" textVariant="secondary" className={GAME_CLASSES.marginTop1} style={{ display: 'block' }}>
+        <GameText
+          variant="caption"
+          textVariant="secondary"
+          className={GAME_CLASSES.marginTop1}
+          style={{ display: 'block' }}
+        >
           Use Ctrl+B, Ctrl+I, Ctrl+U for formatting. Ctrl+S to save.
         </GameText>
       )}

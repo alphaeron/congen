@@ -2,10 +2,10 @@ import { Box, useTheme, CardContent } from '@mui/material';
 import { ResponsiveSunburst } from '@nivo/sunburst';
 import React, { useState, useMemo } from 'react';
 
+import { GameText, GameCard, GAME_CLASSES } from './GameTheme';
 import type { UserExercisePoolResponse, Exercise } from '../api/types';
 import { capitalizeEachWord } from '../common/utils';
 import { createCongenNivoTheme } from '../theme/nivoTheme';
-import { GameText, GameCard, GAME_CLASSES } from './GameTheme';
 
 interface ExercisePoolSunburstChartProps {
   exercisePoolData: UserExercisePoolResponse | null;

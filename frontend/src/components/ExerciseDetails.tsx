@@ -1,13 +1,13 @@
-import { Alert, AlertTitle, Box, Chip, Divider, Grid, Skeleton, Stack, Tooltip } from '@mui/material';
-import React from 'react';
+import { Alert, AlertTitle, Box, Chip, Grid, Skeleton, Stack, Tooltip } from '@mui/material';
 import { motion } from 'framer-motion';
+import React from 'react';
 import { createEditor } from 'slate';
 import { Slate, Editable, withReact } from 'slate-react';
 
 import { BinaryTag } from './BinaryTag';
 import { ExercisePreferenceControls } from './ExercisePreferenceControls';
-import { LoadingSpinner } from './LoadingSpinner';
 import { GameCard, GameText, GAME_CLASSES } from './GameTheme';
+import { LoadingSpinner } from './LoadingSpinner';
 import type { Exercise, ExerciseEquipment, ExerciseMuscle, Equipment, Muscle } from '../api/types';
 import { capitalizeEachWord } from '../common/utils';
 import { useData } from '../contexts/DataContext';
@@ -114,7 +114,8 @@ export function ExerciseDetails(
             <Alert severity="warning" sx={{ backgroundColor: 'transparent' }}>
               <AlertTitle>Connection Error</AlertTitle>
               <GameText>
-                Unable to connect to the server. Please check your internet connection and try again.
+                Unable to connect to the server. Please check your internet connection and try
+                again.
               </GameText>
               <GameText variant="body2" textVariant="secondary" className={GAME_CLASSES.marginTop1}>
                 Error: {error?.message || 'Network error'}
@@ -135,7 +136,11 @@ export function ExerciseDetails(
               <AlertTitle>Exercise Not Found</AlertTitle>
               <GameText>The specified exercise could not be found.</GameText>
               {error && (
-                <GameText variant="body2" textVariant="secondary" className={GAME_CLASSES.marginTop1}>
+                <GameText
+                  variant="body2"
+                  textVariant="secondary"
+                  className={GAME_CLASSES.marginTop1}
+                >
                   {error.toString()}
                 </GameText>
               )}
@@ -235,8 +240,8 @@ export function ExerciseDetails(
                           },
                         ]}
                       >
-                        <Editable 
-                          readOnly={true} 
+                        <Editable
+                          readOnly={true}
                           placeholder="No description provided."
                           style={{
                             minHeight: '100px',
@@ -278,7 +283,7 @@ export function ExerciseDetails(
                                 transition={{ duration: 0.3, delay: 0.5 + index * 0.1 }}
                               >
                                 <Tooltip arrow={true} title={muscle?.description}>
-                                  <Chip 
+                                  <Chip
                                     label={`${capitalizeEachWord(em.muscle_name)}`}
                                     sx={{
                                       backgroundColor: 'var(--game-cyan-light)',
@@ -313,7 +318,7 @@ export function ExerciseDetails(
                                 transition={{ duration: 0.3, delay: 0.6 + index * 0.1 }}
                               >
                                 <Tooltip arrow={true} title={equip?.description}>
-                                  <Chip 
+                                  <Chip
                                     label={`${capitalizeEachWord(ee.equipment_name)}`}
                                     sx={{
                                       backgroundColor: 'var(--game-gray)',

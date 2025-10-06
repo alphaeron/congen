@@ -1,5 +1,5 @@
-import { Box, IconButton, Tooltip, Button } from '@mui/material';
 import { Settings, ArrowBack } from '@mui/icons-material';
+import { Box, IconButton, Tooltip, Button } from '@mui/material';
 import { motion } from 'framer-motion';
 import React from 'react';
 
@@ -77,19 +77,26 @@ export const WorkoutHeader: React.FC<WorkoutHeaderProps> = ({
         return {
           value: progressValue || 0,
           max: progressMax || 1,
-          percentage: progressValue && progressMax ? Math.round((progressValue / progressMax) * 100) : 0,
+          percentage:
+            progressValue && progressMax ? Math.round((progressValue / progressMax) * 100) : 0,
         };
       case 'week':
         return {
           value: completedWeekWorkouts || 0,
           max: totalWorkouts || 1,
-          percentage: completedWeekWorkouts && totalWorkouts ? Math.round((completedWeekWorkouts / totalWorkouts) * 100) : 0,
+          percentage:
+            completedWeekWorkouts && totalWorkouts
+              ? Math.round((completedWeekWorkouts / totalWorkouts) * 100)
+              : 0,
         };
       case 'day':
         return {
           value: completedExercises || 0,
           max: totalExercises || 1,
-          percentage: completedExercises && totalExercises ? Math.round((completedExercises / totalExercises) * 100) : 0,
+          percentage:
+            completedExercises && totalExercises
+              ? Math.round((completedExercises / totalExercises) * 100)
+              : 0,
         };
       default:
         return { value: 0, max: 1, percentage: 0 };
@@ -102,7 +109,7 @@ export const WorkoutHeader: React.FC<WorkoutHeaderProps> = ({
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, ease: "easeOut" }}
+      transition={{ duration: 0.5, ease: 'easeOut' }}
     >
       <GameCard className="glassmorphism-card">
         <Box
@@ -113,116 +120,111 @@ export const WorkoutHeader: React.FC<WorkoutHeaderProps> = ({
             p: 3,
           }}
         >
-      {/* Left Section: Context Badge */}
-      <Box className={GAME_CLASSES.subCard} sx={{ p: 2, flexShrink: 0 }}>
-        <GameText variant="h4" className={GAME_CLASSES.textBold}>
-          {context === 'program' && `Week ${currentWeek}`}
-          {context === 'week' && `Week ${weekNumber}`}
-          {context === 'day' && `Day ${dayNumber}`}
-        </GameText>
-      </Box>
+          {/* Left Section: Context Badge */}
+          <Box className={GAME_CLASSES.subCard} sx={{ p: 2, flexShrink: 0 }}>
+            <GameText variant="h4" className={GAME_CLASSES.textBold}>
+              {context === 'program' && `Week ${currentWeek}`}
+              {context === 'week' && `Week ${weekNumber}`}
+              {context === 'day' && `Day ${dayNumber}`}
+            </GameText>
+          </Box>
 
-      {/* Middle Section: Progress Bar (takes all available space) */}
-      <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, mx: 3 }}>
-        <Box sx={{ mb: 1 }}>
-          <GameText variant="body2" className={GAME_CLASSES.textMuted}>
-            {context === 'program' && (currentWeekWorkouts && currentWeekWorkouts > 0 ? `${currentWeekWorkouts} workouts this week` : 'Current training week')}
-            {context === 'week' && `${totalWorkouts || 0} workouts in week`}
-            {context === 'day' && workoutName}
-          </GameText>
-        </Box>
-        
-        {/* Progress Bar - takes full width */}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <ProgressBar
-            value={progressData.value}
-            max={progressData.max}
-            width="100%"
-            height={6}
-            showFraction={true}
-            current={progressData.value}
-            total={progressData.max}
-            status={progressData.percentage >= 80 ? 'completed' : progressData.percentage >= 30 ? 'in-progress' : 'not-started'}
-            smooth={true}
-            animationDuration={300}
-          />
-        </Box>
-        
-        <Box sx={{ mt: 0.5 }}>
-          <GameText variant="body2" className={GAME_CLASSES.textMedium}>
-            {context === 'program' && (completedWorkouts && completedWorkouts > 0 ? `${completedWorkouts} completed` : `${progressValue}/${progressMax} weeks in program`)}
-            {context === 'week' && `${completedWeekWorkouts || 0}/${totalWorkouts || 0} completed`}
-            {context === 'day' && `${completedExercises || 0}/${totalExercises || 0} exercises`}
-          </GameText>
-        </Box>
-      </Box>
+          {/* Middle Section: Progress Bar (takes all available space) */}
+          <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, mx: 3 }}>
+            <Box sx={{ mb: 1 }}>
+              <GameText variant="body2" className={GAME_CLASSES.textMuted}>
+                {context === 'program' &&
+                  (currentWeekWorkouts && currentWeekWorkouts > 0
+                    ? `${currentWeekWorkouts} workouts this week`
+                    : 'Current training week')}
+                {context === 'week' && `${totalWorkouts || 0} workouts in week`}
+                {context === 'day' && workoutName}
+              </GameText>
+            </Box>
 
-      {/* Right Section: Quick Actions */}
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexShrink: 0 }}>
-        {/* Back Button (for week and day contexts) */}
-        {(context === 'week' || context === 'day') && onBack && (
-          <Tooltip title="Go Back">
-            <motion.div
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <IconButton
-                onClick={onBack}
-                className={GAME_CLASSES.button}
-              >
-                <ArrowBack />
-              </IconButton>
+            {/* Progress Bar - takes full width */}
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <ProgressBar
+                value={progressData.value}
+                max={progressData.max}
+                width="100%"
+                height={6}
+                showFraction={true}
+                current={progressData.value}
+                total={progressData.max}
+                status={
+                  progressData.percentage >= 80
+                    ? 'completed'
+                    : progressData.percentage >= 30
+                      ? 'in-progress'
+                      : 'not-started'
+                }
+                smooth={true}
+                animationDuration={300}
+              />
+            </Box>
+
+            <Box sx={{ mt: 0.5 }}>
+              <GameText variant="body2" className={GAME_CLASSES.textMedium}>
+                {context === 'program' &&
+                  (completedWorkouts && completedWorkouts > 0
+                    ? `${completedWorkouts} completed`
+                    : `${progressValue}/${progressMax} weeks in program`)}
+                {context === 'week' &&
+                  `${completedWeekWorkouts || 0}/${totalWorkouts || 0} completed`}
+                {context === 'day' && `${completedExercises || 0}/${totalExercises || 0} exercises`}
+              </GameText>
+            </Box>
+          </Box>
+
+          {/* Right Section: Quick Actions */}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexShrink: 0 }}>
+            {/* Back Button (for week and day contexts) */}
+            {(context === 'week' || context === 'day') && onBack && (
+              <Tooltip title="Go Back">
+                <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}>
+                  <IconButton onClick={onBack} className={GAME_CLASSES.button}>
+                    <ArrowBack />
+                  </IconButton>
+                </motion.div>
+              </Tooltip>
+            )}
+
+            {/* Add Exercise Button (day context only) */}
+            {context === 'day' && onAddExercise && (
+              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                <Button
+                  variant="contained"
+                  onClick={onAddExercise}
+                  disabled={saving}
+                  sx={{
+                    '&:hover:not(:disabled)': {
+                      boxShadow: 'var(--game-cyan-shadow)',
+                    },
+                  }}
+                >
+                  Add Exercise
+                </Button>
+              </motion.div>
+            )}
+
+            {/* Export Button */}
+            <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}>
+              <ExportButtons onExportPDF={onExportPDF} disabled={disabled} />
             </motion.div>
-          </Tooltip>
-        )}
 
-        {/* Add Exercise Button (day context only) */}
-        {context === 'day' && onAddExercise && (
-          <motion.div
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-          >
-            <Button
-              variant="contained"
-              onClick={onAddExercise}
-              disabled={saving}
-              sx={{
-                '&:hover:not(:disabled)': {
-                  boxShadow: 'var(--game-cyan-shadow)',
-                },
-              }}
-            >
-              Add Exercise
-            </Button>
-          </motion.div>
-        )}
-
-        {/* Export Button */}
-        <motion.div
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.95 }}
-        >
-          <ExportButtons onExportPDF={onExportPDF} disabled={disabled} />
-        </motion.div>
-
-        {/* Settings Button */}
-        {onSettings && (
-          <Tooltip title="Settings">
-            <motion.div
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <IconButton
-                onClick={onSettings}
-                className={GAME_CLASSES.button}
-              >
-                <Settings />
-              </IconButton>
-            </motion.div>
-          </Tooltip>
-        )}
-      </Box>
-      </Box>
+            {/* Settings Button */}
+            {onSettings && (
+              <Tooltip title="Settings">
+                <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}>
+                  <IconButton onClick={onSettings} className={GAME_CLASSES.button}>
+                    <Settings />
+                  </IconButton>
+                </motion.div>
+              </Tooltip>
+            )}
+          </Box>
+        </Box>
       </GameCard>
     </motion.div>
   );

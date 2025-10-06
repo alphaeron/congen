@@ -5,11 +5,10 @@ import {
   DialogActions,
   Button,
   DialogContentText,
-  Alert,
 } from '@mui/material';
 import React from 'react';
 
-import { GameText, GameDialog, GameButton, GameAlert, GAME_CLASSES } from './GameTheme';
+import { GameText, GameAlert, GAME_CLASSES } from './GameTheme';
 
 interface ConfirmationDialogProps {
   open: boolean;
@@ -61,9 +60,16 @@ export const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
   disabled = false,
 }) => {
   return (
-    <Dialog open={open} onClose={onClose} aria-labelledby="confirmation-dialog-title" className={GAME_CLASSES.dialog}>
+    <Dialog
+      open={open}
+      onClose={onClose}
+      aria-labelledby="confirmation-dialog-title"
+      className={GAME_CLASSES.dialog}
+    >
       <DialogTitle id="confirmation-dialog-title">
-        <GameText variant="h6" textVariant="glow">{title}</GameText>
+        <GameText variant="h6" textVariant="glow">
+          {title}
+        </GameText>
       </DialogTitle>
       <DialogContent>
         {message && <DialogContentText className={GAME_CLASSES.text}>{message}</DialogContentText>}

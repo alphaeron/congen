@@ -16,7 +16,6 @@ import com.congen.dal.SetSchemeDAL
 import com.congen.dal.UserDAL
 import com.congen.dal.UserEquipmentDAL
 import com.congen.dal.UserExercisePreferenceDAL
-import com.congen.service.UserOneRepMaxService
 import com.congen.dal.UserWeakMuscleDAL
 import com.congen.dal.UserWeightUnitPreferenceDAL
 import com.congen.dal.WorkoutStageDAL
@@ -71,11 +70,9 @@ class CacheWarmupService(
      * This method is called by Spring Boot after the application is ready to serve requests.
      * It builds a chain of warmup operations based on configuration and executes them
      * reactively without blocking the main thread.
-     *
-     * @param event Application ready event
      */
     @EventListener(ApplicationReadyEvent::class)
-    fun onApplicationReady(event: ApplicationReadyEvent) {
+    fun onApplicationReady() {
         if (!cacheWarmupConfig.enabled) {
             logger.info("Cache warmup is disabled, skipping warmup process")
             return

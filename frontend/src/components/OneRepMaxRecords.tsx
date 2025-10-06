@@ -1,11 +1,5 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
-import {
-  Box,
-  CardContent,
-  InputAdornment,
-  useTheme,
-  Button,
-} from '@mui/material';
+import { Box, CardContent, Button } from '@mui/material';
+import { useField } from '@tanstack/react-form';
 import {
   useReactTable,
   getCoreRowModel,
@@ -14,18 +8,21 @@ import {
   createColumnHelper,
 } from '@tanstack/react-table';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { useField } from '@tanstack/react-form';
+import { useSnackbar } from 'notistack';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 
-import { GameCard, GameText, GameTextField, GAME_CLASSES } from './GameTheme';
 import { ExerciseName } from './ExerciseName';
-import { LoadingSpinner } from './LoadingSpinner';
 import { FormDialog } from './FormDialog';
 import { FormField } from './FormField';
-import { useData } from '../contexts/DataContext';
-import { useSnackbar } from 'notistack';
+import { GameCard, GameText, GameTextField, GAME_CLASSES } from './GameTheme';
+import { LoadingSpinner } from './LoadingSpinner';
 import type { UserOneRepMax } from '../api/types';
+import { useData } from '../contexts/DataContext';
 
-interface OneRepMaxRecordsProps {}
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+interface OneRepMaxRecordsProps {
+  // No props needed for this component
+}
 
 /**
  * Component for displaying and managing user 1RM records.
@@ -39,7 +36,16 @@ interface OneRepMaxRecordsProps {}
  * @return OneRepMaxRecords component
  */
 export const OneRepMaxRecords: React.FC<OneRepMaxRecordsProps> = () => {
-  const { userData, weightUnitPreferences, isLoading: isDataLoading, upsertUserOneRepMax, allExercises, loadAllExercises, userOneRepMaxes, loadUserOneRepMaxes } = useData();
+  const {
+    userData,
+    weightUnitPreferences,
+    isLoading: isDataLoading,
+    upsertUserOneRepMax,
+    allExercises,
+    loadAllExercises,
+    userOneRepMaxes,
+    loadUserOneRepMaxes,
+  } = useData();
   const { enqueueSnackbar } = useSnackbar();
 
   // State for loaded data
@@ -63,9 +69,7 @@ export const OneRepMaxRecords: React.FC<OneRepMaxRecordsProps> = () => {
 
   // Get default weight unit for an exercise
   const getDefaultWeightUnit = (exerciseName: string): string => {
-    const preference = weightUnitPreferences.find(
-      pref => pref.exercise_name === exerciseName
-    );
+    const preference = weightUnitPreferences.find(pref => pref.exercise_name === exerciseName);
     return preference?.preferred_unit || 'KG';
   };
 
@@ -79,17 +83,15 @@ export const OneRepMaxRecords: React.FC<OneRepMaxRecordsProps> = () => {
       // Convert object to array
       records = Object.values(userOneRepMaxes);
     }
-    
-    const existingRecord = records.find(
-      record => record.exercise_name === exerciseName
-    );
+
+    const existingRecord = records.find(record => record.exercise_name === exerciseName);
     return existingRecord ? existingRecord.one_rep_max : null;
   };
 
   // Handle form submission
   const handleSubmitOneRepMax = async (data: { exercise_name: string; one_rep_max: number }) => {
     if (!userData) return;
-    
+
     try {
       setIsSaving(true);
       const unit = getDefaultWeightUnit(data.exercise_name);
@@ -97,7 +99,7 @@ export const OneRepMaxRecords: React.FC<OneRepMaxRecordsProps> = () => {
       setRecordDialogOpen(false);
       setSelectedExercise('');
       enqueueSnackbar('1RM record saved successfully', { variant: 'success' });
-    } catch (error) {
+    } catch {
       enqueueSnackbar('Failed to save 1RM record', { variant: 'error' });
     } finally {
       setIsSaving(false);
@@ -116,17 +118,20 @@ export const OneRepMaxRecords: React.FC<OneRepMaxRecordsProps> = () => {
         if (allExercises.length === 0) {
           await loadAllExercises();
         }
-        
+
         // Load user one rep maxes if not already loaded
         if (userOneRepMaxes.length === 0) {
           await loadUserOneRepMaxes();
         }
-        
+
         // Extract one rep maxes from userData as fallback
         let fallbackData: UserOneRepMax[] = [];
         if (Array.isArray(userData.user_one_rep_max)) {
           fallbackData = userData.user_one_rep_max as unknown as UserOneRepMax[];
-        } else if (typeof userData.user_one_rep_max === 'object' && userData.user_one_rep_max !== null) {
+        } else if (
+          typeof userData.user_one_rep_max === 'object' &&
+          userData.user_one_rep_max !== null
+        ) {
           fallbackData = Object.values(userData.user_one_rep_max) as unknown as UserOneRepMax[];
         }
         setOneRepMaxes(fallbackData);
@@ -138,7 +143,13 @@ export const OneRepMaxRecords: React.FC<OneRepMaxRecordsProps> = () => {
     };
 
     loadData();
-  }, [userData, allExercises.length, loadAllExercises, userOneRepMaxes.length, loadUserOneRepMaxes]);
+  }, [
+    userData,
+    allExercises.length,
+    loadAllExercises,
+    userOneRepMaxes.length,
+    loadUserOneRepMaxes,
+  ]);
 
   // Table configuration
   const columnHelper = createColumnHelper<{
@@ -273,18 +284,14 @@ export const OneRepMaxRecords: React.FC<OneRepMaxRecordsProps> = () => {
                 {oneRepMaxes.length}
               </Box>
             </Box>
-            <Button
-              variant="contained"
-              onClick={() => setRecordDialogOpen(true)}
-              sx={{ ml: 2 }}
-            >
+            <Button variant="contained" onClick={() => setRecordDialogOpen(true)} sx={{ ml: 2 }}>
               Record 1RM
             </Button>
           </Box>
           <GameText variant="body2" textVariant="secondary" className={GAME_CLASSES.marginBottom2}>
             Track your strength progress and personal records • Search and filter your 1RM data
           </GameText>
-          
+
           {oneRepMaxes.length === 0 ? (
             <Box sx={{ textAlign: 'center', py: 4 }}>
               <GameText variant="h6" className={GAME_CLASSES.marginBottom2}>
@@ -359,49 +366,52 @@ export const OneRepMaxRecords: React.FC<OneRepMaxRecordsProps> = () => {
                         }}
                       />
                     </tr>
-                    {rowVirtualizer.getVirtualItems().map((virtualRow: any) => {
-                      const row = table.getRowModel().rows[virtualRow.index];
-                      if (!row) return null;
-                      return (
-                        <tr
-                          key={row.id}
-                          style={{
-                            position: 'absolute',
-                            top: 0,
-                            left: 0,
-                            width: '100%',
-                            height: `${virtualRow.size}px`,
-                            transform: `translateY(${virtualRow.start + 50}px)`, // Add header height offset
-                            display: 'table',
-                            tableLayout: 'fixed',
-                          }}
-                        >
-                          {row.getVisibleCells().map((cell, index) => (
-                            <td
-                              key={cell.id}
-                              style={{
-                                padding: '12px 16px',
-                                borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-                                fontSize: '0.875rem',
-                                color: '#ffffff',
-                                transition: 'background-color 0.2s ease',
-                                textAlign: index === 1 ? 'center' : index === 2 ? 'right' : 'left', // Match header alignment
-                                display: 'table-cell',
-                                width: index === 0 ? '40%' : index === 1 ? '30%' : '30%', // Set column widths
-                              }}
-                              onMouseEnter={e => {
-                                e.currentTarget.style.backgroundColor = 'rgba(0, 188, 212, 0.15)';
-                              }}
-                              onMouseLeave={e => {
-                                e.currentTarget.style.backgroundColor = 'transparent';
-                              }}
-                            >
-                              {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                            </td>
-                          ))}
-                        </tr>
-                      );
-                    })}
+                    {rowVirtualizer
+                      .getVirtualItems()
+                      .map((virtualRow: { index: number; start: number; size: number }) => {
+                        const row = table.getRowModel().rows[virtualRow.index];
+                        if (!row) return null;
+                        return (
+                          <tr
+                            key={row.id}
+                            style={{
+                              position: 'absolute',
+                              top: 0,
+                              left: 0,
+                              width: '100%',
+                              height: `${virtualRow.size}px`,
+                              transform: `translateY(${virtualRow.start + 50}px)`, // Add header height offset
+                              display: 'table',
+                              tableLayout: 'fixed',
+                            }}
+                          >
+                            {row.getVisibleCells().map((cell, index) => (
+                              <td
+                                key={cell.id}
+                                style={{
+                                  padding: '12px 16px',
+                                  borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+                                  fontSize: '0.875rem',
+                                  color: '#ffffff',
+                                  transition: 'background-color 0.2s ease',
+                                  textAlign:
+                                    index === 1 ? 'center' : index === 2 ? 'right' : 'left', // Match header alignment
+                                  display: 'table-cell',
+                                  width: index === 0 ? '40%' : index === 1 ? '30%' : '30%', // Set column widths
+                                }}
+                                onMouseEnter={e => {
+                                  e.currentTarget.style.backgroundColor = 'rgba(0, 188, 212, 0.15)';
+                                }}
+                                onMouseLeave={e => {
+                                  e.currentTarget.style.backgroundColor = 'transparent';
+                                }}
+                              >
+                                {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                              </td>
+                            ))}
+                          </tr>
+                        );
+                      })}
                   </tbody>
                 </table>
               </Box>
@@ -429,17 +439,20 @@ export const OneRepMaxRecords: React.FC<OneRepMaxRecordsProps> = () => {
           one_rep_max: 0,
         }}
       >
-        {(form: any) => {
+        {(form: {
+          getFieldValue: (name: string) => unknown;
+          setFieldValue: (name: string, value: unknown) => void;
+        }) => {
           // Subscribe to exercise_name field changes using TanStack Form's useField
           const exerciseField = useField({
             form,
             name: 'exercise_name',
           });
-          
+
           // Handle exercise field changes
           React.useEffect(() => {
             const exerciseName = exerciseField.state.value as string;
-            
+
             if (exerciseName && typeof exerciseName === 'string') {
               setSelectedExercise(exerciseName);
               // Pre-populate with existing 1RM value if available, otherwise set to 0

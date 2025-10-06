@@ -2,8 +2,8 @@ import { Box, useTheme, Tooltip, CardContent } from '@mui/material';
 import { ResponsiveChord } from '@nivo/chord';
 import React, { useMemo } from 'react';
 
+import { GameText, GameCard } from './GameTheme';
 import { createCongenNivoTheme } from '../theme/nivoTheme';
-import { GameText, GameCard, GAME_CLASSES } from './GameTheme';
 
 interface WorkoutStageWithExercises {
   stage: Record<string, unknown>;

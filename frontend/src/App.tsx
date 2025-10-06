@@ -14,7 +14,6 @@ import MenuItem from '@mui/material/MenuItem';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { alpha } from '@mui/material/styles';
 import Toolbar from '@mui/material/Toolbar';
-import Typography from '@mui/material/Typography';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import * as React from 'react';
 import { AuthProvider as OidcAuthProvider } from 'react-oidc-context';
@@ -194,7 +193,8 @@ function AppContent(): React.ReactElement {
                   src={ConGenIcon}
                   style={{
                     ...logoStyle,
-                    filter: 'brightness(0) saturate(100%) invert(70%) sepia(100%) saturate(1000%) hue-rotate(180deg) brightness(1.2) contrast(1.2)',
+                    filter:
+                      'brightness(0) saturate(100%) invert(70%) sepia(100%) saturate(1000%) hue-rotate(180deg) brightness(1.2) contrast(1.2)',
                     cursor: 'pointer',
                   }}
                   alt="ConGen"

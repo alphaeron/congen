@@ -170,7 +170,11 @@ export const OneRepMaxInputStep: React.FC<OneRepMaxInputStepProps> = ({
       {/* Current exercise input */}
       <Card sx={{ mb: 3 }}>
         <CardContent>
-          <GameText variant="h5" gutterBottom className={`${GAME_CLASSES.textBold} ${GAME_CLASSES.marginBottom2}`}>
+          <GameText
+            variant="h5"
+            gutterBottom
+            className={`${GAME_CLASSES.textBold} ${GAME_CLASSES.marginBottom2}`}
+          >
             {currentExercise.name}
           </GameText>
           <Grid container spacing={2}>

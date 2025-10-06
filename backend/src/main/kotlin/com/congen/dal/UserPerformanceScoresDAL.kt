@@ -227,7 +227,7 @@ class UserPerformanceScoresDAL(
                                     fatigue_loss = $16,
                                     skills = $17
                                 WHERE id = (
-                                    SELECT id FROM user_performance_scores 
+                                    SELECT id FROM user_performance_scores
                                     WHERE keycloak_id = $1 AND DATE(created_at) = DATE(NOW())
                                     ORDER BY created_at DESC
                                     LIMIT 1

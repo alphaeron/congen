@@ -1,8 +1,10 @@
-import React, { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
-import { CycleDiagram, CycleDiagramProps } from './CycleDiagram';
+import React, { useEffect, useRef, useState } from 'react';
 
-export const CycleDiagramReact: React.FC<CycleDiagramProps> = (props) => {
+import type { CycleDiagramProps } from './CycleDiagram';
+import { CycleDiagram } from './CycleDiagram';
+
+export const CycleDiagramReact: React.FC<CycleDiagramProps> = props => {
   const containerRef = useRef<HTMLDivElement>(null);
   const diagramRef = useRef<CycleDiagram | null>(null);
   const [isInView, setIsInView] = useState(false);
@@ -67,41 +69,44 @@ export const CycleDiagramReact: React.FC<CycleDiagramProps> = (props) => {
   return (
     <motion.div
       ref={containerRef}
-      initial={{ 
-        opacity: 0, 
-        scale: 0.8, 
-        rotate: -360
+      initial={{
+        opacity: 0,
+        scale: 0.8,
+        rotate: -360,
       }}
-      animate={isInView ? { 
-        opacity: 1, 
-        scale: 1,
-        rotate: 0
-      } : { 
-        opacity: 0, 
-        scale: 0.8, 
-        rotate: -360
-      }}
-      transition={{ 
+      animate={
+        isInView
+          ? {
+              opacity: 1,
+              scale: 1,
+              rotate: 0,
+            }
+          : {
+              opacity: 0,
+              scale: 0.8,
+              rotate: -360,
+            }
+      }
+      transition={{
         duration: 1.0,
-        ease: "easeOut",
+        ease: 'easeOut',
         rotate: {
           duration: 1.0,
-          ease: [0.25, 0.46, 0.45, 0.94] // Smooth deceleration for spin
+          ease: [0.25, 0.46, 0.45, 0.94], // Smooth deceleration for spin
         },
         scale: {
           duration: 0.6,
-          ease: "easeOut"
+          ease: 'easeOut',
         },
         opacity: {
           duration: 0.4,
-          ease: "easeOut"
-        }
+          ease: 'easeOut',
+        },
       }}
       style={{
         position: 'relative',
-        overflow: 'visible'
+        overflow: 'visible',
       }}
-    >
-    </motion.div>
+    ></motion.div>
   );
 };

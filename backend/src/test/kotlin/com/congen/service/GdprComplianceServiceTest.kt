@@ -8,7 +8,6 @@ import com.congen.dal.ProgramPreferencesDAL
 import com.congen.dal.UserDAL
 import com.congen.dal.UserEquipmentDAL
 import com.congen.dal.UserExercisePreferenceDAL
-import com.congen.service.UserOneRepMaxService
 import com.congen.dal.UserWeightUnitPreferenceDAL
 import com.congen.model.User
 import com.congen.model.UserConsent

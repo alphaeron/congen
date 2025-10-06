@@ -3,7 +3,6 @@ package com.congen.service
 import com.congen.client.PostgresClient
 import com.congen.dal.ProgrammedExerciseDAL
 import com.congen.dal.SetSchemeDAL
-import com.congen.service.UserOneRepMaxService
 import com.congen.exceptions.NoResultsFoundException
 import com.congen.mockProgrammedExercise
 import com.congen.mockSetScheme

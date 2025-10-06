@@ -57,7 +57,7 @@ export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
           transition={{
             duration: 1,
             repeat: Infinity,
-            ease: 'linear'
+            ease: 'linear',
           }}
         />
         <motion.div
@@ -75,7 +75,7 @@ export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
           transition={{
             duration: 1.5,
             repeat: Infinity,
-            ease: 'linear'
+            ease: 'linear',
           }}
         />
       </Box>
@@ -93,7 +93,6 @@ export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
           {message}
         </GameText>
       )}
-
     </Box>
   );
 };

@@ -53,7 +53,11 @@ export const PreferenceSection: React.FC<PreferenceSectionProps> = ({
         <Divider sx={{ mb: 2 }} />
 
         {!hasItems && emptyMessage ? (
-          <GameText variant="body2" textVariant="secondary" className={`${GAME_CLASSES.textCenter} ${GAME_CLASSES.padding2}`}>
+          <GameText
+            variant="body2"
+            textVariant="secondary"
+            className={`${GAME_CLASSES.textCenter} ${GAME_CLASSES.padding2}`}
+          >
             {emptyMessage}
           </GameText>
         ) : (

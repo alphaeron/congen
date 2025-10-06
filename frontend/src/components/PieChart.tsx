@@ -1,7 +1,8 @@
-import { Box, Card, CardContent, useTheme } from '@mui/material';
+import { Box, CardContent, useTheme } from '@mui/material';
 import { ResponsivePie } from '@nivo/pie';
 import React, { useState, useMemo } from 'react';
 
+import { GameText, GameCard, GAME_CLASSES } from './GameTheme';
 import type {
   UserDataExport,
   Exercise,
@@ -10,7 +11,6 @@ import type {
   UserWeightUnitPreference,
 } from '../api/types';
 import { createCongenNivoTheme } from '../theme/nivoTheme';
-import { GameText, GameCard, GAME_CLASSES } from './GameTheme';
 
 interface PieChartProps {
   userDataExport: UserDataExport | null;

@@ -1,21 +1,10 @@
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import InfoIcon from '@mui/icons-material/Info';
-import {
-  Box,
-  Button,
-  Card,
-  CardContent,
-  Chip,
-  Collapse,
-  IconButton,
-  Link,
-  Stack,
-} from '@mui/material';
-import { alpha } from '@mui/material/styles';
+import { Box, Button, CardContent, Chip, Collapse, IconButton, Link, Stack } from '@mui/material';
 import * as React from 'react';
 
+import { GameText, GameCard, GAME_CLASSES } from './GameTheme';
 import { useCookie } from '../contexts/CookieContext';
-import { GameText, GameCard, GameButton, GAME_CLASSES } from './GameTheme';
 
 interface CookieConsentBannerProps {
   onClose?: () => void;
@@ -59,7 +48,11 @@ export const CookieConsentBanner: React.FC<CookieConsentBannerProps> = ({ onClos
               Cookie Notice
             </GameText>
           </Box>
-          <GameText variant="caption" textVariant="secondary" className={GAME_CLASSES.marginBottom2}>
+          <GameText
+            variant="caption"
+            textVariant="secondary"
+            className={GAME_CLASSES.marginBottom2}
+          >
             We use essential cookies to ensure our website functions properly, including
             authentication and security features.
           </GameText>
@@ -85,7 +78,11 @@ export const CookieConsentBanner: React.FC<CookieConsentBannerProps> = ({ onClos
               </IconButton>
             </Box>
             <Collapse in={expanded}>
-              <GameText variant="caption" textVariant="secondary" className={GAME_CLASSES.marginBottom2}>
+              <GameText
+                variant="caption"
+                textVariant="secondary"
+                className={GAME_CLASSES.marginBottom2}
+              >
                 These cookies are essential for the website to function properly. They enable secure
                 authentication and maintain your login session.
               </GameText>

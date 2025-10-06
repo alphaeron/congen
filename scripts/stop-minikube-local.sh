@@ -70,7 +70,7 @@ stop_application() {
 stop_minikube() {
     local stop_minikube_flag="$1"
     
-    if [ "$stop_minikube_flag" = "--stop-minikube" ]; then
+    if [[ "${stop_minikube_flag}" = "--stop-minikube" ]]; then
         print_status "Stopping minikube profile '${MINIKUBE_PROFILE}'..."
         
         if minikube status -p "${MINIKUBE_PROFILE}" >/dev/null 2>&1; then
@@ -155,7 +155,7 @@ main() {
     # Execute cleanup steps
     stop_port_forwarding
     stop_application
-    stop_minikube "$stop_minikube_flag"
+    stop_minikube "${stop_minikube_flag}"
     display_cleanup_info
     
     print_success "Congen minikube deployment stopped successfully!"

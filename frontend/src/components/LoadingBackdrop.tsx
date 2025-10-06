@@ -1,8 +1,8 @@
 import { Backdrop } from '@mui/material';
 import React from 'react';
 
-import { LoadingSpinner } from './LoadingSpinner';
 import { GameText, GAME_CLASSES } from './GameTheme';
+import { LoadingSpinner } from './LoadingSpinner';
 
 interface LoadingBackdropProps {
   open: boolean;

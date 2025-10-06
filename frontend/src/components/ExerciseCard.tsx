@@ -1,5 +1,4 @@
 import Box from '@mui/material/Box';
-import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import Chip from '@mui/material/Chip';
 import Divider from '@mui/material/Divider';
@@ -8,11 +7,10 @@ import { alpha } from '@mui/material/styles';
 import * as React from 'react';
 import { Link } from 'react-router';
 
-import { encodeExerciseName } from '../api/endpoint';
-
 import { BinaryTag } from './BinaryTag';
 import { ExercisePreferenceControls } from './ExercisePreferenceControls';
 import { GameCard, GameText } from './GameTheme';
+import { encodeExerciseName } from '../api/endpoint';
 import type { Exercise } from '../api/types';
 import { capitalizeEachWord } from '../common/utils';
 
@@ -38,10 +36,7 @@ export function ExerciseCard(props: ExerciseCardProps): React.ReactElement<Exerc
   const { exercise, equipment = [], muscles = [] } = props;
 
   return (
-    <GameCard
-      interactive={true}
-      sx={{ height: '100%' }}
-    >
+    <GameCard interactive={true} sx={{ height: '100%' }}>
       <CardContent sx={{ p: 3, height: '100%', display: 'flex', flexDirection: 'column' }}>
         <Link
           className="undecoratedLink"

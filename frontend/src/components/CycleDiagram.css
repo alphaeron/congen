@@ -8,7 +8,13 @@
   width: 100%;
   max-width: 100%;
   overflow: visible;
-  font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family:
+    Inter,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
 }
 
 .cycle-diagram-svg-container {
@@ -31,7 +37,7 @@
   .cycle-diagram-container {
     gap: 16px;
   }
-  
+
   .cycle-diagram-title {
     font-size: 20px;
   }
@@ -41,7 +47,7 @@
   .cycle-diagram-container {
     gap: 12px;
   }
-  
+
   .cycle-diagram-title {
     font-size: 18px;
   }

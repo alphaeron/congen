@@ -10,7 +10,6 @@ import com.congen.dal.ProgrammedWorkoutDAL
 import com.congen.dal.SetSchemeDAL
 import com.congen.dal.UserEquipmentDAL
 import com.congen.dal.UserExercisePreferenceDAL
-import com.congen.service.UserOneRepMaxService
 import com.congen.dal.UserWeakMuscleDAL
 import com.congen.dal.UserWeightUnitPreferenceDAL
 import com.congen.model.Program
@@ -20,6 +19,7 @@ import com.congen.model.UserOneRepMax
 import com.congen.model.UserWeakMuscle
 import com.congen.service.ProgramService
 import com.congen.service.SetSchemeService
+import com.congen.service.UserOneRepMaxService
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any

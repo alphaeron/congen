@@ -9,7 +9,6 @@ import com.congen.util.UnitConverter
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Mono
-import java.time.Instant
 
 /**
  * Service for user business logic: validation, conversion, and DAL operations.
@@ -55,7 +54,7 @@ class UserService(
                                 .flatMap { user ->
                                     // Automatically create consent record for basic service provision
                                     gdprComplianceService.updateUserConsent(keycloakId, true)
-                                        .flatMap { 
+                                        .flatMap {
                                             performanceTrackingService.createDefaultPerformanceData(keycloakId)
                                                 .map { user }
                                         }

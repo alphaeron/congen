@@ -1,12 +1,10 @@
 package com.congen.service
 
 import com.congen.dal.UserDAL
-import com.congen.model.User
 import com.congen.model.UserPerformanceMetrics
 import com.congen.model.UserPerformanceScores
 import com.congen.model.UserWeeklyTest
 import com.congen.model.WeightUnit
-import com.congen.service.WilksCalculationService
 import com.congen.util.UnitConverter
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -61,6 +59,7 @@ class PerformanceScoringService(
      *
      * @param dailyMetrics Daily wearable and subjective metrics
      * @param weeklyTest Latest weekly test results (optional)
+     * @param levelChangeReason Reason for level change (default: "daily_metrics_updated")
      * @return Complete performance scores with HP/MP/Fatigue and athleticism level
      */
     fun calculatePerformanceScores(
@@ -76,7 +75,7 @@ class PerformanceScoringService(
         val recoveryScore = calculateRecoveryScore(weeklyTest?.hrRecoveryResult)
         val reactionTimeScore = calculateReactionTimeScore(weeklyTest?.reflexResult)
         val mobilityScore = calculateMobilityScore(weeklyTest?.mobilityResult)
-        
+
         // Calculate strength score and raw Wilks score reactively
         return calculateStrengthData(dailyMetrics)
             .map { strengthData: Pair<Double, Double> ->
@@ -144,7 +143,7 @@ class PerformanceScoringService(
      * Calculates explosiveness score using logarithmic scaling.
      * Scaled relative to world record (127cm) with reasonable performance benchmarks:
      * - 40cm (beginner) ≈ 20 score
-     * - 60cm (intermediate) ≈ 50 score  
+     * - 60cm (intermediate) ≈ 50 score
      * - 80cm (advanced) ≈ 75 score
      * - 100cm (elite) ≈ 90 score
      * - 127cm (world record) = 100 score
@@ -229,7 +228,7 @@ class PerformanceScoringService(
     ): Double {
         // HP is based on physical resilience metrics from weekly tests and daily metrics
         val vo2MaxScore = calculateAerobicCapacityScore(metrics.vo2Max)
-        
+
         // Use daily recovery metric if available, otherwise fall back to weekly test data
         val dailyRecoveryScore = metrics.recovery?.let { calculateRecoveryScore(it) }
         val weeklyRecoveryScore = calculateRecoveryScore(weeklyTest?.hrRecoveryResult)
@@ -483,14 +482,14 @@ class PerformanceScoringService(
 
     /**
      * Calculates strength score and raw Wilks score.
-     * 
+     *
      * Returns a Mono<Pair<Double, Double>> where:
      * - strengthScore: 0-100 scale using logarithmic scaling
      * - wilksScore: raw Wilks score
-     * 
+     *
      * Strength score scaling (500+ Wilks = 100 score):
      * - 200 Wilks ≈ 15 score (beginner)
-     * - 300 Wilks ≈ 40 score (intermediate)  
+     * - 300 Wilks ≈ 40 score (intermediate)
      * - 400 Wilks ≈ 65 score (advanced)
      * - 500+ Wilks = 100 score (elite/world class)
      */
@@ -503,10 +502,11 @@ class PerformanceScoringService(
                 }
 
                 // Convert weight from pounds to kg (User.weight is in pounds)
-                val weightInKg = unitConverter.toKg(
-                    user.weight.toBigDecimal(), 
-                    WeightUnit.LBS
-                ).toDouble()
+                val weightInKg =
+                    unitConverter.toKg(
+                        user.weight.toBigDecimal(),
+                        WeightUnit.LBS
+                    ).toDouble()
 
                 logger.debug("User weight: {} lbs = {} kg, gender: {}", user.weight, weightInKg, user.gender)
 
@@ -534,5 +534,4 @@ class PerformanceScoringService(
                 Mono.just(Pair(0.0, 0.0))
             }
     }
-
 }

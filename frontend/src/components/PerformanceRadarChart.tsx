@@ -2,17 +2,16 @@ import { Radar as RadarIcon } from '@mui/icons-material';
 import { Box, useTheme, Tooltip } from '@mui/material';
 import { ResponsiveRadar } from '@nivo/radar';
 import React, { useEffect, useRef, useState } from 'react';
-import { motion } from 'framer-motion';
 
 import { CustomSvgIcon } from './CustomSvgIcon';
 import { GameText, GAME_CLASSES } from './GameTheme';
 import type { UserPerformanceScores, UserPerformanceMetrics, UserTestResult } from '../api/types';
-import RecoveryIcon from '../resources/recovery-icon.svg';
 import DexterityIcon from '../resources/dexterity-icon.svg';
 import ExplosivenessIcon from '../resources/explosiveness-icon.svg';
-import StrengthIcon from '../resources/strength-icon.svg';
-import StaminaIcon from '../resources/stamina-icon.svg';
+import RecoveryIcon from '../resources/recovery-icon.svg';
 import ReflexesIcon from '../resources/reflexes-icon.svg';
+import StaminaIcon from '../resources/stamina-icon.svg';
+import StrengthIcon from '../resources/strength-icon.svg';
 import { createCongenNivoTheme } from '../theme/nivoTheme';
 
 interface PerformanceRadarChartProps {
@@ -56,7 +55,13 @@ const getMetricData = (
         ? `${metrics.vo2_max.toFixed(1)} ml/kg/min`
         : 'VO₂ max test required',
       color: '#45B7D1',
-      icon: <CustomSvgIcon src={StaminaIcon} alt="Stamina" className={`${GAME_CLASSES.fontSize32} ${GAME_CLASSES.colorCyan}`} />,
+      icon: (
+        <CustomSvgIcon
+          src={StaminaIcon}
+          alt="Stamina"
+          className={`${GAME_CLASSES.fontSize32} ${GAME_CLASSES.colorCyan}`}
+        />
+      ),
     },
     {
       metric: 'Recovery',
@@ -67,7 +72,11 @@ const getMetricData = (
         : 'HR recovery test required',
       color: '#96CEB4',
       icon: (
-        <CustomSvgIcon src={RecoveryIcon} alt="Recovery" className={`${GAME_CLASSES.fontSize32} ${GAME_CLASSES.colorCyan}`} />
+        <CustomSvgIcon
+          src={RecoveryIcon}
+          alt="Recovery"
+          className={`${GAME_CLASSES.fontSize32} ${GAME_CLASSES.colorCyan}`}
+        />
       ),
     },
     {
@@ -92,7 +101,13 @@ const getMetricData = (
       description: 'Relative strength based on Wilks score',
       rawValue: scores.wilks_score ? `${scores.wilks_score.toFixed(1)} Wilks` : '1RM data required',
       color: '#FF6B6B',
-      icon: <CustomSvgIcon src={StrengthIcon} alt="Strength" className={`${GAME_CLASSES.fontSize32} ${GAME_CLASSES.colorCyan}`} />,
+      icon: (
+        <CustomSvgIcon
+          src={StrengthIcon}
+          alt="Strength"
+          className={`${GAME_CLASSES.fontSize32} ${GAME_CLASSES.colorCyan}`}
+        />
+      ),
     },
     {
       metric: 'Dexterity',
@@ -103,7 +118,11 @@ const getMetricData = (
         : 'Mobility test required',
       color: '#9C27B0',
       icon: (
-        <CustomSvgIcon src={DexterityIcon} alt="Dexterity" className={`${GAME_CLASSES.fontSize32} ${GAME_CLASSES.colorCyan}`} />
+        <CustomSvgIcon
+          src={DexterityIcon}
+          alt="Dexterity"
+          className={`${GAME_CLASSES.fontSize32} ${GAME_CLASSES.colorCyan}`}
+        />
       ),
     },
   ];
@@ -180,9 +199,7 @@ export const PerformanceRadarChart: React.FC<PerformanceRadarChartProps> = ({
 
     if (!metric) {
       return (
-        <Box
-          className={GAME_CLASSES.tooltipBackground}
-        >
+        <Box className={GAME_CLASSES.tooltipBackground}>
           <Box className={GAME_CLASSES.fontSize16}>No metric found for: {metricName}</Box>
         </Box>
       );
@@ -202,12 +219,19 @@ export const PerformanceRadarChart: React.FC<PerformanceRadarChartProps> = ({
           position: 'relative',
         }}
       >
-        <Box className={`${GAME_CLASSES.fontSize16} ${GAME_CLASSES.flex} ${GAME_CLASSES.alignItemsCenter}`} sx={{ gap: 1 }}>
+        <Box
+          className={`${GAME_CLASSES.fontSize16} ${GAME_CLASSES.flex} ${GAME_CLASSES.alignItemsCenter}`}
+          sx={{ gap: 1 }}
+        >
           {metric.icon}
           <Box className={GAME_CLASSES.textBold}>{metric.metric}:</Box>
-          <Box className={`${GAME_CLASSES.textBold} ${GAME_CLASSES.colorCyan}`}>{metric.rawValue}</Box>
+          <Box className={`${GAME_CLASSES.textBold} ${GAME_CLASSES.colorCyan}`}>
+            {metric.rawValue}
+          </Box>
         </Box>
-        <Box className={`${GAME_CLASSES.fontSizeSmall} ${GAME_CLASSES.opacity80} ${GAME_CLASSES.fontStyleItalic} ${GAME_CLASSES.marginTop1}`}>
+        <Box
+          className={`${GAME_CLASSES.fontSizeSmall} ${GAME_CLASSES.opacity80} ${GAME_CLASSES.fontStyleItalic} ${GAME_CLASSES.marginTop1}`}
+        >
           {metric.description}
         </Box>
       </Box>
@@ -219,7 +243,10 @@ export const PerformanceRadarChart: React.FC<PerformanceRadarChartProps> = ({
     return (
       <Box>
         {title && (
-          <Box className={`${GAME_CLASSES.flex} ${GAME_CLASSES.alignItemsCenter} ${GAME_CLASSES.marginBottom2}`} sx={{ gap: 1 }}>
+          <Box
+            className={`${GAME_CLASSES.flex} ${GAME_CLASSES.alignItemsCenter} ${GAME_CLASSES.marginBottom2}`}
+            sx={{ gap: 1 }}
+          >
             <RadarIcon className={GAME_CLASSES.colorWhite} />
             <GameText variant="h6">{title}</GameText>
           </Box>

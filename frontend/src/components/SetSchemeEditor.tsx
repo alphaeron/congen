@@ -1,20 +1,11 @@
 import { Edit } from '@mui/icons-material';
-import {
-  Box,
-  IconButton,
-  Tooltip,
-  Popover,
-  Button,
-  Divider,
-  Alert,
-  CircularProgress,
-} from '@mui/material';
+import { Box, IconButton, Tooltip, Popover, Button, Divider, Alert } from '@mui/material';
 import { useForm } from '@tanstack/react-form';
 import { useSnackbar } from 'notistack';
 import React, { useState } from 'react';
 
-import { SetSchemeForm } from './SetSchemeForm';
 import { GameText } from './GameTheme';
+import { SetSchemeForm } from './SetSchemeForm';
 import { deleteProgrammedExercise } from '../api/programmedExercise';
 import { updateSetScheme } from '../api/setScheme';
 import type { ProgrammedExerciseWithSetSchemes, UserWeightUnitPreference } from '../api/types';
@@ -220,9 +211,7 @@ export const SetSchemeEditor: React.FC<SetSchemeEditorProps> = ({
       >
         <Box sx={{ p: 2 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-            <GameText variant="subtitle1">
-              {exercise.exercise.exercise_name}
-            </GameText>
+            <GameText variant="subtitle1">{exercise.exercise.exercise_name}</GameText>
           </Box>
 
           <Alert severity="info" sx={{ mb: 2 }}>
@@ -258,12 +247,7 @@ export const SetSchemeEditor: React.FC<SetSchemeEditorProps> = ({
                 alignItems: 'center',
               }}
             >
-              <Button
-                onClick={handleDelete}
-                disabled={saving}
-                color="error"
-                variant="contained"
-              >
+              <Button onClick={handleDelete} disabled={saving} color="error" variant="contained">
                 Delete Exercise
               </Button>
 
@@ -271,11 +255,7 @@ export const SetSchemeEditor: React.FC<SetSchemeEditorProps> = ({
                 <Button onClick={handleClose} disabled={saving}>
                   Cancel
                 </Button>
-                <Button
-                  type="submit"
-                  variant="contained"
-                  disabled={saving}
-                >
+                <Button type="submit" variant="contained" disabled={saving}>
                   Submit
                 </Button>
               </Box>

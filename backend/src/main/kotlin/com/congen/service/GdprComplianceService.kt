@@ -8,7 +8,6 @@ import com.congen.dal.ProgramPreferencesDAL
 import com.congen.dal.UserDAL
 import com.congen.dal.UserEquipmentDAL
 import com.congen.dal.UserExercisePreferenceDAL
-import com.congen.service.UserOneRepMaxService
 import com.congen.dal.UserWeightUnitPreferenceDAL
 import com.congen.model.ProgramWithWorkouts
 import com.congen.model.UserConsent
@@ -53,7 +52,7 @@ import java.time.Instant
  * @param userEquipmentDAL Data access layer for user equipment
  * @param userExercisePreferenceDAL Data access layer for exercise preferences
  * @param programPreferencesDAL Data access layer for program preferences
- * @param userOneRepMaxDAL Data access layer for one-rep-max records
+ * @param userOneRepMaxService Service for user one rep max operations
  * @param userWeightUnitPreferenceDAL Data access layer for weight unit preferences
  * @param programDAL Data access layer for training programs
  * @param auditService Service for audit logging

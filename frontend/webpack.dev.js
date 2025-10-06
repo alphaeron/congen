@@ -141,13 +141,13 @@ module.exports = merge(common, {
     },
     // Modern webpack 5 fallbacks for Node.js modules
     fallback: {
-      "path": false,
-      "fs": false,
-      "crypto": false,
-      "stream": false,
-      "util": false,
-      "buffer": false,
-      "process": require.resolve("process/browser.js"),
+      path: false,
+      fs: false,
+      crypto: false,
+      stream: false,
+      util: false,
+      buffer: false,
+      process: require.resolve('process/browser.js'),
     },
   },
 

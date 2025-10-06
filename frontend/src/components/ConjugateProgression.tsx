@@ -11,10 +11,10 @@ import { useVirtualizer } from '@tanstack/react-virtual';
 import React, { useMemo, useState, useRef, useEffect } from 'react';
 
 import { ExerciseName } from './ExerciseName';
+import { GameText, GameCard, GameTextField, GAME_CLASSES } from './GameTheme';
 import { LineChart } from './LineChart';
 import { LoadingSpinner } from './LoadingSpinner';
 import { PieChart } from './PieChart';
-import { GameText, GameCard, GameTextField, GAME_CLASSES } from './GameTheme';
 import type { Exercise, UserOneRepMax } from '../api/types';
 import { useData } from '../contexts/DataContext';
 
@@ -248,7 +248,11 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = () => {
                 {oneRepMaxes.length}
               </Box>
             </Box>
-            <GameText variant="body2" textVariant="secondary" className={GAME_CLASSES.marginBottom2}>
+            <GameText
+              variant="body2"
+              textVariant="secondary"
+              className={GAME_CLASSES.marginBottom2}
+            >
               Track your strength progress and personal records • Click to view details
             </GameText>
             <GameTextField

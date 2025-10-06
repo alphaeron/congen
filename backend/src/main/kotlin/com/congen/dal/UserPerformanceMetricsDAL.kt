@@ -117,7 +117,7 @@ class UserPerformanceMetricsDAL(
                                     subjective_tiredness = $9,
                                     updated_at = NOW()
                                 WHERE id = (
-                                    SELECT id FROM user_performance_metrics 
+                                    SELECT id FROM user_performance_metrics
                                     WHERE keycloak_id = $1 AND DATE(created_at) = DATE(NOW())
                                     ORDER BY created_at DESC
                                     LIMIT 1

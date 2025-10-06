@@ -4,7 +4,6 @@ import React from 'react';
 import { AdventurerStatusCard } from './AdventurerStatusCard';
 import { CompactQuestCard } from './CompactQuestCard';
 import { LoadingSpinner } from './LoadingSpinner';
-import { GAME_CLASSES } from './GameTheme';
 import type { User } from '../api/types';
 import { useData } from '../contexts/DataContext';
 
@@ -41,7 +40,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ user }) =>
       {performanceScores ? (
         <Grid container spacing={3}>
           <Grid size={{ xs: 12, lg: 9 }}>
-          {/* Status Card - 3/4 width */}
+            {/* Status Card - 3/4 width */}
             <AdventurerStatusCard
               scores={performanceScores}
               metrics={performanceMetrics}

@@ -1,9 +1,9 @@
 import { Box, Tooltip } from '@mui/material';
 import { styled, alpha } from '@mui/material/styles';
+import { motion } from 'framer-motion';
 import React, { useEffect, useRef, useState } from 'react';
-import { motion, useMotionValue, useTransform, useAnimation } from 'framer-motion';
 
-import { GameText, GAME_CLASSES } from './GameTheme';
+import { GameText } from './GameTheme';
 
 /**
  * Shared progress bar components for consistent styling across the game UI.
@@ -99,7 +99,7 @@ export const GameProgressBar: React.FC<GameProgressBarProps> = ({
               controls.start({
                 x: 0,
                 opacity: 1,
-                transition: { duration: 0.25 }
+                transition: { duration: 0.25 },
               });
               progressValue.set(1);
             }
@@ -124,7 +124,15 @@ export const GameProgressBar: React.FC<GameProgressBarProps> = ({
 
   const ProgressBarContent = (
     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.25, minWidth: 'auto' }}>
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: 0.25,
+          minWidth: 'auto',
+        }}
+      >
         {icon}
         <LabelText>{label}</LabelText>
       </Box>
@@ -141,11 +149,15 @@ export const GameProgressBar: React.FC<GameProgressBarProps> = ({
                 borderRadius: 4,
               }}
               initial={{ width: '0%' }}
-              animate={isInView ? {
-                width: `${Math.max(2, percentage)}%`,
-              } : {
-                width: '0%',
-              }}
+              animate={
+                isInView
+                  ? {
+                      width: `${Math.max(2, percentage)}%`,
+                    }
+                  : {
+                      width: '0%',
+                    }
+              }
               transition={{
                 duration: 1.2,
                 delay: delay / 1000,
@@ -169,20 +181,24 @@ export const GameProgressBar: React.FC<GameProgressBarProps> = ({
                 fontFamily: '"Inter", "system-ui", "sans-serif"',
               }}
             >
-            <motion.span
-              initial={{ opacity: 0 }}
-              animate={isInView ? {
-                opacity: 1,
-              } : {
-                opacity: 0,
-              }}
-              transition={{
-                duration: 0.3,
-                delay: delay / 1000 + 0.8,
-              }}
-            >
-              {Math.round(current)}/{Math.round(max)}
-            </motion.span>
+              <motion.span
+                initial={{ opacity: 0 }}
+                animate={
+                  isInView
+                    ? {
+                        opacity: 1,
+                      }
+                    : {
+                        opacity: 0,
+                      }
+                }
+                transition={{
+                  duration: 0.3,
+                  delay: delay / 1000 + 0.8,
+                }}
+              >
+                {Math.round(current)}/{Math.round(max)}
+              </motion.span>
             </motion.div>
           ) : (
             <ProgressBarText>
@@ -202,18 +218,12 @@ export const GameProgressBar: React.FC<GameProgressBarProps> = ({
         animate={controls}
         style={{ display: 'flex', alignItems: 'center', gap: 8 }}
       >
-        <Tooltip title={tooltip}>
-          {ProgressBarContent}
-        </Tooltip>
+        <Tooltip title={tooltip}>{ProgressBarContent}</Tooltip>
       </motion.div>
     );
   }
 
-  return (
-    <Tooltip title={tooltip}>
-      {ProgressBarContent}
-    </Tooltip>
-  );
+  return <Tooltip title={tooltip}>{ProgressBarContent}</Tooltip>;
 };
 
 const CircularProgressContainer = styled(Box)(() => ({
@@ -277,7 +287,7 @@ export const GameCircularProgressBar: React.FC<GameProgressBarProps> = ({
               controls.start({
                 x: 0,
                 opacity: 1,
-                transition: { duration: 0.25 }
+                transition: { duration: 0.25 },
               });
               progressValue.set(1);
             }
@@ -316,12 +326,7 @@ export const GameCircularProgressBar: React.FC<GameProgressBarProps> = ({
               height: 75,
             }}
           >
-            <svg
-              width={75}
-              height={75}
-              viewBox="0 0 75 75"
-              style={{ transform: 'rotate(90deg)' }}
-            >
+            <svg width={75} height={75} viewBox="0 0 75 75" style={{ transform: 'rotate(90deg)' }}>
               <circle
                 cx="37.5"
                 cy="37.5"
@@ -342,11 +347,15 @@ export const GameCircularProgressBar: React.FC<GameProgressBarProps> = ({
                   strokeLinecap="round"
                   strokeDasharray={circumference}
                   initial={{ strokeDashoffset: -circumference }}
-                  animate={isInView ? {
-                    strokeDashoffset: -circumference * (1 - percentage / 100),
-                  } : {
-                    strokeDashoffset: -circumference,
-                  }}
+                  animate={
+                    isInView
+                      ? {
+                          strokeDashoffset: -circumference * (1 - percentage / 100),
+                        }
+                      : {
+                          strokeDashoffset: -circumference,
+                        }
+                  }
                   transition={{
                     duration: 1.2,
                     delay: delay / 1000,
@@ -382,11 +391,15 @@ export const GameCircularProgressBar: React.FC<GameProgressBarProps> = ({
                   fontFamily: '"Inter", "system-ui", "sans-serif"',
                 }}
                 initial={{ opacity: 0 }}
-                animate={isInView ? {
-                  opacity: 1,
-                } : {
-                  opacity: 0,
-                }}
+                animate={
+                  isInView
+                    ? {
+                        opacity: 1,
+                      }
+                    : {
+                        opacity: 0,
+                      }
+                }
                 transition={{
                   duration: 0.3,
                   delay: delay / 1000 + 0.8,
@@ -411,21 +424,11 @@ export const GameCircularProgressBar: React.FC<GameProgressBarProps> = ({
 
   if (animated) {
     return (
-      <motion.div
-        ref={ref}
-        initial={{ opacity: 0, x: 15 }}
-        animate={controls}
-      >
-        <Tooltip title={tooltip}>
-          {CircularProgressContent}
-        </Tooltip>
+      <motion.div ref={ref} initial={{ opacity: 0, x: 15 }} animate={controls}>
+        <Tooltip title={tooltip}>{CircularProgressContent}</Tooltip>
       </motion.div>
     );
   }
 
-  return (
-    <Tooltip title={tooltip}>
-      {CircularProgressContent}
-    </Tooltip>
-  );
+  return <Tooltip title={tooltip}>{CircularProgressContent}</Tooltip>;
 };

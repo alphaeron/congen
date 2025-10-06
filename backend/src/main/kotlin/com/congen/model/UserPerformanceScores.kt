@@ -41,6 +41,8 @@ import java.time.Instant
  * @property recoveryScore Individual recovery score (0-100)
  * @property reactionTimeScore Individual reaction time score (0-100)
  * @property mobilityScore Individual mobility score (0-100)
+ * @property strengthScore Individual strength score (0-100)
+ * @property wilksScore Wilks coefficient score (0-100)
  * @property level Athleticism level with tanh scaling (1-100)
  * @property levelChangeReason Reason for this score calculation (e.g., 'weekly_test_completed', 'daily_metrics_updated')
  * @property hp Health Points - physical resilience (0-100)

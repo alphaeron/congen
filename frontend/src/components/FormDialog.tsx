@@ -1,14 +1,8 @@
-import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Button,
-} from '@mui/material';
+import { Dialog, DialogTitle, DialogContent, DialogActions, Button } from '@mui/material';
 import { useForm } from '@tanstack/react-form';
 import React from 'react';
 
-import { GameText, GameDialog, GameButton, GAME_CLASSES } from './GameTheme';
+import { GameText, GAME_CLASSES } from './GameTheme';
 
 interface FormDialogProps<TFormData = unknown> {
   open: boolean;
@@ -95,11 +89,17 @@ export const FormDialog = <TFormData extends Record<string, unknown>>({
       {useTanStackForm ? (
         <form onSubmit={handleSubmit}>
           <DialogTitle>
-            <GameText variant="body1" sx={{ fontSize: '1.25rem', fontWeight: 600 }}>{title}</GameText>
+            <GameText variant="body1" sx={{ fontSize: '1.25rem', fontWeight: 600 }}>
+              {title}
+            </GameText>
           </DialogTitle>
           <DialogContent>
             {description && (
-              <GameText variant="body2" textVariant="secondary" className={GAME_CLASSES.marginBottom2}>
+              <GameText
+                variant="body2"
+                textVariant="secondary"
+                className={GAME_CLASSES.marginBottom2}
+              >
                 {description}
               </GameText>
             )}
@@ -124,11 +124,17 @@ export const FormDialog = <TFormData extends Record<string, unknown>>({
       ) : (
         <React.Fragment>
           <DialogTitle>
-            <GameText variant="body1" sx={{ fontSize: '1.25rem', fontWeight: 600 }}>{title}</GameText>
+            <GameText variant="body1" sx={{ fontSize: '1.25rem', fontWeight: 600 }}>
+              {title}
+            </GameText>
           </DialogTitle>
           <DialogContent>
             {description && (
-              <GameText variant="body2" textVariant="secondary" className={GAME_CLASSES.marginBottom2}>
+              <GameText
+                variant="body2"
+                textVariant="secondary"
+                className={GAME_CLASSES.marginBottom2}
+              >
                 {description}
               </GameText>
             )}

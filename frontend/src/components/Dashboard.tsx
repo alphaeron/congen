@@ -17,9 +17,9 @@ import React from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 
 import { DashboardOverview } from './DashboardOverview';
+import { GameText, GAME_CLASSES } from './GameTheme';
 import { ProgramManagement } from './ProgramManagement';
 import { WorkoutsOverview } from './WorkoutsOverview';
-import { GameText, GAME_CLASSES } from './GameTheme';
 import type { User } from '../api/types';
 
 interface DashboardProps {
@@ -118,7 +118,9 @@ export const Dashboard: React.FC<DashboardProps> = ({
             height: '100%',
           }}
         >
-          <Box className={`${GAME_CLASSES.padding2} ${GAME_CLASSES.borderBottom1} ${GAME_CLASSES.borderColorDivider} ${GAME_CLASSES.flexShrink0}`}>
+          <Box
+            className={`${GAME_CLASSES.padding2} ${GAME_CLASSES.borderBottom1} ${GAME_CLASSES.borderColorDivider} ${GAME_CLASSES.flexShrink0}`}
+          >
             <GameText variant="h6" textVariant="glow">
               Dashboard
             </GameText>

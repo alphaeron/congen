@@ -2,11 +2,11 @@ import { Tooltip } from '@mui/material';
 import React from 'react';
 import { Link } from 'react-router';
 
-import type { Exercise, Muscle } from '../api/types';
+import { GameText } from './GameTheme';
 import { encodeExerciseName } from '../api/endpoint';
+import type { Exercise, Muscle } from '../api/types';
 import { capitalizeEachWord } from '../common/utils';
 import { useData } from '../contexts/DataContext';
-import { GameText, GAME_CLASSES } from './GameTheme';
 
 import type { TypographyProps } from '@mui/material';
 

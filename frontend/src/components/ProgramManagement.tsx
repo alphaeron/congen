@@ -3,20 +3,20 @@ import { default as EditIcon } from '@mui/icons-material/Edit';
 import { default as PauseIcon } from '@mui/icons-material/Pause';
 import { default as PlayArrowIcon } from '@mui/icons-material/PlayArrow';
 import { Box, Button, IconButton, Tooltip } from '@mui/material';
+import { motion } from 'framer-motion';
 import { useSnackbar } from 'notistack';
 import React, { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
-import { HoverCard, HoverScale, ButtonPress, Magnetic } from './AnimatedWrapper';
 
 import { ActionCard } from './ActionCard';
+import { HoverCard, HoverScale, ButtonPress, Magnetic } from './AnimatedWrapper';
 import { ConfirmationDialog } from './ConfirmationDialog';
 import { EmptyState } from './EmptyState';
 import { FormDialog } from './FormDialog';
 import { FormField } from './FormField';
+import { GameText } from './GameTheme';
 import { LoadingBackdrop } from './LoadingBackdrop';
 import { LoadingSpinner } from './LoadingSpinner';
 import { StatusChip } from './StatusChip';
-import { GameCard, GameText, GameButton, GAME_CLASSES } from './GameTheme';
 import { createProgram, updateProgram, deleteProgram } from '../api/program';
 import { updateProgramPreferences } from '../api/programPreferences';
 import type { User, Program, ProgramPreferences } from '../api/types';
@@ -265,10 +265,10 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.8, ease: 'easeOut' }}
-        style={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          alignItems: 'center', 
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
           marginBottom: '24px',
         }}
       >
@@ -277,10 +277,7 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.6, ease: 'easeOut', delay: 0.2 }}
         >
-          <GameText 
-            variant="h5" 
-            textVariant="glow"
-          >
+          <GameText variant="h5" textVariant="glow">
             Program Management
           </GameText>
         </motion.div>
@@ -329,130 +326,127 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
               >
                 <ActionCard
                   title={program.name}
-                actions={
-                  <React.Fragment>
-                    {program.is_active ? (
-                      <React.Fragment>
-                        <Tooltip title="Change Session Duration">
-                          <Magnetic>
-                            <IconButton 
-                              size="small" 
-                              onClick={() => openEditDialog(program)}
-                              sx={{
-                                '&:hover': {
-                                  backgroundColor: 'rgba(0, 188, 212, 0.1)',
-                                  boxShadow: '0 4px 15px rgba(0, 188, 212, 0.3)',
-                                }
-                              }}
-                            >
-                              <EditIcon />
-                            </IconButton>
-                          </Magnetic>
-                        </Tooltip>
-                        <Tooltip title="Stop Program">
+                  actions={
+                    <React.Fragment>
+                      {program.is_active ? (
+                        <React.Fragment>
+                          <Tooltip title="Change Session Duration">
+                            <Magnetic>
+                              <IconButton
+                                size="small"
+                                onClick={() => openEditDialog(program)}
+                                sx={{
+                                  '&:hover': {
+                                    backgroundColor: 'rgba(0, 188, 212, 0.1)',
+                                    boxShadow: '0 4px 15px rgba(0, 188, 212, 0.3)',
+                                  },
+                                }}
+                              >
+                                <EditIcon />
+                              </IconButton>
+                            </Magnetic>
+                          </Tooltip>
+                          <Tooltip title="Stop Program">
+                            <Magnetic>
+                              <IconButton
+                                size="small"
+                                color="primary"
+                                onClick={() => openStopDialog(program)}
+                                sx={{
+                                  '&:hover': {
+                                    backgroundColor: 'rgba(255, 152, 0, 0.1)',
+                                    boxShadow: '0 4px 15px rgba(255, 152, 0, 0.3)',
+                                  },
+                                }}
+                              >
+                                <PauseIcon />
+                              </IconButton>
+                            </Magnetic>
+                          </Tooltip>
+                        </React.Fragment>
+                      ) : (
+                        <Tooltip title="Resume Program">
                           <Magnetic>
                             <IconButton
                               size="small"
                               color="primary"
-                              onClick={() => openStopDialog(program)}
+                              onClick={() => openResumeDialog(program)}
                               sx={{
                                 '&:hover': {
-                                  backgroundColor: 'rgba(255, 152, 0, 0.1)',
-                                  boxShadow: '0 4px 15px rgba(255, 152, 0, 0.3)',
-                                }
+                                  backgroundColor: 'rgba(76, 175, 80, 0.1)',
+                                  boxShadow: '0 4px 15px rgba(76, 175, 80, 0.3)',
+                                },
                               }}
                             >
-                              <PauseIcon />
+                              <PlayArrowIcon />
                             </IconButton>
                           </Magnetic>
                         </Tooltip>
-                      </React.Fragment>
-                    ) : (
-                      <Tooltip title="Resume Program">
+                      )}
+                      <Tooltip title="Delete Program">
                         <Magnetic>
                           <IconButton
                             size="small"
-                            color="primary"
-                            onClick={() => openResumeDialog(program)}
+                            color="error"
+                            onClick={() => openDeleteDialog(program)}
                             sx={{
                               '&:hover': {
-                                backgroundColor: 'rgba(76, 175, 80, 0.1)',
-                                boxShadow: '0 4px 15px rgba(76, 175, 80, 0.3)',
-                              }
+                                backgroundColor: 'rgba(244, 67, 54, 0.1)',
+                                boxShadow: '0 4px 15px rgba(244, 67, 54, 0.3)',
+                              },
                             }}
                           >
-                            <PlayArrowIcon />
+                            <DeleteIcon />
                           </IconButton>
                         </Magnetic>
                       </Tooltip>
-                    )}
-                    <Tooltip title="Delete Program">
-                      <Magnetic>
-                        <IconButton
-                          size="small"
-                          color="error"
-                          onClick={() => openDeleteDialog(program)}
-                          sx={{
-                            '&:hover': {
-                              backgroundColor: 'rgba(244, 67, 54, 0.1)',
-                              boxShadow: '0 4px 15px rgba(244, 67, 54, 0.3)',
-                            }
-                          }}
-                        >
-                          <DeleteIcon />
-                        </IconButton>
-                      </Magnetic>
-                    </Tooltip>
-                  </React.Fragment>
-                }
-              >
-                <Box 
-                  display="flex" 
-                  gap={1} 
-                  flexWrap="wrap" 
-                  sx={{ 
-                    mb: 2
-                  }}
+                    </React.Fragment>
+                  }
                 >
-                  <HoverScale>
-                    <StatusChip
-                      label={program.is_active ? 'Active' : 'Inactive'}
-                      status={program.is_active ? 'active' : 'inactive'}
-                    />
-                  </HoverScale>
-                  <HoverScale>
-                    <StatusChip
-                      label={`Week ${Math.max(program.current_week_number, 1)}`}
-                      status="info"
-                    />
-                  </HoverScale>
-                  <HoverScale>
-                    <StatusChip
-                      label={`${programWorkouts.length} workouts`}
-                      status="default"
-                      variant="outlined"
-                    />
-                  </HoverScale>
-                  <HoverScale>
-                    <StatusChip
-                      label={`Session Duration: ${sessionDuration} min`}
-                      status="default"
-                      variant="outlined"
-                    />
-                  </HoverScale>
-                </Box>
+                  <Box
+                    display="flex"
+                    gap={1}
+                    flexWrap="wrap"
+                    sx={{
+                      mb: 2,
+                    }}
+                  >
+                    <HoverScale>
+                      <StatusChip
+                        label={program.is_active ? 'Active' : 'Inactive'}
+                        status={program.is_active ? 'active' : 'inactive'}
+                      />
+                    </HoverScale>
+                    <HoverScale>
+                      <StatusChip
+                        label={`Week ${Math.max(program.current_week_number, 1)}`}
+                        status="info"
+                      />
+                    </HoverScale>
+                    <HoverScale>
+                      <StatusChip
+                        label={`${programWorkouts.length} workouts`}
+                        status="default"
+                        variant="outlined"
+                      />
+                    </HoverScale>
+                    <HoverScale>
+                      <StatusChip
+                        label={`Session Duration: ${sessionDuration} min`}
+                        status="default"
+                        variant="outlined"
+                      />
+                    </HoverScale>
+                  </Box>
 
-                <GameText 
-                  variant="body2" 
-                  textVariant="secondary"
-                >
-                  Created: {formatDate(program.created_at)}
-                </GameText>
-              </ActionCard>
+                  <GameText variant="body2" textVariant="secondary">
+                    Created: {formatDate(program.created_at)}
+                  </GameText>
+                </ActionCard>
               </HoverCard>
             );
           })}
-        </Box>
+      </Box>
 
       {/* No Programs State */}
       {(!userData?.training_programs || userData.training_programs.length === 0) && (

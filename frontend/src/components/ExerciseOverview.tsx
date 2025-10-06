@@ -13,10 +13,10 @@ import { useSearchParams } from 'react-router';
 import { EmptyState } from './EmptyState';
 import { ExerciseCard } from './ExerciseCard';
 import { ExerciseSearchDrawer } from './ExerciseSearchDrawer';
-import { LoadingSpinner } from './LoadingSpinner';
 import { GameText, GAME_CLASSES } from './GameTheme';
-import type { Exercise } from '../api/types';
+import { LoadingSpinner } from './LoadingSpinner';
 import { encodeExerciseName } from '../api/endpoint';
+import type { Exercise } from '../api/types';
 import { useData } from '../contexts/DataContext';
 
 import '../styles/Form.css';
@@ -36,7 +36,12 @@ export function ExerciseOverview(): React.ReactElement {
   };
 
   const parseExerciseArrayParam = (param: string | null): string[] => {
-    return param ? param.split(',').filter(Boolean).map(name => decodeURIComponent(name)) : [];
+    return param
+      ? param
+          .split(',')
+          .filter(Boolean)
+          .map(name => decodeURIComponent(name))
+      : [];
   };
 
   const parseBooleanParam = (param: string | null): boolean | null => {
@@ -47,7 +52,7 @@ export function ExerciseOverview(): React.ReactElement {
 
   const serializeFiltersToURL = (filters: typeof appliedFilters) => {
     const params = new URLSearchParams();
-    
+
     if (filters.selectedExercises.length > 0) {
       params.set('exercises', filters.selectedExercises.map(encodeExerciseName).join(','));
     }
@@ -74,15 +79,18 @@ export function ExerciseOverview(): React.ReactElement {
   };
 
   // Single source of truth: derive filters from URL parameters
-  const appliedFilters = React.useMemo(() => ({
-    selectedExercises: parseExerciseArrayParam(searchParams.get('exercises')),
-    movementTypes: parseArrayParam(searchParams.get('movementTypes')),
-    equipment: parseArrayParam(searchParams.get('equipment')),
-    targetMuscles: parseArrayParam(searchParams.get('targetMuscles')),
-    isUnilateral: parseBooleanParam(searchParams.get('isUnilateral')),
-    isAccessory: parseBooleanParam(searchParams.get('isAccessory')),
-    isUpper: parseBooleanParam(searchParams.get('isUpper')),
-  }), [searchParams]);
+  const appliedFilters = React.useMemo(
+    () => ({
+      selectedExercises: parseExerciseArrayParam(searchParams.get('exercises')),
+      movementTypes: parseArrayParam(searchParams.get('movementTypes')),
+      equipment: parseArrayParam(searchParams.get('equipment')),
+      targetMuscles: parseArrayParam(searchParams.get('targetMuscles')),
+      isUnilateral: parseBooleanParam(searchParams.get('isUnilateral')),
+      isAccessory: parseBooleanParam(searchParams.get('isAccessory')),
+      isUpper: parseBooleanParam(searchParams.get('isUpper')),
+    }),
+    [searchParams]
+  );
 
   // Check if there are any active filters
   const hasActiveFilters = React.useMemo(() => {
@@ -137,7 +145,13 @@ export function ExerciseOverview(): React.ReactElement {
     };
 
     loadData();
-  }, [loadAllExercises, loadAllEquipment, loadAllMuscles, loadAllExerciseMuscleData, loadAllExerciseEquipmentData]);
+  }, [
+    loadAllExercises,
+    loadAllEquipment,
+    loadAllMuscles,
+    loadAllExerciseMuscleData,
+    loadAllExerciseEquipmentData,
+  ]);
 
   const isExercisesError = !!dataError;
   const isEquipmentError = !!dataError;
@@ -145,13 +159,15 @@ export function ExerciseOverview(): React.ReactElement {
   const isExerciseMuscleError = !!getErrorForDataType('exerciseMuscleData');
   const isExerciseEquipmentError = !!getErrorForDataType('exerciseEquipmentData');
 
-
   // Convert DataContext data to the expected format
   const exerciseEquipmentMap = React.useMemo(() => {
     const mapping = new Map<string, Set<string>>();
     // Convert DataContext exerciseEquipmentData to the expected format
     for (const [exerciseName, equipmentList] of Array.from(exerciseEquipmentData.entries())) {
-      mapping.set(exerciseName, new Set(equipmentList.map((eq: any) => eq.equipment_name)));
+      mapping.set(
+        exerciseName,
+        new Set(equipmentList.map((eq: { equipment_name: string }) => eq.equipment_name))
+      );
     }
     return mapping;
   }, [exerciseEquipmentData]);
@@ -168,11 +184,11 @@ export function ExerciseOverview(): React.ReactElement {
   // Enhanced filtering with search drawer
   React.useEffect(() => {
     if (!allExercises || allExercises.length === 0) return;
-    
+
     // Don't run equipment/muscle filters if mapping data isn't loaded yet
     const needsEquipmentData = appliedFilters.equipment.length > 0;
     const needsMuscleData = appliedFilters.targetMuscles.length > 0;
-    
+
     if (needsEquipmentData && exerciseEquipmentMap.size === 0) {
       return;
     }
@@ -184,9 +200,7 @@ export function ExerciseOverview(): React.ReactElement {
 
     // Selected exercises filter
     if (appliedFilters.selectedExercises.length > 0) {
-      filtered = filtered.filter(e => 
-        appliedFilters.selectedExercises.includes(e.name)
-      );
+      filtered = filtered.filter(e => appliedFilters.selectedExercises.includes(e.name));
     }
 
     // Movement type filters
@@ -224,12 +238,7 @@ export function ExerciseOverview(): React.ReactElement {
     }
 
     setExercisesToDisplay(filtered);
-  }, [
-    allExercises,
-    appliedFilters,
-    exerciseEquipmentMap,
-    exerciseMuscleMap,
-  ]);
+  }, [allExercises, appliedFilters, exerciseEquipmentMap, exerciseMuscleMap]);
 
   const isLoading =
     isLoadingSpecific('exercises') ||
@@ -299,196 +308,232 @@ export function ExerciseOverview(): React.ReactElement {
       >
         <Container maxWidth="xl" sx={{ py: 3 }}>
           <Stack spacing={4}>
-        {/* Applied Filters */}
-        {hasActiveFilters && (
-          <Box sx={{ mb: 3 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-              <GameText variant="h6" textVariant="secondary" sx={{ color: '#1e293b' }}>
-                Applied Filters
+            {/* Applied Filters */}
+            {hasActiveFilters && (
+              <Box sx={{ mb: 3 }}>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    mb: 2,
+                  }}
+                >
+                  <GameText variant="h6" textVariant="secondary" sx={{ color: '#1e293b' }}>
+                    Applied Filters
+                  </GameText>
+                  <Button
+                    size="small"
+                    onClick={() =>
+                      updateFilters({
+                        selectedExercises: [],
+                        movementTypes: [],
+                        equipment: [],
+                        targetMuscles: [],
+                        isUnilateral: null,
+                        isAccessory: null,
+                        isUpper: null,
+                      })
+                    }
+                    className="modern-button"
+                    sx={{
+                      minWidth: 'auto',
+                      p: 0.5,
+                      background: 'linear-gradient(135deg, #00bcd4, #00acc1)',
+                      '&:hover': {
+                        background: 'linear-gradient(135deg, #00acc1, #0097a7)',
+                      },
+                    }}
+                  >
+                    Clear All
+                  </Button>
+                </Box>
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                  {appliedFilters.selectedExercises.map(exercise => (
+                    <Chip
+                      key={exercise}
+                      label={exercise}
+                      size="small"
+                      onDelete={() =>
+                        updateFilters({
+                          ...appliedFilters,
+                          selectedExercises: appliedFilters.selectedExercises.filter(
+                            e => e !== exercise
+                          ),
+                        })
+                      }
+                      color="primary"
+                      variant="outlined"
+                    />
+                  ))}
+                  {appliedFilters.movementTypes.map(type => (
+                    <Chip
+                      key={type}
+                      label={type}
+                      size="small"
+                      onDelete={() =>
+                        updateFilters({
+                          ...appliedFilters,
+                          movementTypes: appliedFilters.movementTypes.filter(t => t !== type),
+                        })
+                      }
+                      color="primary"
+                      variant="outlined"
+                    />
+                  ))}
+                  {appliedFilters.equipment.map(eq => (
+                    <Chip
+                      key={eq}
+                      label={eq}
+                      size="small"
+                      onDelete={() =>
+                        updateFilters({
+                          ...appliedFilters,
+                          equipment: appliedFilters.equipment.filter(e => e !== eq),
+                        })
+                      }
+                      color="primary"
+                      variant="outlined"
+                    />
+                  ))}
+                  {appliedFilters.targetMuscles.map(muscle => (
+                    <Chip
+                      key={muscle}
+                      label={muscle}
+                      size="small"
+                      onDelete={() =>
+                        updateFilters({
+                          ...appliedFilters,
+                          targetMuscles: appliedFilters.targetMuscles.filter(m => m !== muscle),
+                        })
+                      }
+                      color="primary"
+                      variant="outlined"
+                    />
+                  ))}
+                  {appliedFilters.isUnilateral !== null && (
+                    <Chip
+                      label={appliedFilters.isUnilateral ? 'Unilateral' : 'Bilateral'}
+                      size="small"
+                      onDelete={() =>
+                        updateFilters({
+                          ...appliedFilters,
+                          isUnilateral: null,
+                        })
+                      }
+                      color="primary"
+                      variant="outlined"
+                    />
+                  )}
+                  {appliedFilters.isAccessory !== null && (
+                    <Chip
+                      label={appliedFilters.isAccessory ? 'Accessory' : 'Primary'}
+                      size="small"
+                      onDelete={() =>
+                        updateFilters({
+                          ...appliedFilters,
+                          isAccessory: null,
+                        })
+                      }
+                      color="secondary"
+                      variant="outlined"
+                    />
+                  )}
+                  {appliedFilters.isUpper !== null && (
+                    <Chip
+                      label={appliedFilters.isUpper ? 'Upper Body' : 'Lower Body'}
+                      size="small"
+                      onDelete={() =>
+                        updateFilters({
+                          ...appliedFilters,
+                          isUpper: null,
+                        })
+                      }
+                      color="success"
+                      variant="outlined"
+                    />
+                  )}
+                </Box>
+              </Box>
+            )}
+
+            {/* Results Section */}
+            <Box>
+              <GameText
+                variant="h5"
+                className={`${GAME_CLASSES.textBold} ${GAME_CLASSES.marginBottom3}`}
+                sx={{ color: '#1e293b' }}
+              >
+                Results ({exercisesToDisplay.length} exercises)
               </GameText>
-              <Button
-                size="small"
-                onClick={() => updateFilters({
-                  selectedExercises: [],
-                  movementTypes: [],
-                  equipment: [],
-                  targetMuscles: [],
-                  isUnilateral: null,
-                  isAccessory: null,
-                  isUpper: null,
-                })}
-                className="modern-button"
-                sx={{ 
-                  minWidth: 'auto', 
-                  p: 0.5,
-                  background: 'linear-gradient(135deg, #00bcd4, #00acc1)',
-                  '&:hover': {
-                    background: 'linear-gradient(135deg, #00acc1, #0097a7)',
-                  },
-                }}
-              >
-                Clear All
-              </Button>
-            </Box>
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-              {appliedFilters.selectedExercises.map(exercise => (
-                <Chip
-                  key={exercise}
-                  label={exercise}
-                  size="small"
-                  onDelete={() => updateFilters({
-                    ...appliedFilters,
-                    selectedExercises: appliedFilters.selectedExercises.filter(e => e !== exercise)
-                  })}
-                  color="primary"
-                  variant="outlined"
-                />
-              ))}
-              {appliedFilters.movementTypes.map(type => (
-                <Chip
-                  key={type}
-                  label={type}
-                  size="small"
-                  onDelete={() => updateFilters({
-                    ...appliedFilters,
-                    movementTypes: appliedFilters.movementTypes.filter(t => t !== type)
-                  })}
-                  color="primary"
-                  variant="outlined"
-                />
-              ))}
-              {appliedFilters.equipment.map(eq => (
-                <Chip
-                  key={eq}
-                  label={eq}
-                  size="small"
-                  onDelete={() => updateFilters({
-                    ...appliedFilters,
-                    equipment: appliedFilters.equipment.filter(e => e !== eq)
-                  })}
-                  color="primary"
-                  variant="outlined"
-                />
-              ))}
-              {appliedFilters.targetMuscles.map(muscle => (
-                <Chip
-                  key={muscle}
-                  label={muscle}
-                  size="small"
-                  onDelete={() => updateFilters({
-                    ...appliedFilters,
-                    targetMuscles: appliedFilters.targetMuscles.filter(m => m !== muscle)
-                  })}
-                  color="primary"
-                  variant="outlined"
-                />
-              ))}
-              {appliedFilters.isUnilateral !== null && (
-                <Chip
-                  label={appliedFilters.isUnilateral ? 'Unilateral' : 'Bilateral'}
-                  size="small"
-                  onDelete={() => updateFilters({
-                    ...appliedFilters,
-                    isUnilateral: null
-                  })}
-                  color="primary"
-                  variant="outlined"
-                />
-              )}
-              {appliedFilters.isAccessory !== null && (
-                <Chip
-                  label={appliedFilters.isAccessory ? 'Accessory' : 'Primary'}
-                  size="small"
-                  onDelete={() => updateFilters({
-                    ...appliedFilters,
-                    isAccessory: null
-                  })}
-                  color="secondary"
-                  variant="outlined"
-                />
-              )}
-              {appliedFilters.isUpper !== null && (
-                <Chip
-                  label={appliedFilters.isUpper ? 'Upper Body' : 'Lower Body'}
-                  size="small"
-                  onDelete={() => updateFilters({
-                    ...appliedFilters,
-                    isUpper: null
-                  })}
-                  color="success"
-                  variant="outlined"
-                />
-              )}
-            </Box>
-          </Box>
-        )}
 
-        {/* Results Section */}
-        <Box>
-          <GameText variant="h5" className={`${GAME_CLASSES.textBold} ${GAME_CLASSES.marginBottom3}`} sx={{ color: '#1e293b' }}>
-            Results ({exercisesToDisplay.length} exercises)
-          </GameText>
+              {exercisesToDisplay.length === 0 ? (
+                <EmptyState
+                  title="No exercises found matching your filters."
+                  message="Try adjusting your filter criteria to see more results."
+                  variant="paper"
+                />
+              ) : (
+                <Box
+                  ref={parentRef}
+                  sx={{
+                    minHeight: '400px', // Minimum height for virtualization
+                    width: '100%',
+                  }}
+                >
+                  <div
+                    style={{
+                      height: `${virtualizer.getTotalSize()}px`,
+                      width: '100%',
+                      position: 'relative',
+                    }}
+                  >
+                    {virtualizer.getVirtualItems().map(virtualRow => {
+                      const startIndex = virtualRow.index * itemsPerRow;
+                      const endIndex = Math.min(
+                        startIndex + itemsPerRow,
+                        exercisesToDisplay.length
+                      );
+                      const rowExercises = exercisesToDisplay.slice(startIndex, endIndex);
 
-          {exercisesToDisplay.length === 0 ? (
-            <EmptyState
-              title="No exercises found matching your filters."
-              message="Try adjusting your filter criteria to see more results."
-              variant="paper"
-            />
-          ) : (
-            <Box
-              ref={parentRef}
-              sx={{
-                minHeight: '400px', // Minimum height for virtualization
-                width: '100%',
-              }}
-            >
-              <div
-                style={{
-                  height: `${virtualizer.getTotalSize()}px`,
-                  width: '100%',
-                  position: 'relative',
-                }}
-              >
-                {virtualizer.getVirtualItems().map(virtualRow => {
-                  const startIndex = virtualRow.index * itemsPerRow;
-                  const endIndex = Math.min(startIndex + itemsPerRow, exercisesToDisplay.length);
-                  const rowExercises = exercisesToDisplay.slice(startIndex, endIndex);
-
-                  return (
-                    <div
-                      key={virtualRow.key}
-                      style={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        width: '100%',
-                        height: `${virtualRow.size}px`,
-                        transform: `translateY(${virtualRow.start}px)`,
-                      }}
-                    >
-                      <Grid container spacing={2} sx={{ height: '100%' }}>
-                        {rowExercises.map(exercise => (
-                          <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={exercise.name} sx={{ pb: 2 }}>
-                            <ExerciseCard exercise={exercise} />
+                      return (
+                        <div
+                          key={virtualRow.key}
+                          style={{
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            width: '100%',
+                            height: `${virtualRow.size}px`,
+                            transform: `translateY(${virtualRow.start}px)`,
+                          }}
+                        >
+                          <Grid container spacing={2} sx={{ height: '100%' }}>
+                            {rowExercises.map(exercise => (
+                              <Grid
+                                size={{ xs: 12, sm: 6, md: 4, lg: 3 }}
+                                key={exercise.name}
+                                sx={{ pb: 2 }}
+                              >
+                                <ExerciseCard exercise={exercise} />
+                              </Grid>
+                            ))}
+                            {/* Fill remaining grid slots with empty space */}
+                            {Array.from({ length: itemsPerRow - rowExercises.length }).map(
+                              (_, index) => (
+                                <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={`empty-${index}`}>
+                                  <div style={{ height: '100%' }} />
+                                </Grid>
+                              )
+                            )}
                           </Grid>
-                        ))}
-                        {/* Fill remaining grid slots with empty space */}
-                        {Array.from({ length: itemsPerRow - rowExercises.length }).map(
-                          (_, index) => (
-                            <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={`empty-${index}`}>
-                              <div style={{ height: '100%' }} />
-                            </Grid>
-                          )
-                        )}
-                      </Grid>
-                    </div>
-                  );
-                })}
-              </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </Box>
+              )}
             </Box>
-          )}
-        </Box>
           </Stack>
         </Container>
       </Box>

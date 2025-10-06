@@ -2,10 +2,10 @@ import { Box, useTheme, CardContent } from '@mui/material';
 import { ResponsivePie } from '@nivo/pie';
 import React, { useState, useMemo } from 'react';
 
+import { GameText, GameCard, GAME_CLASSES } from './GameTheme';
 import type { UserExercisePoolResponse } from '../api/types';
 import { capitalizeEachWord } from '../common/utils';
 import { createCongenNivoTheme, congenColorSchemes } from '../theme/nivoTheme';
-import { GameText, GameCard, GAME_CLASSES } from './GameTheme';
 
 interface ExercisePoolPieChartProps {
   exercisePoolData: UserExercisePoolResponse | null;

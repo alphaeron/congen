@@ -150,7 +150,7 @@ class PerformanceTrackingService(
 
         // Save metrics first, then create default test results
         return userPerformanceMetricsDAL.upsertUserPerformanceMetrics(defaultMetrics)
-            .flatMap { 
+            .flatMap {
                 createDefaultTestResults(keycloakId, weekStart)
                     .flatMap {
                         // For new users, we'll create default scores without test results
@@ -200,36 +200,6 @@ class PerformanceTrackingService(
                     .collectList()
                     .map { it.size }
             }
-    }
-
-    /**
-     * Creates default performance metrics for new users.
-     *
-     * @param keycloakId The user's Keycloak identifier
-     * @return Mono containing the created performance metrics
-     */
-    private fun createDefaultPerformanceMetrics(keycloakId: String): Mono<UserPerformanceMetrics> {
-        logger.info("Creating default performance metrics for new user: $keycloakId")
-
-        val now = Instant.now()
-
-        val defaultMetrics =
-            UserPerformanceMetrics(
-                keycloakId = keycloakId,
-                vo2Max = null,
-                strain = null,
-                recovery = null,
-                hrv = null,
-                sleepScore = null,
-                remSleepMinutes = null,
-                deepSleepMinutes = null,
-                subjectiveTiredness = null,
-                createdAt = now,
-                updatedAt = now
-            )
-
-        return userPerformanceMetricsDAL.upsertUserPerformanceMetrics(defaultMetrics)
-            .then(Mono.just(defaultMetrics))
     }
 
     /**
@@ -325,9 +295,9 @@ class PerformanceTrackingService(
                         val weeklyTest = convertTestResultsToWeeklyTest(testResults)
                         performanceScoringService.calculatePerformanceScores(updatedMetrics, weeklyTest, "daily_metrics_updated")
                     }.flatMap { scores ->
-                    // Insert new scores (historical tracking)
-                    userPerformanceScoresDAL.insertUserPerformanceScores(scores)
-                }
+                        // Insert new scores (historical tracking)
+                        userPerformanceScoresDAL.insertUserPerformanceScores(scores)
+                    }
             }
     }
 
@@ -419,7 +389,7 @@ class PerformanceTrackingService(
 
     /**
      * Converts a list of UserTestResult to a UserWeeklyTest object for scoring.
-     * 
+     *
      * Implements fallback logic: for each metric, iterates from newest to oldest
      * test results to find the most recent non-null value. If no non-null value
      * is found across all historical results, the metric remains null.
@@ -443,7 +413,7 @@ class PerformanceTrackingService(
             if (results == null) {
                 return Pair(TestStatus.PENDING, null)
             }
-            
+
             // Results are already ordered newest to oldest, so find first non-null
             for (result in results) {
                 if (result.resultValue != null) {
@@ -451,7 +421,7 @@ class PerformanceTrackingService(
                     return Pair(result.status, result.resultValue)
                 }
             }
-            
+
             // If no non-null value found, return the status from the most recent result
             val mostRecentResult = results.first()
             logger.info("No non-null result found for $testName, returning status: ${mostRecentResult.status}")
@@ -464,9 +434,11 @@ class PerformanceTrackingService(
         val (reflexStatus, reflexResult) = findMostRecentNonNullValue("reflex")
         val (mobilityStatus, mobilityResult) = findMostRecentNonNullValue("mobility")
 
-        logger.debug("Weekly test fallback results for user $keycloakId: " +
-            "vertical_jump=$verticalJumpResult, hr_recovery=$hrRecoveryResult, " +
-            "reflex=$reflexResult, mobility=$mobilityResult")
+        logger.debug(
+            "Weekly test fallback results for user $keycloakId: " +
+                "vertical_jump=$verticalJumpResult, hr_recovery=$hrRecoveryResult, " +
+                "reflex=$reflexResult, mobility=$mobilityResult"
+        )
 
         return UserWeeklyTest(
             keycloakId = keycloakId,

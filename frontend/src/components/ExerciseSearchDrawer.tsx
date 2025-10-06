@@ -9,7 +9,7 @@ import {
   MenuItem,
   Autocomplete,
 } from '@mui/material';
-import React, { useState } from 'react';
+import React from 'react';
 
 import { GameText, GameTextField, GAME_CLASSES } from './GameTheme';
 import type { Exercise, Equipment, Muscle } from '../api/types';
@@ -34,13 +34,13 @@ interface ExerciseFilters {
 
 /**
  * Exercise Search Drawer component providing faceted search functionality.
- * 
+ *
  * Follows e-commerce search patterns with:
  * - Progressive disclosure of filters
  * - Real-time search with autocomplete
  * - Applied filters display
  * - Clear all functionality
- * 
+ *
  * @param open Whether the drawer is open
  * @param onClose Function to close the drawer
  * @param exercises Available exercises for filtering
@@ -68,7 +68,10 @@ export const ExerciseSearchDrawer: React.FC<ExerciseSearchDrawerProps> = ({
 
   const muscleOptions = muscles.map(m => m.name).sort();
 
-  const handleFilterChange = (filterType: keyof ExerciseFilters, value: any) => {
+  const handleFilterChange = (
+    filterType: keyof ExerciseFilters,
+    value: string | string[] | boolean
+  ) => {
     const newFilters = { ...appliedFilters, [filterType]: value };
     onFiltersChange(newFilters);
   };
@@ -96,7 +99,9 @@ export const ExerciseSearchDrawer: React.FC<ExerciseSearchDrawerProps> = ({
     >
       <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
         {/* Header */}
-        <Box className={`${GAME_CLASSES.padding2} ${GAME_CLASSES.borderBottom1} ${GAME_CLASSES.borderColorDivider} ${GAME_CLASSES.flexShrink0}`}>
+        <Box
+          className={`${GAME_CLASSES.padding2} ${GAME_CLASSES.borderBottom1} ${GAME_CLASSES.borderColorDivider} ${GAME_CLASSES.flexShrink0}`}
+        >
           <GameText variant="h6" textVariant="glow">
             Exercise Library
           </GameText>
@@ -118,6 +123,7 @@ export const ExerciseSearchDrawer: React.FC<ExerciseSearchDrawerProps> = ({
               renderTags={(value, getTagProps) =>
                 value.map((option, index) => (
                   <Chip
+                    key={index}
                     variant="outlined"
                     label={option}
                     size="small"
@@ -126,19 +132,12 @@ export const ExerciseSearchDrawer: React.FC<ExerciseSearchDrawerProps> = ({
                   />
                 ))
               }
-              renderInput={(params) => (
-                <GameTextField
-                  {...params}
-                  placeholder="Select exercises..."
-                  size="small"
-                />
+              renderInput={params => (
+                <GameTextField {...params} placeholder="Select exercises..." size="small" />
               )}
               renderOption={(props, option, { selected }) => (
                 <li {...props}>
-                  <Checkbox
-                    style={{ marginRight: 8 }}
-                    checked={selected}
-                  />
+                  <Checkbox style={{ marginRight: 8 }} checked={selected} />
                   {option}
                 </li>
               )}
@@ -159,6 +158,7 @@ export const ExerciseSearchDrawer: React.FC<ExerciseSearchDrawerProps> = ({
               renderTags={(value, getTagProps) =>
                 value.map((option, index) => (
                   <Chip
+                    key={index}
                     variant="outlined"
                     label={option}
                     size="small"
@@ -167,19 +167,12 @@ export const ExerciseSearchDrawer: React.FC<ExerciseSearchDrawerProps> = ({
                   />
                 ))
               }
-              renderInput={(params) => (
-                <GameTextField
-                  {...params}
-                  placeholder="Select movement types..."
-                  size="small"
-                />
+              renderInput={params => (
+                <GameTextField {...params} placeholder="Select movement types..." size="small" />
               )}
               renderOption={(props, option, { selected }) => (
                 <li {...props}>
-                  <Checkbox
-                    style={{ marginRight: 8 }}
-                    checked={selected}
-                  />
+                  <Checkbox style={{ marginRight: 8 }} checked={selected} />
                   {option}
                 </li>
               )}
@@ -200,6 +193,7 @@ export const ExerciseSearchDrawer: React.FC<ExerciseSearchDrawerProps> = ({
               renderTags={(value, getTagProps) =>
                 value.map((option, index) => (
                   <Chip
+                    key={index}
                     variant="outlined"
                     label={option}
                     size="small"
@@ -208,19 +202,12 @@ export const ExerciseSearchDrawer: React.FC<ExerciseSearchDrawerProps> = ({
                   />
                 ))
               }
-              renderInput={(params) => (
-                <GameTextField
-                  {...params}
-                  placeholder="Select equipment..."
-                  size="small"
-                />
+              renderInput={params => (
+                <GameTextField {...params} placeholder="Select equipment..." size="small" />
               )}
               renderOption={(props, option, { selected }) => (
                 <li {...props}>
-                  <Checkbox
-                    style={{ marginRight: 8 }}
-                    checked={selected}
-                  />
+                  <Checkbox style={{ marginRight: 8 }} checked={selected} />
                   {option}
                 </li>
               )}
@@ -241,6 +228,7 @@ export const ExerciseSearchDrawer: React.FC<ExerciseSearchDrawerProps> = ({
               renderTags={(value, getTagProps) =>
                 value.map((option, index) => (
                   <Chip
+                    key={index}
                     variant="outlined"
                     label={option}
                     size="small"
@@ -249,19 +237,12 @@ export const ExerciseSearchDrawer: React.FC<ExerciseSearchDrawerProps> = ({
                   />
                 ))
               }
-              renderInput={(params) => (
-                <GameTextField
-                  {...params}
-                  placeholder="Select target muscles..."
-                  size="small"
-                />
+              renderInput={params => (
+                <GameTextField {...params} placeholder="Select target muscles..." size="small" />
               )}
               renderOption={(props, option, { selected }) => (
                 <li {...props}>
-                  <Checkbox
-                    style={{ marginRight: 8 }}
-                    checked={selected}
-                  />
+                  <Checkbox style={{ marginRight: 8 }} checked={selected} />
                   {option}
                 </li>
               )}
@@ -277,8 +258,14 @@ export const ExerciseSearchDrawer: React.FC<ExerciseSearchDrawerProps> = ({
             </GameText>
             <FormControl fullWidth size="small">
               <Select
-                value={appliedFilters.isUnilateral === null ? 'both' : appliedFilters.isUnilateral ? 'unilateral' : 'bilateral'}
-                onChange={(e) => {
+                value={
+                  appliedFilters.isUnilateral === null
+                    ? 'both'
+                    : appliedFilters.isUnilateral
+                      ? 'unilateral'
+                      : 'bilateral'
+                }
+                onChange={e => {
                   const value = e.target.value;
                   if (value === 'both') {
                     handleFilterChange('isUnilateral', null);
@@ -320,8 +307,14 @@ export const ExerciseSearchDrawer: React.FC<ExerciseSearchDrawerProps> = ({
             </GameText>
             <FormControl fullWidth size="small">
               <Select
-                value={appliedFilters.isAccessory === null ? 'both' : appliedFilters.isAccessory ? 'accessory' : 'primary'}
-                onChange={(e) => {
+                value={
+                  appliedFilters.isAccessory === null
+                    ? 'both'
+                    : appliedFilters.isAccessory
+                      ? 'accessory'
+                      : 'primary'
+                }
+                onChange={e => {
                   const value = e.target.value;
                   if (value === 'both') {
                     handleFilterChange('isAccessory', null);
@@ -363,8 +356,14 @@ export const ExerciseSearchDrawer: React.FC<ExerciseSearchDrawerProps> = ({
             </GameText>
             <FormControl fullWidth size="small">
               <Select
-                value={appliedFilters.isUpper === null ? 'both' : appliedFilters.isUpper ? 'upper' : 'lower'}
-                onChange={(e) => {
+                value={
+                  appliedFilters.isUpper === null
+                    ? 'both'
+                    : appliedFilters.isUpper
+                      ? 'upper'
+                      : 'lower'
+                }
+                onChange={e => {
                   const value = e.target.value;
                   if (value === 'both') {
                     handleFilterChange('isUpper', null);

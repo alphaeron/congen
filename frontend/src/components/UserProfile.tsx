@@ -13,13 +13,13 @@ import {
   ListItemText,
   Container,
 } from '@mui/material';
+import { motion } from 'framer-motion';
 import React from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
-import { motion } from 'framer-motion';
 
+import { GameText, GAME_CLASSES } from './GameTheme';
 import { GdprComplianceSection } from './GdprComplianceSection';
 import { PhysicalAttributesSection } from './PhysicalAttributesSection';
-import { GameText, GameSidebar, GAME_CLASSES } from './GameTheme';
 
 interface UserProfileProps {
   initialSection?: string;
@@ -124,28 +124,25 @@ export const UserProfile: React.FC<UserProfileProps> = ({ initialSection = 'phys
             initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, ease: 'easeOut', delay: 0.2 }}
-            style={{ 
-              padding: '16px', 
+            style={{
+              padding: '16px',
               borderBottom: '1px solid',
-              borderColor: 'var(--mui-palette-divider)', 
+              borderColor: 'var(--mui-palette-divider)',
               flexShrink: 0,
             }}
           >
             <motion.div
-              animate={{ 
+              animate={{
                 scale: [1, 1.02, 1],
-                opacity: [1, 0.8, 1]
+                opacity: [1, 0.8, 1],
               }}
-              transition={{ 
-                duration: 2, 
-                repeat: Infinity, 
-                ease: 'easeInOut' 
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                ease: 'easeInOut',
               }}
             >
-              <GameText 
-                variant="h6" 
-                textVariant="glow"
-              >
+              <GameText variant="h6" textVariant="glow">
                 User Profile
               </GameText>
             </motion.div>
@@ -183,15 +180,17 @@ export const UserProfile: React.FC<UserProfileProps> = ({ initialSection = 'phys
                         },
                       }}
                     >
-                      <ListItemIcon sx={{ minWidth: 40, color: 'inherit' }}>{item.icon}</ListItemIcon>
-                      <ListItemText 
-                        primary={item.label} 
-                        sx={{ 
-                          '& .MuiListItemText-primary': { 
+                      <ListItemIcon sx={{ minWidth: 40, color: 'inherit' }}>
+                        {item.icon}
+                      </ListItemIcon>
+                      <ListItemText
+                        primary={item.label}
+                        sx={{
+                          '& .MuiListItemText-primary': {
                             color: 'inherit',
                             fontWeight: activeSection === item.id ? 600 : 400,
-                          } 
-                        }} 
+                          },
+                        }}
                       />
                     </ListItemButton>
                   </motion.div>

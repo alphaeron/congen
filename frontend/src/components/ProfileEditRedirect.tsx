@@ -4,8 +4,8 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from 'react-oidc-context';
 import { useNavigate } from 'react-router';
 
+import { GameText } from './GameTheme';
 import { LoadingSpinner } from './LoadingSpinner';
-import { GameText, GAME_CLASSES } from './GameTheme';
 import { updateUserProfile } from '../api/user';
 
 /**

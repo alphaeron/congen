@@ -13,8 +13,8 @@ import {
   getExerciseEquipment,
   getExercises,
 } from '../api/exercise';
-import { getExerciseMuscle } from '../api/exerciseMuscle';
 import { getExerciseEquipment as getExerciseEquipmentBulk } from '../api/exerciseEquipment';
+import { getExerciseMuscle } from '../api/exerciseMuscle';
 import { getUserDataExport } from '../api/gdpr';
 import {
   getConsentStatus,
@@ -68,7 +68,10 @@ import type {
 } from '../api/types';
 import { getUserEquipment } from '../api/userEquipment';
 import { getUserExercisePreferences } from '../api/userExercisePreference';
-import { getUserOneRepMaxes, upsertUserOneRepMax as upsertUserOneRepMaxAPI } from '../api/userOneRepMax';
+import {
+  getUserOneRepMaxes,
+  upsertUserOneRepMax as upsertUserOneRepMaxAPI,
+} from '../api/userOneRepMax';
 import { getUserWeakMuscles } from '../api/userWeakMuscle';
 import { getUserWeightUnitPreferences } from '../api/userWeightUnitPreference';
 
@@ -244,7 +247,9 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
   const [dashboardStats, setDashboardStats] = useState<DashboardStats | null>(null);
   // Performance tracking data
   const [performanceScores, setPerformanceScores] = useState<UserPerformanceScores | null>(null);
-  const [performanceScoresHistory, setPerformanceScoresHistory] = useState<UserPerformanceScores[]>([]);
+  const [performanceScoresHistory, setPerformanceScoresHistory] = useState<UserPerformanceScores[]>(
+    []
+  );
   const [performanceMetrics, setPerformanceMetrics] = useState<UserPerformanceMetrics | null>(null);
   const [weeklyTests, setWeeklyTests] = useState<UserTestResult[]>([]);
   const [testProtocols, setTestProtocols] = useState<TestProtocol[]>([]);
@@ -317,7 +322,8 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
         const exerciseMuscleData = results[1].status === 'fulfilled' ? results[1].value : [];
         const weightUnitPreferencesData = results[2].status === 'fulfilled' ? results[2].value : [];
         const performanceScoresData = results[3].status === 'fulfilled' ? results[3].value : null;
-        const performanceScoresHistoryData = results[4].status === 'fulfilled' ? results[4].value : [];
+        const performanceScoresHistoryData =
+          results[4].status === 'fulfilled' ? results[4].value : [];
         const performanceMetricsData = results[5].status === 'fulfilled' ? results[5].value : null;
         const weeklyTestsData = results[6].status === 'fulfilled' ? results[6].value : [];
 
@@ -548,69 +554,67 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
     }
   }, [allEquipment, isCacheValid, setLoadingState]);
 
-  const loadAllExerciseMuscleData = useCallback(
-    async (): Promise<Map<string, string[]>> => {
-      if (exerciseMuscleData.size > 0 && isCacheValid('exerciseMuscleData')) {
-        return exerciseMuscleData;
-      }
+  const loadAllExerciseMuscleData = useCallback(async (): Promise<Map<string, string[]>> => {
+    if (exerciseMuscleData.size > 0 && isCacheValid('exerciseMuscleData')) {
+      return exerciseMuscleData;
+    }
 
-      try {
-        setLoadingState('exerciseMuscleData', true);
-        const exerciseMuscleDataRaw = await getExerciseMuscle();
-        
-        // Convert to Map format
-        const muscleMap = new Map<string, string[]>();
-        exerciseMuscleDataRaw.forEach((item: ExerciseMuscle) => {
-          const existing = muscleMap.get(item.exercise_name) || [];
-          existing.push(item.muscle_name);
-          muscleMap.set(item.exercise_name, existing);
-        });
-        
-        setExerciseMuscleData(muscleMap);
-        setCacheTimestamps(prev => new Map(prev).set('exerciseMuscleData', Date.now()));
-        return muscleMap;
-      } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'Failed to load exercise muscle data';
-        setError(errorMessage);
-        return new Map();
-      } finally {
-        setLoadingState('exerciseMuscleData', false);
-      }
-    },
-    [exerciseMuscleData, isCacheValid, setLoadingState]
-  );
+    try {
+      setLoadingState('exerciseMuscleData', true);
+      const exerciseMuscleDataRaw = await getExerciseMuscle();
 
-  const loadAllExerciseEquipmentData = useCallback(
-    async (): Promise<Map<string, ExerciseEquipment[]>> => {
-      if (exerciseEquipmentData.size > 0 && isCacheValid('exerciseEquipmentData')) {
-        return exerciseEquipmentData;
-      }
+      // Convert to Map format
+      const muscleMap = new Map<string, string[]>();
+      exerciseMuscleDataRaw.forEach((item: ExerciseMuscle) => {
+        const existing = muscleMap.get(item.exercise_name) || [];
+        existing.push(item.muscle_name);
+        muscleMap.set(item.exercise_name, existing);
+      });
 
-      try {
-        setLoadingState('exerciseEquipmentData', true);
-        const exerciseEquipmentDataRaw = await getExerciseEquipmentBulk();
-        
-        // Convert to Map format
-        const equipmentMap = new Map<string, ExerciseEquipment[]>();
-        exerciseEquipmentDataRaw.forEach((item: ExerciseEquipment) => {
-          const existing = equipmentMap.get(item.exercise_name) || [];
-          existing.push(item);
-          equipmentMap.set(item.exercise_name, existing);
-        });
-        
-        setExerciseEquipmentData(equipmentMap);
-        setCacheTimestamps(prev => new Map(prev).set('exerciseEquipmentData', Date.now()));
-        return equipmentMap;
-      } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'Failed to load exercise equipment data';
-        setError(errorMessage);
-        return new Map();
-      } finally {
-        setLoadingState('exerciseEquipmentData', false);
-      }
-    },
-    [exerciseEquipmentData, isCacheValid, setLoadingState]
-  );
+      setExerciseMuscleData(muscleMap);
+      setCacheTimestamps(prev => new Map(prev).set('exerciseMuscleData', Date.now()));
+      return muscleMap;
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : 'Failed to load exercise muscle data';
+      setError(errorMessage);
+      return new Map();
+    } finally {
+      setLoadingState('exerciseMuscleData', false);
+    }
+  }, [exerciseMuscleData, isCacheValid, setLoadingState]);
+
+  const loadAllExerciseEquipmentData = useCallback(async (): Promise<
+    Map<string, ExerciseEquipment[]>
+  > => {
+    if (exerciseEquipmentData.size > 0 && isCacheValid('exerciseEquipmentData')) {
+      return exerciseEquipmentData;
+    }
+
+    try {
+      setLoadingState('exerciseEquipmentData', true);
+      const exerciseEquipmentDataRaw = await getExerciseEquipmentBulk();
+
+      // Convert to Map format
+      const equipmentMap = new Map<string, ExerciseEquipment[]>();
+      exerciseEquipmentDataRaw.forEach((item: ExerciseEquipment) => {
+        const existing = equipmentMap.get(item.exercise_name) || [];
+        existing.push(item);
+        equipmentMap.set(item.exercise_name, existing);
+      });
+
+      setExerciseEquipmentData(equipmentMap);
+      setCacheTimestamps(prev => new Map(prev).set('exerciseEquipmentData', Date.now()));
+      return equipmentMap;
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : 'Failed to load exercise equipment data';
+      setError(errorMessage);
+      return new Map();
+    } finally {
+      setLoadingState('exerciseEquipmentData', false);
+    }
+  }, [exerciseEquipmentData, isCacheValid, setLoadingState]);
 
   // User-specific data loading functions
   const loadUserEquipment = useCallback(async (): Promise<UserEquipment[]> => {
@@ -707,11 +711,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
   }, [user?.keycloak_id, userOneRepMaxes]);
 
   const upsertUserOneRepMax = useCallback(
-    async (
-      exerciseName: string,
-      oneRepMax: number,
-      unit: string
-    ): Promise<UserOneRepMax> => {
+    async (exerciseName: string, oneRepMax: number, unit: string): Promise<UserOneRepMax> => {
       if (!user?.keycloak_id) {
         throw new Error('User not authenticated');
       }
@@ -728,8 +728,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
         await loadData(true);
         return result;
       } catch (err) {
-        const errorMessage =
-          err instanceof Error ? err.message : 'Failed to save one rep max';
+        const errorMessage = err instanceof Error ? err.message : 'Failed to save one rep max';
         setError(errorMessage);
         throw err;
       }
@@ -1002,7 +1001,8 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
 
         return result;
       } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'Failed to submit performance metrics';
+        const errorMessage =
+          err instanceof Error ? err.message : 'Failed to submit performance metrics';
         setError(errorMessage);
         throw err;
       }

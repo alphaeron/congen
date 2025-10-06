@@ -1,7 +1,13 @@
 import React from 'react';
-import { TextField, FormControl, InputLabel, Select, MenuItem, Typography } from '@mui/material';
 import { useField } from '@tanstack/react-form';
-import { GameTextField, GameFormControl, GameInputLabel, GameSelect, GameMenuItem, GameText, GAME_CLASSES } from './GameTheme';
+import {
+  GameTextField,
+  GameFormControl,
+  GameInputLabel,
+  GameSelect,
+  GameMenuItem,
+  GameText,
+} from './GameTheme';
 
 interface FormFieldProps {
   name: string;

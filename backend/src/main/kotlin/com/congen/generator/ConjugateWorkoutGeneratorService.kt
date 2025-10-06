@@ -10,7 +10,6 @@ import com.congen.dal.ProgrammedWorkoutDAL
 import com.congen.dal.SetSchemeDAL
 import com.congen.dal.UserEquipmentDAL
 import com.congen.dal.UserExercisePreferenceDAL
-import com.congen.service.UserOneRepMaxService
 import com.congen.dal.UserWeakMuscleDAL
 import com.congen.dal.UserWeightUnitPreferenceDAL
 import com.congen.model.Program
@@ -18,6 +17,7 @@ import com.congen.model.SetScheme
 import com.congen.model.WeightUnit
 import com.congen.service.ProgramService
 import com.congen.service.SetSchemeService
+import com.congen.service.UserOneRepMaxService
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Flux
@@ -50,7 +50,7 @@ import reactor.core.publisher.Mono
  * - **Accessory**: Isolation and weak point training
  * - **Conditioning**: Cardio and recovery work
  *
- * @param userOneRepMaxDAL Data access layer for user one rep max values
+ * @param userOneRepMaxService Service for user one rep max operations
  * @param programPreferencesDAL Data access layer for program preferences
  * @param programService Service for program operations
  * @param programmedWorkoutDAL Data access layer for programmed workout operations

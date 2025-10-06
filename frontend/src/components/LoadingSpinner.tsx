@@ -1,8 +1,8 @@
 import { Box } from '@mui/material';
-import React from 'react';
 import { motion } from 'framer-motion';
+import React from 'react';
 
-import { GameText, GAME_CLASSES } from './GameTheme';
+import { GameText } from './GameTheme';
 
 interface LoadingSpinnerProps {
   message?: string;
@@ -58,7 +58,7 @@ export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
           transition={{
             duration: 1,
             repeat: Infinity,
-            ease: 'linear'
+            ease: 'linear',
           }}
         />
         <motion.div
@@ -76,7 +76,7 @@ export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
           transition={{
             duration: 1.5,
             repeat: Infinity,
-            ease: 'linear'
+            ease: 'linear',
           }}
         />
       </Box>
@@ -94,7 +94,6 @@ export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
           {message}
         </GameText>
       )}
-
     </Box>
   );
 };

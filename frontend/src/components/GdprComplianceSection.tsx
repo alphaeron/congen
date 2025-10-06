@@ -19,14 +19,14 @@ import {
   RadioGroup,
   TextField,
 } from '@mui/material';
+import { motion } from 'framer-motion';
 import { useSnackbar } from 'notistack';
 import React from 'react';
 import { Link } from 'react-router';
-import { motion } from 'framer-motion';
 
 import { ConfirmationDialog } from './ConfirmationDialog';
-import { GameCard, GameText, GAME_CLASSES } from './GameTheme';
 import { FormDialog } from './FormDialog';
+import { GameCard, GameText, GAME_CLASSES } from './GameTheme';
 import { LoadingSpinner } from './LoadingSpinner';
 import { formatDate } from '../common/utils';
 import { useData } from '../contexts/DataContext';
@@ -184,255 +184,122 @@ export function GdprComplianceSection(): React.ReactElement {
             transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
             '&:hover': {
               boxShadow: '0 8px 25px rgba(0, 188, 212, 0.15)',
-            }
+            },
           }}
         >
-        <Box className={GAME_CLASSES.padding2}>
-          <motion.div
-            initial={{ opacity: 0, x: -30 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6, ease: 'easeOut', delay: 0.2 }}
-            style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              gap: '16px',
-              marginBottom: '16px',
-            }}
-          >
+          <Box className={GAME_CLASSES.padding2}>
             <motion.div
-              animate={{ 
-                scale: [1, 1.05, 1],
-                opacity: [1, 0.8, 1]
-              }}
-              transition={{ 
-                duration: 2, 
-                repeat: Infinity, 
-                ease: 'easeInOut' 
-              }}
-            >
-              <PrivacyIcon 
-                sx={{ 
-                  color: '#00bcd4',
-                }} 
-              />
-            </motion.div>
-            <motion.div
-              animate={{ 
-                scale: [1, 1.02, 1],
-                opacity: [1, 0.8, 1]
-              }}
-              transition={{ 
-                duration: 2, 
-                repeat: Infinity, 
-                ease: 'easeInOut' 
+              initial={{ opacity: 0, x: -30 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, ease: 'easeOut', delay: 0.2 }}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '16px',
+                marginBottom: '16px',
               }}
             >
-              <GameText 
-                variant="h6" 
-                textVariant="glow"
-              >
-                Privacy & Data Protection
-              </GameText>
-            </motion.div>
-          </motion.div>
-
-          <GameText 
-            variant="body2" 
-            textVariant="secondary" 
-            paragraph
-            sx={{
-            }}
-          >
-            Manage your data and privacy settings. You have the right to control how your personal
-            data is processed.
-          </GameText>
-
-          <Divider sx={{ my: 2 }} />
-
-          {/* Consent Status */}
-          <Box 
-            className={GAME_CLASSES.marginBottom3}
-            sx={{
-            }}
-          >
-            <GameText 
-              variant="subtitle1" 
-              gutterBottom
-              sx={{
-              }}
-            >
-              Data Processing Consent
-            </GameText>
-            <Box 
-              display="flex" 
-              alignItems="center" 
-              gap={2} 
-              className={GAME_CLASSES.marginBottom2}
-              sx={{
-              }}
-            >
-              {userConsent?.data_processing_consent ? (
-                <Chip
-                  icon={<CheckCircleIcon />}
-                  label="Consent Given"
-                  color="success"
-                  size="small"
-                  sx={{
-                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                    '&:hover': {
-                      transform: 'scale(1.05)',
-                      boxShadow: '0 4px 15px rgba(76, 175, 80, 0.3)',
-                    }
-                  }}
-                />
-              ) : (
-                <Chip 
-                  icon={<CancelIcon />} 
-                  label="Consent Withdrawn" 
-                  color="error" 
-                  size="small"
-                  sx={{
-                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                    '&:hover': {
-                      transform: 'scale(1.05)',
-                      boxShadow: '0 4px 15px rgba(244, 67, 54, 0.3)',
-                    }
-                  }}
-                />
-              )}
-              {userConsent?.consent_timestamp && (
-                <GameText 
-                  variant="caption" 
-                  textVariant="secondary"
-                  sx={{
-                  }}
-                >
-                  Last updated:{' '}
-                  {formatDate(userConsent.consent_timestamp, {
-                    year: 'numeric',
-                    month: 'short',
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  })}
-                </GameText>
-              )}
-            </Box>
-            <Button 
-              variant="outlined" 
-              size="small" 
-              onClick={() => setConsentDialogOpen(true)}
-              sx={{ 
-                borderColor: '#00bcd4', 
-                color: '#00bcd4',
-                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                '&:hover': {
-                  borderColor: '#00acc1',
-                  backgroundColor: 'rgba(0, 188, 212, 0.1)',
-                  transform: 'translateY(-2px)',
-                  boxShadow: '0 4px 15px rgba(0, 188, 212, 0.3)',
-                }
-              }}
-            >
-              {userConsent?.data_processing_consent ? 'Withdraw Consent' : 'Give Consent'}
-            </Button>
-          </Box>
-
-          <Divider sx={{ my: 2 }} />
-
-          {/* GDPR Actions */}
-          <GameText 
-            variant="subtitle1" 
-            gutterBottom
-            sx={{
-            }}
-          >
-            Your Data Rights
-          </GameText>
-
-          <Box 
-            display="flex" 
-            flexDirection="column" 
-            gap={2}
-            sx={{
-            }}
-          >
-            {/* Data Export */}
-            <Box 
-              display="flex" 
-              justifyContent="space-between" 
-              alignItems="center"
-              sx={{
-                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                '&:hover': {
-                  transform: 'translateX(4px)',
-                  backgroundColor: 'rgba(0, 188, 212, 0.05)',
-                  borderRadius: 1,
-                  padding: 1,
-                }
-              }}
-            >
-              <Box>
-                <GameText variant="body2" className={GAME_CLASSES.textMedium}>
-                  Export Your Data
-                </GameText>
-                <GameText variant="caption" textVariant="secondary">
-                  Download all your personal data in JSON format
-                </GameText>
-              </Box>
-              <Button
-                variant="outlined"
-                size="small"
-                startIcon={<DownloadIcon />}
-                onClick={handleDataExport}
-                disabled={operationLoading === 'export'}
-                sx={{ 
-                  borderColor: '#00bcd4', 
-                  color: '#00bcd4',
-                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                  '&:hover:not(:disabled)': {
-                    borderColor: '#00acc1',
-                    backgroundColor: 'rgba(0, 188, 212, 0.1)',
-                    transform: 'translateY(-2px)',
-                    boxShadow: '0 4px 15px rgba(0, 188, 212, 0.3)',
-                  }
+              <motion.div
+                animate={{
+                  scale: [1, 1.05, 1],
+                  opacity: [1, 0.8, 1],
+                }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                  ease: 'easeInOut',
                 }}
               >
-                {operationLoading === 'export' ? 'Exporting...' : 'Export Data'}
-              </Button>
-            </Box>
+                <PrivacyIcon
+                  sx={{
+                    color: '#00bcd4',
+                  }}
+                />
+              </motion.div>
+              <motion.div
+                animate={{
+                  scale: [1, 1.02, 1],
+                  opacity: [1, 0.8, 1],
+                }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                  ease: 'easeInOut',
+                }}
+              >
+                <GameText variant="h6" textVariant="glow">
+                  Privacy & Data Protection
+                </GameText>
+              </motion.div>
+            </motion.div>
 
-            {/* Privacy Policy */}
-            <Box 
-              display="flex" 
-              justifyContent="space-between" 
-              alignItems="center"
-              sx={{
-                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                '&:hover': {
-                  transform: 'translateX(4px)',
-                  backgroundColor: 'rgba(0, 188, 212, 0.05)',
-                  borderRadius: 1,
-                  padding: 1,
-                }
-              }}
-            >
-              <Box>
-                <GameText variant="body2" className={GAME_CLASSES.textMedium}>
-                  Privacy Policy
-                </GameText>
-                <GameText variant="caption" textVariant="secondary">
-                  View our privacy policy and data processing information
-                </GameText>
+            <GameText variant="body2" textVariant="secondary" paragraph sx={{}}>
+              Manage your data and privacy settings. You have the right to control how your personal
+              data is processed.
+            </GameText>
+
+            <Divider sx={{ my: 2 }} />
+
+            {/* Consent Status */}
+            <Box className={GAME_CLASSES.marginBottom3} sx={{}}>
+              <GameText variant="subtitle1" gutterBottom sx={{}}>
+                Data Processing Consent
+              </GameText>
+              <Box
+                display="flex"
+                alignItems="center"
+                gap={2}
+                className={GAME_CLASSES.marginBottom2}
+                sx={{}}
+              >
+                {userConsent?.data_processing_consent ? (
+                  <Chip
+                    icon={<CheckCircleIcon />}
+                    label="Consent Given"
+                    color="success"
+                    size="small"
+                    sx={{
+                      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                      '&:hover': {
+                        transform: 'scale(1.05)',
+                        boxShadow: '0 4px 15px rgba(76, 175, 80, 0.3)',
+                      },
+                    }}
+                  />
+                ) : (
+                  <Chip
+                    icon={<CancelIcon />}
+                    label="Consent Withdrawn"
+                    color="error"
+                    size="small"
+                    sx={{
+                      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                      '&:hover': {
+                        transform: 'scale(1.05)',
+                        boxShadow: '0 4px 15px rgba(244, 67, 54, 0.3)',
+                      },
+                    }}
+                  />
+                )}
+                {userConsent?.consent_timestamp && (
+                  <GameText variant="caption" textVariant="secondary" sx={{}}>
+                    Last updated:{' '}
+                    {formatDate(userConsent.consent_timestamp, {
+                      year: 'numeric',
+                      month: 'short',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                  </GameText>
+                )}
               </Box>
               <Button
                 variant="outlined"
                 size="small"
-                startIcon={<PolicyIcon />}
-                component={Link}
-                to="/privacy_policy"
-                sx={{ 
-                  borderColor: '#00bcd4', 
+                onClick={() => setConsentDialogOpen(true)}
+                sx={{
+                  borderColor: '#00bcd4',
                   color: '#00bcd4',
                   transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                   '&:hover': {
@@ -440,15 +307,113 @@ export function GdprComplianceSection(): React.ReactElement {
                     backgroundColor: 'rgba(0, 188, 212, 0.1)',
                     transform: 'translateY(-2px)',
                     boxShadow: '0 4px 15px rgba(0, 188, 212, 0.3)',
-                  }
+                  },
                 }}
               >
-                View Policy
+                {userConsent?.data_processing_consent ? 'Withdraw Consent' : 'Give Consent'}
               </Button>
             </Box>
+
+            <Divider sx={{ my: 2 }} />
+
+            {/* GDPR Actions */}
+            <GameText variant="subtitle1" gutterBottom sx={{}}>
+              Your Data Rights
+            </GameText>
+
+            <Box display="flex" flexDirection="column" gap={2} sx={{}}>
+              {/* Data Export */}
+              <Box
+                display="flex"
+                justifyContent="space-between"
+                alignItems="center"
+                sx={{
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  '&:hover': {
+                    transform: 'translateX(4px)',
+                    backgroundColor: 'rgba(0, 188, 212, 0.05)',
+                    borderRadius: 1,
+                    padding: 1,
+                  },
+                }}
+              >
+                <Box>
+                  <GameText variant="body2" className={GAME_CLASSES.textMedium}>
+                    Export Your Data
+                  </GameText>
+                  <GameText variant="caption" textVariant="secondary">
+                    Download all your personal data in JSON format
+                  </GameText>
+                </Box>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  startIcon={<DownloadIcon />}
+                  onClick={handleDataExport}
+                  disabled={operationLoading === 'export'}
+                  sx={{
+                    borderColor: '#00bcd4',
+                    color: '#00bcd4',
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                    '&:hover:not(:disabled)': {
+                      borderColor: '#00acc1',
+                      backgroundColor: 'rgba(0, 188, 212, 0.1)',
+                      transform: 'translateY(-2px)',
+                      boxShadow: '0 4px 15px rgba(0, 188, 212, 0.3)',
+                    },
+                  }}
+                >
+                  {operationLoading === 'export' ? 'Exporting...' : 'Export Data'}
+                </Button>
+              </Box>
+
+              {/* Privacy Policy */}
+              <Box
+                display="flex"
+                justifyContent="space-between"
+                alignItems="center"
+                sx={{
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  '&:hover': {
+                    transform: 'translateX(4px)',
+                    backgroundColor: 'rgba(0, 188, 212, 0.05)',
+                    borderRadius: 1,
+                    padding: 1,
+                  },
+                }}
+              >
+                <Box>
+                  <GameText variant="body2" className={GAME_CLASSES.textMedium}>
+                    Privacy Policy
+                  </GameText>
+                  <GameText variant="caption" textVariant="secondary">
+                    View our privacy policy and data processing information
+                  </GameText>
+                </Box>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  startIcon={<PolicyIcon />}
+                  component={Link}
+                  to="/privacy_policy"
+                  sx={{
+                    borderColor: '#00bcd4',
+                    color: '#00bcd4',
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                    '&:hover': {
+                      borderColor: '#00acc1',
+                      backgroundColor: 'rgba(0, 188, 212, 0.1)',
+                      transform: 'translateY(-2px)',
+                      boxShadow: '0 4px 15px rgba(0, 188, 212, 0.3)',
+                    },
+                  }}
+                >
+                  View Policy
+                </Button>
+              </Box>
+            </Box>
           </Box>
-        </Box>
-      </GameCard>
+        </GameCard>
       </motion.div>
 
       {/* Danger Zone */}
@@ -457,106 +422,94 @@ export function GdprComplianceSection(): React.ReactElement {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: 'easeOut', delay: 2.0 }}
         whileHover={{ y: -2 }}
-        style={{ 
+        style={{
           marginTop: '24px',
-          transition: 'box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1)' 
+          transition: 'box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
         }}
       >
-        <GameCard 
-          sx={{ 
-            border: '2px solid', 
+        <GameCard
+          sx={{
+            border: '2px solid',
             borderColor: '#f44336',
             transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
             '&:hover': {
               boxShadow: '0 8px 25px rgba(244, 67, 54, 0.15)',
-            }
+            },
           }}
         >
-        <Box className={GAME_CLASSES.padding2}>
-          <Box 
-            display="flex" 
-            alignItems="center" 
-            gap={2} 
-            className={GAME_CLASSES.marginBottom2}
-            sx={{
-            }}
-          >
-            <DeleteForeverIcon 
-              sx={{ 
-                color: '#f44336',
-              }} 
-            />
-            <GameText 
-              variant="h6" 
-              textVariant="accent"
-              sx={{
-              }}
+          <Box className={GAME_CLASSES.padding2}>
+            <Box
+              display="flex"
+              alignItems="center"
+              gap={2}
+              className={GAME_CLASSES.marginBottom2}
+              sx={{}}
             >
-              Danger Zone
-            </GameText>
-          </Box>
-
-          <GameText 
-            variant="body2" 
-            textVariant="secondary" 
-            paragraph
-            sx={{
-            }}
-          >
-            These actions are irreversible. Please proceed with caution.
-          </GameText>
-
-          <Box 
-            display="flex" 
-            justifyContent="space-between" 
-            alignItems="center"
-            sx={{
-              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-              '&:hover': {
-                transform: 'translateX(4px)',
-                backgroundColor: 'rgba(244, 67, 54, 0.05)',
-                borderRadius: 1,
-                padding: 1,
-              }
-            }}
-          >
-            <Box>
-              <GameText variant="body2" className={GAME_CLASSES.textMedium} textVariant="accent">
-                Delete All Data
-              </GameText>
-              <GameText variant="caption" textVariant="secondary">
-                Permanently delete all your personal data and account
+              <DeleteForeverIcon
+                sx={{
+                  color: '#f44336',
+                }}
+              />
+              <GameText variant="h6" textVariant="accent" sx={{}}>
+                Danger Zone
               </GameText>
             </Box>
-            <Button
-              variant="contained"
-              size="small"
-              startIcon={<DeleteForeverIcon />}
-              onClick={() => setDeleteDialogOpen(true)}
-              disabled={operationLoading === 'delete'}
+
+            <GameText variant="body2" textVariant="secondary" paragraph sx={{}}>
+              These actions are irreversible. Please proceed with caution.
+            </GameText>
+
+            <Box
+              display="flex"
+              justifyContent="space-between"
+              alignItems="center"
               sx={{
-                backgroundColor: '#f44336',
-                color: '#ffffff',
                 transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                '&:hover:not(:disabled)': {
-                  backgroundColor: '#d32f2f',
-                  transform: 'translateY(-2px)',
-                  boxShadow: '0 4px 15px rgba(244, 67, 54, 0.4)',
+                '&:hover': {
+                  transform: 'translateX(4px)',
+                  backgroundColor: 'rgba(244, 67, 54, 0.05)',
+                  borderRadius: 1,
+                  padding: 1,
                 },
-                '&:active:not(:disabled)': {
-                  transform: 'translateY(0)',
-                },
-                '&:disabled': {
-                  backgroundColor: 'rgba(244, 67, 54, 0.3)',
-                  color: 'rgba(255, 255, 255, 0.5)',
-                }
               }}
             >
-              Delete All Data
-            </Button>
+              <Box>
+                <GameText variant="body2" className={GAME_CLASSES.textMedium} textVariant="accent">
+                  Delete All Data
+                </GameText>
+                <GameText variant="caption" textVariant="secondary">
+                  Permanently delete all your personal data and account
+                </GameText>
+              </Box>
+              <Button
+                variant="contained"
+                size="small"
+                startIcon={<DeleteForeverIcon />}
+                onClick={() => setDeleteDialogOpen(true)}
+                disabled={operationLoading === 'delete'}
+                sx={{
+                  backgroundColor: '#f44336',
+                  color: '#ffffff',
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  '&:hover:not(:disabled)': {
+                    backgroundColor: '#d32f2f',
+                    transform: 'translateY(-2px)',
+                    boxShadow: '0 4px 15px rgba(244, 67, 54, 0.4)',
+                  },
+                  '&:active:not(:disabled)': {
+                    transform: 'translateY(0)',
+                  },
+                  '&:disabled': {
+                    backgroundColor: 'rgba(244, 67, 54, 0.3)',
+                    color: 'rgba(255, 255, 255, 0.5)',
+                  },
+                }}
+              >
+                Delete All Data
+              </Button>
+            </Box>
           </Box>
-        </Box>
-      </GameCard>
+        </GameCard>
       </motion.div>
 
       {/* Consent Dialog */}

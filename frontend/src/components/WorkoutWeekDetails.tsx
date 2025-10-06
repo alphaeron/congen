@@ -1,27 +1,17 @@
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import PauseCircleIcon from '@mui/icons-material/PauseCircle';
 import ScheduleIcon from '@mui/icons-material/Schedule';
-import {
-  Box,
-  Card,
-  CardContent,
-  Grid,
-  List,
-  ListItem,
-  ListItemText,
-  IconButton,
-} from '@mui/material';
+import { Box, CardContent, Grid, List, ListItem, ListItemText } from '@mui/material';
+import { motion } from 'framer-motion';
 import { useSnackbar } from 'notistack';
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
-import { motion } from 'framer-motion';
 
+import { GameCard, GameText, GAME_CLASSES } from './GameTheme';
 import { LoadingSpinner } from './LoadingSpinner';
 import { RadarChart } from './RadarChart';
 import { SunburstChart } from './SunburstChart';
 import { WorkoutHeader } from './WorkoutHeader';
-import { GameCard, GameText, GAME_CLASSES } from './GameTheme';
 import type {
   ProgramWithPreferences,
   Exercise,
@@ -255,143 +245,140 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
         marginTop: '24px',
       }}
     >
-        {!activeProgram ? (
-          <GameCard>
-            <CardContent>
-              <motion.div
-                initial={{ opacity: 0, x: -30 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.6, ease: 'easeOut', delay: 0.2 }}
-              >
-                <GameText 
-                  variant="h6" 
-                  gutterBottom
-                >
-                  No Active Program
-                </GameText>
-              </motion.div>
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.6, ease: 'easeOut', delay: 0.4 }}
-              >
-                <GameText 
-                  variant="body2" 
-                  textVariant="secondary" 
-                  paragraph
-                >
-                  You need to create a program first before you can generate and view workouts. Please
-                  go to the Programs section to create a program.
-                </GameText>
-              </motion.div>
-            </CardContent>
-          </GameCard>
-        ) : (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.8, ease: 'easeOut' }}
-            style={{ position: 'relative' }}
-          >
-            {/* Header Section */}
-            <WorkoutHeader
-              context="week"
-              weekNumber={weekNumber}
-              totalWorkouts={weekWorkouts.length}
-              completedWeekWorkouts={progressMetrics?.completedWorkouts || 0}
-              onExportPDF={handleExportPDF}
-              onBack={showBackButton ? (onBack || handleBackToWeekList) : undefined}
-              disabled={weekWorkouts.length === 0}
-            />
-
-            <Box 
-              id="week-details-content" 
-              sx={{ 
-                px: 3,
-              }}
+      {!activeProgram ? (
+        <GameCard>
+          <CardContent>
+            <motion.div
+              initial={{ opacity: 0, x: -30 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, ease: 'easeOut', delay: 0.2 }}
             >
-              <Grid container spacing={3}>
-                {/* Workout List - 2/3 width */}
-                <Grid size={{ xs: 12, lg: 8 }}>
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.4, delay: 0.2 }}
-                    whileHover={{ y: -8 }}
-                  >
-                      <GameCard className="glassmorphism-card" sx={{ mt: 3 }}>
-                        <Box sx={{ p: 2 }}>
-                        <Box
-                          sx={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 1,
-                            mb: 2,
-                          }}
-                        >
-                          <GameText variant="h6">Workouts</GameText>
-                          {weekWorkouts.length > 0 && (
-                            <Box
-                              sx={{
-                                backgroundColor: 'primary.main',
-                                color: 'primary.contrastText',
-                                borderRadius: '50%',
-                                width: 24,
-                                height: 24,
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                fontSize: '0.75rem',
-                                fontWeight: 'bold',
-                              }}
-                            >
-                              {weekWorkouts.length}
-                            </Box>
-                          )}
+              <GameText variant="h6" gutterBottom>
+                No Active Program
+              </GameText>
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.6, ease: 'easeOut', delay: 0.4 }}
+            >
+              <GameText variant="body2" textVariant="secondary" paragraph>
+                You need to create a program first before you can generate and view workouts. Please
+                go to the Programs section to create a program.
+              </GameText>
+            </motion.div>
+          </CardContent>
+        </GameCard>
+      ) : (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.8, ease: 'easeOut' }}
+          style={{ position: 'relative' }}
+        >
+          {/* Header Section */}
+          <WorkoutHeader
+            context="week"
+            weekNumber={weekNumber}
+            totalWorkouts={weekWorkouts.length}
+            completedWeekWorkouts={progressMetrics?.completedWorkouts || 0}
+            onExportPDF={handleExportPDF}
+            onBack={showBackButton ? onBack || handleBackToWeekList : undefined}
+            disabled={weekWorkouts.length === 0}
+          />
+
+          <Box
+            id="week-details-content"
+            sx={{
+              px: 3,
+            }}
+          >
+            <Grid container spacing={3}>
+              {/* Workout List - 2/3 width */}
+              <Grid size={{ xs: 12, lg: 8 }}>
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: 0.2 }}
+                  whileHover={{ y: -8 }}
+                >
+                  <GameCard className="glassmorphism-card" sx={{ mt: 3 }}>
+                    <Box sx={{ p: 2 }}>
+                      <Box
+                        sx={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 1,
+                          mb: 2,
+                        }}
+                      >
+                        <GameText variant="h6">Workouts</GameText>
+                        {weekWorkouts.length > 0 && (
+                          <Box
+                            sx={{
+                              backgroundColor: 'primary.main',
+                              color: 'primary.contrastText',
+                              borderRadius: '50%',
+                              width: 24,
+                              height: 24,
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontSize: '0.75rem',
+                              fontWeight: 'bold',
+                            }}
+                          >
+                            {weekWorkouts.length}
+                          </Box>
+                        )}
+                      </Box>
+                      <GameText
+                        variant="body2"
+                        textVariant="secondary"
+                        className={GAME_CLASSES.marginBottom2}
+                      >
+                        Week {weekNumber} of {activeProgram.program.current_week_number} • Click any
+                        workout to view details
+                      </GameText>
+                      {isLoading ? (
+                        <Box display="flex" justifyContent="center" p={3}>
+                          <LoadingSpinner message="Loading workouts..." size={40} />
                         </Box>
-                        <GameText variant="body2" textVariant="secondary" className={GAME_CLASSES.marginBottom2}>
-                          Week {weekNumber} of {activeProgram.program.current_week_number} • Click
-                          any workout to view details
-                        </GameText>
-                        {isLoading ? (
-                          <Box display="flex" justifyContent="center" p={3}>
-                            <LoadingSpinner message="Loading workouts..." size={40} />
-                          </Box>
-                        ) : weekWorkouts.length === 0 ? (
-                          <Box sx={{ textAlign: 'center', py: 4 }}>
-                            <GameText variant="body2" textVariant="secondary">
-                              No workouts found for Week {weekNumber}.
-                            </GameText>
-                          </Box>
-                        ) : (
-                          <List>
-                            {weekWorkouts.map((weekWorkout, index) => {
-                              // Calculate workout progress using proper logic
-                              const workoutProgress = calculateWorkoutProgress(weekWorkout.workout);
-                              return (
-                                <motion.div
-                                  key={weekWorkout.workout.workout.id}
-                                  initial={{ opacity: 0, x: -20 }}
-                                  animate={{ opacity: 1, x: 0 }}
-                                  transition={{ duration: 0.3, delay: index * 0.1 }}
-                                  whileHover={{ x: 4, scale: 1.02 }}
-                                  whileTap={{ scale: 0.98 }}
-                                >
-                                  <ListItem
-                                    disablePadding
-                                    sx={{
-                                      cursor: 'pointer',
-                                      borderRadius: 1,
-                                      mb: 1,
-                                      border: 1,
-                                      borderColor: 'divider',
-                                      backgroundColor: 'transparent',
-                                      '&:hover': {
-                                        backgroundColor: 'action.hover',
-                                        boxShadow: 'var(--game-cyan-shadow)',
-                                        borderColor: 'var(--game-cyan)',
-                                      },
-                                    }}
+                      ) : weekWorkouts.length === 0 ? (
+                        <Box sx={{ textAlign: 'center', py: 4 }}>
+                          <GameText variant="body2" textVariant="secondary">
+                            No workouts found for Week {weekNumber}.
+                          </GameText>
+                        </Box>
+                      ) : (
+                        <List>
+                          {weekWorkouts.map((weekWorkout, index) => {
+                            // Calculate workout progress using proper logic
+                            const workoutProgress = calculateWorkoutProgress(weekWorkout.workout);
+                            return (
+                              <motion.div
+                                key={weekWorkout.workout.workout.id}
+                                initial={{ opacity: 0, x: -20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ duration: 0.3, delay: index * 0.1 }}
+                                whileHover={{ x: 4, scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                              >
+                                <ListItem
+                                  disablePadding
+                                  sx={{
+                                    cursor: 'pointer',
+                                    borderRadius: 1,
+                                    mb: 1,
+                                    border: 1,
+                                    borderColor: 'divider',
+                                    backgroundColor: 'transparent',
+                                    '&:hover': {
+                                      backgroundColor: 'action.hover',
+                                      boxShadow: 'var(--game-cyan-shadow)',
+                                      borderColor: 'var(--game-cyan)',
+                                    },
+                                  }}
                                   onClick={() =>
                                     (onWorkoutClick || handleWorkoutClick)(
                                       weekWorkout.workout.workout.id
@@ -401,7 +388,10 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
                                   <ListItemText
                                     primary={
                                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                        <GameText variant="subtitle1" className={GAME_CLASSES.textMedium}>
+                                        <GameText
+                                          variant="subtitle1"
+                                          className={GAME_CLASSES.textMedium}
+                                        >
                                           Day {weekWorkout.dayInWeek}
                                         </GameText>
                                         {workoutProgress.status === 'completed' ? (
@@ -453,62 +443,62 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
                                     }
                                   />
                                 </ListItem>
-                                </motion.div>
-                              );
-                            })}
-                          </List>
-                        )}
-                        </Box>
-                      </GameCard>
-                    </motion.div>
-                </Grid>
-
-                {/* Charts - 1/3 width */}
-                <Grid size={{ xs: 12, lg: 4 }}>
-                  <Box 
-                    sx={{ 
-                      mt: 3, 
-                      display: 'flex', 
-                      flexDirection: 'column', 
-                      gap: 3,
-                    }}
-                  >
-                    {weekWorkouts.length > 0 && aggregatedWorkoutData && (
-                      <React.Fragment>
-                        <motion.div
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ duration: 0.4, delay: 0.3 }}
-                          whileHover={{ y: -8 }}
-                        >
-                          <SunburstChart
-                            workoutData={aggregatedWorkoutData}
-                            exerciseMuscleData={exerciseToMusclesData}
-                            weightUnitPreferences={weightUnitPreferences}
-                            selectedExercise="all"
-                          />
-                        </motion.div>
-                        <motion.div
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ duration: 0.4, delay: 0.4 }}
-                          whileHover={{ y: -8 }}
-                        >
-                          <RadarChart
-                            weekWorkouts={weekWorkouts.map(ww => ww.workout)}
-                            exerciseData={exerciseData}
-                            title="Exercise Movement Type"
-                            height={300}
-                          />
-                        </motion.div>
-                      </React.Fragment>
-                    )}
-                  </Box>
-                </Grid>
+                              </motion.div>
+                            );
+                          })}
+                        </List>
+                      )}
+                    </Box>
+                  </GameCard>
+                </motion.div>
               </Grid>
-            </Box>
-          </motion.div>
-        )}
+
+              {/* Charts - 1/3 width */}
+              <Grid size={{ xs: 12, lg: 4 }}>
+                <Box
+                  sx={{
+                    mt: 3,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 3,
+                  }}
+                >
+                  {weekWorkouts.length > 0 && aggregatedWorkoutData && (
+                    <React.Fragment>
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.4, delay: 0.3 }}
+                        whileHover={{ y: -8 }}
+                      >
+                        <SunburstChart
+                          workoutData={aggregatedWorkoutData}
+                          exerciseMuscleData={exerciseToMusclesData}
+                          weightUnitPreferences={weightUnitPreferences}
+                          selectedExercise="all"
+                        />
+                      </motion.div>
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.4, delay: 0.4 }}
+                        whileHover={{ y: -8 }}
+                      >
+                        <RadarChart
+                          weekWorkouts={weekWorkouts.map(ww => ww.workout)}
+                          exerciseData={exerciseData}
+                          title="Exercise Movement Type"
+                          height={300}
+                        />
+                      </motion.div>
+                    </React.Fragment>
+                  )}
+                </Box>
+              </Grid>
+            </Grid>
+          </Box>
+        </motion.div>
+      )}
     </motion.div>
   );
 };

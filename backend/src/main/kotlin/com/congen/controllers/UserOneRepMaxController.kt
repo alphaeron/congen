@@ -70,14 +70,12 @@ class UserOneRepMaxController(
      * Get all one rep max records for a user.
      *
      * @param userId The Keycloak user ID
-     * @param unit Optional unit to convert weights to (kg or lbs)
      * @return Mono containing list of one rep max records
      */
     @GetMapping("/user/{user_id}")
     @PreAuthorize("isAuthenticated()")
     fun getOneRepMaxesByUserId(
         @PathVariable("user_id") userId: String,
-        @RequestParam(required = false) unit: String?
     ): Mono<ResponseEntity<List<UserOneRepMax>>> {
         return keycloakUtil.getCurrentUserId().zipWith(keycloakUtil.getCurrentUserRoles()) { currentUserId, roles ->
             Pair(currentUserId, roles)
@@ -107,7 +105,6 @@ class UserOneRepMaxController(
      *
      * @param userId The Keycloak user ID
      * @param exerciseName The exercise name
-     * @param unit Optional unit to convert weight to (kg or lbs)
      * @return Mono containing the one rep max record or empty if not found
      */
     @GetMapping("/user/{user_id}/exercise/{exercise_name}")
@@ -115,7 +112,6 @@ class UserOneRepMaxController(
     fun getOneRepMaxByUserAndExercise(
         @PathVariable("user_id") userId: String,
         @PathVariable("exercise_name") exerciseName: String,
-        @RequestParam(required = false) unit: String?
     ): Mono<ResponseEntity<UserOneRepMax>> {
         return keycloakUtil.getCurrentUserId().zipWith(keycloakUtil.getCurrentUserRoles()) { currentUserId, roles ->
             Pair(currentUserId, roles)

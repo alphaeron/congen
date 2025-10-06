@@ -1,24 +1,17 @@
-import {
-  Box,
-  CardContent,
-} from '@mui/material';
+import { Box, CardContent } from '@mui/material';
 import { useSnackbar } from 'notistack';
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 
+import { GameCard, GameText, GAME_CLASSES } from './GameTheme';
+import { HeroCTA } from './HeroCTA';
 import { LoadingBackdrop } from './LoadingBackdrop';
 import { LoadingSpinner } from './LoadingSpinner';
+import { TrainingTimeline } from './TrainingTimeline';
 import { VolumeOverviewCards } from './VolumeOverviewCards';
 import { WorkoutGenerationWizard } from './WorkoutGenerationWizard';
 import { WorkoutHeader } from './WorkoutHeader';
-import { HeroCTA } from './HeroCTA';
-import { TrainingTimeline } from './TrainingTimeline';
-import { GameCard, GameText, GAME_CLASSES } from './GameTheme';
-import type {
-  Program,
-  ProgramWithPreferences,
-  Exercise,
-} from '../api/types';
+import type { Program, ProgramWithPreferences, Exercise } from '../api/types';
 import { useData } from '../contexts/DataContext';
 import { exportProgramToPDF } from '../utils/exportUtils';
 import { calculateProgramProgress, calculateWorkoutProgress } from '../utils/progressUtils';
@@ -153,20 +146,24 @@ export const Workouts: React.FC<WorkoutsProps> = () => {
     return Array.from(weekMap.entries())
       .map(([weekNumber, weekWorkoutsWithStages]) => {
         // Calculate completion for each workout
-        const workoutProgresses = weekWorkoutsWithStages.map(workoutWithStages => 
+        const workoutProgresses = weekWorkoutsWithStages.map(workoutWithStages =>
           calculateWorkoutProgress(workoutWithStages)
         );
-        
+
         // A week is completed if all workouts in the week are completed
         const isCompleted = workoutProgresses.every(progress => progress.status === 'completed');
-        
+
         // Count completed workouts
-        const completedWorkouts = workoutProgresses.filter(progress => progress.status === 'completed').length;
-        
+        const completedWorkouts = workoutProgresses.filter(
+          progress => progress.status === 'completed'
+        ).length;
+
         return {
           weekNumber,
           workoutCount: weekWorkoutsWithStages.length,
-          workouts: weekWorkoutsWithStages.map(w => w.workout).sort((a, b) => a.day_number - b.day_number),
+          workouts: weekWorkoutsWithStages
+            .map(w => w.workout)
+            .sort((a, b) => a.day_number - b.day_number),
           isCompleted,
           completedWorkouts,
         };
@@ -190,7 +187,7 @@ export const Workouts: React.FC<WorkoutsProps> = () => {
     // Close the wizard first
     setWizardOpen(false);
     setSelectedProgram(null);
-    
+
     setIsGenerating(true);
     try {
       // Refresh all data after generation
@@ -268,8 +265,16 @@ export const Workouts: React.FC<WorkoutsProps> = () => {
                 progressMax={progressMetrics.totalWeeks}
                 onExportPDF={handleExportPDF}
                 disabled={weeks.length === 0}
-                currentWeekWorkouts={weeks.find(w => w.weekNumber === Math.max(activeProgram.program.current_week_number, 1))?.workoutCount || 0}
-                completedWorkouts={weeks.find(w => w.weekNumber === Math.max(activeProgram.program.current_week_number, 1))?.completedWorkouts || 0}
+                currentWeekWorkouts={
+                  weeks.find(
+                    w => w.weekNumber === Math.max(activeProgram.program.current_week_number, 1)
+                  )?.workoutCount || 0
+                }
+                completedWorkouts={
+                  weeks.find(
+                    w => w.weekNumber === Math.max(activeProgram.program.current_week_number, 1)
+                  )?.completedWorkouts || 0
+                }
               />
             )}
 

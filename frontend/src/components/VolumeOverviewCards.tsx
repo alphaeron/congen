@@ -4,7 +4,6 @@ import { motion } from 'framer-motion';
 import React, { useMemo } from 'react';
 
 import { GameCard, GameText, GAME_CLASSES } from './GameTheme';
-
 import type {
   UserDataExport,
   UserWeightUnitPreference,
@@ -17,7 +16,6 @@ import {
   replaceUnderscoresWithSpaces,
   formatDate,
 } from '../common/utils';
-import { createCongenNivoTheme } from '../theme/nivoTheme';
 
 interface VolumeOverviewCardsProps {
   userDataExport: UserDataExport | null;
@@ -51,14 +49,12 @@ interface VolumeCardData {
  * @param userDataExport The raw user data export containing all workout information
  * @param exerciseData Map of exercise data for categorization
  * @param weightUnitPreferences User's weight unit preferences for conversion
- * @param height Optional height for the chart container
  * @return Volume Overview Cards component
  */
 export const VolumeOverviewCards: React.FC<VolumeOverviewCardsProps> = ({
   userDataExport,
   exerciseData,
   weightUnitPreferences,
-  height = 200,
 }) => {
   // Extract workouts from the raw data
   const workouts = useMemo(() => {
@@ -144,9 +140,12 @@ export const VolumeOverviewCards: React.FC<VolumeOverviewCardsProps> = ({
     const previousWeek = volumeData[volumeData.length - 2];
 
     // Calculate targets based on historical averages (simplified)
-    const avgMaxEffort = volumeData.reduce((sum, v) => sum + v.maxEffortVolume, 0) / volumeData.length;
-    const avgDynamicEffort = volumeData.reduce((sum, v) => sum + v.dynamicEffortVolume, 0) / volumeData.length;
-    const avgAccessory = volumeData.reduce((sum, v) => sum + v.accessoryVolume, 0) / volumeData.length;
+    const avgMaxEffort =
+      volumeData.reduce((sum, v) => sum + v.maxEffortVolume, 0) / volumeData.length;
+    const avgDynamicEffort =
+      volumeData.reduce((sum, v) => sum + v.dynamicEffortVolume, 0) / volumeData.length;
+    const avgAccessory =
+      volumeData.reduce((sum, v) => sum + v.accessoryVolume, 0) / volumeData.length;
 
     const calculateTrend = (current: number, previous: number): number => {
       if (!previous || previous === 0) return 0;
@@ -173,7 +172,10 @@ export const VolumeOverviewCards: React.FC<VolumeOverviewCardsProps> = ({
         type: 'Dynamic Effort',
         current: currentWeek.dynamicEffortVolume,
         target: Math.round(avgDynamicEffort * 1.1),
-        trend: calculateTrend(currentWeek.dynamicEffortVolume, previousWeek?.dynamicEffortVolume || 0),
+        trend: calculateTrend(
+          currentWeek.dynamicEffortVolume,
+          previousWeek?.dynamicEffortVolume || 0
+        ),
         trendData: prepareTrendData('dynamicEffortVolume'),
         color: 'var(--game-cyan)',
       },
@@ -197,7 +199,7 @@ export const VolumeOverviewCards: React.FC<VolumeOverviewCardsProps> = ({
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, ease: "easeOut" }}
+      transition={{ duration: 0.5, ease: 'easeOut' }}
       style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}
     >
       {cardData.map((card, index) => (
@@ -218,95 +220,106 @@ export const VolumeOverviewCards: React.FC<VolumeOverviewCardsProps> = ({
               height: '100%',
             }}
           >
-          <CardContent sx={{ p: 2 }}>
-            {/* Header */}
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-              <GameText variant="h6" className={GAME_CLASSES.textMedium}>
-                {card.type}
-              </GameText>
-              <GameText
-                variant="body2"
-                className={GAME_CLASSES.textMedium}
+            <CardContent sx={{ p: 2 }}>
+              {/* Header */}
+              <Box
                 sx={{
-                  color: card.trend >= 0 ? 'var(--game-cyan)' : 'var(--game-error)',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  mb: 2,
                 }}
               >
-                {card.trend >= 0 ? '↗' : '↘'} {Math.abs(card.trend)}%
-              </GameText>
-            </Box>
-
-            {/* Current vs Target */}
-            <Box sx={{ mb: 2 }}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                <GameText variant="h4" className={GAME_CLASSES.textBold}>
-                  {card.current.toLocaleString()}
+                <GameText variant="h6" className={GAME_CLASSES.textMedium}>
+                  {card.type}
                 </GameText>
-                <GameText variant="body2" className={GAME_CLASSES.textMuted} sx={{ alignSelf: 'flex-end' }}>
-                  / {card.target.toLocaleString()} lbs
+                <GameText
+                  variant="body2"
+                  className={GAME_CLASSES.textMedium}
+                  sx={{
+                    color: card.trend >= 0 ? 'var(--game-cyan)' : 'var(--game-error)',
+                  }}
+                >
+                  {card.trend >= 0 ? '↗' : '↘'} {Math.abs(card.trend)}%
                 </GameText>
               </Box>
 
-              {/* Progress Bar */}
-              <LinearProgress
-                variant="determinate"
-                value={(card.current / card.target) * 100}
-                sx={{
-                  height: 8,
-                  borderRadius: 4,
-                  backgroundColor: 'var(--game-cyan-light)',
-                  '& .MuiLinearProgress-bar': {
-                    backgroundColor: card.color,
-                    borderRadius: 4,
-                  },
-                }}
-              />
-            </Box>
+              {/* Current vs Target */}
+              <Box sx={{ mb: 2 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                  <GameText variant="h4" className={GAME_CLASSES.textBold}>
+                    {card.current.toLocaleString()}
+                  </GameText>
+                  <GameText
+                    variant="body2"
+                    className={GAME_CLASSES.textMuted}
+                    sx={{ alignSelf: 'flex-end' }}
+                  >
+                    / {card.target.toLocaleString()} lbs
+                  </GameText>
+                </Box>
 
-            {/* Mini Line Chart */}
-            <Box sx={{ height: 60, width: '100%' }}>
-              <ResponsiveLine
-                data={[
-                  {
-                    id: card.type,
-                    data: card.trendData,
-                  },
-                ]}
-                margin={{ top: 5, right: 5, bottom: 5, left: 5 }}
-                xScale={{ type: 'point' }}
-                yScale={{
-                  type: 'linear',
-                  min: 'auto',
-                  max: 'auto',
-                }}
-                curve="monotoneX"
-                axisTop={null}
-                axisRight={null}
-                axisBottom={null}
-                axisLeft={null}
-                enableGridX={false}
-                enableGridY={false}
-                enablePoints={false}
-                enableArea={true}
-                areaOpacity={0.3}
-                colors={[card.color]}
-                lineWidth={2}
-                theme={{
-                  background: 'transparent',
-                  text: {
-                    fontSize: 10,
-                    fill: 'var(--game-white-muted)',
-                  },
-                  grid: {
-                    line: {
-                      stroke: 'var(--game-cyan-light)',
+                {/* Progress Bar */}
+                <LinearProgress
+                  variant="determinate"
+                  value={(card.current / card.target) * 100}
+                  sx={{
+                    height: 8,
+                    borderRadius: 4,
+                    backgroundColor: 'var(--game-cyan-light)',
+                    '& .MuiLinearProgress-bar': {
+                      backgroundColor: card.color,
+                      borderRadius: 4,
                     },
-                  },
-                }}
-                animate={true}
-                motionConfig="gentle"
-              />
-            </Box>
-          </CardContent>
+                  }}
+                />
+              </Box>
+
+              {/* Mini Line Chart */}
+              <Box sx={{ height: 60, width: '100%' }}>
+                <ResponsiveLine
+                  data={[
+                    {
+                      id: card.type,
+                      data: card.trendData,
+                    },
+                  ]}
+                  margin={{ top: 5, right: 5, bottom: 5, left: 5 }}
+                  xScale={{ type: 'point' }}
+                  yScale={{
+                    type: 'linear',
+                    min: 'auto',
+                    max: 'auto',
+                  }}
+                  curve="monotoneX"
+                  axisTop={null}
+                  axisRight={null}
+                  axisBottom={null}
+                  axisLeft={null}
+                  enableGridX={false}
+                  enableGridY={false}
+                  enablePoints={false}
+                  enableArea={true}
+                  areaOpacity={0.3}
+                  colors={[card.color]}
+                  lineWidth={2}
+                  theme={{
+                    background: 'transparent',
+                    text: {
+                      fontSize: 10,
+                      fill: 'var(--game-white-muted)',
+                    },
+                    grid: {
+                      line: {
+                        stroke: 'var(--game-cyan-light)',
+                      },
+                    },
+                  }}
+                  animate={true}
+                  motionConfig="gentle"
+                />
+              </Box>
+            </CardContent>
           </GameCard>
         </motion.div>
       ))}

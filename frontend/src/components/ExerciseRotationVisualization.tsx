@@ -1,24 +1,16 @@
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import InfoIcon from '@mui/icons-material/Info';
-import {
-  Box,
-  CardContent,
-  Chip,
-  Grid,
-  Alert,
-  Tooltip,
-  IconButton,
-} from '@mui/material';
+import { Box, CardContent, Chip, Grid, Alert, Tooltip, IconButton } from '@mui/material';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useSnackbar } from 'notistack';
 import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
-import { motion, AnimatePresence } from 'framer-motion';
 
 import { ExerciseCategoryDetails } from './ExerciseCategoryDetails';
 import { ExerciseName } from './ExerciseName';
-import { GameText, GameCard, GameSubCard } from './GameTheme';
 import { ExercisePoolPieChart } from './ExercisePoolPieChart';
 import { ExercisePoolSunburstChart } from './ExercisePoolSunburstChart';
+import { GameText, GameCard, GameSubCard } from './GameTheme';
 import { LoadingSpinner } from './LoadingSpinner';
 import { RadialBarChart } from './RadialBarChart';
 import type { UserExercisePoolResponse } from '../api/types';
@@ -179,347 +171,351 @@ export const ExerciseRotationVisualization: React.FC = () => {
             transition={{ duration: 0.3, ease: 'easeInOut' }}
           >
             <Box sx={{ px: 3, pt: 3 }}>
-          <Grid container spacing={3}>
-            {/* Exercise Insights Charts */}
-            {exercisePoolAnalysis && (
-              <Grid size={{ xs: 12 }}>
+              <Grid container spacing={3}>
+                {/* Exercise Insights Charts */}
+                {exercisePoolAnalysis && (
+                  <Grid size={{ xs: 12 }}>
+                    <Grid container spacing={3}>
+                      {/* Pool Availability - Pie Chart */}
+                      <Grid size={{ xs: 12, md: 4 }}>
+                        <ExercisePoolPieChart
+                          exercisePoolData={exercisePoolData}
+                          title="Exercise Availability"
+                          description={`${exercisePoolAnalysis.availableExercises} of ${exercisePoolAnalysis.totalExercises} exercises available`}
+                          height={250}
+                        />
+                      </Grid>
+
+                      {/* Exercise Variety - Radial Bar Chart */}
+                      <Grid size={{ xs: 12, md: 4 }}>
+                        <RadialBarChart
+                          exercisePoolData={exercisePoolData}
+                          title="Exercise Variety"
+                          description="Primary vs accessory distribution"
+                          height={250}
+                        />
+                      </Grid>
+
+                      {/* Exercise Selection - Sunburst Chart */}
+                      <Grid size={{ xs: 12, md: 4 }}>
+                        <ExercisePoolSunburstChart
+                          exercisePoolData={exercisePoolData}
+                          title="Exercise Selection"
+                          description="Hierarchical pool structure"
+                          height={250}
+                        />
+                      </Grid>
+                    </Grid>
+                  </Grid>
+                )}
+
+                {/* Exercise Rotation and Recent Exercises - Side by side */}
                 <Grid container spacing={3}>
-                  {/* Pool Availability - Pie Chart */}
-                  <Grid size={{ xs: 12, md: 4 }}>
-                    <ExercisePoolPieChart
-                      exercisePoolData={exercisePoolData}
-                      title="Exercise Availability"
-                      description={`${exercisePoolAnalysis.availableExercises} of ${exercisePoolAnalysis.totalExercises} exercises available`}
-                      height={250}
-                    />
-                  </Grid>
+                  {/* Available Exercises - Left side */}
+                  {exercisePoolAnalysis && (
+                    <Grid
+                      size={
+                        exercisePoolAnalysis.previouslyUsedExercises.length > 0
+                          ? { xs: 12, md: 6 }
+                          : { xs: 12 }
+                      }
+                    >
+                      <GameCard>
+                        <CardContent>
+                          <GameText
+                            variant="h6"
+                            gutterBottom
+                            sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
+                          >
+                            Available Exercises
+                          </GameText>
+                          <Grid container spacing={2}>
+                            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                              <GameSubCard
+                                sx={{
+                                  p: 2,
+                                  textAlign: 'center',
+                                  cursor: 'pointer',
+                                  transition: 'all 0.2s ease-in-out',
+                                  '&:hover': {
+                                    transform: 'translateY(-2px)',
+                                    boxShadow: 3,
+                                  },
+                                }}
+                                onClick={() => handleCategoryClick('primary')}
+                              >
+                                <GameText variant="h4" textVariant="accent">
+                                  {exercisePoolAnalysis.categorizedExercises.primary.length}
+                                </GameText>
+                                <GameText variant="body2">Primary Exercises</GameText>
+                                <Box
+                                  sx={{
+                                    mt: 1,
+                                    display: 'flex',
+                                    flexWrap: 'wrap',
+                                    gap: 0.5,
+                                    justifyContent: 'center',
+                                  }}
+                                >
+                                  {exercisePoolAnalysis.categorizedExercises.primary
+                                    .slice(0, 3)
+                                    .map(exercise => (
+                                      <Chip
+                                        key={exercise.name}
+                                        label={
+                                          <ExerciseName
+                                            exerciseName={exercise.name}
+                                            variant="caption"
+                                          />
+                                        }
+                                        size="small"
+                                        variant="outlined"
+                                        color="info"
+                                        clickable
+                                        onClick={e => {
+                                          e.stopPropagation();
+                                          handleExerciseClick(exercise.name);
+                                        }}
+                                      />
+                                    ))}
+                                  {exercisePoolAnalysis.categorizedExercises.primary.length > 3 && (
+                                    <Chip
+                                      label={`+${exercisePoolAnalysis.categorizedExercises.primary.length - 3}`}
+                                      size="small"
+                                      variant="outlined"
+                                    />
+                                  )}
+                                </Box>
+                              </GameSubCard>
+                            </Grid>
+                            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                              <GameSubCard
+                                sx={{
+                                  p: 2,
+                                  textAlign: 'center',
+                                  cursor: 'pointer',
+                                  transition: 'all 0.2s ease-in-out',
+                                  '&:hover': {
+                                    transform: 'translateY(-2px)',
+                                    boxShadow: 3,
+                                  },
+                                }}
+                                onClick={() => handleCategoryClick('accessory')}
+                              >
+                                <GameText variant="h4" textVariant="accent">
+                                  {exercisePoolAnalysis.categorizedExercises.accessory.length}
+                                </GameText>
+                                <GameText variant="body2">Accessory Exercises</GameText>
+                                <Box
+                                  sx={{
+                                    mt: 1,
+                                    display: 'flex',
+                                    flexWrap: 'wrap',
+                                    gap: 0.5,
+                                    justifyContent: 'center',
+                                  }}
+                                >
+                                  {exercisePoolAnalysis.categorizedExercises.accessory
+                                    .slice(0, 3)
+                                    .map(exercise => (
+                                      <Chip
+                                        key={exercise.name}
+                                        label={
+                                          <ExerciseName
+                                            exerciseName={exercise.name}
+                                            variant="caption"
+                                          />
+                                        }
+                                        size="small"
+                                        variant="outlined"
+                                        color="info"
+                                        clickable
+                                        onClick={e => {
+                                          e.stopPropagation();
+                                          handleExerciseClick(exercise.name);
+                                        }}
+                                      />
+                                    ))}
+                                  {exercisePoolAnalysis.categorizedExercises.accessory.length >
+                                    3 && (
+                                    <Chip
+                                      label={`+${exercisePoolAnalysis.categorizedExercises.accessory.length - 3}`}
+                                      size="small"
+                                      variant="outlined"
+                                    />
+                                  )}
+                                </Box>
+                              </GameSubCard>
+                            </Grid>
+                            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                              <GameSubCard
+                                sx={{
+                                  p: 2,
+                                  textAlign: 'center',
+                                  cursor: 'pointer',
+                                  transition: 'all 0.2s ease-in-out',
+                                  '&:hover': {
+                                    transform: 'translateY(-2px)',
+                                    boxShadow: 3,
+                                  },
+                                }}
+                                onClick={handlePreferencesClick}
+                              >
+                                <GameText variant="h4" textVariant="accent">
+                                  {exercisePoolAnalysis.userEquipment.length}
+                                </GameText>
+                                <GameText variant="body2">Available Equipment</GameText>
+                                <Box
+                                  sx={{
+                                    mt: 1,
+                                    display: 'flex',
+                                    flexWrap: 'wrap',
+                                    gap: 0.5,
+                                    justifyContent: 'center',
+                                  }}
+                                >
+                                  {exercisePoolAnalysis.userEquipment.slice(0, 3).map(equipment => (
+                                    <Chip
+                                      key={equipment.equipment_name}
+                                      label={equipment.equipment_name}
+                                      size="small"
+                                      variant="outlined"
+                                      color="success"
+                                    />
+                                  ))}
+                                  {exercisePoolAnalysis.userEquipment.length > 3 && (
+                                    <Chip
+                                      label={`+${exercisePoolAnalysis.userEquipment.length - 3}`}
+                                      size="small"
+                                      variant="outlined"
+                                    />
+                                  )}
+                                </Box>
+                              </GameSubCard>
+                            </Grid>
+                            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                              <GameSubCard
+                                sx={{
+                                  p: 2,
+                                  textAlign: 'center',
+                                  cursor: 'pointer',
+                                  transition: 'all 0.2s ease-in-out',
+                                  '&:hover': {
+                                    transform: 'translateY(-2px)',
+                                    boxShadow: 3,
+                                  },
+                                }}
+                                onClick={handlePreferencesClick}
+                              >
+                                <GameText variant="h4" textVariant="accent">
+                                  {
+                                    exercisePoolAnalysis.userPreferences.filter(p => p.should_avoid)
+                                      .length
+                                  }
+                                </GameText>
+                                <GameText variant="body2">Avoided Exercises</GameText>
+                                <Box
+                                  sx={{
+                                    mt: 1,
+                                    display: 'flex',
+                                    flexWrap: 'wrap',
+                                    gap: 0.5,
+                                    justifyContent: 'center',
+                                  }}
+                                >
+                                  {exercisePoolAnalysis.userPreferences
+                                    .filter(p => p.should_avoid)
+                                    .slice(0, 3)
+                                    .map(pref => (
+                                      <Chip
+                                        key={pref.exercise_name}
+                                        label={pref.exercise_name}
+                                        size="small"
+                                        variant="outlined"
+                                        color="warning"
+                                      />
+                                    ))}
+                                  {exercisePoolAnalysis.userPreferences.filter(p => p.should_avoid)
+                                    .length > 3 && (
+                                    <Chip
+                                      label={`+${exercisePoolAnalysis.userPreferences.filter(p => p.should_avoid).length - 3}`}
+                                      size="small"
+                                      variant="outlined"
+                                    />
+                                  )}
+                                </Box>
+                              </GameSubCard>
+                            </Grid>
+                          </Grid>
+                        </CardContent>
+                      </GameCard>
+                    </Grid>
+                  )}
 
-                  {/* Exercise Variety - Radial Bar Chart */}
-                  <Grid size={{ xs: 12, md: 4 }}>
-                    <RadialBarChart
-                      exercisePoolData={exercisePoolData}
-                      title="Exercise Variety"
-                      description="Primary vs accessory distribution"
-                      height={250}
-                    />
-                  </Grid>
-
-                  {/* Exercise Selection - Sunburst Chart */}
-                  <Grid size={{ xs: 12, md: 4 }}>
-                    <ExercisePoolSunburstChart
-                      exercisePoolData={exercisePoolData}
-                      title="Exercise Selection"
-                      description="Hierarchical pool structure"
-                      height={250}
-                    />
-                  </Grid>
+                  {/* Recent Exercises - Right side */}
+                  {exercisePoolAnalysis &&
+                    exercisePoolAnalysis.previouslyUsedExercises.length > 0 && (
+                      <Grid size={{ xs: 12, md: 6 }}>
+                        <GameCard
+                          sx={{
+                            cursor: 'pointer',
+                            transition: 'all 0.2s ease-in-out',
+                            '&:hover': {
+                              transform: 'translateY(-2px)',
+                              boxShadow: 3,
+                            },
+                          }}
+                          onClick={() => handleCategoryClick('recent')}
+                        >
+                          <CardContent>
+                            <GameText
+                              variant="h6"
+                              gutterBottom
+                              sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
+                            >
+                              Recent Exercises
+                              <Tooltip
+                                title="These exercises have been used in recent weeks and are temporarily excluded from selection to promote variety."
+                                arrow
+                              >
+                                <IconButton size="small" sx={{ p: 0.5 }}>
+                                  <InfoIcon fontSize="small" color="action" />
+                                </IconButton>
+                              </Tooltip>
+                            </GameText>
+                            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                              {exercisePoolAnalysis.previouslyUsedExercises
+                                .slice(0, 10)
+                                .map(exerciseName => (
+                                  <Chip
+                                    key={exerciseName}
+                                    label={
+                                      <ExerciseName exerciseName={exerciseName} variant="caption" />
+                                    }
+                                    variant="outlined"
+                                    color="info"
+                                    size="small"
+                                    clickable
+                                    onClick={e => {
+                                      e.stopPropagation();
+                                      handleExerciseClick(exerciseName);
+                                    }}
+                                  />
+                                ))}
+                              {exercisePoolAnalysis.previouslyUsedExercises.length > 10 && (
+                                <Chip
+                                  label={`+${exercisePoolAnalysis.previouslyUsedExercises.length - 10}`}
+                                  size="small"
+                                  variant="outlined"
+                                />
+                              )}
+                            </Box>
+                          </CardContent>
+                        </GameCard>
+                      </Grid>
+                    )}
                 </Grid>
               </Grid>
-            )}
-
-            {/* Exercise Rotation and Recent Exercises - Side by side */}
-            <Grid container spacing={3}>
-              {/* Available Exercises - Left side */}
-              {exercisePoolAnalysis && (
-                <Grid
-                  size={
-                    exercisePoolAnalysis.previouslyUsedExercises.length > 0
-                      ? { xs: 12, md: 6 }
-                      : { xs: 12 }
-                  }
-                >
-                  <GameCard>
-                    <CardContent>
-                      <GameText
-                        variant="h6"
-                        gutterBottom
-                        sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
-                      >
-                        Available Exercises
-                      </GameText>
-                      <Grid container spacing={2}>
-                        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                          <GameSubCard
-                            sx={{
-                              p: 2,
-                              textAlign: 'center',
-                              cursor: 'pointer',
-                              transition: 'all 0.2s ease-in-out',
-                              '&:hover': {
-                                transform: 'translateY(-2px)',
-                                boxShadow: 3,
-                              },
-                            }}
-                            onClick={() => handleCategoryClick('primary')}
-                          >
-                            <GameText variant="h4" textVariant="accent">
-                              {exercisePoolAnalysis.categorizedExercises.primary.length}
-                            </GameText>
-                            <GameText variant="body2">Primary Exercises</GameText>
-                            <Box
-                              sx={{
-                                mt: 1,
-                                display: 'flex',
-                                flexWrap: 'wrap',
-                                gap: 0.5,
-                                justifyContent: 'center',
-                              }}
-                            >
-                              {exercisePoolAnalysis.categorizedExercises.primary
-                                .slice(0, 3)
-                                .map(exercise => (
-                                  <Chip
-                                    key={exercise.name}
-                                    label={
-                                      <ExerciseName
-                                        exerciseName={exercise.name}
-                                        variant="caption"
-                                      />
-                                    }
-                                    size="small"
-                                    variant="outlined"
-                                    color="info"
-                                    clickable
-                                    onClick={e => {
-                                      e.stopPropagation();
-                                      handleExerciseClick(exercise.name);
-                                    }}
-                                  />
-                                ))}
-                              {exercisePoolAnalysis.categorizedExercises.primary.length > 3 && (
-                                <Chip
-                                  label={`+${exercisePoolAnalysis.categorizedExercises.primary.length - 3}`}
-                                  size="small"
-                                  variant="outlined"
-                                />
-                              )}
-                            </Box>
-                          </GameSubCard>
-                        </Grid>
-                        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                          <GameSubCard
-                            sx={{
-                              p: 2,
-                              textAlign: 'center',
-                              cursor: 'pointer',
-                              transition: 'all 0.2s ease-in-out',
-                              '&:hover': {
-                                transform: 'translateY(-2px)',
-                                boxShadow: 3,
-                              },
-                            }}
-                            onClick={() => handleCategoryClick('accessory')}
-                          >
-                            <GameText variant="h4" textVariant="accent">
-                              {exercisePoolAnalysis.categorizedExercises.accessory.length}
-                            </GameText>
-                            <GameText variant="body2">Accessory Exercises</GameText>
-                            <Box
-                              sx={{
-                                mt: 1,
-                                display: 'flex',
-                                flexWrap: 'wrap',
-                                gap: 0.5,
-                                justifyContent: 'center',
-                              }}
-                            >
-                              {exercisePoolAnalysis.categorizedExercises.accessory
-                                .slice(0, 3)
-                                .map(exercise => (
-                                  <Chip
-                                    key={exercise.name}
-                                    label={
-                                      <ExerciseName
-                                        exerciseName={exercise.name}
-                                        variant="caption"
-                                      />
-                                    }
-                                    size="small"
-                                    variant="outlined"
-                                    color="info"
-                                    clickable
-                                    onClick={e => {
-                                      e.stopPropagation();
-                                      handleExerciseClick(exercise.name);
-                                    }}
-                                  />
-                                ))}
-                              {exercisePoolAnalysis.categorizedExercises.accessory.length > 3 && (
-                                <Chip
-                                  label={`+${exercisePoolAnalysis.categorizedExercises.accessory.length - 3}`}
-                                  size="small"
-                                  variant="outlined"
-                                />
-                              )}
-                            </Box>
-                          </GameSubCard>
-                        </Grid>
-                        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                          <GameSubCard
-                            sx={{
-                              p: 2,
-                              textAlign: 'center',
-                              cursor: 'pointer',
-                              transition: 'all 0.2s ease-in-out',
-                              '&:hover': {
-                                transform: 'translateY(-2px)',
-                                boxShadow: 3,
-                              },
-                            }}
-                            onClick={handlePreferencesClick}
-                          >
-                            <GameText variant="h4" textVariant="accent">
-                              {exercisePoolAnalysis.userEquipment.length}
-                            </GameText>
-                            <GameText variant="body2">Available Equipment</GameText>
-                            <Box
-                              sx={{
-                                mt: 1,
-                                display: 'flex',
-                                flexWrap: 'wrap',
-                                gap: 0.5,
-                                justifyContent: 'center',
-                              }}
-                            >
-                              {exercisePoolAnalysis.userEquipment.slice(0, 3).map(equipment => (
-                                <Chip
-                                  key={equipment.equipment_name}
-                                  label={equipment.equipment_name}
-                                  size="small"
-                                  variant="outlined"
-                                  color="success"
-                                />
-                              ))}
-                              {exercisePoolAnalysis.userEquipment.length > 3 && (
-                                <Chip
-                                  label={`+${exercisePoolAnalysis.userEquipment.length - 3}`}
-                                  size="small"
-                                  variant="outlined"
-                                />
-                              )}
-                            </Box>
-                          </GameSubCard>
-                        </Grid>
-                        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                          <GameSubCard
-                            sx={{
-                              p: 2,
-                              textAlign: 'center',
-                              cursor: 'pointer',
-                              transition: 'all 0.2s ease-in-out',
-                              '&:hover': {
-                                transform: 'translateY(-2px)',
-                                boxShadow: 3,
-                              },
-                            }}
-                            onClick={handlePreferencesClick}
-                          >
-                            <GameText variant="h4" textVariant="accent">
-                              {
-                                exercisePoolAnalysis.userPreferences.filter(p => p.should_avoid)
-                                  .length
-                              }
-                            </GameText>
-                            <GameText variant="body2">Avoided Exercises</GameText>
-                            <Box
-                              sx={{
-                                mt: 1,
-                                display: 'flex',
-                                flexWrap: 'wrap',
-                                gap: 0.5,
-                                justifyContent: 'center',
-                              }}
-                            >
-                              {exercisePoolAnalysis.userPreferences
-                                .filter(p => p.should_avoid)
-                                .slice(0, 3)
-                                .map(pref => (
-                                  <Chip
-                                    key={pref.exercise_name}
-                                    label={pref.exercise_name}
-                                    size="small"
-                                    variant="outlined"
-                                    color="warning"
-                                  />
-                                ))}
-                              {exercisePoolAnalysis.userPreferences.filter(p => p.should_avoid)
-                                .length > 3 && (
-                                <Chip
-                                  label={`+${exercisePoolAnalysis.userPreferences.filter(p => p.should_avoid).length - 3}`}
-                                  size="small"
-                                  variant="outlined"
-                                />
-                              )}
-                            </Box>
-                          </GameSubCard>
-                        </Grid>
-                      </Grid>
-                    </CardContent>
-                  </GameCard>
-                </Grid>
-              )}
-
-              {/* Recent Exercises - Right side */}
-              {exercisePoolAnalysis && exercisePoolAnalysis.previouslyUsedExercises.length > 0 && (
-                <Grid size={{ xs: 12, md: 6 }}>
-                  <GameCard
-                    sx={{
-                      cursor: 'pointer',
-                      transition: 'all 0.2s ease-in-out',
-                      '&:hover': {
-                        transform: 'translateY(-2px)',
-                        boxShadow: 3,
-                      },
-                    }}
-                    onClick={() => handleCategoryClick('recent')}
-                  >
-                    <CardContent>
-                      <GameText
-                        variant="h6"
-                        gutterBottom
-                        sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
-                      >
-                        Recent Exercises
-                        <Tooltip
-                          title="These exercises have been used in recent weeks and are temporarily excluded from selection to promote variety."
-                          arrow
-                        >
-                          <IconButton size="small" sx={{ p: 0.5 }}>
-                            <InfoIcon fontSize="small" color="action" />
-                          </IconButton>
-                        </Tooltip>
-                      </GameText>
-                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                        {exercisePoolAnalysis.previouslyUsedExercises
-                          .slice(0, 10)
-                          .map(exerciseName => (
-                            <Chip
-                              key={exerciseName}
-                              label={<ExerciseName exerciseName={exerciseName} variant="caption" />}
-                              variant="outlined"
-                              color="info"
-                              size="small"
-                              clickable
-                              onClick={e => {
-                                e.stopPropagation();
-                                handleExerciseClick(exerciseName);
-                              }}
-                            />
-                          ))}
-                        {exercisePoolAnalysis.previouslyUsedExercises.length > 10 && (
-                          <Chip
-                            label={`+${exercisePoolAnalysis.previouslyUsedExercises.length - 10}`}
-                            size="small"
-                            variant="outlined"
-                          />
-                        )}
-                      </Box>
-                    </CardContent>
-                  </GameCard>
-                </Grid>
-              )}
-            </Grid>
-          </Grid>
             </Box>
           </motion.div>
         )}
@@ -536,15 +532,15 @@ export const ExerciseRotationVisualization: React.FC = () => {
             transition={{ duration: 0.3, ease: 'easeInOut' }}
           >
             <Box sx={{ px: 3, pt: 3 }}>
-            {/* Horizontal layout for alert - positioned to align with back button */}
-            <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, mb: 3, ml: 5 }}>
-              <Alert severity="info" sx={{ flex: 1 }}>
-                {selectedCategory === 'primary' && '10 primary exercises in your rotation.'}
-                {selectedCategory === 'accessory' && '15 accessory exercises in your rotation.'}
-                {selectedCategory === 'recent' && '8 recent exercises in your rotation.'}
-              </Alert>
-            </Box>
-            <ExerciseCategoryDetails category={selectedCategory} />
+              {/* Horizontal layout for alert - positioned to align with back button */}
+              <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, mb: 3, ml: 5 }}>
+                <Alert severity="info" sx={{ flex: 1 }}>
+                  {selectedCategory === 'primary' && '10 primary exercises in your rotation.'}
+                  {selectedCategory === 'accessory' && '15 accessory exercises in your rotation.'}
+                  {selectedCategory === 'recent' && '8 recent exercises in your rotation.'}
+                </Alert>
+              </Box>
+              <ExerciseCategoryDetails category={selectedCategory} />
             </Box>
           </motion.div>
         )}

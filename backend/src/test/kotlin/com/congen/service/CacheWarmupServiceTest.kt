@@ -16,7 +16,6 @@ import com.congen.dal.SetSchemeDAL
 import com.congen.dal.UserDAL
 import com.congen.dal.UserEquipmentDAL
 import com.congen.dal.UserExercisePreferenceDAL
-import com.congen.service.UserOneRepMaxService
 import com.congen.dal.UserWeakMuscleDAL
 import com.congen.dal.UserWeightUnitPreferenceDAL
 import com.congen.dal.WorkoutStageDAL

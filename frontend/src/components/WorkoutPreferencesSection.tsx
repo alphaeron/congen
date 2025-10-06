@@ -1,15 +1,15 @@
 import { Box, List, Tabs, Tab } from '@mui/material';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useSnackbar } from 'notistack';
 import React, { useState, useEffect, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 
 import { DeletableChip } from './DeletableChip';
 import { DeletableListItem } from './DeletableListItem';
 import { FormDialog } from './FormDialog';
 import { FormField } from './FormField';
+import { GAME_CLASSES } from './GameTheme';
 import { LoadingSpinner } from './LoadingSpinner';
 import { PreferenceSection } from './PreferenceSection';
-import { GAME_CLASSES } from './GameTheme';
 import {
   WeightUnit,
   type Exercise,
@@ -56,21 +56,21 @@ function TabPanel(props: TabPanelProps) {
         {value === index && (
           <motion.div
             key={index}
-            initial={{ 
-              opacity: 0, 
-              x: slideDirection === 'left' ? 50 : -50 
+            initial={{
+              opacity: 0,
+              x: slideDirection === 'left' ? 50 : -50,
             }}
-            animate={{ 
-              opacity: 1, 
-              x: 0 
+            animate={{
+              opacity: 1,
+              x: 0,
             }}
-            exit={{ 
-              opacity: 0, 
-              x: slideDirection === 'left' ? -50 : 50 
+            exit={{
+              opacity: 0,
+              x: slideDirection === 'left' ? -50 : 50,
             }}
-            transition={{ 
-              duration: 0.3, 
-              ease: 'easeInOut' 
+            transition={{
+              duration: 0.3,
+              ease: 'easeInOut',
             }}
           >
             <Box sx={{ p: 0 }}>{children}</Box>
@@ -195,7 +195,7 @@ export function WorkoutPreferencesSection(): React.ReactElement {
     } else {
       setSlideDirection('right'); // Moving backward to previous tab
     }
-    
+
     setActiveTab(newValue);
   };
 
@@ -419,7 +419,7 @@ export function WorkoutPreferencesSection(): React.ReactElement {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.8, ease: 'easeOut' }}
-        style={{ 
+        style={{
           borderBottom: '1px solid',
           borderColor: 'var(--mui-palette-divider)',
         }}
@@ -446,7 +446,7 @@ export function WorkoutPreferencesSection(): React.ReactElement {
               '&.Mui-selected': {
                 color: '#00bcd4',
                 textShadow: '0 0 8px rgba(0, 188, 212, 0.5)',
-              }
+              },
             },
             '& .MuiTabs-indicator': {
               backgroundColor: '#00bcd4',
@@ -454,23 +454,23 @@ export function WorkoutPreferencesSection(): React.ReactElement {
             },
           }}
         >
-          <Tab 
-            label="Weight Unit Preferences" 
+          <Tab
+            label="Weight Unit Preferences"
             id="preferences-tab-0"
             aria-controls="preferences-tabpanel-0"
           />
-          <Tab 
-            label="Available Equipment" 
+          <Tab
+            label="Available Equipment"
             id="preferences-tab-1"
             aria-controls="preferences-tabpanel-1"
           />
-          <Tab 
-            label="Weak Muscle Groups" 
+          <Tab
+            label="Weak Muscle Groups"
             id="preferences-tab-2"
             aria-controls="preferences-tabpanel-2"
           />
-          <Tab 
-            label="Exercise Preferences" 
+          <Tab
+            label="Exercise Preferences"
             id="preferences-tab-3"
             aria-controls="preferences-tabpanel-3"
           />

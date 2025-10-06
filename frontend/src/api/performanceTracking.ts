@@ -14,7 +14,7 @@ export const submitPerformanceMetrics = async (
   options: { forceRefresh?: boolean } = {}
 ): Promise<UserPerformanceScores> => {
   const params = new URLSearchParams();
-  
+
   // Add only non-null/undefined values as query parameters
   if (metrics.vo2_max !== undefined && metrics.vo2_max !== null) {
     params.append('vo2_max', metrics.vo2_max.toString());
@@ -70,7 +70,7 @@ export const getPerformanceScoresHistory = async (
   options: { forceRefresh?: boolean } = {}
 ): Promise<UserPerformanceScores[]> => {
   const params = new URLSearchParams();
-  
+
   if (startDate) {
     params.append('start_date', startDate.toISOString());
   }
@@ -79,7 +79,9 @@ export const getPerformanceScoresHistory = async (
   }
 
   const queryString = params.toString();
-  const url = queryString ? `/performance/scores/history?${queryString}` : '/performance/scores/history';
+  const url = queryString
+    ? `/performance/scores/history?${queryString}`
+    : '/performance/scores/history';
 
   return REQUEST<UserPerformanceScores[]>({
     method: 'GET',
@@ -109,7 +111,7 @@ export const submitWeeklyTest = async (
   options: { forceRefresh?: boolean } = {}
 ): Promise<UserTestResult[]> => {
   const params = new URLSearchParams();
-  
+
   params.append('week_start_timestamp', testResult.week_start_timestamp.toISOString());
   params.append('test_name', testResult.test_name);
   params.append('status', testResult.status);
@@ -141,7 +143,12 @@ export const getWeeklyTestsInRange = async (
   }
 
   // Only include params in the request if we have any
-  const requestConfig: any = {
+  const requestConfig: {
+    method: string;
+    url: string;
+    params?: Record<string, string>;
+    forceRefresh?: boolean;
+  } = {
     method: 'GET',
     url: '/performance/weekly_test',
     ...options,

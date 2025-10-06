@@ -3,18 +3,12 @@ import {
   Block as BlockIcon,
   Remove as RemoveIcon,
 } from '@mui/icons-material';
-import {
-  Chip,
-  IconButton,
-  Tooltip,
-  ToggleButton,
-  ToggleButtonGroup,
-} from '@mui/material';
+import { Chip, IconButton, Tooltip, ToggleButton, ToggleButtonGroup } from '@mui/material';
 import { useSnackbar } from 'notistack';
 import React, { useState, useEffect } from 'react';
 
-import { LoadingSpinner } from './LoadingSpinner';
 import { GameText } from './GameTheme';
+import { LoadingSpinner } from './LoadingSpinner';
 import type { UserExercisePreference } from '../api/types';
 import {
   upsertUserExercisePreference,

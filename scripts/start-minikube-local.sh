@@ -6,7 +6,7 @@
 set -e
 
 # Configuration
-MINIKUBE_PROFILE="congen"
+export MINIKUBE_PROFILE="congen"
 NAMESPACE="congen"
 DEFAULT_DATA_DIR="${HOME}/.congen/minikube-data"
 POSTGRES_DATA_DIR="${DEFAULT_DATA_DIR}/postgres"
@@ -54,7 +54,7 @@ check_prerequisites() {
         exit 1
     fi
     
-    if [ ! -f "gradlew" ]; then
+    if [[ ! -f "gradlew" ]]; then
         print_error "Gradle wrapper not found. Please run this script from the project root."
         exit 1
     fi
@@ -83,7 +83,7 @@ create_postgres_with_local_storage() {
     print_status "Creating PostgreSQL deployment with local storage..."
     
     # Create a custom PostgreSQL deployment that mounts local directory
-    cat <<EOF | kubectl apply -f -
+    cat <<EOF | kubectl apply -f - || true
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -149,7 +149,7 @@ spec:
 EOF
 
     # Create service for the local PostgreSQL
-    cat <<EOF | kubectl apply -f -
+    cat <<EOF | kubectl apply -f - || true
 apiVersion: v1
 kind: Service
 metadata:
@@ -248,10 +248,29 @@ verify_services() {
     print_status "Verifying services are accessible..."
     
     # Quick health checks
-    curl -s http://localhost:8888/actuator/health >/dev/null 2>&1 && print_success "Backend: http://localhost:8888" || print_warning "Backend not ready"
-    curl -s http://localhost:3000 >/dev/null 2>&1 && print_success "Frontend: http://localhost:3000" || print_warning "Frontend not ready"
-    curl -s http://localhost:8080/realms/congen >/dev/null 2>&1 && print_success "Keycloak: http://localhost:8080" || print_warning "Keycloak not ready"
-    nc -z localhost 5432 2>/dev/null && print_success "PostgreSQL: localhost:5432" || print_warning "PostgreSQL not ready"
+    if curl -s http://localhost:8888/actuator/health >/dev/null 2>&1; then
+        print_success "Backend: http://localhost:8888"
+    else
+        print_warning "Backend not ready"
+    fi
+    
+    if curl -s http://localhost:3000 >/dev/null 2>&1; then
+        print_success "Frontend: http://localhost:3000"
+    else
+        print_warning "Frontend not ready"
+    fi
+    
+    if curl -s http://localhost:8080/realms/congen >/dev/null 2>&1; then
+        print_success "Keycloak: http://localhost:8080"
+    else
+        print_warning "Keycloak not ready"
+    fi
+    
+    if nc -z localhost 5432 2>/dev/null; then
+        print_success "PostgreSQL: localhost:5432"
+    else
+        print_warning "PostgreSQL not ready"
+    fi
 }
 
 # Function to display access information
@@ -275,10 +294,21 @@ display_access_info() {
     echo "   All data:        ${DEFAULT_DATA_DIR}"
     echo ""
     echo "📋 Port Forward PIDs:"
-    echo "   Backend:   $(cat /tmp/congen-backend-port-forward.pid 2>/dev/null || echo 'N/A')"
-    echo "   Frontend:  $(cat /tmp/congen-frontend-port-forward.pid 2>/dev/null || echo 'N/A')"
-    echo "   Keycloak:  $(cat /tmp/congen-keycloak-port-forward.pid 2>/dev/null || echo 'N/A')"
-    echo "   PostgreSQL: $(cat /tmp/congen-postgres-port-forward.pid 2>/dev/null || echo 'N/A')"
+    local backend_pid
+    backend_pid=$(cat /tmp/congen-backend-port-forward.pid 2>/dev/null || echo 'N/A')
+    echo "   Backend:   ${backend_pid}"
+    
+    local frontend_pid
+    frontend_pid=$(cat /tmp/congen-frontend-port-forward.pid 2>/dev/null || echo 'N/A')
+    echo "   Frontend:  ${frontend_pid}"
+    
+    local keycloak_pid
+    keycloak_pid=$(cat /tmp/congen-keycloak-port-forward.pid 2>/dev/null || echo 'N/A')
+    echo "   Keycloak:  ${keycloak_pid}"
+    
+    local postgres_pid
+    postgres_pid=$(cat /tmp/congen-postgres-port-forward.pid 2>/dev/null || echo 'N/A')
+    echo "   PostgreSQL: ${postgres_pid}"
     echo ""
 }
 

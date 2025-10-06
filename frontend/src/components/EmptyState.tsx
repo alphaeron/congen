@@ -1,7 +1,7 @@
-import { Card, CardContent, Paper, Box } from '@mui/material';
+import { CardContent, Paper, Box } from '@mui/material';
 import React from 'react';
 
-import { GameCard, GameText, GAME_CLASSES } from './GameTheme';
+import { GameCard, GameText } from './GameTheme';
 
 interface EmptyStateProps {
   title: string;

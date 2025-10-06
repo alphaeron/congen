@@ -7,7 +7,6 @@ import com.congen.dal.ProgramPreferencesDAL
 import com.congen.dal.UserDAL
 import com.congen.dal.UserEquipmentDAL
 import com.congen.dal.UserExercisePreferenceDAL
-import com.congen.service.UserOneRepMaxService
 import com.congen.dal.UserWeightUnitPreferenceDAL
 import com.congen.generator.DayTemplate
 import com.congen.generator.PrilepinGuidelines
@@ -40,6 +39,7 @@ import com.congen.model.WorkoutStageType
 import com.congen.model.WorkoutStageTypeEnum
 import com.congen.service.AuditService
 import com.congen.service.GdprComplianceService
+import com.congen.service.UserOneRepMaxService
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.spy
 import reactor.core.publisher.Flux

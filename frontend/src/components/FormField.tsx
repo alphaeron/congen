@@ -1,15 +1,15 @@
-import {
-  TextField,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Autocomplete,
-} from '@mui/material';
+import { Autocomplete } from '@mui/material';
 import { useField } from '@tanstack/react-form';
 import React, { useMemo } from 'react';
 
-import { GameText, GameTextField, GameFormControl, GameInputLabel, GameSelect, GameMenuItem, GAME_CLASSES } from './GameTheme';
+import {
+  GameText,
+  GameTextField,
+  GameFormControl,
+  GameInputLabel,
+  GameSelect,
+  GameMenuItem,
+} from './GameTheme';
 
 interface BaseFormFieldProps {
   label: string;
@@ -116,7 +116,12 @@ export const FormField: React.FC<FormFieldProps> = props => {
   if (type === 'select') {
     const { options } = props as SelectFormFieldProps;
     return (
-      <GameFormControl fullWidth={fullWidth} error={fieldError} disabled={disabled} required={required}>
+      <GameFormControl
+        fullWidth={fullWidth}
+        error={fieldError}
+        disabled={disabled}
+        required={required}
+      >
         <GameInputLabel>{label}</GameInputLabel>
         <GameSelect
           value={fieldValue !== undefined ? fieldValue : ''}

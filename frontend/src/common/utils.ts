@@ -36,25 +36,25 @@ export function replaceUnderscoresWithSpaces(str: string): string {
 
 /**
  * Get the browser's preferred locale for date formatting.
- * 
+ *
  * @returns The browser's locale string
  */
 function getBrowserLocale(): string {
   // Modern browsers support navigator.languages, which provides an array of preferred languages.
   if (navigator.languages && navigator.languages.length > 0) {
     return navigator.languages[0]; // Returns the most preferred language
-  } 
+  }
   // Fallback for older browsers or if navigator.languages is not available.
   // navigator.language is generally supported by most browsers.
   else if (navigator.language) {
     return navigator.language;
-  } 
+  }
   // Older Internet Explorer versions might use navigator.userLanguage.
-  else if ((navigator as any).userLanguage) {
-    return (navigator as any).userLanguage;
+  else if ((navigator as { userLanguage?: string }).userLanguage) {
+    return (navigator as { userLanguage: string }).userLanguage;
   }
   // Default to 'en' if no language information is found.
-  return 'en'; 
+  return 'en';
 }
 
 /**

@@ -87,7 +87,6 @@ class PostgresConfig(
         private val CONNECTION_POOL_COUNT_WRITER = 10
     }
 
-
     /**
      * Creates and configures the PostgreSQL writer connection pool.
      *
@@ -134,6 +133,7 @@ class PostgresConfig(
      * This method creates a PostgreSQL client with connection pooling,
      * prepared statement caching, and automatic reconnection capabilities.
      *
+     * @param vertx Vert.x instance for the client
      * @param host Database hostname
      * @param poolSize Number of connections in the pool
      * @return Configured SqlClient instance

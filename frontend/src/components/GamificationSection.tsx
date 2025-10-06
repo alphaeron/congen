@@ -1,10 +1,10 @@
 import Box from '@mui/material/Box';
 import { alpha } from '@mui/material/styles';
-import * as React from 'react';
 import { motion, useInView } from 'framer-motion';
+import * as React from 'react';
 
-import { GameText, GameCard } from './GameTheme';
 import { AdventurerStatusCard } from './AdventurerStatusCard';
+import { GameText, GameCard } from './GameTheme';
 import type { UserPerformanceScores, UserPerformanceMetrics, UserTestResult } from '../api/types';
 
 // Sample data for AdventurerStatusCard demonstration
@@ -12,14 +12,14 @@ import type { UserPerformanceScores, UserPerformanceMetrics, UserTestResult } fr
 const samplePerformanceScores: UserPerformanceScores = {
   id: 1,
   keycloak_id: 'sample-user',
-  explosiveness_score: 75.5,  // 60+ = "Quick Burst" skill
-  aerobic_capacity_score: 68.2,  // 60+ = "Endurance Runner" skill  
-  recovery_score: 82.1,  // 80+ = "Rapid Recovery" skill
-  reaction_time_score: 71.8,  // 60+ = "Quick Response" skill
-  mobility_score: 65.4,  // 60+ = "Agile Movement" skill
-  strength_score: 78.9,  // 60+ = "Strong Lifter" skill
+  explosiveness_score: 75.5, // 60+ = "Quick Burst" skill
+  aerobic_capacity_score: 68.2, // 60+ = "Endurance Runner" skill
+  recovery_score: 82.1, // 80+ = "Rapid Recovery" skill
+  reaction_time_score: 71.8, // 60+ = "Quick Response" skill
+  mobility_score: 65.4, // 60+ = "Agile Movement" skill
+  strength_score: 78.9, // 60+ = "Strong Lifter" skill
   wilks_score: 285.6,
-  level: 15,  // Calculated: tanh((73.3-50)/15) + 1) * 50 = 15
+  level: 15, // Calculated: tanh((73.3-50)/15) + 1) * 50 = 15
   level_change_reason: 'weekly_test_completed',
   hp: 85.2,
   hp_loss: 12.3,
@@ -27,8 +27,15 @@ const samplePerformanceScores: UserPerformanceScores = {
   mp_loss: 8.1,
   fatigue: 45.6,
   fatigue_loss: 15.2,
-  skills: ['Quick Burst', 'Endurance Runner', 'Rapid Recovery', 'Quick Response', 'Agile Movement', 'Strong Lifter'],
-  created_at: new Date()
+  skills: [
+    'Quick Burst',
+    'Endurance Runner',
+    'Rapid Recovery',
+    'Quick Response',
+    'Agile Movement',
+    'Strong Lifter',
+  ],
+  created_at: new Date(),
 };
 
 const samplePerformanceMetrics: UserPerformanceMetrics = {
@@ -39,7 +46,7 @@ const samplePerformanceMetrics: UserPerformanceMetrics = {
   strain: 12.1,
   recovery: 85.6,
   created_at: new Date(),
-  updated_at: new Date()
+  updated_at: new Date(),
 };
 
 const sampleWeeklyTests: UserTestResult[] = [
@@ -51,7 +58,7 @@ const sampleWeeklyTests: UserTestResult[] = [
     status: 'COMPLETED',
     result_value: 52.3,
     created_at: new Date(),
-    updated_at: new Date()
+    updated_at: new Date(),
   },
   {
     id: 2,
@@ -61,7 +68,7 @@ const sampleWeeklyTests: UserTestResult[] = [
     status: 'COMPLETED',
     result_value: 28,
     created_at: new Date(),
-    updated_at: new Date()
+    updated_at: new Date(),
   },
   {
     id: 3,
@@ -71,7 +78,7 @@ const sampleWeeklyTests: UserTestResult[] = [
     status: 'COMPLETED',
     result_value: 285,
     created_at: new Date(),
-    updated_at: new Date()
+    updated_at: new Date(),
   },
   {
     id: 4,
@@ -81,15 +88,15 @@ const sampleWeeklyTests: UserTestResult[] = [
     status: 'COMPLETED',
     result_value: 78.5,
     created_at: new Date(),
-    updated_at: new Date()
-  }
+    updated_at: new Date(),
+  },
 ];
 
 // Advanced animation variants with 3D effects and micro-interactions
 const sectionVariants = {
-  hidden: { 
-    opacity: 0, 
-    y: 60, 
+  hidden: {
+    opacity: 0,
+    y: 60,
     scale: 0.95,
     rotateX: -10,
     transformPerspective: 1000,
@@ -118,9 +125,9 @@ const staggerVariants = {
 };
 
 const itemVariants = {
-  hidden: { 
-    y: 30, 
-    opacity: 0, 
+  hidden: {
+    y: 30,
+    opacity: 0,
     scale: 0.9,
     rotateY: -15,
   },
@@ -136,53 +143,32 @@ const itemVariants = {
   },
 };
 
-// Advanced card hover variants with 3D tilt
-const cardHoverVariants = {
-  rest: { 
-    scale: 1, 
-    rotateX: 0, 
-    rotateY: 0,
-    z: 0,
-  },
-  hover: { 
-    scale: 1.03, 
-    rotateX: 3, 
-    rotateY: 3,
-    z: 15,
-    transition: {
-      type: "spring" as const,
-      stiffness: 300,
-      damping: 20,
-    },
-  },
-};
-
 export function GamificationSection() {
   const ref = React.useRef(null);
-  const isInView = useInView(ref, { once: true, margin: "-100px" });
+  const isInView = useInView(ref, { once: true, margin: '-100px' });
   return (
     <motion.div>
       <motion.div
         ref={ref}
         variants={sectionVariants}
         initial="hidden"
-        animate={isInView ? "visible" : "hidden"}
+        animate={isInView ? 'visible' : 'hidden'}
       >
         <Box
           id="gamification"
-                  sx={{
-                    position: 'relative',
-                    background: 'rgba(255, 255, 255, 0.02)',
-                    backdropFilter: 'blur(20px)',
-                    border: theme => `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
-                    width: '100vw',
-                    height: '100vh',
-                    marginLeft: 'calc(-50vw + 50%)',
-                    marginTop: 0,
-                    marginBottom: 0,
-                    px: { xs: 2, sm: 4, md: 6 },
-                    display: 'flex',
-                    alignItems: 'center',
+          sx={{
+            position: 'relative',
+            background: 'rgba(255, 255, 255, 0.02)',
+            backdropFilter: 'blur(20px)',
+            border: theme => `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
+            width: '100vw',
+            height: '100vh',
+            marginLeft: 'calc(-50vw + 50%)',
+            marginTop: 0,
+            marginBottom: 0,
+            px: { xs: 2, sm: 4, md: 6 },
+            display: 'flex',
+            alignItems: 'center',
             '&::before': {
               content: '""',
               position: 'absolute',
@@ -190,9 +176,9 @@ export function GamificationSection() {
               left: 0,
               right: 0,
               bottom: 0,
-              background: theme =>
+              background: () =>
                 `radial-gradient(circle at 20% 20%, ${alpha('#8b5cf6', 0.025)} 0%, transparent 50%),
-                 radial-gradient(circle at 80% 80%, ${alpha('#f97316', 0.020)} 0%, transparent 50%),
+                 radial-gradient(circle at 80% 80%, ${alpha('#f97316', 0.02)} 0%, transparent 50%),
                  linear-gradient(45deg, transparent 30%, ${alpha('#22c55e', 0.015)} 50%, transparent 70%)`,
               backgroundSize: '400px 400px, 600px 600px, 200px 200px',
               zIndex: 0,
@@ -239,7 +225,7 @@ export function GamificationSection() {
                   RPG-Style Gamification
                 </GameText>
               </motion.div>
-              
+
               <motion.div variants={itemVariants}>
                 <GameText
                   variant="h5"
@@ -252,12 +238,12 @@ export function GamificationSection() {
                     fontSize: { xs: '1.1rem', sm: '1.25rem' },
                   }}
                 >
-                  Transform your fitness journey into an epic RPG adventure. Level up your 
-                  character, unlock skills, and master the HP/MP/Fatigue 
-                  system for maximum motivation.
+                  Transform your fitness journey into an epic RPG adventure. Level up your
+                  character, unlock skills, and master the HP/MP/Fatigue system for maximum
+                  motivation.
                 </GameText>
               </motion.div>
-              
+
               <motion.div variants={staggerVariants}>
                 <Box
                   sx={{
@@ -270,12 +256,12 @@ export function GamificationSection() {
                 >
                   {[
                     'Level Progression',
-                    'Performance Tracking', 
+                    'Performance Tracking',
                     'Skill System',
-                    'HP/MP Mechanics'
+                    'HP/MP Mechanics',
                   ].map((feature, index) => (
-                    <motion.div 
-                      key={index} 
+                    <motion.div
+                      key={index}
                       variants={itemVariants}
                       initial="rest"
                       whileHover="hover"
@@ -289,21 +275,21 @@ export function GamificationSection() {
                           p: 3,
                           background: 'rgba(139, 92, 246, 0.05)',
                           backdropFilter: 'blur(20px)',
-                          border: theme => `2px solid ${alpha('#8b5cf6', 0.2)}`,
+                          border: () => `2px solid ${alpha('#8b5cf6', 0.2)}`,
                           flex: '1 1 auto',
                           minWidth: '200px',
                           transition: 'all 0.3s ease',
-                          boxShadow: theme => `0 8px 32px ${alpha('#8b5cf6', 0.1)}`,
+                          boxShadow: () => `0 8px 32px ${alpha('#8b5cf6', 0.1)}`,
                           '&:hover': {
-                            boxShadow: theme => `0 20px 40px ${alpha('#8b5cf6', 0.3)}`,
-                            border: theme => `2px solid ${alpha('#8b5cf6', 0.4)}`,
+                            boxShadow: () => `0 20px 40px ${alpha('#8b5cf6', 0.3)}`,
+                            border: () => `2px solid ${alpha('#8b5cf6', 0.4)}`,
                           },
                         }}
                       >
                         <GameText
                           variant="body1"
                           textVariant="glow"
-                          sx={{ 
+                          sx={{
                             fontWeight: 600,
                             color: '#8b5cf6',
                           }}
@@ -316,7 +302,7 @@ export function GamificationSection() {
                 </Box>
               </motion.div>
             </motion.div>
-            
+
             <motion.div
               variants={itemVariants}
               style={{
@@ -329,10 +315,7 @@ export function GamificationSection() {
               }}
             >
               <Box sx={{ maxWidth: 800, width: '100%' }}>
-                <motion.div
-                  whileHover={{ scale: 1.02 }}
-                  transition={{ duration: 0.3 }}
-                >
+                <motion.div whileHover={{ scale: 1.02 }} transition={{ duration: 0.3 }}>
                   <AdventurerStatusCard
                     scores={samplePerformanceScores}
                     metrics={samplePerformanceMetrics}

@@ -1,5 +1,6 @@
-import { motion, MotionProps } from 'framer-motion';
-import React, { ReactNode } from 'react';
+import { motion } from 'framer-motion';
+import React from 'react';
+
 import {
   fadeInVariants,
   slideInLeftVariants,
@@ -22,10 +23,13 @@ import {
   pageTransitionVariants,
   spinnerVariants,
   buttonPressVariants,
-  magneticVariants
+  magneticVariants,
 } from '../utils/animations';
 
-export type AnimationType = 
+import type { MotionProps } from 'framer-motion';
+import type { ReactNode } from 'react';
+
+export type AnimationType =
   | 'fadeIn'
   | 'slideInLeft'
   | 'slideInRight'
@@ -79,22 +83,32 @@ const animationVariants = {
   pageTransition: pageTransitionVariants,
   spinner: spinnerVariants,
   buttonPress: buttonPressVariants,
-  magnetic: magneticVariants
+  magnetic: magneticVariants,
 };
 
-export function AnimatedWrapper({ 
-  children, 
-  animation = 'fadeIn', 
+export function AnimatedWrapper({
+  children,
+  animation = 'fadeIn',
   className,
   style,
   as = 'div',
-  ...motionProps 
+  ...motionProps
 }: AnimatedWrapperProps) {
   const MotionComponent = motion[as];
   const variants = animationVariants[animation];
 
   // For continuous animations, use animate prop
-  const continuousAnimations = ['pulse', 'bounce', 'programBounce', 'floating', 'questGlow', 'programPulse', 'shimmer', 'programShimmer', 'spinner'];
+  const continuousAnimations = [
+    'pulse',
+    'bounce',
+    'programBounce',
+    'floating',
+    'questGlow',
+    'programPulse',
+    'shimmer',
+    'programShimmer',
+    'spinner',
+  ];
   const isContinuous = continuousAnimations.includes(animation);
 
   if (isContinuous) {
@@ -148,78 +162,153 @@ export function AnimatedWrapper({
 
 // Specialized components for common use cases
 export function FadeIn({ children, ...props }: Omit<AnimatedWrapperProps, 'animation'>) {
-  return <AnimatedWrapper animation="fadeIn" {...props}>{children}</AnimatedWrapper>;
+  return (
+    <AnimatedWrapper animation="fadeIn" {...props}>
+      {children}
+    </AnimatedWrapper>
+  );
 }
 
 export function SlideInLeft({ children, ...props }: Omit<AnimatedWrapperProps, 'animation'>) {
-  return <AnimatedWrapper animation="slideInLeft" {...props}>{children}</AnimatedWrapper>;
+  return (
+    <AnimatedWrapper animation="slideInLeft" {...props}>
+      {children}
+    </AnimatedWrapper>
+  );
 }
 
 export function SlideInRight({ children, ...props }: Omit<AnimatedWrapperProps, 'animation'>) {
-  return <AnimatedWrapper animation="slideInRight" {...props}>{children}</AnimatedWrapper>;
+  return (
+    <AnimatedWrapper animation="slideInRight" {...props}>
+      {children}
+    </AnimatedWrapper>
+  );
 }
 
 export function SlideInUp({ children, ...props }: Omit<AnimatedWrapperProps, 'animation'>) {
-  return <AnimatedWrapper animation="slideInUp" {...props}>{children}</AnimatedWrapper>;
+  return (
+    <AnimatedWrapper animation="slideInUp" {...props}>
+      {children}
+    </AnimatedWrapper>
+  );
 }
 
 export function ScaleIn({ children, ...props }: Omit<AnimatedWrapperProps, 'animation'>) {
-  return <AnimatedWrapper animation="scaleIn" {...props}>{children}</AnimatedWrapper>;
+  return (
+    <AnimatedWrapper animation="scaleIn" {...props}>
+      {children}
+    </AnimatedWrapper>
+  );
 }
 
 export function HoverLift({ children, ...props }: Omit<AnimatedWrapperProps, 'animation'>) {
-  return <AnimatedWrapper animation="hoverLift" {...props}>{children}</AnimatedWrapper>;
+  return (
+    <AnimatedWrapper animation="hoverLift" {...props}>
+      {children}
+    </AnimatedWrapper>
+  );
 }
 
 export function HoverScale({ children, ...props }: Omit<AnimatedWrapperProps, 'animation'>) {
-  return <AnimatedWrapper animation="hoverScale" {...props}>{children}</AnimatedWrapper>;
+  return (
+    <AnimatedWrapper animation="hoverScale" {...props}>
+      {children}
+    </AnimatedWrapper>
+  );
 }
 
 export function HoverCard({ children, ...props }: Omit<AnimatedWrapperProps, 'animation'>) {
-  return <AnimatedWrapper animation="hoverCard" {...props}>{children}</AnimatedWrapper>;
+  return (
+    <AnimatedWrapper animation="hoverCard" {...props}>
+      {children}
+    </AnimatedWrapper>
+  );
 }
 
 export function Pulse({ children, ...props }: Omit<AnimatedWrapperProps, 'animation'>) {
-  return <AnimatedWrapper animation="pulse" {...props}>{children}</AnimatedWrapper>;
+  return (
+    <AnimatedWrapper animation="pulse" {...props}>
+      {children}
+    </AnimatedWrapper>
+  );
 }
 
 export function Bounce({ children, ...props }: Omit<AnimatedWrapperProps, 'animation'>) {
-  return <AnimatedWrapper animation="bounce" {...props}>{children}</AnimatedWrapper>;
+  return (
+    <AnimatedWrapper animation="bounce" {...props}>
+      {children}
+    </AnimatedWrapper>
+  );
 }
 
 export function Floating({ children, ...props }: Omit<AnimatedWrapperProps, 'animation'>) {
-  return <AnimatedWrapper animation="floating" {...props}>{children}</AnimatedWrapper>;
+  return (
+    <AnimatedWrapper animation="floating" {...props}>
+      {children}
+    </AnimatedWrapper>
+  );
 }
 
-
 export function QuestGlow({ children, ...props }: Omit<AnimatedWrapperProps, 'animation'>) {
-  return <AnimatedWrapper animation="questGlow" {...props}>{children}</AnimatedWrapper>;
+  return (
+    <AnimatedWrapper animation="questGlow" {...props}>
+      {children}
+    </AnimatedWrapper>
+  );
 }
 
 export function ProgramPulse({ children, ...props }: Omit<AnimatedWrapperProps, 'animation'>) {
-  return <AnimatedWrapper animation="programPulse" {...props}>{children}</AnimatedWrapper>;
+  return (
+    <AnimatedWrapper animation="programPulse" {...props}>
+      {children}
+    </AnimatedWrapper>
+  );
 }
 
 export function Shimmer({ children, ...props }: Omit<AnimatedWrapperProps, 'animation'>) {
-  return <AnimatedWrapper animation="shimmer" {...props}>{children}</AnimatedWrapper>;
+  return (
+    <AnimatedWrapper animation="shimmer" {...props}>
+      {children}
+    </AnimatedWrapper>
+  );
 }
 
 export function ProgramShimmer({ children, ...props }: Omit<AnimatedWrapperProps, 'animation'>) {
-  return <AnimatedWrapper animation="programShimmer" {...props}>{children}</AnimatedWrapper>;
+  return (
+    <AnimatedWrapper animation="programShimmer" {...props}>
+      {children}
+    </AnimatedWrapper>
+  );
 }
 
 export function PageTransition({ children, ...props }: Omit<AnimatedWrapperProps, 'animation'>) {
-  return <AnimatedWrapper animation="pageTransition" {...props}>{children}</AnimatedWrapper>;
+  return (
+    <AnimatedWrapper animation="pageTransition" {...props}>
+      {children}
+    </AnimatedWrapper>
+  );
 }
 
 export function Spinner({ children, ...props }: Omit<AnimatedWrapperProps, 'animation'>) {
-  return <AnimatedWrapper animation="spinner" {...props}>{children}</AnimatedWrapper>;
+  return (
+    <AnimatedWrapper animation="spinner" {...props}>
+      {children}
+    </AnimatedWrapper>
+  );
 }
 
 export function ButtonPress({ children, ...props }: Omit<AnimatedWrapperProps, 'animation'>) {
-  return <AnimatedWrapper animation="buttonPress" {...props}>{children}</AnimatedWrapper>;
+  return (
+    <AnimatedWrapper animation="buttonPress" {...props}>
+      {children}
+    </AnimatedWrapper>
+  );
 }
 
 export function Magnetic({ children, ...props }: Omit<AnimatedWrapperProps, 'animation'>) {
-  return <AnimatedWrapper animation="magnetic" {...props}>{children}</AnimatedWrapper>;
+  return (
+    <AnimatedWrapper animation="magnetic" {...props}>
+      {children}
+    </AnimatedWrapper>
+  );
 }

@@ -2,8 +2,8 @@ import { Box, useTheme, Tooltip } from '@mui/material';
 import { Ranger } from '@tanstack/ranger';
 import React, { useMemo, useRef, useEffect, useState } from 'react';
 
+import { GameText } from './GameTheme';
 import type { ProgressStatus } from '../utils/progressUtils';
-import { GameText, GameProgressBar, GAME_CLASSES } from './GameTheme';
 
 interface ProgressBarProps {
   /** Current progress value (0-100) */

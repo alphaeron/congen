@@ -1,9 +1,9 @@
 import { Box, TextField, Divider, FormControlLabel, Switch } from '@mui/material';
 import React from 'react';
 
+import { GameText } from './GameTheme';
 import type { UserWeightUnitPreference } from '../api/types';
 import { convertWeightToPounds } from '../common/utils';
-import { GameText, GAME_CLASSES } from './GameTheme';
 
 import type { useForm } from '@tanstack/react-form';
 
