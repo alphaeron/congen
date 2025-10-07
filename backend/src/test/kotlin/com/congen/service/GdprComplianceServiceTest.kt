@@ -62,9 +62,9 @@ class GdprComplianceServiceTest {
 
         // Mock PostgresClient.withTransaction to execute the block directly
         doAnswer { invocation ->
-            val block = invocation.getArgument<() -> reactor.core.publisher.Mono<kotlin.Unit>>(0)
+            val block = invocation.getArgument<() -> Mono<kotlin.Unit>>(0)
             block.invoke()
-        }.whenever(postgresClient).withTransaction(any<() -> reactor.core.publisher.Mono<kotlin.Unit>>())
+        }.whenever(postgresClient).withTransaction(any<() -> Mono<kotlin.Unit>>())
 
         gdprComplianceService =
             GdprComplianceService(

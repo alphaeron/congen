@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Mono
 import java.time.Instant
+import java.time.ZoneOffset
 
 /**
  * Data Access Layer for UserWeeklyTest entity operations.
@@ -84,8 +85,8 @@ class UserWeeklyTestDAL(
                     ORDER BY week_start_timestamp DESC
                     """,
                     keycloakId,
-                    startTimestamp.atZone(java.time.ZoneOffset.UTC).toLocalDateTime(),
-                    endTimestamp.atZone(java.time.ZoneOffset.UTC).toLocalDateTime()
+                    startTimestamp.atZone(ZoneOffset.UTC).toLocalDateTime(),
+                    endTimestamp.atZone(ZoneOffset.UTC).toLocalDateTime()
                 )
             )
     }
@@ -131,7 +132,7 @@ class UserWeeklyTestDAL(
                         updated_at = NOW()
                     """,
                     weeklyTestWithTimestamps.keycloakId,
-                    weeklyTestWithTimestamps.weekStartTimestamp.atZone(java.time.ZoneOffset.UTC).toLocalDateTime(),
+                    weeklyTestWithTimestamps.weekStartTimestamp.atZone(ZoneOffset.UTC).toLocalDateTime(),
                     weeklyTestWithTimestamps.verticalJumpStatus.name,
                     weeklyTestWithTimestamps.verticalJumpResult,
                     weeklyTestWithTimestamps.hrRecoveryStatus.name,

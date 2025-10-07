@@ -153,7 +153,7 @@ class FourDayWorkoutStageGenerationServiceTest {
                 currentWeekNumber = any(),
                 movementRole = any()
             )
-        ).thenReturn(Pair(com.congen.generator.PrilepinGuidelines(0.8..0.9, 1..3, 15, 10..20, 60..120), 0.85))
+        ).thenReturn(Pair(PrilepinGuidelines(0.8..0.9, 1..3, 15, 10..20, 60..120), 0.85))
 
         whenever(
             prilepinGuidelinesService.getRepsAndSetsBasedOnIntensity(
@@ -303,7 +303,7 @@ class FourDayWorkoutStageGenerationServiceTest {
                 currentWeekNumber = any(),
                 movementRole = any()
             )
-        ).thenReturn(Pair(com.congen.generator.PrilepinGuidelines(0.8..0.9, 1..3, 15, 10..20, 60..120), 0.75))
+        ).thenReturn(Pair(PrilepinGuidelines(0.8..0.9, 1..3, 15, 10..20, 60..120), 0.75))
 
         whenever(
             prilepinGuidelinesService.getRepsAndSetsBasedOnIntensity(
@@ -453,7 +453,7 @@ class FourDayWorkoutStageGenerationServiceTest {
                 currentWeekNumber = any(),
                 movementRole = any()
             )
-        ).thenReturn(Pair(com.congen.generator.PrilepinGuidelines(0.8..0.9, 1..3, 15, 10..20, 60..120), 0.85))
+        ).thenReturn(Pair(PrilepinGuidelines(0.8..0.9, 1..3, 15, 10..20, 60..120), 0.85))
 
         whenever(
             prilepinGuidelinesService.getRepsAndSetsBasedOnIntensity(
@@ -628,7 +628,7 @@ class FourDayWorkoutStageGenerationServiceTest {
                 currentWeekNumber = any(),
                 movementRole = any()
             )
-        ).thenReturn(Pair(com.congen.generator.PrilepinGuidelines(0.8..0.9, 1..3, 15, 10..20, 60..120), 0.75))
+        ).thenReturn(Pair(PrilepinGuidelines(0.8..0.9, 1..3, 15, 10..20, 60..120), 0.75))
 
         whenever(
             prilepinGuidelinesService.getRepsAndSetsBasedOnIntensity(

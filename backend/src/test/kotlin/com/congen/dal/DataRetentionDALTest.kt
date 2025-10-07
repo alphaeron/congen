@@ -1,6 +1,7 @@
 package com.congen.dal
 
 import com.congen.client.PostgresClient
+import com.congen.model.DataCleanupResult
 import com.congen.model.DataRetentionPolicy
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
@@ -29,9 +30,9 @@ class DataRetentionDALTest {
 
         // Mock PostgresClient.withTransaction to execute the block directly
         doAnswer { invocation ->
-            val block = invocation.getArgument<() -> Mono<List<com.congen.model.DataCleanupResult>>>(0)
+            val block = invocation.getArgument<() -> Mono<List<DataCleanupResult>>>(0)
             block.invoke()
-        }.whenever(postgresClient).withTransaction(any<() -> Mono<List<com.congen.model.DataCleanupResult>>>())
+        }.whenever(postgresClient).withTransaction(any<() -> Mono<List<DataCleanupResult>>>())
 
         dataRetentionDAL = DataRetentionDAL(postgresClient)
     }

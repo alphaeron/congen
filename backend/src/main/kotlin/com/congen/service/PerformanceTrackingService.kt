@@ -15,8 +15,11 @@ import com.congen.model.UserWeeklyTest
 import com.congen.util.KeycloakUtil
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import java.time.Instant
+import java.time.ZoneOffset
+import java.time.temporal.ChronoUnit
 import java.util.*
 
 /**
@@ -194,7 +197,7 @@ class PerformanceTrackingService(
                 // Upsert all test results
                 Mono.fromCallable { testResults }
                     .flatMapMany { results ->
-                        reactor.core.publisher.Flux.fromIterable(results)
+                        Flux.fromIterable(results)
                             .flatMap { result -> userTestResultDAL.upsertUserTestResult(result) }
                     }
                     .collectList()
@@ -321,7 +324,7 @@ class PerformanceTrackingService(
         logger.debug("Submitting test results for user: $keycloakId, week: $weekStartTimestamp, count: ${testResults.size}")
 
         // Validate week start timestamp is a Monday
-        val weekStartLocalDate = weekStartTimestamp.atZone(java.time.ZoneOffset.UTC).toLocalDate()
+        val weekStartLocalDate = weekStartTimestamp.atZone(ZoneOffset.UTC).toLocalDate()
         if (weekStartLocalDate.dayOfWeek.value != 1) {
             return Mono.error(ValidationException("Week start date must be a Monday"))
         }
@@ -336,7 +339,7 @@ class PerformanceTrackingService(
         }
 
         // Upsert all test results
-        return reactor.core.publisher.Flux.fromIterable(testResults)
+        return Flux.fromIterable(testResults)
             .flatMap { testResult -> userTestResultDAL.upsertUserTestResult(testResult) }
             .collectList()
             .flatMap { updatedTestResults ->
@@ -363,11 +366,11 @@ class PerformanceTrackingService(
      * @return The start date of the current week in UTC
      */
     private fun getCurrentWeekStart(): Instant {
-        val now = Instant.now().atZone(java.time.ZoneOffset.UTC)
+        val now = Instant.now().atZone(ZoneOffset.UTC)
         val dayOfWeek = now.dayOfWeek.value // 1=Monday, 7=Sunday
         val daysToSubtract = if (dayOfWeek == 1) 0 else dayOfWeek - 1
         val monday = now.minusDays(daysToSubtract.toLong())
-        return monday.truncatedTo(java.time.temporal.ChronoUnit.DAYS).toInstant()
+        return monday.truncatedTo(ChronoUnit.DAYS).toInstant()
     }
 
     /**

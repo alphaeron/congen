@@ -139,7 +139,7 @@ class ThreeDayWorkoutStageGenerationServiceTest {
             prilepinGuidelinesService.getUndulatingPeriodizationGuidelines(any(), any(), any())
         ).thenReturn(
             Pair(
-                com.congen.generator.PrilepinGuidelines(
+                PrilepinGuidelines(
                     intensityRange = 0.85..0.95,
                     repsPerSetRange = 1..3,
                     totalReps = 10,
@@ -276,7 +276,7 @@ class ThreeDayWorkoutStageGenerationServiceTest {
             prilepinGuidelinesService.getUndulatingPeriodizationGuidelines(any(), any(), any())
         ).thenReturn(
             Pair(
-                com.congen.generator.PrilepinGuidelines(
+                PrilepinGuidelines(
                     intensityRange = 0.85..0.95,
                     repsPerSetRange = 1..3,
                     totalReps = 10,
@@ -413,7 +413,7 @@ class ThreeDayWorkoutStageGenerationServiceTest {
             prilepinGuidelinesService.getUndulatingPeriodizationGuidelines(any(), any(), any())
         ).thenReturn(
             Pair(
-                com.congen.generator.PrilepinGuidelines(
+                PrilepinGuidelines(
                     intensityRange = 0.55..0.65,
                     repsPerSetRange = 3..6,
                     totalReps = 24,

@@ -11,6 +11,7 @@ import com.congen.model.WeightUnit
 import com.congen.service.SetSchemeService
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
+import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import reactor.util.retry.Retry
 import java.time.Duration
@@ -129,7 +130,7 @@ class AtomicWorkoutWriter(
         stagesData: List<WorkoutStageData>,
         preparedData: WorkoutGenerationPreparedData
     ): Mono<Void> {
-        return reactor.core.publisher.Flux.fromIterable(stagesData)
+        return Flux.fromIterable(stagesData)
             .concatMap { stageData ->
                 writeWorkoutStage(workoutId, stageData, preparedData)
             }
@@ -176,7 +177,7 @@ class AtomicWorkoutWriter(
         exercisesData: List<ProgrammedExerciseData>,
         preparedData: WorkoutGenerationPreparedData
     ): Mono<Void> {
-        return reactor.core.publisher.Flux.fromIterable(exercisesData)
+        return Flux.fromIterable(exercisesData)
             .concatMap { exerciseData ->
                 writeProgrammedExercise(stageId, exerciseData, preparedData)
             }
@@ -222,7 +223,7 @@ class AtomicWorkoutWriter(
         exerciseName: String,
         preparedData: WorkoutGenerationPreparedData
     ): Mono<Void> {
-        return reactor.core.publisher.Flux.fromIterable(setSchemesData)
+        return Flux.fromIterable(setSchemesData)
             .concatMap { setSchemeData ->
                 writeSetScheme(exerciseId, setSchemeData, exerciseName, preparedData)
             }

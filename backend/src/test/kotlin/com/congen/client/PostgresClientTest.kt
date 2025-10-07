@@ -14,11 +14,13 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.vertx.core.Future
 import io.vertx.core.json.JsonObject
+import io.vertx.sqlclient.Pool
 import io.vertx.sqlclient.PreparedQuery
 import io.vertx.sqlclient.Row
 import io.vertx.sqlclient.RowIterator
 import io.vertx.sqlclient.RowSet
 import io.vertx.sqlclient.SqlClient
+import io.vertx.sqlclient.SqlConnection
 import io.vertx.sqlclient.Tuple
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
@@ -28,6 +30,7 @@ import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
 import reactor.core.publisher.Mono
+import java.util.function.Function
 import reactor.test.StepVerifier
 import java.net.ConnectException
 
@@ -399,16 +402,16 @@ class PostgresClientTest {
 
     @Test
     fun `should execute transaction with connection reuse`() {
-        val mockConnection = mock<io.vertx.sqlclient.SqlConnection>()
-        val mockPool = mock<io.vertx.sqlclient.Pool>()
+        val mockConnection = mock<SqlConnection>()
+        val mockPool = mock<Pool>()
 
         // Mock the pool.withTransaction method to return a successful Future
         whenever(mockPool.withTransaction<String>(any())).thenAnswer { invocation ->
             val function =
                 invocation.getArgument<
-                    java.util.function.Function<
-                        io.vertx.sqlclient.SqlConnection,
-                        io.vertx.core.Future<String>
+                    Function<
+                        SqlConnection,
+                        Future<String>
                     >
                 >(0)
             // Execute the function with the mock connection and return the result
@@ -430,16 +433,16 @@ class PostgresClientTest {
 
     @Test
     fun `should handle transaction rollback on error`() {
-        val mockConnection = mock<io.vertx.sqlclient.SqlConnection>()
-        val mockPool = mock<io.vertx.sqlclient.Pool>()
+        val mockConnection = mock<SqlConnection>()
+        val mockPool = mock<Pool>()
 
         // Mock the pool.withTransaction method to return a failed Future when an error occurs
         whenever(mockPool.withTransaction<String>(any())).thenAnswer { invocation ->
             val function =
                 invocation.getArgument<
-                    java.util.function.Function<
-                        io.vertx.sqlclient.SqlConnection,
-                        io.vertx.core.Future<String>
+                    Function<
+                        SqlConnection,
+                        Future<String>
                     >
                 >(0)
             // Execute the function with the mock connection and return the result

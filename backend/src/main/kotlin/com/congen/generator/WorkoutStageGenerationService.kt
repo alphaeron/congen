@@ -1066,7 +1066,7 @@ abstract class WorkoutStageGenerationService(
      * @return Mono containing the list of workout stage data
      */
     protected fun createStagesSequentially(stageCreators: List<() -> Mono<WorkoutStageData>>): Mono<List<WorkoutStageData>> {
-        return reactor.core.publisher.Flux.fromIterable(stageCreators)
+        return Flux.fromIterable(stageCreators)
             .concatMap { stageCreator ->
                 stageCreator()
             }

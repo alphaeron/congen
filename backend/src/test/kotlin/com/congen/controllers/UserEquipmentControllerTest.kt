@@ -5,6 +5,7 @@ import com.congen.createGdprComplianceServiceSpy
 import com.congen.dal.UserEquipmentDAL
 import com.congen.exceptions.DatabaseQueryException
 import com.congen.mockUserEquipment
+import com.congen.model.UserEquipment
 import com.congen.service.GdprComplianceService
 import com.congen.util.KeycloakUtil
 import org.junit.jupiter.api.BeforeEach
@@ -54,9 +55,9 @@ class UserEquipmentControllerTest {
 
         // Mock PostgresClient.withTransaction to execute the block directly
         doAnswer { invocation ->
-            val block = invocation.getArgument<() -> Mono<ResponseEntity<List<com.congen.model.UserEquipment>>>>(0)
+            val block = invocation.getArgument<() -> Mono<ResponseEntity<List<UserEquipment>>>>(0)
             block.invoke()
-        }.whenever(postgresClient).withTransaction(any<() -> Mono<ResponseEntity<List<com.congen.model.UserEquipment>>>>())
+        }.whenever(postgresClient).withTransaction(any<() -> Mono<ResponseEntity<List<UserEquipment>>>>())
 
         userEquipmentController = UserEquipmentController(userEquipmentDAL, keycloakUtil, gdprComplianceService, postgresClient)
 

@@ -24,6 +24,7 @@ import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
+import java.time.Instant
 import java.math.BigDecimal
 
 /**
@@ -319,8 +320,8 @@ class AtomicWorkoutWriterTest {
             programId = programId,
             dayNumber = dayNumber,
             name = name,
-            createdAt = java.time.Instant.now(),
-            updatedAt = java.time.Instant.now()
+            createdAt = Instant.now(),
+            updatedAt = Instant.now()
         )
     }
 
@@ -334,8 +335,8 @@ class AtomicWorkoutWriterTest {
             stageTypeId = 1,
             position = 1,
             name = "Primary Movement",
-            createdAt = java.time.Instant.now(),
-            updatedAt = java.time.Instant.now()
+            createdAt = Instant.now(),
+            updatedAt = Instant.now()
         )
     }
 
@@ -349,8 +350,8 @@ class AtomicWorkoutWriterTest {
             exerciseName = "Bench Press",
             position = 1,
             notes = null,
-            createdAt = java.time.Instant.now(),
-            updatedAt = java.time.Instant.now()
+            createdAt = Instant.now(),
+            updatedAt = Instant.now()
         )
     }
 
@@ -373,8 +374,8 @@ class AtomicWorkoutWriterTest {
             targetRepCount = 5,
             performedRepCount = null,
             restSeconds = null,
-            createdAt = java.time.Instant.now(),
-            updatedAt = java.time.Instant.now(),
+            createdAt = Instant.now(),
+            updatedAt = Instant.now(),
             band = null
         )
     }
@@ -386,7 +387,7 @@ class AtomicWorkoutWriterTest {
         return WorkoutStageType(
             id = id,
             name = name,
-            createdAt = java.time.Instant.now()
+            createdAt = Instant.now()
         )
     }
 
@@ -399,8 +400,8 @@ class AtomicWorkoutWriterTest {
             userId = userId,
             exerciseName = exerciseName,
             preferredUnit = preferredUnit,
-            createdAt = java.time.Instant.now(),
-            updatedAt = java.time.Instant.now()
+            createdAt = Instant.now(),
+            updatedAt = Instant.now()
         )
     }
 

@@ -1,6 +1,7 @@
 package com.congen.service
 
 import com.congen.dal.UserOneRepMaxDAL
+import com.congen.model.UserOneRepMax
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Mono
@@ -107,7 +108,7 @@ class WilksCalculationService(
      * Finds a 1RM value for exercises matching the given names (case-insensitive).
      */
     private fun findOneRepMax(
-        oneRepMaxes: List<com.congen.model.UserOneRepMax>,
+        oneRepMaxes: List<UserOneRepMax>,
         exerciseNames: List<String>
     ): BigDecimal? {
         return oneRepMaxes.find { oneRepMax ->

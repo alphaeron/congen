@@ -2,6 +2,7 @@ package com.congen
 
 import com.congen.dal.ExerciseEquipmentDAL
 import com.congen.generator.SupportedEquipmentWeightRoundingService
+import com.congen.model.ExerciseEquipment
 import com.congen.model.WeightUnit
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -26,7 +27,7 @@ class SupportedEquipmentWeightRoundingServiceIntegrationTest : BaseIntegrationTe
     @Autowired
     private lateinit var exerciseEquipmentDAL: ExerciseEquipmentDAL
 
-    private lateinit var exerciseEquipmentMappings: Map<String, List<com.congen.model.ExerciseEquipment>>
+    private lateinit var exerciseEquipmentMappings: Map<String, List<ExerciseEquipment>>
 
     @BeforeEach
     override fun setUp() {

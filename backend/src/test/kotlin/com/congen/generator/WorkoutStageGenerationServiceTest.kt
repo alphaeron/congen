@@ -133,7 +133,7 @@ class WorkoutStageGenerationServiceTest {
             prilepinGuidelinesService.getUndulatingPeriodizationGuidelines(any(), any(), any())
         ).thenReturn(
             Pair(
-                com.congen.generator.PrilepinGuidelines(
+                PrilepinGuidelines(
                     intensityRange = 0.85..0.95,
                     repsPerSetRange = 1..3,
                     totalReps = 10,
