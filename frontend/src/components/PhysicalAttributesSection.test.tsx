@@ -9,11 +9,52 @@ import { ENDPOINT } from '../api/endpoint';
 import type { User } from '../api/types';
 
 // Mock framer-motion
-jest.mock('framer-motion', () => ({
-  motion: {
-    div: 'div',
-  },
-}));
+jest.mock('framer-motion', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const React = require('react');
+  return {
+    motion: {
+      div: ({ children, ...props }) => {
+        // Filter out Framer Motion specific props
+        const framerMotionProps = new Set([
+          'initial',
+          'animate',
+          'transition',
+          'whileHover',
+          'whileTap',
+          'whileFocus',
+          'whileInView',
+          'exit',
+          'variants',
+          'custom',
+          'inherit',
+          'layout',
+          'layoutId',
+          'layoutDependency',
+          'layoutScroll',
+          'layoutRoot',
+          'drag',
+          'dragConstraints',
+          'dragElastic',
+          'dragMomentum',
+          'dragPropagation',
+          'dragSnapToOrigin',
+          'dragTransition',
+          'dragControls',
+          'onDrag',
+          'onDragStart',
+          'onDragEnd',
+        ]);
+
+        const domProps = Object.fromEntries(
+          Object.entries(props).filter(([key]) => !framerMotionProps.has(key))
+        );
+
+        return React.createElement('div', domProps, children);
+      },
+    },
+  };
+});
 
 // Mock the auth context
 const mockUser: User = {

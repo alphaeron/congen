@@ -167,6 +167,10 @@ export interface UserDataExport {
   user_exercise_preferences: Record<string, unknown>[];
   user_one_rep_max: Record<string, unknown>[];
   user_weight_unit_preferences: Record<string, unknown>[];
+  user_performance_metrics: Record<string, unknown>[];
+  user_performance_scores: Record<string, unknown>[];
+  user_test_results: Record<string, unknown>[];
+  user_weak_muscles: Record<string, unknown>[];
   training_programs: ProgramWithWorkouts[];
   audit_logs: Record<string, unknown>[];
   data_retention_policies: Record<string, unknown>[];

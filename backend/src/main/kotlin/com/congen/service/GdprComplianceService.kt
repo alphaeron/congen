@@ -8,6 +8,10 @@ import com.congen.dal.ProgramPreferencesDAL
 import com.congen.dal.UserDAL
 import com.congen.dal.UserEquipmentDAL
 import com.congen.dal.UserExercisePreferenceDAL
+import com.congen.dal.UserPerformanceMetricsDAL
+import com.congen.dal.UserPerformanceScoresDAL
+import com.congen.dal.UserTestResultDAL
+import com.congen.dal.UserWeakMuscleDAL
 import com.congen.dal.UserWeightUnitPreferenceDAL
 import com.congen.model.ProgramWithWorkouts
 import com.congen.model.UserConsent
@@ -54,6 +58,10 @@ import java.time.Instant
  * @param programPreferencesDAL Data access layer for program preferences
  * @param userOneRepMaxService Service for user one rep max operations
  * @param userWeightUnitPreferenceDAL Data access layer for weight unit preferences
+ * @param userPerformanceMetricsDAL Data access layer for performance metrics
+ * @param userPerformanceScoresDAL Data access layer for performance scores
+ * @param userTestResultDAL Data access layer for individual test results
+ * @param userWeakMuscleDAL Data access layer for weak muscle preferences
  * @param programDAL Data access layer for training programs
  * @param auditService Service for audit logging
  * @param keycloakClient Client for Keycloak operations
@@ -71,6 +79,10 @@ class GdprComplianceService(
     private val programPreferencesDAL: ProgramPreferencesDAL,
     private val userOneRepMaxService: UserOneRepMaxService,
     private val userWeightUnitPreferenceDAL: UserWeightUnitPreferenceDAL,
+    private val userPerformanceMetricsDAL: UserPerformanceMetricsDAL,
+    private val userPerformanceScoresDAL: UserPerformanceScoresDAL,
+    private val userTestResultDAL: UserTestResultDAL,
+    private val userWeakMuscleDAL: UserWeakMuscleDAL,
     private val programDAL: ProgramDAL,
     private val auditService: AuditService,
     private val keycloakClient: KeycloakClient,
@@ -129,6 +141,11 @@ class GdprComplianceService(
      * - Program preferences (days per week, session length)
      * - One-rep-max records
      * - Weight unit preferences
+     * - Daily performance metrics (VO₂ max, strain, recovery, HRV, sleep data)
+     * - Performance scores (HP/MP/Fatigue, athleticism level, skills)
+     * - Weekly test protocol results
+     * - Individual test results
+     * - Weak muscle group preferences
      * - Complete training programs with workouts
      * - Performance data and set schemes
      * - Audit logs for data access history
@@ -153,6 +170,15 @@ class GdprComplianceService(
             val userExercisePreferencesMono = userExercisePreferenceDAL.selectUserExercisePreferencesByUser(keycloakId)
             val userOneRepMaxMono = userOneRepMaxService.selectUserOneRepMaxByUser(keycloakId)
             val userWeightUnitPreferencesMono = userWeightUnitPreferenceDAL.selectUserWeightUnitPreferencesByUser(keycloakId)
+            val userPerformanceMetricsMono =
+                userPerformanceMetricsDAL.getUserPerformanceMetricsInRange(
+                    keycloakId,
+                    Instant.EPOCH,
+                    Instant.now()
+                )
+            val userPerformanceScoresMono = userPerformanceScoresDAL.selectUserPerformanceScoresInRange(keycloakId, null, null)
+            val userTestResultsMono = userTestResultDAL.getUserTestResultsInRange(keycloakId, null, null)
+            val userWeakMusclesMono = userWeakMuscleDAL.selectUserWeakMusclesByUser(keycloakId)
             val auditLogsMono = gdprComplianceDAL.getUserAuditLogs(keycloakId)
             val dataRetentionPoliciesMono = gdprComplianceDAL.getDataRetentionPolicies()
 
@@ -168,55 +194,74 @@ class GdprComplianceService(
                             val oneRepMax = tuple2.t1 ?: emptyList()
                             val weightUnitPreferences = tuple2.t2 ?: emptyList()
 
-                            Mono.zip(auditLogsMono, dataRetentionPoliciesMono)
+                            Mono.zip(userPerformanceMetricsMono, userPerformanceScoresMono)
                                 .flatMap { tuple3 ->
-                                    val auditLogs = tuple3.t1 ?: emptyList()
-                                    val retentionPolicies = tuple3.t2 ?: emptyList()
+                                    val performanceMetrics = tuple3.t1 ?: emptyList()
+                                    val performanceScores = tuple3.t2 ?: emptyList()
 
-                                    // Use optimized single query to fetch complete training programs with workouts, stages, exercises, and set schemes
-                                    programDAL.selectProgramsWithWorkoutHierarchyByUserId(keycloakId)
-                                        .flatMap { programsWithWorkouts ->
-                                            // If no programs are found, return empty list instead of throwing error
-                                            // This ensures GDPR compliance by returning all available data
-                                            if (programsWithWorkouts.isEmpty()) {
-                                                Mono.just(emptyList<ProgramWithWorkouts>())
-                                            } else {
-                                                // For each program, fetch its preferences and create enriched program data
-                                                Flux.fromIterable(programsWithWorkouts)
-                                                    .flatMap { programWithWorkouts ->
-                                                        programPreferencesDAL.selectProgramPreferences(programWithWorkouts.program.id)
-                                                            .map { preferences ->
-                                                                ProgramWithWorkouts(
-                                                                    program = programWithWorkouts.program,
-                                                                    programPreferences = preferences,
-                                                                    workouts = programWithWorkouts.workouts
-                                                                )
-                                                            }
-                                                    }
-                                                    .collectList()
-                                            }
-                                        }
-                                        .map { enrichedPrograms ->
-                                            UserDataExport(
-                                                keycloakId = user.keycloakId,
-                                                name = user.name,
-                                                age = user.age,
-                                                weight = user.weight,
-                                                height = user.height,
-                                                gender = user.gender,
-                                                createdAt = user.createdAt,
-                                                updatedAt = user.updatedAt,
-                                                dataProcessingConsent = consent.dataProcessingConsent,
-                                                consentTimestamp = consent.consentTimestamp,
-                                                userEquipment = equipment,
-                                                userExercisePreferences = exercisePreferences,
-                                                userOneRepMax = oneRepMax,
-                                                userWeightUnitPreferences = weightUnitPreferences,
-                                                trainingPrograms = enrichedPrograms,
-                                                auditLogs = auditLogs,
-                                                dataRetentionPolicies = retentionPolicies,
-                                                exportTimestamp = Instant.now()
-                                            )
+                                    userTestResultsMono
+                                        .flatMap { testResults ->
+
+                                            Mono.zip(userWeakMusclesMono, auditLogsMono)
+                                                .flatMap { tuple5 ->
+                                                    val weakMuscles = tuple5.t1 ?: emptyList()
+                                                    val auditLogs = tuple5.t2 ?: emptyList()
+
+                                                    dataRetentionPoliciesMono
+                                                        .flatMap { retentionPolicies ->
+                                                            // Use optimized single query to fetch complete training programs with workouts, stages, exercises, and set schemes
+                                                            programDAL.selectProgramsWithWorkoutHierarchyByUserId(keycloakId)
+                                                                .flatMap { programsWithWorkouts ->
+                                                                    // If no programs are found, return empty list instead of throwing error
+                                                                    // This ensures GDPR compliance by returning all available data
+                                                                    if (programsWithWorkouts.isEmpty()) {
+                                                                        Mono.just(emptyList<ProgramWithWorkouts>())
+                                                                    } else {
+                                                                        // For each program, fetch its preferences and create enriched program data
+                                                                        Flux.fromIterable(programsWithWorkouts)
+                                                                            .flatMap { programWithWorkouts ->
+                                                                                programPreferencesDAL.selectProgramPreferences(
+                                                                                    programWithWorkouts.program.id
+                                                                                )
+                                                                                    .map { preferences ->
+                                                                                        ProgramWithWorkouts(
+                                                                                            program = programWithWorkouts.program,
+                                                                                            programPreferences = preferences,
+                                                                                            workouts = programWithWorkouts.workouts
+                                                                                        )
+                                                                                    }
+                                                                            }
+                                                                            .collectList()
+                                                                    }
+                                                                }
+                                                                .map { enrichedPrograms ->
+                                                                    UserDataExport(
+                                                                        keycloakId = user.keycloakId,
+                                                                        name = user.name,
+                                                                        age = user.age,
+                                                                        weight = user.weight,
+                                                                        height = user.height,
+                                                                        gender = user.gender,
+                                                                        createdAt = user.createdAt,
+                                                                        updatedAt = user.updatedAt,
+                                                                        dataProcessingConsent = consent.dataProcessingConsent,
+                                                                        consentTimestamp = consent.consentTimestamp,
+                                                                        userEquipment = equipment,
+                                                                        userExercisePreferences = exercisePreferences,
+                                                                        userOneRepMax = oneRepMax,
+                                                                        userWeightUnitPreferences = weightUnitPreferences,
+                                                                        userPerformanceMetrics = performanceMetrics,
+                                                                        userPerformanceScores = performanceScores,
+                                                                        userTestResults = testResults,
+                                                                        userWeakMuscles = weakMuscles,
+                                                                        trainingPrograms = enrichedPrograms,
+                                                                        auditLogs = auditLogs,
+                                                                        dataRetentionPolicies = retentionPolicies ?: emptyList(),
+                                                                        exportTimestamp = Instant.now()
+                                                                    )
+                                                                }
+                                                        }
+                                                }
                                         }
                                 }
                         }
@@ -238,6 +283,11 @@ class GdprComplianceService(
      * - One-rep-max records
      * - Program preferences
      * - Weight unit preferences
+     * - Daily performance metrics
+     * - Performance scores (historical)
+     * - Weekly test protocol results
+     * - Individual test results
+     * - Weak muscle group preferences
      * - Training programs and workouts
      * - Performance data and set schemes
      * - Consent records

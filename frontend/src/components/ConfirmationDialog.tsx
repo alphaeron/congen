@@ -67,7 +67,7 @@ export const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
       className={GAME_CLASSES.dialog}
     >
       <DialogTitle id="confirmation-dialog-title">
-        <GameText variant="h6" textVariant="glow">
+        <GameText variant="body1" textVariant="glow">
           {title}
         </GameText>
       </DialogTitle>

@@ -7,6 +7,10 @@ import com.congen.dal.ProgramPreferencesDAL
 import com.congen.dal.UserDAL
 import com.congen.dal.UserEquipmentDAL
 import com.congen.dal.UserExercisePreferenceDAL
+import com.congen.dal.UserPerformanceMetricsDAL
+import com.congen.dal.UserPerformanceScoresDAL
+import com.congen.dal.UserTestResultDAL
+import com.congen.dal.UserWeakMuscleDAL
 import com.congen.dal.UserWeightUnitPreferenceDAL
 import com.congen.generator.DayTemplate
 import com.congen.generator.PrilepinGuidelines
@@ -517,6 +521,10 @@ fun createGdprComplianceServiceSpy(): GdprComplianceService {
     val programPreferencesDAL = mock<ProgramPreferencesDAL>()
     val userOneRepMaxService = mock<UserOneRepMaxService>()
     val userWeightUnitPreferenceDAL = mock<UserWeightUnitPreferenceDAL>()
+    val userPerformanceMetricsDAL = mock<UserPerformanceMetricsDAL>()
+    val userPerformanceScoresDAL = mock<UserPerformanceScoresDAL>()
+    val userTestResultDAL = mock<UserTestResultDAL>()
+    val userWeakMuscleDAL = mock<UserWeakMuscleDAL>()
     val programDAL = mock<ProgramDAL>()
     val auditService = mock<AuditService>()
     val keycloakClient = mock<KeycloakClient>()
@@ -530,6 +538,10 @@ fun createGdprComplianceServiceSpy(): GdprComplianceService {
             programPreferencesDAL = programPreferencesDAL,
             userOneRepMaxService = userOneRepMaxService,
             userWeightUnitPreferenceDAL = userWeightUnitPreferenceDAL,
+            userPerformanceMetricsDAL = userPerformanceMetricsDAL,
+            userPerformanceScoresDAL = userPerformanceScoresDAL,
+            userTestResultDAL = userTestResultDAL,
+            userWeakMuscleDAL = userWeakMuscleDAL,
             programDAL = programDAL,
             auditService = auditService,
             keycloakClient = keycloakClient,

@@ -9,12 +9,90 @@ import { ENDPOINT } from '../api/endpoint';
 import type { User, Program, ProgrammedWorkout } from '../api/types';
 
 // Mock framer-motion
-jest.mock('framer-motion', () => ({
-  motion: {
-    div: 'div',
-    h5: 'h5',
-  },
-}));
+jest.mock('framer-motion', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const React = require('react');
+  return {
+    motion: {
+      div: ({ children, ...props }) => {
+        // Filter out Framer Motion specific props
+        const framerMotionProps = new Set([
+          'initial',
+          'animate',
+          'transition',
+          'whileHover',
+          'whileTap',
+          'whileFocus',
+          'whileInView',
+          'exit',
+          'variants',
+          'custom',
+          'inherit',
+          'layout',
+          'layoutId',
+          'layoutDependency',
+          'layoutScroll',
+          'layoutRoot',
+          'drag',
+          'dragConstraints',
+          'dragElastic',
+          'dragMomentum',
+          'dragPropagation',
+          'dragSnapToOrigin',
+          'dragTransition',
+          'dragControls',
+          'onDrag',
+          'onDragStart',
+          'onDragEnd',
+        ]);
+
+        const domProps = Object.fromEntries(
+          Object.entries(props).filter(([key]) => !framerMotionProps.has(key))
+        );
+
+        return React.createElement('div', domProps, children);
+      },
+      h5: ({ children, ...props }) => {
+        // Filter out Framer Motion specific props
+        const framerMotionProps = new Set([
+          'initial',
+          'animate',
+          'transition',
+          'whileHover',
+          'whileTap',
+          'whileFocus',
+          'whileInView',
+          'exit',
+          'variants',
+          'custom',
+          'inherit',
+          'layout',
+          'layoutId',
+          'layoutDependency',
+          'layoutScroll',
+          'layoutRoot',
+          'drag',
+          'dragConstraints',
+          'dragElastic',
+          'dragMomentum',
+          'dragPropagation',
+          'dragSnapToOrigin',
+          'dragTransition',
+          'dragControls',
+          'onDrag',
+          'onDragStart',
+          'onDragEnd',
+        ]);
+
+        const domProps = Object.fromEntries(
+          Object.entries(props).filter(([key]) => !framerMotionProps.has(key))
+        );
+
+        return React.createElement('h5', domProps, children);
+      },
+    },
+  };
+});
 
 // Mock DataContext
 const mockUseData = jest.fn();

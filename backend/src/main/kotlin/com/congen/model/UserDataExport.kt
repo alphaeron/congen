@@ -29,6 +29,10 @@ import java.time.Instant
  * @property userExercisePreferences User's exercise preferences
  * @property userOneRepMax User's one-rep-max records
  * @property userWeightUnitPreferences User's weight unit preferences
+ * @property userPerformanceMetrics User's daily performance metrics
+ * @property userPerformanceScores User's calculated performance scores (historical)
+ * @property userTestResults User's individual test results
+ * @property userWeakMuscles User's identified weak muscle groups
  * @property trainingPrograms User's training programs with their preferences and complete workout hierarchy
  * @property auditLogs Audit logs for data access
  * @property dataRetentionPolicies Data retention policies
@@ -121,6 +125,14 @@ data class UserDataExport(
     @param:JsonProperty("user_one_rep_max") val userOneRepMax: List<Any>,
     /** User's weight unit preferences. */
     @param:JsonProperty("user_weight_unit_preferences") val userWeightUnitPreferences: List<Any>,
+    /** User's daily performance metrics. */
+    @param:JsonProperty("user_performance_metrics") val userPerformanceMetrics: List<Any>,
+    /** User's calculated performance scores (historical). */
+    @param:JsonProperty("user_performance_scores") val userPerformanceScores: List<Any>,
+    /** User's individual test results. */
+    @param:JsonProperty("user_test_results") val userTestResults: List<Any>,
+    /** User's identified weak muscle groups. */
+    @param:JsonProperty("user_weak_muscles") val userWeakMuscles: List<Any>,
     /** User's training programs. */
     @param:JsonProperty("training_programs") val trainingPrograms: List<ProgramWithWorkouts>,
     /** Audit logs for data access. */

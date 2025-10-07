@@ -8,6 +8,10 @@ import com.congen.dal.ProgramPreferencesDAL
 import com.congen.dal.UserDAL
 import com.congen.dal.UserEquipmentDAL
 import com.congen.dal.UserExercisePreferenceDAL
+import com.congen.dal.UserPerformanceMetricsDAL
+import com.congen.dal.UserPerformanceScoresDAL
+import com.congen.dal.UserTestResultDAL
+import com.congen.dal.UserWeakMuscleDAL
 import com.congen.dal.UserWeightUnitPreferenceDAL
 import com.congen.model.User
 import com.congen.model.UserConsent
@@ -42,6 +46,10 @@ class GdprComplianceServiceTest {
     private lateinit var programPreferencesDAL: ProgramPreferencesDAL
     private lateinit var userOneRepMaxService: UserOneRepMaxService
     private lateinit var userWeightUnitPreferenceDAL: UserWeightUnitPreferenceDAL
+    private lateinit var userPerformanceMetricsDAL: UserPerformanceMetricsDAL
+    private lateinit var userPerformanceScoresDAL: UserPerformanceScoresDAL
+    private lateinit var userTestResultDAL: UserTestResultDAL
+    private lateinit var userWeakMuscleDAL: UserWeakMuscleDAL
     private lateinit var programDAL: ProgramDAL
     private lateinit var keycloakClient: KeycloakClient
     private lateinit var gdprComplianceService: GdprComplianceService
@@ -56,6 +64,10 @@ class GdprComplianceServiceTest {
         programPreferencesDAL = mock()
         userOneRepMaxService = mock()
         userWeightUnitPreferenceDAL = mock()
+        userPerformanceMetricsDAL = mock()
+        userPerformanceScoresDAL = mock()
+        userTestResultDAL = mock()
+        userWeakMuscleDAL = mock()
         programDAL = mock()
         keycloakClient = mock()
         val postgresClient = mock<PostgresClient>()
@@ -75,6 +87,10 @@ class GdprComplianceServiceTest {
                 programPreferencesDAL = programPreferencesDAL,
                 userOneRepMaxService = userOneRepMaxService,
                 userWeightUnitPreferenceDAL = userWeightUnitPreferenceDAL,
+                userPerformanceMetricsDAL = userPerformanceMetricsDAL,
+                userPerformanceScoresDAL = userPerformanceScoresDAL,
+                userTestResultDAL = userTestResultDAL,
+                userWeakMuscleDAL = userWeakMuscleDAL,
                 programDAL = programDAL,
                 auditService = auditService,
                 keycloakClient = keycloakClient,
@@ -201,6 +217,12 @@ class GdprComplianceServiceTest {
         whenever(programPreferencesDAL.selectProgramPreferences(any())).thenReturn(Mono.empty())
         whenever(userOneRepMaxService.selectUserOneRepMaxByUser(keycloakId)).thenReturn(Mono.just(emptyList()))
         whenever(userWeightUnitPreferenceDAL.selectUserWeightUnitPreferencesByUser(keycloakId)).thenReturn(Mono.just(emptyList()))
+        whenever(userPerformanceMetricsDAL.getUserPerformanceMetricsInRange(any(), any(), any())).thenReturn(Mono.just(emptyList()))
+        whenever(
+            userPerformanceScoresDAL.selectUserPerformanceScoresInRange(any(), anyOrNull(), anyOrNull())
+        ).thenReturn(Mono.just(emptyList()))
+        whenever(userTestResultDAL.getUserTestResultsInRange(any(), anyOrNull(), anyOrNull())).thenReturn(Mono.just(emptyList()))
+        whenever(userWeakMuscleDAL.selectUserWeakMusclesByUser(keycloakId)).thenReturn(Mono.just(emptyList()))
         whenever(programDAL.selectProgramsByUserId(keycloakId)).thenReturn(Mono.just(emptyList()))
         whenever(programDAL.selectProgramsWithWorkoutHierarchyByUserId(keycloakId)).thenReturn(Mono.just(emptyList()))
         whenever(gdprComplianceDAL.getUserAuditLogs(keycloakId)).thenReturn(Mono.just(emptyList()))
