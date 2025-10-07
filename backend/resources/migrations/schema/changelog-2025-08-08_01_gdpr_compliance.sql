@@ -27,13 +27,13 @@ CREATE TABLE data_retention_policy (
   description TEXT
 );
 
--- Insert default retention policies
+-- Insert default retention policies (optimized for compliance and storage efficiency)
 INSERT INTO data_retention_policy (data_type, retention_period_days, description) VALUES
-('USER_PROFILE', 2555, 'User profile data retained for 7 years after account closure'),
-('AUDIT_LOGS', 2555, 'Audit logs retained for 7 years for compliance'),
+('USER_PROFILE', 1825, 'User profile data retained for 5 years after account closure'),
+('AUDIT_LOGS', 1095, 'Audit logs retained for 3 years for compliance'),
 ('EXERCISE_DATA', 1095, 'Exercise and fitness data retained for 3 years'),
 ('SESSION_LOGS', 365, 'Session and access logs retained for 1 year'),
-('CONSENT_RECORDS', 2555, 'User consent records retained for 7 years for compliance');
+('CONSENT_RECORDS', 1825, 'User consent records retained for 5 years for compliance');
 
 -- Create dedicated user_consent table (separated from user table for proper GDPR data separation)
 CREATE TABLE user_consent (

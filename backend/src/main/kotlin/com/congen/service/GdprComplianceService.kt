@@ -112,7 +112,8 @@ class GdprComplianceService(
         return auditService.logDataOperation(
             keycloakId = keycloakId,
             operation = if (consent) "CONSENT_GIVEN" else "CONSENT_WITHDRAWN",
-            dataType = "USER_CONSENT"
+            dataType = "USER_CONSENT",
+            additionalInfo = "Sensitivity: HIGH - Critical GDPR operation"
         ).then(
             gdprComplianceDAL.updateUserConsent(keycloakId, consent)
         ).doOnSuccess { userConsentRecord ->
@@ -160,7 +161,8 @@ class GdprComplianceService(
         return auditService.logDataOperation(
             keycloakId = keycloakId,
             operation = "DATA_EXPORT",
-            dataType = "ALL_USER_DATA"
+            dataType = "ALL_USER_DATA",
+            additionalInfo = "Sensitivity: HIGH - Complete user data export"
         ).then(
             userDAL.selectUserByKeycloakId(keycloakId)
         ).flatMap { user ->
@@ -303,7 +305,8 @@ class GdprComplianceService(
         return auditService.logDataOperation(
             keycloakId = keycloakId,
             operation = "DATA_DELETION_STARTED",
-            dataType = "ALL_USER_DATA"
+            dataType = "ALL_USER_DATA",
+            additionalInfo = "Sensitivity: HIGH - Complete user data deletion initiated"
         ).then(
             // Use transaction to ensure all database operations are atomic
             postgresClient.withTransaction {

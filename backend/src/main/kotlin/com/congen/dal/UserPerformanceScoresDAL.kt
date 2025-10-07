@@ -9,6 +9,7 @@ import com.congen.client.PostgresClient
 import com.congen.exceptions.NoResultsFoundException
 import com.congen.model.UserPerformanceScores
 import com.congen.service.AuditService
+import com.congen.service.LogSensitivity
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Mono
@@ -71,7 +72,7 @@ class UserPerformanceScoresDAL(
     fun selectUserPerformanceScores(keycloakId: String): Mono<UserPerformanceScores> {
         logger.debug("Selecting latest performance scores for user: $keycloakId")
 
-        return auditService.logDataAccess("user_performance_scores", "SELECT_LATEST", keycloakId)
+        return auditService.logDataAccess("user_performance_scores", "SELECT_LATEST", keycloakId, LogSensitivity.LOW)
             .then(
                 postgresClient.selectIndividual(
                     "SELECT * FROM user_performance_scores WHERE keycloak_id = $1 ORDER BY created_at DESC LIMIT 1",
@@ -102,7 +103,7 @@ class UserPerformanceScoresDAL(
 
         return when {
             startTimestamp != null && endTimestamp != null -> {
-                auditService.logDataAccess("user_performance_scores", "SELECT_RANGE", keycloakId)
+                auditService.logDataAccess("user_performance_scores", "SELECT_RANGE", keycloakId, LogSensitivity.LOW)
                     .then(
                         postgresClient.select(
                             """
@@ -117,7 +118,7 @@ class UserPerformanceScoresDAL(
                     )
             }
             else -> {
-                auditService.logDataAccess("user_performance_scores", "SELECT_ALL", keycloakId)
+                auditService.logDataAccess("user_performance_scores", "SELECT_ALL", keycloakId, LogSensitivity.LOW)
                     .then(
                         postgresClient.select(
                             "SELECT * FROM user_performance_scores WHERE keycloak_id = $1 ORDER BY created_at DESC",
@@ -145,7 +146,7 @@ class UserPerformanceScoresDAL(
         val now = Instant.now()
         val scoresWithTimestamps = scores.copy(createdAt = now)
 
-        return auditService.logDataAccess("user_performance_scores", "INSERT", scores.keycloakId)
+        return auditService.logDataAccess("user_performance_scores", "INSERT", scores.keycloakId, LogSensitivity.LOW)
             .then(
                 postgresClient.update(
                     """
@@ -197,7 +198,7 @@ class UserPerformanceScoresDAL(
         val now = Instant.now()
         val scoresWithTimestamps = scores.copy(createdAt = now)
 
-        return auditService.logDataAccess("user_performance_scores", "UPSERT", scores.keycloakId)
+        return auditService.logDataAccess("user_performance_scores", "UPSERT", scores.keycloakId, LogSensitivity.LOW)
             .then(
                 // First, check if there's already a record for today
                 selectUserPerformanceScores(scores.keycloakId)

@@ -177,8 +177,8 @@ class AuditServiceTest {
                 additionalInfo = null
             )
 
-        // Mock the database call to return success
-        whenever(postgresClient.update<AuditLog>(expectedQuery, keycloakId, "DATA_ACCESS", dataType, adminUser, null))
+        // Mock the database call to return success with the new additional info parameter
+        whenever(postgresClient.update<AuditLog>(expectedQuery, keycloakId, "DATA_ACCESS", dataType, adminUser, "Sensitivity: MEDIUM"))
             .thenReturn(Mono.just(mockAuditLog))
 
         // Admin access should be logged
@@ -193,7 +193,7 @@ class AuditServiceTest {
             .verifyComplete()
 
         // Verify admin access was logged
-        verify(postgresClient).update<AuditLog>(expectedQuery, keycloakId, "DATA_ACCESS", dataType, adminUser, null)
+        verify(postgresClient).update<AuditLog>(expectedQuery, keycloakId, "DATA_ACCESS", dataType, adminUser, "Sensitivity: MEDIUM")
     }
 
     @Test

@@ -9,6 +9,20 @@ import reactor.core.publisher.Mono
 import java.time.Instant
 
 /**
+ * Logging sensitivity categories for GDPR audit compliance.
+ */
+enum class LogSensitivity {
+    /** Critical operations requiring full audit trail */
+    HIGH,
+
+    /** Important operations requiring moderate logging */
+    MEDIUM,
+
+    /** Routine operations with minimal logging */
+    LOW
+}
+
+/**
  * Service for audit logging to ensure GDPR compliance.
  *
  * This service provides comprehensive audit logging for all data operations
@@ -24,6 +38,12 @@ import java.time.Instant
  * - **Data Modification**: Track all changes to personal data
  * - **Data Deletion**: Log all data deletion operations
  * - **Retention**: Audit logs must be retained for compliance periods
+ *
+ * ## Logging Categories
+ *
+ * - **HIGH**: Critical operations (data exports, deletions, consent changes)
+ * - **MEDIUM**: Admin access, significant modifications, security events
+ * - **LOW**: Routine user access to their own data (minimal logging)
  *
  * ## Storage
  *
@@ -114,35 +134,44 @@ class AuditService(
     }
 
     /**
-     * Logs user data access for audit purposes.
+     * Logs user data access for audit purposes with sensitivity categorization.
      *
-     * Simplified logging that focuses on essential GDPR requirements.
-     * Only logs significant data access events, not routine operations.
+     * Enhanced logging that focuses on essential GDPR requirements while
+     * minimizing routine operation logging to reduce audit log volume.
      *
      * @param keycloakId The user's Keycloak ID
      * @param dataType The type of data accessed
      * @param accessedBy Who accessed the data (user, admin, system)
+     * @param sensitivity The sensitivity level of the operation.  Defaults to MEDIUM.
      * @return Mono that completes when log is written
      */
     fun logDataAccess(
         keycloakId: String,
         dataType: String,
-        accessedBy: String
+        accessedBy: String,
+        sensitivity: LogSensitivity = LogSensitivity.MEDIUM
     ): Mono<Unit> {
         if (!auditEnabled) {
             return Mono.just(Unit)
         }
 
-        // Only log if this is admin access or significant data access
-        return if (accessedBy != keycloakId) {
+        // Apply sensitivity-based logging rules
+        val shouldLog =
+            when (sensitivity) {
+                LogSensitivity.HIGH -> true
+                LogSensitivity.MEDIUM -> accessedBy != keycloakId
+                LogSensitivity.LOW -> accessedBy != keycloakId && accessedBy.contains("admin")
+            }
+
+        return if (shouldLog) {
             logDataOperation(
                 keycloakId = keycloakId,
                 operation = "DATA_ACCESS",
                 dataType = dataType,
-                userId = accessedBy
+                userId = accessedBy,
+                additionalInfo = "Sensitivity: ${sensitivity.name}"
             )
         } else {
-            // Skip logging for users accessing their own data (routine operation)
             Mono.just(Unit)
         }
     }

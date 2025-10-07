@@ -9,6 +9,7 @@ import com.congen.client.PostgresClient
 import com.congen.exceptions.NoResultsFoundException
 import com.congen.model.UserPerformanceMetrics
 import com.congen.service.AuditService
+import com.congen.service.LogSensitivity
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Mono
@@ -94,7 +95,7 @@ class UserPerformanceMetricsDAL(
                 updatedAt = now
             )
 
-        return auditService.logDataAccess("user_performance_metrics", "UPSERT", metrics.keycloakId)
+        return auditService.logDataAccess("user_performance_metrics", "UPSERT", metrics.keycloakId, LogSensitivity.LOW)
             .then(
                 // First, check if there's already a record for today
                 getLatestUserPerformanceMetrics(metrics.keycloakId)
@@ -207,7 +208,7 @@ class UserPerformanceMetricsDAL(
     ): Mono<List<UserPerformanceMetrics>> {
         logger.debug("Selecting performance metrics for user: $keycloakId, range: $startTimestamp to $endTimestamp")
 
-        return auditService.logDataAccess("user_performance_metrics", "SELECT_RANGE", keycloakId)
+        return auditService.logDataAccess("user_performance_metrics", "SELECT_RANGE", keycloakId, LogSensitivity.LOW)
             .then(
                 postgresClient.select(
                     """
@@ -238,7 +239,7 @@ class UserPerformanceMetricsDAL(
     fun getLatestUserPerformanceMetrics(keycloakId: String): Mono<UserPerformanceMetrics> {
         logger.debug("Selecting latest performance metrics for user: $keycloakId")
 
-        return auditService.logDataAccess("user_performance_metrics", "SELECT_LATEST", keycloakId)
+        return auditService.logDataAccess("user_performance_metrics", "SELECT_LATEST", keycloakId, LogSensitivity.LOW)
             .then(
                 postgresClient.select<UserPerformanceMetrics>(
                     """
