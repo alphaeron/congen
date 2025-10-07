@@ -19,11 +19,14 @@ import org.mockito.kotlin.mock
 import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
+import org.mockito.junit.jupiter.MockitoSettings
+import org.mockito.quality.Strictness
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
 import java.time.Instant
 
 @ExtendWith(MockitoExtension::class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 class UserServiceTest {
     private lateinit var userDAL: UserDAL
     private lateinit var unitConverter: UnitConverter
@@ -54,6 +57,9 @@ class UserServiceTest {
         gdprComplianceService = mock()
         val performanceTrackingService = mock<PerformanceTrackingService>()
         userService = UserService(userDAL, unitConverter, keycloakClient, keycloakUtil, gdprComplianceService, performanceTrackingService)
+        
+        // Mock the performance tracking service to return empty Mono to avoid null pointer exceptions
+        whenever(performanceTrackingService.createDefaultPerformanceData(any())).thenReturn(Mono.empty())
     }
 
     @Test

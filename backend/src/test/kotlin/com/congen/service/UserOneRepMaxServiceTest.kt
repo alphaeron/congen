@@ -5,6 +5,8 @@ import com.congen.assertMonoSuccess
 import com.congen.createMockMono
 import com.congen.createMockMonoError
 import com.congen.dal.UserOneRepMaxDAL
+import com.congen.dal.UserPerformanceMetricsDAL
+import com.congen.dal.UserPerformanceScoresDAL
 import com.congen.dal.UserWeightUnitPreferenceDAL
 import com.congen.exceptions.NoResultsFoundException
 import com.congen.mockUserOneRepMax
@@ -18,16 +20,33 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.Mock
 import org.mockito.junit.jupiter.MockitoExtension
+import org.mockito.kotlin.any
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
+import org.mockito.junit.jupiter.MockitoSettings
+import org.mockito.quality.Strictness
+import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
 import java.math.BigDecimal
 
 @ExtendWith(MockitoExtension::class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 class UserOneRepMaxServiceTest {
     @Mock
     private lateinit var userOneRepMaxDAL: UserOneRepMaxDAL
+
+    @Mock
+    private lateinit var performanceScoringService: PerformanceScoringService
+
+    @Mock
+    private lateinit var performanceTrackingService: PerformanceTrackingService
+
+    @Mock
+    private lateinit var userPerformanceMetricsDAL: UserPerformanceMetricsDAL
+
+    @Mock
+    private lateinit var userPerformanceScoresDAL: UserPerformanceScoresDAL
 
     @Mock
     private lateinit var userWeightUnitPreferenceDAL: UserWeightUnitPreferenceDAL
@@ -81,7 +100,23 @@ class UserOneRepMaxServiceTest {
 
     @BeforeEach
     fun setUp() {
-        service = UserOneRepMaxService(userOneRepMaxDAL, userWeightUnitPreferenceDAL, unitConverter)
+        service = UserOneRepMaxService(
+            userOneRepMaxDAL,
+            performanceScoringService,
+            performanceTrackingService,
+            userPerformanceMetricsDAL,
+            userPerformanceScoresDAL,
+            userWeightUnitPreferenceDAL,
+            unitConverter
+        )
+        
+        // Mock the performance tracking service methods to return proper Mono objects to avoid null pointer exceptions
+        // The triggerPerformanceScoreRecalculation method uses onErrorComplete() so it won't fail the main operation
+        whenever(userPerformanceMetricsDAL.getLatestUserPerformanceMetrics(any())).thenReturn(Mono.empty())
+        whenever(performanceTrackingService.getWeeklyTests(any(), any(), any())).thenReturn(Mono.empty())
+        whenever(performanceTrackingService.convertTestResultsToWeeklyTest(any())).thenReturn(null)
+        whenever(performanceScoringService.calculatePerformanceScores(any(), any(), any())).thenReturn(Mono.empty())
+        whenever(userPerformanceScoresDAL.upsertUserPerformanceScores(any())).thenReturn(Mono.empty())
     }
 
     @Test
@@ -110,45 +145,32 @@ class UserOneRepMaxServiceTest {
     }
 
     @Test
-    fun `getAllByUser returns converted values using preferences`() {
+    fun `getAllByUser returns raw values from DAL`() {
         val oneRepMaxes = createUserOneRepMaxTestData()
-        val preferences = createWeightUnitPreferenceTestData()
-        val convertedWeight1 = BigDecimal("220.46")
-        val convertedWeight2 = BigDecimal("315.0") // KG stays the same
-        val convertedWeight3 = BigDecimal("606.27")
 
         whenever(userOneRepMaxDAL.selectUserOneRepMaxByUser(userId)).thenReturn(createMockMono(oneRepMaxes))
-        whenever(userWeightUnitPreferenceDAL.selectUserWeightUnitPreferencesByUser(userId)).thenReturn(createMockMono(preferences))
-        whenever(unitConverter.fromKg(eq(oneRepMaxes[0].oneRepMax), eq(WeightUnit.LBS))).thenReturn(convertedWeight1)
-        whenever(unitConverter.fromKg(eq(oneRepMaxes[1].oneRepMax), eq(WeightUnit.KG))).thenReturn(convertedWeight2)
-        whenever(unitConverter.fromKg(eq(oneRepMaxes[2].oneRepMax), eq(WeightUnit.LBS))).thenReturn(convertedWeight3)
 
-        val result = service.selectUserOneRepMaxByUser(userId, null)
+        val result = service.selectUserOneRepMaxByUser(userId)
 
         StepVerifier.create(result)
             .assertNext { list ->
-                assert(list.size == 3)
-                assert(list[0].oneRepMax == convertedWeight1)
-                assert(list[1].oneRepMax == convertedWeight2)
-                assert(list[2].oneRepMax == convertedWeight3)
+                assert(list.size == 3) { "Expected list size 3, got ${list.size}" }
+                assert(list[0].oneRepMax == oneRepMaxes[0].oneRepMax) { "Expected first weight ${oneRepMaxes[0].oneRepMax}, got ${list[0].oneRepMax}" }
+                assert(list[1].oneRepMax == oneRepMaxes[1].oneRepMax) { "Expected second weight ${oneRepMaxes[1].oneRepMax}, got ${list[1].oneRepMax}" }
+                assert(list[2].oneRepMax == oneRepMaxes[2].oneRepMax) { "Expected third weight ${oneRepMaxes[2].oneRepMax}, got ${list[2].oneRepMax}" }
             }
             .verifyComplete()
     }
 
     @Test
-    fun `getByUserAndExercise returns converted value using preference`() {
-        val preference = mockUserWeightUnitPreference(userId = userId, exerciseName = exerciseName)
-        val convertedWeight = BigDecimal("220.46")
-
+    fun `getByUserAndExercise returns raw value from DAL`() {
         whenever(userOneRepMaxDAL.selectUserOneRepMax(userId, exerciseName)).thenReturn(createMockMono(oneRepMax))
-        whenever(userWeightUnitPreferenceDAL.selectUserWeightUnitPreference(userId, exerciseName)).thenReturn(createMockMono(preference))
-        whenever(unitConverter.fromKg(oneRepMax.oneRepMax, WeightUnit.LBS)).thenReturn(convertedWeight)
 
-        val result = service.selectUserOneRepMax(userId, exerciseName, null)
+        val result = service.selectUserOneRepMax(userId, exerciseName)
 
         StepVerifier.create(result)
             .assertNext { userOneRepMax ->
-                assert(userOneRepMax.oneRepMax == convertedWeight)
+                assert(userOneRepMax.oneRepMax == oneRepMax.oneRepMax) { "Expected weight ${oneRepMax.oneRepMax}, got ${userOneRepMax.oneRepMax}" }
             }
             .verifyComplete()
     }
@@ -169,7 +191,7 @@ class UserOneRepMaxServiceTest {
         )
 
         assertMonoError(
-            service.selectUserOneRepMax(userId, exerciseName, null),
+            service.selectUserOneRepMax(userId, exerciseName),
             NoResultsFoundException::class.java
         )
     }

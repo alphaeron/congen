@@ -56,7 +56,7 @@ class UserService(
                                     gdprComplianceService.updateUserConsent(keycloakId, true)
                                         .flatMap {
                                             performanceTrackingService.createDefaultPerformanceData(keycloakId)
-                                                .map { user }
+                                                .thenReturn(user)
                                         }
                                 }
                                 .doOnSuccess { logger.debug("Created user profile with Keycloak ID: {}", it.keycloakId) }
