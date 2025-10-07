@@ -24,8 +24,8 @@ import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
-import java.time.Instant
 import java.math.BigDecimal
+import java.time.Instant
 
 /**
  * Unit tests for AtomicWorkoutWriter

@@ -21,8 +21,8 @@ import com.congen.model.ProgramPreferences
 import com.congen.model.ProgrammedWorkout
 import com.congen.model.UserEquipment
 import com.congen.model.UserOneRepMax
-import com.congen.model.UserWeightUnitPreference
 import com.congen.model.UserWeakMuscle
+import com.congen.model.UserWeightUnitPreference
 import com.congen.model.WeightUnit
 import com.congen.service.ProgramService
 import com.congen.service.SetSchemeService
@@ -141,7 +141,9 @@ class ConjugateWorkoutGeneratorServiceTest {
 
         // Mock the additional DAL methods needed for data preparation
         whenever(userWeightUnitPreferenceDAL.selectUserWeightUnitPreferencesByUser(any())).thenReturn(Mono.just(emptyList()))
-        whenever(userWeightUnitPreferenceDAL.selectUserWeightUnitPreference(any(), anyOrNull())).thenReturn(Mono.just(createSampleWeightUnitPreference()))
+        whenever(
+            userWeightUnitPreferenceDAL.selectUserWeightUnitPreference(any(), anyOrNull())
+        ).thenReturn(Mono.just(createSampleWeightUnitPreference()))
         whenever(exerciseDAL.selectExercises()).thenReturn(Mono.just(emptyList()))
         whenever(exerciseEquipmentDAL.selectAllExerciseEquipment()).thenReturn(Mono.just(emptyList()))
         whenever(exerciseMuscleDAL.selectAllExerciseMuscle()).thenReturn(Mono.just(emptyList()))

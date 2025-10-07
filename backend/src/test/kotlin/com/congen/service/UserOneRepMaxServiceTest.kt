@@ -117,11 +117,13 @@ class UserOneRepMaxServiceTest {
         whenever(performanceTrackingService.convertTestResultsToWeeklyTest(any())).thenReturn(null)
         whenever(performanceScoringService.calculatePerformanceScores(any(), any(), any())).thenReturn(Mono.empty())
         whenever(userPerformanceScoresDAL.upsertUserPerformanceScores(any())).thenReturn(Mono.empty())
-        
+
         // Mock the weight unit preference DAL to return a default preference to avoid null pointer exceptions
         whenever(userWeightUnitPreferenceDAL.selectUserWeightUnitPreference(any(), any()))
-            .thenReturn(Mono.just(mockUserWeightUnitPreference(userId = userId, exerciseName = exerciseName, preferredUnit = WeightUnit.KG)))
-        
+            .thenReturn(
+                Mono.just(mockUserWeightUnitPreference(userId = userId, exerciseName = exerciseName, preferredUnit = WeightUnit.KG))
+            )
+
         // Mock the unit converter to return the same weight when converting from KG to KG (default case)
         whenever(unitConverter.fromKg(any(), any())).thenAnswer { invocation ->
             invocation.getArgument<BigDecimal>(0)

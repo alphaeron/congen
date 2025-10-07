@@ -9,7 +9,6 @@ import com.congen.dal.UserDAL
 import com.congen.dal.UserEquipmentDAL
 import com.congen.dal.UserExercisePreferenceDAL
 import com.congen.dal.UserWeightUnitPreferenceDAL
-import com.congen.model.ProgramPreferences
 import com.congen.model.ProgramWithWorkouts
 import com.congen.model.UserConsent
 import com.congen.model.UserDataExport

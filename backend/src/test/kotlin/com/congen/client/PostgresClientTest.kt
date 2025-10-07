@@ -30,9 +30,9 @@ import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
 import reactor.core.publisher.Mono
-import java.util.function.Function
 import reactor.test.StepVerifier
 import java.net.ConnectException
+import java.util.function.Function
 
 /**
  * Unit tests for [PostgresClient].

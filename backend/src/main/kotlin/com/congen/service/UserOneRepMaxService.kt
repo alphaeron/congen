@@ -58,21 +58,23 @@ class UserOneRepMaxService(
                 if (unit != null) {
                     // Convert all weights to the specified unit
                     val weightUnit = WeightUnit.fromString(unit)
-                    val convertedOneRepMaxes = oneRepMaxes.map { oneRepMax ->
-                        val convertedWeight = unitConverter.fromKg(oneRepMax.oneRepMax, weightUnit)
-                        oneRepMax.copy(oneRepMax = convertedWeight)
-                    }
+                    val convertedOneRepMaxes =
+                        oneRepMaxes.map { oneRepMax ->
+                            val convertedWeight = unitConverter.fromKg(oneRepMax.oneRepMax, weightUnit)
+                            oneRepMax.copy(oneRepMax = convertedWeight)
+                        }
                     Mono.just(convertedOneRepMaxes)
                 } else {
                     // Convert each weight to the user's preferred unit for that exercise
-                    val conversionPromises = oneRepMaxes.map { oneRepMax ->
-                        userWeightUnitPreferenceDAL.selectUserWeightUnitPreference(userId, oneRepMax.exerciseName)
-                            .map { preference ->
-                                val convertedWeight = unitConverter.fromKg(oneRepMax.oneRepMax, preference.preferredUnit)
-                                oneRepMax.copy(oneRepMax = convertedWeight)
-                            }
-                            .onErrorReturn(oneRepMax) // Return original if no preference found
-                    }
+                    val conversionPromises =
+                        oneRepMaxes.map { oneRepMax ->
+                            userWeightUnitPreferenceDAL.selectUserWeightUnitPreference(userId, oneRepMax.exerciseName)
+                                .map { preference ->
+                                    val convertedWeight = unitConverter.fromKg(oneRepMax.oneRepMax, preference.preferredUnit)
+                                    oneRepMax.copy(oneRepMax = convertedWeight)
+                                }
+                                .onErrorReturn(oneRepMax) // Return original if no preference found
+                        }
                     Mono.zip(conversionPromises) { results ->
                         results.map { it as UserOneRepMax }
                     }
