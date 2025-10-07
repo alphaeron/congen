@@ -80,6 +80,11 @@ abstract class BaseIntegrationTest {
                 .withEnv("KC_HEALTH_ENABLED", "true")
                 .withEnv("KC_HTTP_ENABLED", "true")
                 .withEnv("KC_HTTP_RELATIVE_PATH", "/")
+                .withEnv("KC_HOSTNAME_STRICT_HTTPS", "false")
+                .withEnv("KC_HOSTNAME_STRICT", "false")
+                .withEnv("KC_HOSTNAME_DEBUG", "true")
+                .withEnv("KC_HOSTNAME_DEBUG_VERBOSE", "true")
+                .withEnv("KC_SPI_TRUSTSTORE_FILE_HOSTNAME_VERIFICATION_POLICY", "ANY")
 
         private val memcached = MemcachedContainer("1.6.39-alpine")
 

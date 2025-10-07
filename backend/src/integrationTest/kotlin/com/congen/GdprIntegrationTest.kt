@@ -161,8 +161,8 @@ class GdprIntegrationTest : BaseIntegrationTest() {
             .jsonPath("$.data_processing.data_types").isArray
             .jsonPath("$.data_processing.retention_periods").exists()
             .jsonPath("$.user_rights").exists()
-            .jsonPath("$.last_updated").isEqualTo("2025-08-25T00:00:00Z")
-            .jsonPath("$.version").isEqualTo("1.0.0")
+            .jsonPath("$.last_updated").isEqualTo("2025-09-20T00:00:00Z")
+            .jsonPath("$.version").isEqualTo("1.1.0")
     }
 
     @Test
@@ -368,8 +368,8 @@ class GdprIntegrationTest : BaseIntegrationTest() {
             .jsonPath("$.user_rights.portability").exists()
             .jsonPath("$.user_rights.objection").exists()
             .jsonPath("$.user_rights.complaint").exists()
-            .jsonPath("$.last_updated").isEqualTo("2025-08-25T00:00:00Z")
-            .jsonPath("$.version").isEqualTo("1.0.0")
+            .jsonPath("$.last_updated").isEqualTo("2025-09-20T00:00:00Z")
+            .jsonPath("$.version").isEqualTo("1.1.0")
     }
 
     @Test

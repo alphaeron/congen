@@ -138,7 +138,7 @@ class GdprComplianceDAL(
     ): Mono<UserConsent> {
         logger.debug("Updating consent for user: {} to {}", keycloakId, consent)
 
-        return postgresClient.update(
+        return postgresClient.update<UserConsent>(
             """
             INSERT INTO user_consent (keycloak_id, data_processing_consent, consent_timestamp, created_at, updated_at)
             VALUES ($1, $2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)

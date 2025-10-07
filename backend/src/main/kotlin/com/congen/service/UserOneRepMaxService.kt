@@ -38,24 +38,79 @@ class UserOneRepMaxService(
     }
 
     /**
-     * Retrieves all one rep max records for a specific user.
+     * Retrieves all one rep max records for a specific user with optional unit conversion.
      *
      * @param userId The Keycloak identifier of the user
-     * @return Mono containing a list of user one rep max records
+     * @param unit Optional unit to convert all weights to (kg or lbs). If null, uses user preferences.
+     * @return Mono containing a list of user one rep max records with converted weights
      */
-    fun selectUserOneRepMaxByUser(userId: String): Mono<List<UserOneRepMax>> = userOneRepMaxDAL.selectUserOneRepMaxByUser(userId)
+    fun selectUserOneRepMaxByUser(
+        userId: String,
+        unit: String? = null
+    ): Mono<List<UserOneRepMax>> {
+        return userOneRepMaxDAL.selectUserOneRepMaxByUser(userId)
+            .flatMap { oneRepMaxes ->
+                if (oneRepMaxes.isEmpty()) {
+                    // Return empty list immediately if there are no records
+                    return@flatMap Mono.just(emptyList<UserOneRepMax>())
+                }
+
+                if (unit != null) {
+                    // Convert all weights to the specified unit
+                    val weightUnit = WeightUnit.fromString(unit)
+                    val convertedOneRepMaxes = oneRepMaxes.map { oneRepMax ->
+                        val convertedWeight = unitConverter.fromKg(oneRepMax.oneRepMax, weightUnit)
+                        oneRepMax.copy(oneRepMax = convertedWeight)
+                    }
+                    Mono.just(convertedOneRepMaxes)
+                } else {
+                    // Convert each weight to the user's preferred unit for that exercise
+                    val conversionPromises = oneRepMaxes.map { oneRepMax ->
+                        userWeightUnitPreferenceDAL.selectUserWeightUnitPreference(userId, oneRepMax.exerciseName)
+                            .map { preference ->
+                                val convertedWeight = unitConverter.fromKg(oneRepMax.oneRepMax, preference.preferredUnit)
+                                oneRepMax.copy(oneRepMax = convertedWeight)
+                            }
+                            .onErrorReturn(oneRepMax) // Return original if no preference found
+                    }
+                    Mono.zip(conversionPromises) { results ->
+                        results.map { it as UserOneRepMax }
+                    }
+                }
+            }
+    }
 
     /**
-     * Retrieves a specific one rep max record for a user and exercise.
+     * Retrieves a specific one rep max record for a user and exercise with optional unit conversion.
      *
      * @param userId The Keycloak identifier of the user
      * @param exerciseName The name of the exercise
-     * @return Mono containing the user one rep max record
+     * @param unit Optional unit to convert the weight to (kg or lbs)
+     * @return Mono containing the user one rep max record with converted weight
      */
     fun selectUserOneRepMax(
         userId: String,
-        exerciseName: String
-    ): Mono<UserOneRepMax> = userOneRepMaxDAL.selectUserOneRepMax(userId, exerciseName)
+        exerciseName: String,
+        unit: String? = null,
+    ): Mono<UserOneRepMax> {
+        return userOneRepMaxDAL.selectUserOneRepMax(userId, exerciseName)
+            .flatMap { oneRepMax ->
+                if (unit != null) {
+                    // Use the explicitly provided unit
+                    val weightUnit = WeightUnit.fromString(unit)
+                    val convertedWeight = unitConverter.fromKg(oneRepMax.oneRepMax, weightUnit)
+                    Mono.just(oneRepMax.copy(oneRepMax = convertedWeight))
+                } else {
+                    // Check for user's preferred unit for this exercise
+                    userWeightUnitPreferenceDAL.selectUserWeightUnitPreference(userId, exerciseName)
+                        .map { preference ->
+                            val convertedWeight = unitConverter.fromKg(oneRepMax.oneRepMax, preference.preferredUnit)
+                            oneRepMax.copy(oneRepMax = convertedWeight)
+                        }
+                        .onErrorReturn(oneRepMax) // Return original if no preference found
+                }
+            }
+    }
 
     /**
      * Creates a new user one rep max record.

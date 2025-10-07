@@ -207,7 +207,7 @@ class SetSchemeServiceTest {
         ).thenReturn(Mono.just(setScheme))
         whenever(programmedExerciseDAL.getUserIdFromProgrammedExercise(programmedExerciseId)).thenReturn(Mono.just(userId))
         whenever(programmedExerciseDAL.selectProgrammedExerciseById(programmedExerciseId)).thenReturn(Mono.just(programmedExercise))
-        whenever(userOneRepMaxService.selectUserOneRepMax(userId, exerciseName)).thenReturn(Mono.just(currentOneRepMax))
+        whenever(userOneRepMaxService.selectUserOneRepMax(userId, exerciseName, null)).thenReturn(Mono.just(currentOneRepMax))
         whenever(userOneRepMaxService.updateUserOneRepMax(userId, exerciseName, performedWeightInKg)).thenReturn(Mono.just(newOneRepMax))
 
         val result =
@@ -324,7 +324,7 @@ class SetSchemeServiceTest {
         ).thenReturn(Mono.just(setScheme))
         whenever(programmedExerciseDAL.getUserIdFromProgrammedExercise(programmedExerciseId)).thenReturn(Mono.just(userId))
         whenever(programmedExerciseDAL.selectProgrammedExerciseById(programmedExerciseId)).thenReturn(Mono.just(programmedExercise))
-        whenever(userOneRepMaxService.selectUserOneRepMax(userId, exerciseName)).thenReturn(Mono.just(currentOneRepMax))
+        whenever(userOneRepMaxService.selectUserOneRepMax(userId, exerciseName, null)).thenReturn(Mono.just(currentOneRepMax))
         whenever(userOneRepMaxService.updateUserOneRepMax(userId, exerciseName, newOneRepMaxValue)).thenReturn(Mono.just(newOneRepMax))
 
         val result =
@@ -400,7 +400,7 @@ class SetSchemeServiceTest {
         whenever(programmedExerciseDAL.getUserIdFromProgrammedExercise(2L)).thenReturn(Mono.just("different-user-id"))
         whenever(programmedExerciseDAL.selectProgrammedExerciseById(2L)).thenReturn(Mono.just(programmedExercise))
         whenever(
-            userOneRepMaxService.selectUserOneRepMax("different-user-id", "Deadlift")
+            userOneRepMaxService.selectUserOneRepMax("different-user-id", "Deadlift", null)
         ).thenReturn(Mono.error(NoResultsFoundException("not found")))
         whenever(
             userOneRepMaxService.insertUserOneRepMax("different-user-id", "Deadlift", BigDecimal("150.0"))
@@ -480,7 +480,7 @@ class SetSchemeServiceTest {
             .verifyComplete()
 
         verify(programmedExerciseDAL, never()).selectProgrammedExerciseById(any())
-        verify(userOneRepMaxService, never()).selectUserOneRepMax(any(), any())
+        verify(userOneRepMaxService, never()).selectUserOneRepMax(any(), any(), any())
     }
 
     @Test
@@ -510,7 +510,7 @@ class SetSchemeServiceTest {
         ).thenReturn(Mono.just(setScheme))
         whenever(programmedExerciseDAL.getUserIdFromProgrammedExercise(programmedExerciseId)).thenReturn(Mono.just(userId))
         whenever(programmedExerciseDAL.selectProgrammedExerciseById(programmedExerciseId)).thenReturn(Mono.just(programmedExercise))
-        whenever(userOneRepMaxService.selectUserOneRepMax(userId, exerciseName)).thenReturn(Mono.just(currentOneRepMax))
+        whenever(userOneRepMaxService.selectUserOneRepMax(userId, exerciseName, null)).thenReturn(Mono.just(currentOneRepMax))
 
         val result =
             setSchemeService.updateSetSchemeWithUnit(
@@ -568,7 +568,7 @@ class SetSchemeServiceTest {
         ).thenReturn(Mono.just(setScheme))
         whenever(programmedExerciseDAL.getUserIdFromProgrammedExercise(programmedExerciseId)).thenReturn(Mono.just(userId))
         whenever(programmedExerciseDAL.selectProgrammedExerciseById(programmedExerciseId)).thenReturn(Mono.just(programmedExercise))
-        whenever(userOneRepMaxService.selectUserOneRepMax(userId, exerciseName)).thenReturn(Mono.just(currentOneRepMax))
+        whenever(userOneRepMaxService.selectUserOneRepMax(userId, exerciseName, null)).thenReturn(Mono.just(currentOneRepMax))
         whenever(userOneRepMaxService.updateUserOneRepMax(userId, exerciseName, BigDecimal("120.5"))).thenReturn(Mono.just(newOneRepMax))
 
         val result =
