@@ -87,6 +87,11 @@ class ReactiveMemcachedCache(
         logger.debug("Setting cache key: {} with TTL: {} seconds", cacheKey, expirySeconds)
 
         return Mono.fromCallable {
+            // Check if client is still active before attempting operation
+            if (memcachedClient.isShutdown) {
+                logger.warn("Memcached client is shutdown, skipping cache operation for key: {}", cacheKey)
+                return@fromCallable false
+            }
             memcachedClient.set(cacheKey, expirySeconds, jsonValue)
         }.subscribeOn(memcachedScheduler)
             .doOnSuccess { success ->
@@ -103,6 +108,7 @@ class ReactiveMemcachedCache(
             .doOnError { error ->
                 logger.error("Error caching key: {}", cacheKey, error)
             }
+            .onErrorReturn(false)
     }
 
     /**
@@ -136,6 +142,11 @@ class ReactiveMemcachedCache(
         typeReference: TypeReference<T>
     ): Mono<T> {
         return Mono.fromCallable {
+            // Check if client is still active before attempting operation
+            if (memcachedClient.isShutdown) {
+                logger.warn("Memcached client is shutdown, treating as cache miss for key: {}", cacheKey)
+                throw CacheMissException(cacheKey)
+            }
             val cachedValue = memcachedClient.get<String>(cacheKey)
             if (cachedValue != null) {
                 val result = objectMapper.readValue(cachedValue, typeReference)
@@ -144,6 +155,16 @@ class ReactiveMemcachedCache(
                 throw CacheMissException(cacheKey)
             }
         }.subscribeOn(memcachedScheduler)
+            .onErrorResume { error ->
+                // If it's a connection error, treat as cache miss instead of propagating the error
+                if (error.message?.contains("Xmemcached is stopped") == true || 
+                    error.message?.contains("Connection refused") == true) {
+                    logger.warn("Memcached connection error for key: {}, treating as cache miss", cacheKey)
+                    Mono.error(CacheMissException(cacheKey))
+                } else {
+                    Mono.error(error)
+                }
+            }
     }
 
     /**
@@ -173,6 +194,11 @@ class ReactiveMemcachedCache(
         logger.debug("Deleting cache key: {}", cacheKey)
 
         return Mono.fromCallable {
+            // Check if client is still active before attempting operation
+            if (memcachedClient.isShutdown) {
+                logger.warn("Memcached client is shutdown, skipping delete operation for key: {}", cacheKey)
+                return@fromCallable false
+            }
             memcachedClient.delete(cacheKey)
         }.subscribeOn(memcachedScheduler)
             .doOnSuccess { success: Boolean ->
@@ -189,6 +215,7 @@ class ReactiveMemcachedCache(
             .doOnError { error: Throwable ->
                 logger.error("Error deleting cache key: {}", cacheKey, error)
             }
+            .onErrorReturn(false)
     }
 
     /**
@@ -204,6 +231,12 @@ class ReactiveMemcachedCache(
         logger.debug("Deleting cache keys matching pattern: {}", pattern)
 
         return Mono.fromCallable {
+            // Check if client is still active before attempting operation
+            if (memcachedClient.isShutdown) {
+                logger.warn("Memcached client is shutdown, skipping pattern delete operation for pattern: {}", pattern)
+                return@fromCallable emptyList<String>()
+            }
+            
             // Escape regex special characters except for our wildcard pattern
             val escapedPattern =
                 pattern.replace("*", "___WILDCARD___")
@@ -229,11 +262,15 @@ class ReactiveMemcachedCache(
 
                 matchingKeys.forEach { key ->
                     val cacheKey = generateKey(key)
-                    val success = memcachedClient.delete(cacheKey)
-                    if (success) {
-                        deletedKeys.add(key)
-                        keyIndex.remove(key)
-                        logger.debug("Deleted cache key: {}", key)
+                    try {
+                        val success = memcachedClient.delete(cacheKey)
+                        if (success) {
+                            deletedKeys.add(key)
+                            keyIndex.remove(key)
+                            logger.debug("Deleted cache key: {}", key)
+                        }
+                    } catch (e: Exception) {
+                        logger.warn("Failed to delete cache key: {} due to: {}", key, e.message)
                     }
                 }
 
@@ -246,6 +283,7 @@ class ReactiveMemcachedCache(
             .doOnError { error ->
                 logger.error("Error deleting cache keys matching pattern: {}", pattern, error)
             }
+            .onErrorReturn(emptyList())
     }
 
     /**
@@ -264,6 +302,11 @@ class ReactiveMemcachedCache(
         logger.debug("Incrementing cache key: {} by {}", cacheKey, delta)
 
         return Mono.fromCallable {
+            // Check if client is still active before attempting operation
+            if (memcachedClient.isShutdown) {
+                logger.warn("Memcached client is shutdown, skipping increment operation for key: {}", cacheKey)
+                return@fromCallable -1L
+            }
             memcachedClient.incr(cacheKey, delta)
         }.subscribeOn(memcachedScheduler)
             .doOnSuccess { newValue: Long ->
@@ -272,6 +315,7 @@ class ReactiveMemcachedCache(
             .doOnError { error: Throwable ->
                 logger.error("Error incrementing cache key: {}", cacheKey, error)
             }
+            .onErrorReturn(-1L)
     }
 
     /**

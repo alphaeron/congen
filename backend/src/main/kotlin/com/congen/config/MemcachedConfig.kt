@@ -129,6 +129,7 @@ class MemcachedConfig(
 
         // Configure timeouts
         builder.setOpTimeout(props.opTimeout)
+        builder.setConnectTimeout(props.opTimeout)
 
         // Configure no-reply operations
         builder.setMaxQueuedNoReplyOperations(props.maxQueuedNoReply)
@@ -169,6 +170,7 @@ class MemcachedConfig(
 
         // Configure timeouts optimized for ElastiCache
         builder.setOpTimeout(props.opTimeout)
+        builder.setConnectTimeout(props.opTimeout)
 
         // Configure no-reply operations
         builder.setMaxQueuedNoReplyOperations(props.maxQueuedNoReply)

@@ -38,7 +38,6 @@ describe('CongenAppBar', () => {
   it('renders app bar with logo and title', () => {
     render(<CongenAppBar {...defaultProps} />);
 
-    expect(screen.getByText('ConGen')).toBeInTheDocument();
     expect(screen.getByAltText('ConGen')).toBeInTheDocument();
   });
 
@@ -84,7 +83,7 @@ describe('CongenAppBar', () => {
   it('handles home click', () => {
     render(<CongenAppBar {...defaultProps} />);
 
-    const homeButton = screen.getByText('ConGen');
+    const homeButton = screen.getByAltText('ConGen');
     fireEvent.click(homeButton);
 
     expect(navigateToFrontend).toHaveBeenCalledWith('/');

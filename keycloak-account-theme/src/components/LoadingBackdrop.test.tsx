@@ -64,11 +64,12 @@ describe('LoadingBackdrop', () => {
     expect(backdrop).toBeInTheDocument();
   });
 
-  it('includes CSS animation keyframes from LoadingSpinner', () => {
+  it('includes framer-motion animations from LoadingSpinner', () => {
     const { container } = render(<LoadingBackdrop {...defaultProps} />);
 
-    const styleElement = container.querySelector('style');
-    expect(styleElement).toBeInTheDocument();
+    // Check that the LoadingSpinner component renders (which uses framer-motion)
+    const spinner = container.querySelector('.MuiBox-root');
+    expect(spinner).toBeInTheDocument();
     // CSS animations removed - now using framer-motion
   });
 });

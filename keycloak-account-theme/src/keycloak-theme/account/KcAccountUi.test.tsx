@@ -28,7 +28,7 @@ describe('KcAccountUi', () => {
     // Wait for the lazy-loaded component to finish loading
     await waitFor(
       () => {
-        const conGenElement = screen.queryByText('ConGen');
+        const conGenElement = screen.queryByAltText('ConGen');
         const loadingElement = screen.queryByText('Loading...');
         expect(conGenElement || loadingElement).toBeTruthy();
       },
@@ -44,7 +44,7 @@ describe('KcAccountUi', () => {
     // Wait for the Account component to load
     await waitFor(
       () => {
-        expect(screen.getByText('ConGen')).toBeInTheDocument();
+        expect(screen.getByAltText('ConGen')).toBeInTheDocument();
       },
       { timeout: 10000 }
     );
@@ -58,7 +58,7 @@ describe('KcAccountUi', () => {
     // Wait for the Account component to render
     await waitFor(
       () => {
-        expect(screen.getByText('ConGen')).toBeInTheDocument();
+        expect(screen.getByAltText('ConGen')).toBeInTheDocument();
       },
       { timeout: 10000 }
     );
@@ -72,7 +72,7 @@ describe('KcAccountUi', () => {
     // Wait for the Account component to render with proper structure
     await waitFor(
       () => {
-        expect(screen.getByText('ConGen')).toBeInTheDocument();
+        expect(screen.getByAltText('ConGen')).toBeInTheDocument();
         expect(screen.getByText('User Profile')).toBeInTheDocument();
       },
       { timeout: 10000 }

@@ -10,13 +10,13 @@ describe('Account', () => {
 
     expect(screen.getByText('User Profile')).toBeInTheDocument();
     expect(screen.getByText('Privacy & Data')).toBeInTheDocument();
-    expect(screen.getByText('ConGen')).toBeInTheDocument();
+    expect(screen.getByAltText('ConGen')).toBeInTheDocument();
   });
 
   it('renders app bar with navigation', () => {
     render(<Account kcContext={defaultKcContext} i18n={{}} />);
 
-    expect(screen.getByText('ConGen')).toBeInTheDocument();
+    expect(screen.getByAltText('ConGen')).toBeInTheDocument();
     expect(screen.getByText('Exercises')).toBeInTheDocument();
     expect(screen.getByText('Privacy')).toBeInTheDocument();
   });

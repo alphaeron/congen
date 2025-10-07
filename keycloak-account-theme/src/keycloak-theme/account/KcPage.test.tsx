@@ -99,7 +99,7 @@ describe('KcPage', () => {
     // Wait for the component to load and show the main content
     await waitFor(
       () => {
-        expect(screen.getByText('ConGen')).toBeInTheDocument();
+        expect(screen.getByAltText('ConGen')).toBeInTheDocument();
       },
       { timeout: 10000 }
     );
@@ -118,7 +118,7 @@ describe('KcPage', () => {
     // The Account component should render with the app bar
     await waitFor(
       () => {
-        expect(screen.getByText('ConGen')).toBeInTheDocument();
+        expect(screen.getByAltText('ConGen')).toBeInTheDocument();
       },
       { timeout: 5000 }
     );
@@ -139,7 +139,7 @@ describe('KcPage', () => {
     // The Account component should render with the app bar
     await waitFor(
       () => {
-        expect(screen.getByText('ConGen')).toBeInTheDocument();
+        expect(screen.getByAltText('ConGen')).toBeInTheDocument();
       },
       { timeout: 5000 }
     );
@@ -158,7 +158,7 @@ describe('KcPage', () => {
     // The Account component should render with the app bar
     await waitFor(
       () => {
-        expect(screen.getByText('ConGen')).toBeInTheDocument();
+        expect(screen.getByAltText('ConGen')).toBeInTheDocument();
       },
       { timeout: 5000 }
     );
@@ -174,7 +174,7 @@ describe('KcPage', () => {
     // The Account component should render with the app bar
     await waitFor(
       () => {
-        expect(screen.getByText('ConGen')).toBeInTheDocument();
+        expect(screen.getByAltText('ConGen')).toBeInTheDocument();
       },
       { timeout: 5000 }
     );
