@@ -1,9 +1,11 @@
 import { render, screen } from '@testing-library/react';
 import React from 'react';
 import { BrowserRouter } from 'react-router';
+import { SnackbarProvider } from 'notistack';
 
 import { UserProfilePage } from './UserProfilePage';
 import type { User } from '../api/types';
+import { DataProvider } from '../contexts/DataContext';
 
 // Mock the auth context
 const mockUser: User = {
@@ -33,7 +35,15 @@ jest.mock('react-oidc-context', () => ({
 }));
 
 const renderWithProviders = (component: React.ReactElement) => {
-  return render(<BrowserRouter>{component}</BrowserRouter>);
+  return render(
+    <BrowserRouter>
+      <DataProvider>
+        <SnackbarProvider>
+          {component}
+        </SnackbarProvider>
+      </DataProvider>
+    </BrowserRouter>
+  );
 };
 
 describe('UserProfilePage', () => {

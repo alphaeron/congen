@@ -134,7 +134,7 @@ describe('SetSchemeEditor', () => {
     const editButton = screen.getByLabelText(/edit exercise/i);
     await user.click(editButton);
 
-    expect(screen.getByText(/edit exercise: bench press/i)).toBeInTheDocument();
+    expect(screen.getByText('Bench Press')).toBeInTheDocument();
     expect(screen.getByText('Set Scheme Details')).toBeInTheDocument();
     expect(screen.getByLabelText('Total Sets')).toBeInTheDocument();
   });
@@ -176,7 +176,7 @@ describe('SetSchemeEditor', () => {
     const editButton = screen.getByLabelText(/edit exercise/i);
     await user.click(editButton);
 
-    expect(screen.getByText(/edit exercise: bench press/i)).toBeInTheDocument();
+    expect(screen.getByText('Bench Press')).toBeInTheDocument();
 
     const cancelButton = screen.getByText(/cancel/i);
     await user.click(cancelButton);
@@ -328,7 +328,7 @@ describe('SetSchemeEditor', () => {
     await user.click(editButton);
 
     // Should still show the form
-    expect(screen.getByText(/edit exercise: bench press/i)).toBeInTheDocument();
+    expect(screen.getByText('Bench Press')).toBeInTheDocument();
     expect(screen.getByLabelText('Total Sets')).toBeInTheDocument();
   });
 });

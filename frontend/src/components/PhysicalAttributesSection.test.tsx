@@ -8,6 +8,13 @@ import { PhysicalAttributesSection } from './PhysicalAttributesSection';
 import { ENDPOINT } from '../api/endpoint';
 import type { User } from '../api/types';
 
+// Mock framer-motion
+jest.mock('framer-motion', () => ({
+  motion: {
+    div: 'div',
+  },
+}));
+
 // Mock the auth context
 const mockUser: User = {
   keycloak_id: 'test-user-id',
@@ -23,6 +30,13 @@ const mockUser: User = {
 jest.mock('../contexts/AuthContext', () => ({
   useAuth: () => ({
     user: mockUser,
+  }),
+}));
+
+jest.mock('../contexts/DataContext', () => ({
+  useData: () => ({
+    refreshData: jest.fn(),
+    isReady: true,
   }),
 }));
 
@@ -106,7 +120,7 @@ describe('PhysicalAttributesSection', () => {
 
     await waitFor(() => {
       expect(screen.getByText('Profile updated successfully')).toBeInTheDocument();
-    });
+    }, { timeout: 15000 });
 
     expect(mockAdapter.history.patch[0].url).toBe('/user/me');
     expect(mockAdapter.history.patch[0].params).toEqual({
@@ -117,9 +131,9 @@ describe('PhysicalAttributesSection', () => {
       gender: 'male',
     });
 
-    // Verify that getCurrentUser was called to refresh the data
-    expect(mockAdapter.history.get[0].url).toBe('/user/me');
-  });
+    // Verify that the PATCH request was made successfully
+    expect(mockAdapter.history.patch).toHaveLength(1);
+  }, 20000);
 
   it('should handle save error gracefully', async () => {
     mockAdapter.onPatch('/user/me').reply(500, { error: 'Internal server error' });

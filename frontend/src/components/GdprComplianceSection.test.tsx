@@ -28,6 +28,7 @@ describe('GdprComplianceSection', () => {
     exportUserData: jest.fn().mockResolvedValue({}),
     deleteAllPersonalData: jest.fn().mockResolvedValue(undefined),
     isLoading: false,
+    isReady: true,
     userData: null,
     exerciseMuscleData: new Map(),
     weightUnitPreferences: [],

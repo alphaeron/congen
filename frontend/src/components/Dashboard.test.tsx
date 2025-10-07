@@ -20,19 +20,19 @@ jest.mock('../App', () => ({
 // Mock the child components
 jest.mock('./DashboardOverview', () => ({
   DashboardOverview: ({ user }: { user: User }) => (
-    <div data-testid="dashboard-overview">Dashboard Overview for {user.name}</div>
+    <div data-testid="dashboard-overview">Dashboard Overview for {user?.name || 'Unknown User'}</div>
   ),
 }));
 
 jest.mock('./ProgramManagement', () => ({
   ProgramManagement: ({ user }: { user: User }) => (
-    <div data-testid="program-management">Program Management for {user.name}</div>
+    <div data-testid="program-management">Program Management for {user?.name || 'Unknown User'}</div>
   ),
 }));
 
 jest.mock('./Workouts', () => ({
   Workouts: ({ user }: { user: User }) => (
-    <div data-testid="workouts">Workouts for {user.name}</div>
+    <div data-testid="workouts">Workouts for {user?.name || 'Unknown User'}</div>
   ),
 }));
 

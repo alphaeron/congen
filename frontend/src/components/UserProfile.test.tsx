@@ -47,6 +47,7 @@ const defaultMockDataContext = {
     updated_at: new Date('2023-08-09T10:15:30Z'),
   }),
   isLoading: false,
+  isReady: true,
   userData: null,
   exerciseMuscleData: new Map(),
   weightUnitPreferences: [],

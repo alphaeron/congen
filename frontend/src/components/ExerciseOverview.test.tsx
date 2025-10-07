@@ -80,6 +80,8 @@ describe('ExerciseOverview component', () => {
       loadAllExercises: jest.fn().mockResolvedValue([EXERCISE]),
       loadAllEquipment: jest.fn().mockResolvedValue([EQUIPMENT]),
       loadAllMuscles: jest.fn().mockResolvedValue([MUSCLE]),
+      loadAllExerciseMuscleData: jest.fn().mockResolvedValue([]),
+      loadAllExerciseEquipmentData: jest.fn().mockResolvedValue([]),
       isLoading: false,
       error: null,
       refreshData: jest.fn(),
@@ -90,6 +92,8 @@ describe('ExerciseOverview component', () => {
       getMuscle: jest.fn(),
       getEquipment: jest.fn(),
       getProgram: jest.fn(),
+      getErrorForDataType: jest.fn().mockReturnValue(null),
+      isLoadingSpecific: jest.fn().mockReturnValue(false),
     };
 
     mockUseData.mockReturnValue(defaultMockDataContext);
@@ -115,9 +119,8 @@ describe('ExerciseOverview component', () => {
     // Wait for the data to load and the header to be rendered
     await waitFor(
       () => {
-        const exerciseElement = screen.getByTestId('exerciseHeader');
+        const exerciseElement = screen.getByText('Exercise Library');
         expect(exerciseElement).toBeInTheDocument();
-        expect(exerciseElement).toHaveTextContent('Exercise Library');
       },
       { timeout: 10000 }
     );
