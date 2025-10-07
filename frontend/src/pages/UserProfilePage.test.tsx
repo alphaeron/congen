@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
+import { SnackbarProvider } from 'notistack';
 import React from 'react';
 import { BrowserRouter } from 'react-router';
-import { SnackbarProvider } from 'notistack';
 
 import { UserProfilePage } from './UserProfilePage';
 import type { User } from '../api/types';
@@ -38,9 +38,7 @@ const renderWithProviders = (component: React.ReactElement) => {
   return render(
     <BrowserRouter>
       <DataProvider>
-        <SnackbarProvider>
-          {component}
-        </SnackbarProvider>
+        <SnackbarProvider>{component}</SnackbarProvider>
       </DataProvider>
     </BrowserRouter>
   );

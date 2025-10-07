@@ -263,9 +263,12 @@ describe('ExerciseName', () => {
       );
     });
 
-    await waitFor(() => {
-      const link = screen.getByRole('link');
-      expect(link).toHaveAttribute('href', '/exercises/Bench%20Press%20%28Barbell%29');
-    }, { timeout: 15000 });
+    await waitFor(
+      () => {
+        const link = screen.getByRole('link');
+        expect(link).toHaveAttribute('href', '/exercises/Bench%20Press%20%28Barbell%29');
+      },
+      { timeout: 15000 }
+    );
   }, 20000);
 });

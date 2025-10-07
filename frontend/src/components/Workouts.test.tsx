@@ -1,5 +1,5 @@
 import { ThemeProvider, createTheme } from '@mui/material/styles';
-import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
+import { render, screen, waitFor, act } from '@testing-library/react';
 import MockAdapter from 'axios-mock-adapter';
 import { SnackbarProvider } from 'notistack';
 import React from 'react';
@@ -91,12 +91,16 @@ jest.mock('./TrainingTimeline', () => ({
 
 // Mock VolumeOverviewCards component
 jest.mock('./VolumeOverviewCards', () => ({
-  VolumeOverviewCards: () => <div data-testid="volume-overview-cards">Mock Volume Overview Cards</div>,
+  VolumeOverviewCards: () => (
+    <div data-testid="volume-overview-cards">Mock Volume Overview Cards</div>
+  ),
 }));
 
 // Mock WorkoutGenerationWizard component
 jest.mock('./WorkoutGenerationWizard', () => ({
-  WorkoutGenerationWizard: () => <div data-testid="workout-generation-wizard">Mock Workout Generation Wizard</div>,
+  WorkoutGenerationWizard: () => (
+    <div data-testid="workout-generation-wizard">Mock Workout Generation Wizard</div>
+  ),
 }));
 
 // Mock WorkoutHeader component

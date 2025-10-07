@@ -34,11 +34,15 @@ jest.mock('../components/AlgorithmInfographic', () => ({
 }));
 
 jest.mock('../components/GamificationSection', () => ({
-  GamificationSection: () => <div data-testid="gamification-section">Gamification Section Component</div>,
+  GamificationSection: () => (
+    <div data-testid="gamification-section">Gamification Section Component</div>
+  ),
 }));
 
 jest.mock('../components/PersonalizationSection', () => ({
-  PersonalizationSection: () => <div data-testid="personalization-section">Personalization Section Component</div>,
+  PersonalizationSection: () => (
+    <div data-testid="personalization-section">Personalization Section Component</div>
+  ),
 }));
 
 describe('RootPage', () => {

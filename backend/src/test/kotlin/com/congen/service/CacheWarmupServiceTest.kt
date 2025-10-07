@@ -88,7 +88,6 @@ class CacheWarmupServiceTest {
 
     @Mock private lateinit var cacheWarmupConfig: CacheWarmupConfig
 
-
     private lateinit var cacheWarmupService: CacheWarmupService
 
     @BeforeEach

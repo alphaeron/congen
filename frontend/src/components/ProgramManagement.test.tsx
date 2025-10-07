@@ -405,9 +405,12 @@ describe('ProgramManagement', () => {
       fireEvent.click(editButton);
     });
 
-    await waitFor(() => {
-      expect(screen.getByLabelText('Change Session Duration')).toBeInTheDocument();
-    }, { timeout: 15000 });
+    await waitFor(
+      () => {
+        expect(screen.getByLabelText('Change Session Duration')).toBeInTheDocument();
+      },
+      { timeout: 15000 }
+    );
   }, 20000);
 
   it('updates a program successfully', async () => {
@@ -810,9 +813,12 @@ describe('ProgramManagement', () => {
       renderWithProviders(<ProgramManagement user={mockUser} />);
     });
 
-    await waitFor(() => {
-      expect(screen.getByLabelText(/stop program/i)).toBeInTheDocument();
-    }, { timeout: 15000 });
+    await waitFor(
+      () => {
+        expect(screen.getByLabelText(/stop program/i)).toBeInTheDocument();
+      },
+      { timeout: 15000 }
+    );
   }, 20000);
 
   it('verifies API calls are made with correct endpoints', async () => {

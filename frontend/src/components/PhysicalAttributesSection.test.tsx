@@ -118,9 +118,12 @@ describe('PhysicalAttributesSection', () => {
       fireEvent.click(saveButton);
     });
 
-    await waitFor(() => {
-      expect(screen.getByText('Profile updated successfully')).toBeInTheDocument();
-    }, { timeout: 15000 });
+    await waitFor(
+      () => {
+        expect(screen.getByText('Profile updated successfully')).toBeInTheDocument();
+      },
+      { timeout: 15000 }
+    );
 
     expect(mockAdapter.history.patch[0].url).toBe('/user/me');
     expect(mockAdapter.history.patch[0].params).toEqual({

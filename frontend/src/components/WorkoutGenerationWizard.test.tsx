@@ -58,7 +58,7 @@ describe('WorkoutGenerationWizard', () => {
 
     // Mock the getUserExercisePool API call
     mock.onGet('/conjugate_workout_generator/exercise_pool').reply(200, mockUserExercisePool);
-    
+
     // Mock the generateNextWeek API call
     mock.onPost('/conjugate_workout_generator/1').reply(200, mockProgram);
 
@@ -220,10 +220,10 @@ describe('WorkoutGenerationWizard', () => {
 
   it('handles generation errors gracefully', async () => {
     const onClose = jest.fn();
-    
+
     // Mock the API to return an error
     mock.onPost('/conjugate_workout_generator/1').reply(500, { error: 'Generation failed' });
-    
+
     const errorMockDataContext = {
       userData: null,
       exerciseMuscleData: new Map(),

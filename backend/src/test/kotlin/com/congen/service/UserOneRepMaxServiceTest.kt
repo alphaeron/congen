@@ -20,11 +20,10 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.Mock
 import org.mockito.junit.jupiter.MockitoExtension
+import org.mockito.junit.jupiter.MockitoSettings
 import org.mockito.kotlin.any
-import org.mockito.kotlin.eq
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
-import org.mockito.junit.jupiter.MockitoSettings
 import org.mockito.quality.Strictness
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
@@ -100,16 +99,17 @@ class UserOneRepMaxServiceTest {
 
     @BeforeEach
     fun setUp() {
-        service = UserOneRepMaxService(
-            userOneRepMaxDAL,
-            performanceScoringService,
-            performanceTrackingService,
-            userPerformanceMetricsDAL,
-            userPerformanceScoresDAL,
-            userWeightUnitPreferenceDAL,
-            unitConverter
-        )
-        
+        service =
+            UserOneRepMaxService(
+                userOneRepMaxDAL,
+                performanceScoringService,
+                performanceTrackingService,
+                userPerformanceMetricsDAL,
+                userPerformanceScoresDAL,
+                userWeightUnitPreferenceDAL,
+                unitConverter
+            )
+
         // Mock the performance tracking service methods to return proper Mono objects to avoid null pointer exceptions
         // The triggerPerformanceScoreRecalculation method uses onErrorComplete() so it won't fail the main operation
         whenever(userPerformanceMetricsDAL.getLatestUserPerformanceMetrics(any())).thenReturn(Mono.empty())
@@ -155,9 +155,15 @@ class UserOneRepMaxServiceTest {
         StepVerifier.create(result)
             .assertNext { list ->
                 assert(list.size == 3) { "Expected list size 3, got ${list.size}" }
-                assert(list[0].oneRepMax == oneRepMaxes[0].oneRepMax) { "Expected first weight ${oneRepMaxes[0].oneRepMax}, got ${list[0].oneRepMax}" }
-                assert(list[1].oneRepMax == oneRepMaxes[1].oneRepMax) { "Expected second weight ${oneRepMaxes[1].oneRepMax}, got ${list[1].oneRepMax}" }
-                assert(list[2].oneRepMax == oneRepMaxes[2].oneRepMax) { "Expected third weight ${oneRepMaxes[2].oneRepMax}, got ${list[2].oneRepMax}" }
+                assert(
+                    list[0].oneRepMax == oneRepMaxes[0].oneRepMax
+                ) { "Expected first weight ${oneRepMaxes[0].oneRepMax}, got ${list[0].oneRepMax}" }
+                assert(
+                    list[1].oneRepMax == oneRepMaxes[1].oneRepMax
+                ) { "Expected second weight ${oneRepMaxes[1].oneRepMax}, got ${list[1].oneRepMax}" }
+                assert(
+                    list[2].oneRepMax == oneRepMaxes[2].oneRepMax
+                ) { "Expected third weight ${oneRepMaxes[2].oneRepMax}, got ${list[2].oneRepMax}" }
             }
             .verifyComplete()
     }
@@ -170,7 +176,9 @@ class UserOneRepMaxServiceTest {
 
         StepVerifier.create(result)
             .assertNext { userOneRepMax ->
-                assert(userOneRepMax.oneRepMax == oneRepMax.oneRepMax) { "Expected weight ${oneRepMax.oneRepMax}, got ${userOneRepMax.oneRepMax}" }
+                assert(
+                    userOneRepMax.oneRepMax == oneRepMax.oneRepMax
+                ) { "Expected weight ${oneRepMax.oneRepMax}, got ${userOneRepMax.oneRepMax}" }
             }
             .verifyComplete()
     }
