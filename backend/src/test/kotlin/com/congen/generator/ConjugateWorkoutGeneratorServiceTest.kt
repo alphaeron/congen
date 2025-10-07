@@ -12,9 +12,14 @@ import com.congen.dal.UserEquipmentDAL
 import com.congen.dal.UserExercisePreferenceDAL
 import com.congen.dal.UserWeakMuscleDAL
 import com.congen.dal.UserWeightUnitPreferenceDAL
+import com.congen.model.Exercise
+import com.congen.model.ExerciseEquipment
+import com.congen.model.ExerciseMuscle
+import com.congen.model.MovementType
 import com.congen.model.Program
 import com.congen.model.ProgramPreferences
 import com.congen.model.ProgrammedWorkout
+import com.congen.model.UserEquipment
 import com.congen.model.UserOneRepMax
 import com.congen.model.UserWeightUnitPreference
 import com.congen.model.UserWeakMuscle
@@ -492,7 +497,7 @@ class ConjugateWorkoutGeneratorServiceTest {
             weakMuscles = sampleUserWeakMuscles.map { it.muscleName },
             currentWeekNumber = 1,
             userId = USER_ID,
-            weightUnitPreferences = mapOf("Bench Press" to com.congen.model.WeightUnit.LBS),
+            weightUnitPreferences = mapOf("Bench Press" to WeightUnit.LBS),
             exerciseMuscleMappings = createSampleExerciseMuscleMappings(),
             exerciseWorkoutTypeMappings = createSampleExerciseWorkoutTypeMappings(),
             exerciseEquipmentMappings = createSampleExerciseEquipmentMappings(),
@@ -503,36 +508,36 @@ class ConjugateWorkoutGeneratorServiceTest {
         )
     }
 
-    private fun createSampleExercises(): List<com.congen.model.Exercise> {
+    private fun createSampleExercises(): List<Exercise> {
         return listOf(
-            com.congen.model.Exercise(
+            Exercise(
                 name = "Bench Press",
                 description = "Horizontal push exercise",
-                movementType = com.congen.model.MovementType.HORIZONTAL_PUSH,
+                movementType = MovementType.HORIZONTAL_PUSH,
                 isUnilateral = false,
                 isUpper = true,
                 isAccessory = false
             ),
-            com.congen.model.Exercise(
+            Exercise(
                 name = "Squat",
                 description = "Squat movement",
-                movementType = com.congen.model.MovementType.SQUAT,
+                movementType = MovementType.SQUAT,
                 isUnilateral = false,
                 isUpper = false,
                 isAccessory = false
             ),
-            com.congen.model.Exercise(
+            Exercise(
                 name = "Deadlift",
                 description = "Hinge movement",
-                movementType = com.congen.model.MovementType.HINGE,
+                movementType = MovementType.HINGE,
                 isUnilateral = false,
                 isUpper = false,
                 isAccessory = false
             ),
-            com.congen.model.Exercise(
+            Exercise(
                 name = "Incline Bench Press",
                 description = "Inclined horizontal push",
-                movementType = com.congen.model.MovementType.HORIZONTAL_PUSH,
+                movementType = MovementType.HORIZONTAL_PUSH,
                 isUnilateral = false,
                 isUpper = true,
                 isAccessory = true
@@ -540,44 +545,44 @@ class ConjugateWorkoutGeneratorServiceTest {
         )
     }
 
-    private fun createSampleUserEquipment(): List<com.congen.model.UserEquipment> {
+    private fun createSampleUserEquipment(): List<UserEquipment> {
         return listOf(
-            com.congen.model.UserEquipment(USER_ID, "power bar", Instant.now()),
-            com.congen.model.UserEquipment(USER_ID, "bench", Instant.now()),
-            com.congen.model.UserEquipment(USER_ID, "squat rack", Instant.now())
+            UserEquipment(USER_ID, "power bar", Instant.now()),
+            UserEquipment(USER_ID, "bench", Instant.now()),
+            UserEquipment(USER_ID, "squat rack", Instant.now())
         )
     }
 
-    private fun createSampleExerciseEquipmentMappings(): Map<String, List<com.congen.model.ExerciseEquipment>> {
+    private fun createSampleExerciseEquipmentMappings(): Map<String, List<ExerciseEquipment>> {
         return mapOf(
-            "Bench Press" to listOf(com.congen.model.ExerciseEquipment("Bench Press", "power bar")),
-            "Squat" to listOf(com.congen.model.ExerciseEquipment("Squat", "power bar")),
-            "Deadlift" to listOf(com.congen.model.ExerciseEquipment("Deadlift", "power bar")),
-            "Incline Bench Press" to listOf(com.congen.model.ExerciseEquipment("Incline Bench Press", "power bar"))
+            "Bench Press" to listOf(ExerciseEquipment("Bench Press", "power bar")),
+            "Squat" to listOf(ExerciseEquipment("Squat", "power bar")),
+            "Deadlift" to listOf(ExerciseEquipment("Deadlift", "power bar")),
+            "Incline Bench Press" to listOf(ExerciseEquipment("Incline Bench Press", "power bar"))
         )
     }
 
-    private fun createSampleExerciseMuscleMappings(): Map<String, List<com.congen.model.ExerciseMuscle>> {
+    private fun createSampleExerciseMuscleMappings(): Map<String, List<ExerciseMuscle>> {
         return mapOf(
             "Bench Press" to
                 listOf(
-                    com.congen.model.ExerciseMuscle("Bench Press", "chest"),
-                    com.congen.model.ExerciseMuscle("Bench Press", "triceps")
+                    ExerciseMuscle("Bench Press", "chest"),
+                    ExerciseMuscle("Bench Press", "triceps")
                 ),
             "Squat" to
                 listOf(
-                    com.congen.model.ExerciseMuscle("Squat", "quadriceps"),
-                    com.congen.model.ExerciseMuscle("Squat", "glutes")
+                    ExerciseMuscle("Squat", "quadriceps"),
+                    ExerciseMuscle("Squat", "glutes")
                 ),
             "Deadlift" to
                 listOf(
-                    com.congen.model.ExerciseMuscle("Deadlift", "hamstrings"),
-                    com.congen.model.ExerciseMuscle("Deadlift", "glutes")
+                    ExerciseMuscle("Deadlift", "hamstrings"),
+                    ExerciseMuscle("Deadlift", "glutes")
                 ),
             "Incline Bench Press" to
                 listOf(
-                    com.congen.model.ExerciseMuscle("Incline Bench Press", "chest"),
-                    com.congen.model.ExerciseMuscle("Incline Bench Press", "triceps")
+                    ExerciseMuscle("Incline Bench Press", "chest"),
+                    ExerciseMuscle("Incline Bench Press", "triceps")
                 )
         )
     }
