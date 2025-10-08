@@ -28,7 +28,9 @@ export const CustomSvgIcon: React.FC<CustomSvgIconProps> = ({ src, sx, ...props 
         ...sx,
       }}
     >
-      <image href={src} width="100%" height="100%" />
+      <svg width="100%" height="100%" viewBox="0 0 24 24">
+        <image href={src} width="100%" height="100%" />
+      </svg>
     </SvgIcon>
   );
 };
