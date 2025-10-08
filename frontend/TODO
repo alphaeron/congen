@@ -1,9 +1,3 @@
-### Core Pages
-- enhance the ui for exercise browsing functionality to allow filtering based on all exercise properties, and to make it streamlined and follow ux best practices
-- add pages for adding equipment
-- add pages for adding muscles
-- add pages for adding exercise
-
 ### Authentication & UI
 - custom snackbar format instead of the default
 

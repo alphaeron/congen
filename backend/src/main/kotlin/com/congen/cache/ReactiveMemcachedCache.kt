@@ -157,8 +157,9 @@ class ReactiveMemcachedCache(
         }.subscribeOn(memcachedScheduler)
             .onErrorResume { error ->
                 // If it's a connection error, treat as cache miss instead of propagating the error
-                if (error.message?.contains("Xmemcached is stopped") == true || 
-                    error.message?.contains("Connection refused") == true) {
+                if (error.message?.contains("Xmemcached is stopped") == true ||
+                    error.message?.contains("Connection refused") == true
+                ) {
                     logger.warn("Memcached connection error for key: {}, treating as cache miss", cacheKey)
                     Mono.error(CacheMissException(cacheKey))
                 } else {
@@ -236,7 +237,7 @@ class ReactiveMemcachedCache(
                 logger.warn("Memcached client is shutdown, skipping pattern delete operation for pattern: {}", pattern)
                 return@fromCallable emptyList<String>()
             }
-            
+
             // Escape regex special characters except for our wildcard pattern
             val escapedPattern =
                 pattern.replace("*", "___WILDCARD___")

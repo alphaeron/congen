@@ -78,11 +78,9 @@ export const CongenAppBar: React.FC<CongenAppBarProps> = ({
               src={ConGenIcon}
               alt="ConGen"
               style={{
-                width: '72px',
+                width: '48px',
                 height: 'auto',
                 cursor: 'pointer',
-                filter:
-                  'brightness(0) saturate(100%) invert(70%) sepia(100%) saturate(1000%) hue-rotate(180deg) brightness(1.2) contrast(1.2)',
               }}
               onClick={handleHomeClick}
             />

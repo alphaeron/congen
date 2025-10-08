@@ -1,6 +1,6 @@
 import { Box, Tooltip } from '@mui/material';
 import { styled, alpha } from '@mui/material/styles';
-import { motion } from 'framer-motion';
+import { motion, useMotionValue, useAnimation } from 'framer-motion';
 import React, { useEffect, useRef, useState } from 'react';
 
 import { GameText } from './GameTheme';

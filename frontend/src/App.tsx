@@ -44,7 +44,7 @@ import './App.css';
 import './styles/menuButton.css';
 
 const logoStyle = {
-  width: '72px',
+  width: '48px',
   height: 'auto',
   cursor: 'pointer',
 };
@@ -191,12 +191,7 @@ function AppContent(): React.ReactElement {
               <Box sx={{ display: 'flex', alignItems: 'center' }}>
                 <img
                   src={ConGenIcon}
-                  style={{
-                    ...logoStyle,
-                    filter:
-                      'brightness(0) saturate(100%) invert(70%) sepia(100%) saturate(1000%) hue-rotate(180deg) brightness(1.2) contrast(1.2)',
-                    cursor: 'pointer',
-                  }}
+                  style={logoStyle}
                   alt="ConGen"
                   onClick={() => navigate('/')}
                 />

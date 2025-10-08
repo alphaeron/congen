@@ -468,10 +468,11 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
           minHeight,
           maxHeight,
           overflow: 'auto',
-          border: 1,
-          borderColor: 'divider',
+          border: '1px solid var(--game-cyan-border)',
+          backgroundColor: 'rgba(255, 255, 255, 0.1)',
+          borderRadius: 'var(--game-border-radius-small)',
           '&:focus-within': {
-            borderColor: 'primary.main',
+            borderColor: 'var(--game-cyan)',
           },
         }}
       >
