@@ -8,34 +8,36 @@ const mockUseData = {
   submitPerformanceMetrics: jest.fn(),
   submitWeeklyTest: jest.fn(),
   getCurrentWeekTest: jest.fn(() => []),
-  loadPerformanceMetricsInRange: jest.fn(() => Promise.resolve([
-    {
-      keycloak_id: 'test-user',
-      strain: 10.5,
-      recovery: 80.0,
-      hrv: 42.0,
-      sleep_score: 75.0,
-      vo2_max: 40.0,
-      rem_sleep_minutes: 85,
-      deep_sleep_minutes: 110,
-      subjective_tiredness: 4,
-      created_at: new Date(Date.now() - 86400000),
-      updated_at: new Date(Date.now() - 86400000),
-    },
-    {
-      keycloak_id: 'test-user',
-      strain: 11.0,
-      recovery: 82.0,
-      hrv: 43.0,
-      sleep_score: 76.0,
-      vo2_max: 41.0,
-      rem_sleep_minutes: 88,
-      deep_sleep_minutes: 115,
-      subjective_tiredness: 3,
-      created_at: new Date(Date.now() - 172800000),
-      updated_at: new Date(Date.now() - 172800000),
-    },
-  ])),
+  loadPerformanceMetricsInRange: jest.fn(() =>
+    Promise.resolve([
+      {
+        keycloak_id: 'test-user',
+        strain: 10.5,
+        recovery: 80.0,
+        hrv: 42.0,
+        sleep_score: 75.0,
+        vo2_max: 40.0,
+        rem_sleep_minutes: 85,
+        deep_sleep_minutes: 110,
+        subjective_tiredness: 4,
+        created_at: new Date(Date.now() - 86400000),
+        updated_at: new Date(Date.now() - 86400000),
+      },
+      {
+        keycloak_id: 'test-user',
+        strain: 11.0,
+        recovery: 82.0,
+        hrv: 43.0,
+        sleep_score: 76.0,
+        vo2_max: 41.0,
+        rem_sleep_minutes: 88,
+        deep_sleep_minutes: 115,
+        subjective_tiredness: 3,
+        created_at: new Date(Date.now() - 172800000),
+        updated_at: new Date(Date.now() - 172800000),
+      },
+    ])
+  ),
   loadWeeklyTests: jest.fn(),
   loadTestProtocols: jest.fn(),
   testProtocols: [
@@ -75,21 +77,51 @@ jest.mock('@tanstack/react-query', () => ({
 }));
 
 // Mock framer-motion
-jest.mock('framer-motion', () => ({
-  motion: {
-    div: ({ children, animate, initial, variants, whileHover, whileTap, whileInView, whileFocus, whileDrag, drag, dragConstraints, dragElastic, dragMomentum, dragPropagation, dragSnapToOrigin, dragTransition, dragControls, onDrag, onDragStart, onDragEnd, layout, layoutId, layoutDependency, layoutScroll, layoutRoot, transition, custom, inherit, textVariant, ...props }: any) => (
-      <div data-testid="motion-div" {...props}>{children}</div>
-    ),
-  },
-}));
+jest.mock('framer-motion', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const React = require('react');
+  return {
+    motion: {
+      div: ({ children, ...props }) => {
+        // Filter out Framer Motion specific props
+        const framerMotionProps = new Set([
+          'whileHover',
+          'whileTap',
+          'initial',
+          'animate',
+          'transition',
+          'variants',
+        ]);
+        const filteredProps = Object.fromEntries(
+          Object.entries(props).filter(([key]) => !framerMotionProps.has(key))
+        );
+        return React.createElement(
+          'div',
+          { 'data-testid': 'motion-div', ...filteredProps },
+          children
+        );
+      },
+    },
+  };
+});
 
 // Mock components
 jest.mock('./CustomSvgIcon', () => ({
-  CustomSvgIcon: ({ src, alt }: any) => <div data-testid="custom-svg-icon" data-src={src} data-alt={alt} />,
+  CustomSvgIcon: ({ src, alt }: { src: string; alt?: string }) => (
+    <div data-testid="custom-svg-icon" data-src={src} data-alt={alt} />
+  ),
 }));
 
 jest.mock('./MetricTrendChart', () => ({
-  MetricTrendChart: ({ metricLabel, data, isLoading }: any) => (
+  MetricTrendChart: ({
+    metricLabel,
+    data,
+    isLoading,
+  }: {
+    metricLabel: string;
+    data: unknown[];
+    isLoading: boolean;
+  }) => (
     <div data-testid="metric-trend-chart">
       <div data-testid="chart-label">{metricLabel}</div>
       <div data-testid="chart-data-count">{data.length}</div>
@@ -126,54 +158,25 @@ describe('CompactQuestCard', () => {
     },
   ];
 
-  const mockHistoricalMetrics = [
-    {
-      keycloak_id: 'test-user',
-      strain: 10.5,
-      recovery: 80.0,
-      hrv: 42.0,
-      sleep_score: 75.0,
-      vo2_max: 40.0,
-      rem_sleep_minutes: 85,
-      deep_sleep_minutes: 110,
-      subjective_tiredness: 4,
-      created_at: new Date(Date.now() - 86400000), // 1 day ago
-      updated_at: new Date(Date.now() - 86400000),
-    },
-    {
-      keycloak_id: 'test-user',
-      strain: 11.0,
-      recovery: 82.0,
-      hrv: 43.0,
-      sleep_score: 76.0,
-      vo2_max: 41.0,
-      rem_sleep_minutes: 88,
-      deep_sleep_minutes: 115,
-      subjective_tiredness: 3,
-      created_at: new Date(Date.now() - 172800000), // 2 days ago
-      updated_at: new Date(Date.now() - 172800000),
-    },
-  ];
-
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
   it('renders daily quest card', () => {
     render(<CompactQuestCard type="daily" currentMetrics={mockCurrentMetrics} />);
-    
+
     expect(screen.getByText('Daily Quests')).toBeInTheDocument();
   });
 
   it('renders weekly quest card', () => {
     render(<CompactQuestCard type="weekly" weeklyTests={mockWeeklyTests} />);
-    
+
     expect(screen.getByText('Weekly Quests')).toBeInTheDocument();
   });
 
   it('displays daily metrics', () => {
     render(<CompactQuestCard type="daily" currentMetrics={mockCurrentMetrics} />);
-    
+
     expect(screen.getByText('Strain')).toBeInTheDocument();
     expect(screen.getByText('Recovery')).toBeInTheDocument();
     expect(screen.getByText('HRV')).toBeInTheDocument();
@@ -182,20 +185,20 @@ describe('CompactQuestCard', () => {
 
   it('displays weekly test protocols', () => {
     render(<CompactQuestCard type="weekly" weeklyTests={mockWeeklyTests} />);
-    
+
     expect(screen.getByText('Vertical Jump')).toBeInTheDocument();
     expect(screen.getByText('Heart Rate Recovery')).toBeInTheDocument();
   });
 
   it('opens dialog when metric is clicked', async () => {
     render(<CompactQuestCard type="daily" currentMetrics={mockCurrentMetrics} />);
-    
+
     const strainCard = screen.getByText('Strain').closest('div');
     expect(strainCard).toBeInTheDocument();
-    
+
     if (strainCard) {
       fireEvent.click(strainCard);
-      
+
       await waitFor(() => {
         expect(screen.getByRole('dialog')).toBeInTheDocument();
       });
@@ -204,13 +207,13 @@ describe('CompactQuestCard', () => {
 
   it('opens dialog when weekly test is clicked', async () => {
     render(<CompactQuestCard type="weekly" weeklyTests={mockWeeklyTests} />);
-    
+
     const verticalJumpCard = screen.getByText('Vertical Jump').closest('div');
     expect(verticalJumpCard).toBeInTheDocument();
-    
+
     if (verticalJumpCard) {
       fireEvent.click(verticalJumpCard);
-      
+
       await waitFor(() => {
         expect(screen.getByRole('dialog')).toBeInTheDocument();
       });
@@ -219,18 +222,18 @@ describe('CompactQuestCard', () => {
 
   it('closes dialog when close button is clicked', async () => {
     render(<CompactQuestCard type="daily" currentMetrics={mockCurrentMetrics} />);
-    
+
     const strainCard = screen.getByText('Strain').closest('div');
     if (strainCard) {
       fireEvent.click(strainCard);
-      
+
       await waitFor(() => {
         expect(screen.getByRole('dialog')).toBeInTheDocument();
       });
-      
+
       const cancelButton = screen.getByText('Cancel');
       fireEvent.click(cancelButton);
-      
+
       await waitFor(() => {
         expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
       });
@@ -239,34 +242,36 @@ describe('CompactQuestCard', () => {
 
   it('renders motion components', () => {
     render(<CompactQuestCard type="daily" currentMetrics={mockCurrentMetrics} />);
-    
+
     const motionDivs = screen.getAllByTestId('motion-div');
     expect(motionDivs.length).toBeGreaterThan(0);
   });
 
   it('displays custom SVG icons', () => {
     render(<CompactQuestCard type="daily" currentMetrics={mockCurrentMetrics} />);
-    
+
     const svgIcons = screen.getAllByTestId('custom-svg-icon');
     expect(svgIcons.length).toBeGreaterThan(0);
   });
 
   it('handles empty current metrics', () => {
     render(<CompactQuestCard type="daily" />);
-    
+
     expect(screen.getByText('Daily Quests')).toBeInTheDocument();
   });
 
   it('handles empty weekly tests', () => {
     render(<CompactQuestCard type="weekly" />);
-    
+
     expect(screen.getByText('Weekly Quests')).toBeInTheDocument();
   });
 
   it('calls onTestUpdate when provided', () => {
     const onTestUpdate = jest.fn();
-    render(<CompactQuestCard type="weekly" weeklyTests={mockWeeklyTests} onTestUpdate={onTestUpdate} />);
-    
+    render(
+      <CompactQuestCard type="weekly" weeklyTests={mockWeeklyTests} onTestUpdate={onTestUpdate} />
+    );
+
     // The callback should be available for when tests are updated
     expect(onTestUpdate).toBeDefined();
   });

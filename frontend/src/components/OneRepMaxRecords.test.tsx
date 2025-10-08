@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import React from 'react';
 
 import { OneRepMaxRecords } from './OneRepMaxRecords';
@@ -25,11 +25,7 @@ const mockUseData = {
   ],
   isLoading: false,
   upsertUserOneRepMax: jest.fn(),
-  allExercises: [
-    { name: 'Bench Press' },
-    { name: 'Squat' },
-    { name: 'Deadlift' },
-  ],
+  allExercises: [{ name: 'Bench Press' }, { name: 'Squat' }, { name: 'Deadlift' }],
   loadAllExercises: jest.fn(),
   userOneRepMaxes: [
     {
@@ -42,7 +38,7 @@ const mockUseData = {
     },
   ],
   loadUserOneRepMaxes: jest.fn(),
-  getDefaultWeightUnit: jest.fn((exerciseName: string) => 'KG'),
+  getDefaultWeightUnit: jest.fn(() => 'KG'),
 };
 
 jest.mock('../contexts/DataContext', () => ({
@@ -70,7 +66,7 @@ jest.mock('@tanstack/react-table', () => ({
   }),
   getCoreRowModel: () => ({}),
   getFilteredRowModel: () => ({}),
-  flexRender: (content: any, context: any) => {
+  flexRender: (content: unknown, context: unknown) => {
     if (typeof content === 'function') {
       try {
         const result = content(context);
@@ -95,33 +91,75 @@ jest.mock('@tanstack/react-virtual', () => ({
 
 // Mock components
 jest.mock('./ExerciseName', () => ({
-  ExerciseName: ({ exerciseName }: any) => <div data-testid="exercise-name">{String(exerciseName)}</div>,
-}));
-
-jest.mock('./FormDialog', () => ({
-  FormDialog: ({ children, open, onClose, onSubmit, title }: any) => (
-    open ? (
-      <div data-testid="form-dialog">
-        <div data-testid="dialog-title">{title}</div>
-        <button data-testid="close-dialog" onClick={onClose}>Close</button>
-        <button data-testid="submit-dialog" onClick={() => onSubmit({ exercise_name: 'Bench Press', one_rep_max: 100 })}>Submit</button>
-        {children}
-      </div>
-    ) : null
+  ExerciseName: ({ exerciseName }: { exerciseName: string }) => (
+    <div data-testid="exercise-name">{exerciseName}</div>
   ),
 }));
 
-// Mock GameTheme components
-jest.mock('./GameTheme', () => ({
-  GameCard: ({ children, ...props }: any) => <div data-testid="game-card" {...props}>{children}</div>,
-  GameText: ({ children, textVariant, ...props }: any) => <div data-testid="game-text" {...props}>{children}</div>,
-  GameTextField: ({ children, fullWidth, ...props }: any) => <input data-testid="game-text-field" {...props} />,
-  GAME_CLASSES: {
-    textMedium: 'text-medium',
-    marginBottom2: 'margin-bottom-2',
-    marginTop2: 'margin-top-2',
-  },
+jest.mock('./FormDialog', () => ({
+  FormDialog: ({
+    children,
+    open,
+    onClose,
+    onSubmit,
+    title,
+  }: {
+    children: React.ReactNode;
+    open: boolean;
+    onClose: () => void;
+    onSubmit: (data: { exercise_name: string; one_rep_max: number }) => void;
+    title: string;
+  }) =>
+    open ? (
+      <div data-testid="form-dialog">
+        <div data-testid="dialog-title">{title}</div>
+        <button data-testid="close-dialog" onClick={onClose}>
+          Close
+        </button>
+        <button
+          data-testid="submit-dialog"
+          onClick={() => onSubmit({ exercise_name: 'Bench Press', one_rep_max: 100 })}
+        >
+          Submit
+        </button>
+        {children}
+      </div>
+    ) : null,
 }));
+
+// Mock GameTheme components
+jest.mock('./GameTheme', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const React = require('react');
+  return {
+    // eslint-disable-next-line react/prop-types
+    GameCard: ({ children, ...props }) => {
+      return React.createElement('div', { 'data-testid': 'game-card', ...props }, children);
+    },
+    // eslint-disable-next-line react/prop-types
+    GameText: ({ children, ...props }) => {
+      // Filter out GameText specific props
+      const gameTextProps = new Set(['textVariant']);
+      const filteredProps = Object.fromEntries(
+        Object.entries(props).filter(([key]) => !gameTextProps.has(key))
+      );
+      return React.createElement('div', { 'data-testid': 'game-text', ...filteredProps }, children);
+    },
+    GameTextField: ({ ...props }) => {
+      // Filter out GameTextField specific props
+      const gameTextFieldProps = new Set(['fullWidth']);
+      const filteredProps = Object.fromEntries(
+        Object.entries(props).filter(([key]) => !gameTextFieldProps.has(key))
+      );
+      return React.createElement('input', { 'data-testid': 'game-text-field', ...filteredProps });
+    },
+    GAME_CLASSES: {
+      textMedium: 'text-medium',
+      marginBottom2: 'margin-bottom-2',
+      marginTop2: 'margin-top-2',
+    },
+  };
+});
 
 describe('OneRepMaxRecords', () => {
   beforeEach(() => {
@@ -134,29 +172,31 @@ describe('OneRepMaxRecords', () => {
       userData: { user_one_rep_max: [] },
       userOneRepMaxes: [],
     };
-    
-    jest.mocked(require('../contexts/DataContext').useData).mockReturnValue(emptyMock);
-    
+
+    jest.mocked(jest.requireMock('../contexts/DataContext').useData).mockReturnValue(emptyMock);
+
     render(<OneRepMaxRecords />);
-    
+
     // Wait for the component to finish loading
     await waitFor(() => {
       expect(screen.queryByText('Loading 1RM records...')).not.toBeInTheDocument();
     });
-    
+
     // The component should render the empty state
     expect(screen.getByText('No 1RM Records Found')).toBeInTheDocument();
-    expect(screen.getByText('Start recording your 1RM values to track your strength progress over time.')).toBeInTheDocument();
+    expect(
+      screen.getByText('Start recording your 1RM values to track your strength progress over time.')
+    ).toBeInTheDocument();
   });
 
   it('renders search functionality', async () => {
     render(<OneRepMaxRecords />);
-    
+
     // Wait for the component to finish loading
     await waitFor(() => {
       expect(screen.queryByText('Loading 1RM records...')).not.toBeInTheDocument();
     });
-    
+
     // The component shows empty state when no records are found, so no search field
     expect(screen.getByText('No 1RM Records Found')).toBeInTheDocument();
     expect(screen.queryByTestId('game-text-field')).not.toBeInTheDocument();
@@ -164,12 +204,12 @@ describe('OneRepMaxRecords', () => {
 
   it('displays record count', async () => {
     render(<OneRepMaxRecords />);
-    
+
     // Wait for the component to finish loading
     await waitFor(() => {
       expect(screen.queryByText('Loading 1RM records...')).not.toBeInTheDocument();
     });
-    
+
     // The component should display the record count (0 when no records)
     expect(screen.getByText('0')).toBeInTheDocument(); // Record count
   });
@@ -180,16 +220,18 @@ describe('OneRepMaxRecords', () => {
       ...mockUseData,
       upsertUserOneRepMax: mockUpsert,
     };
-    
-    jest.mocked(require('../contexts/DataContext').useData).mockReturnValue(mockWithUpsert);
-    
+
+    jest
+      .mocked(jest.requireMock('../contexts/DataContext').useData)
+      .mockReturnValue(mockWithUpsert);
+
     render(<OneRepMaxRecords />);
-    
+
     // Wait for the component to finish loading
     await waitFor(() => {
       expect(screen.queryByText('Loading 1RM records...')).not.toBeInTheDocument();
     });
-    
+
     // The component should render the button
     expect(screen.getByText('Record 1RM')).toBeInTheDocument();
   });

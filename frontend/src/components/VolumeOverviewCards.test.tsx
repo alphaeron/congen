@@ -5,9 +5,9 @@ import { VolumeOverviewCards } from './VolumeOverviewCards';
 
 // Mock Nivo components
 jest.mock('@nivo/line', () => ({
-  ResponsiveLine: ({ data }: any) => (
+  ResponsiveLine: ({ data }: { data: { id: string; data: unknown[] }[] }) => (
     <div data-testid="responsive-line">
-      {data.map((line: any, index: number) => (
+      {data.map((line: { id: string; data: unknown[] }, index: number) => (
         <div key={index} data-testid={`line-${index}`}>
           {line.id}: {line.data.length} points
         </div>
@@ -17,13 +17,33 @@ jest.mock('@nivo/line', () => ({
 }));
 
 // Mock framer-motion
-jest.mock('framer-motion', () => ({
-  motion: {
-    div: ({ children, animate, initial, variants, whileHover, whileTap, whileInView, whileFocus, whileDrag, drag, dragConstraints, dragElastic, dragMomentum, dragPropagation, dragSnapToOrigin, dragTransition, dragControls, onDrag, onDragStart, onDragEnd, layout, layoutId, layoutDependency, layoutScroll, layoutRoot, transition, custom, inherit, ...props }: any) => (
-      <div data-testid="motion-div" {...props}>{children}</div>
-    ),
-  },
-}));
+jest.mock('framer-motion', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const React = require('react');
+  return {
+    motion: {
+      div: ({ children, ...props }) => {
+        // Filter out Framer Motion specific props
+        const framerMotionProps = new Set([
+          'whileHover',
+          'whileTap',
+          'initial',
+          'animate',
+          'transition',
+          'variants',
+        ]);
+        const filteredProps = Object.fromEntries(
+          Object.entries(props).filter(([key]) => !framerMotionProps.has(key))
+        );
+        return React.createElement(
+          'div',
+          { 'data-testid': 'motion-div', ...filteredProps },
+          children
+        );
+      },
+    },
+  };
+});
 
 describe('VolumeOverviewCards', () => {
   const mockUserDataExport = {
@@ -65,11 +85,14 @@ describe('VolumeOverviewCards', () => {
   };
 
   const mockExerciseData = new Map([
-    ['Bench Press', {
-      id: 1,
-      exercise_name: 'Bench Press',
-      movement_type: 'max_effort',
-    }],
+    [
+      'Bench Press',
+      {
+        id: 1,
+        exercise_name: 'Bench Press',
+        movement_type: 'max_effort',
+      },
+    ],
   ]);
 
   const mockWeightUnitPreferences = [
@@ -87,7 +110,7 @@ describe('VolumeOverviewCards', () => {
 
   it('renders with required props', () => {
     render(<VolumeOverviewCards {...defaultProps} />);
-    
+
     expect(screen.getByText('Max Effort')).toBeInTheDocument();
     expect(screen.getByText('Dynamic Effort')).toBeInTheDocument();
     expect(screen.getByText('Accessory')).toBeInTheDocument();
@@ -95,7 +118,7 @@ describe('VolumeOverviewCards', () => {
 
   it('renders line charts', () => {
     render(<VolumeOverviewCards {...defaultProps} />);
-    
+
     // There will be multiple responsive-line elements, so we check that at least one exists
     const responsiveLines = screen.getAllByTestId('responsive-line');
     expect(responsiveLines.length).toBeGreaterThan(0);
@@ -103,20 +126,20 @@ describe('VolumeOverviewCards', () => {
 
   it('renders motion components', () => {
     render(<VolumeOverviewCards {...defaultProps} />);
-    
+
     const motionDivs = screen.getAllByTestId('motion-div');
     expect(motionDivs.length).toBeGreaterThan(0);
   });
 
   it('renders with custom height', () => {
     render(<VolumeOverviewCards {...defaultProps} height={400} />);
-    
+
     expect(screen.getByText('Max Effort')).toBeInTheDocument();
   });
 
   it('processes workout data correctly', () => {
     render(<VolumeOverviewCards {...defaultProps} />);
-    
+
     // The component should process the workout data and display it
     // There will be multiple responsive-line elements, so we check that at least one exists
     const responsiveLines = screen.getAllByTestId('responsive-line');

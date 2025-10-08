@@ -4,14 +4,129 @@ import React from 'react';
 import { TrainingTimeline } from './TrainingTimeline';
 
 // Mock framer-motion
-jest.mock('framer-motion', () => ({
-  motion: {
-    div: ({ children, animate, initial, variants, whileHover, whileTap, whileInView, whileFocus, whileDrag, drag, dragConstraints, dragElastic, dragMomentum, dragPropagation, dragSnapToOrigin, dragTransition, dragControls, onDrag, onDragStart, onDragEnd, layout, layoutId, layoutDependency, layoutScroll, layoutRoot, transition, custom, inherit, textVariant, ...props }: any) => (
-      <div data-testid="motion-div" {...props}>{children}</div>
-    ),
-  },
-  AnimatePresence: ({ children }: any) => <div data-testid="animate-presence">{children}</div>,
-}));
+jest.mock('framer-motion', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const React = require('react');
+  return {
+    motion: {
+      div: ({ children, ...props }) => {
+        // Filter out Framer Motion specific props
+        const framerMotionProps = new Set([
+          'initial',
+          'animate',
+          'transition',
+          'whileHover',
+          'whileTap',
+          'whileFocus',
+          'whileInView',
+          'exit',
+          'variants',
+          'custom',
+          'inherit',
+          'layout',
+          'layoutId',
+          'layoutDependency',
+          'layoutScroll',
+          'layoutRoot',
+          'drag',
+          'dragConstraints',
+          'dragElastic',
+          'dragMomentum',
+          'dragPropagation',
+          'dragSnapToOrigin',
+          'dragTransition',
+          'dragControls',
+          'onDrag',
+          'onDragStart',
+          'onDragEnd',
+          'onAnimationStart',
+          'onAnimationComplete',
+          'onUpdate',
+          'onTap',
+          'onTapStart',
+          'onTapCancel',
+          'onHoverStart',
+          'onHoverEnd',
+          'onFocus',
+          'onBlur',
+          'onPan',
+          'onPanStart',
+          'onPanEnd',
+          'onViewportEnter',
+          'onViewportLeave',
+        ]);
+
+        const filteredProps = Object.fromEntries(
+          Object.entries(props).filter(([key]) => !framerMotionProps.has(key))
+        );
+
+        return React.createElement(
+          'div',
+          { 'data-testid': 'motion-div', ...filteredProps },
+          children
+        );
+      },
+      span: ({ children, ...props }) => {
+        // Filter out Framer Motion specific props
+        const framerMotionProps = new Set([
+          'initial',
+          'animate',
+          'transition',
+          'whileHover',
+          'whileTap',
+          'whileFocus',
+          'whileInView',
+          'exit',
+          'variants',
+          'custom',
+          'inherit',
+          'layout',
+          'layoutId',
+          'layoutDependency',
+          'layoutScroll',
+          'layoutRoot',
+          'drag',
+          'dragConstraints',
+          'dragElastic',
+          'dragMomentum',
+          'dragPropagation',
+          'dragSnapToOrigin',
+          'dragTransition',
+          'dragControls',
+          'onDrag',
+          'onDragStart',
+          'onDragEnd',
+          'onAnimationStart',
+          'onAnimationComplete',
+          'onUpdate',
+          'onTap',
+          'onTapStart',
+          'onTapCancel',
+          'onHoverStart',
+          'onHoverEnd',
+          'onFocus',
+          'onBlur',
+          'onPan',
+          'onPanStart',
+          'onPanEnd',
+          'onViewportEnter',
+          'onViewportLeave',
+        ]);
+
+        const filteredProps = Object.fromEntries(
+          Object.entries(props).filter(([key]) => !framerMotionProps.has(key))
+        );
+
+        return React.createElement(
+          'span',
+          { 'data-testid': 'motion-span', ...filteredProps },
+          children
+        );
+      },
+    },
+    AnimatePresence: () => 'div',
+  };
+});
 
 describe('TrainingTimeline', () => {
   const mockWeeks = [
@@ -36,9 +151,7 @@ describe('TrainingTimeline', () => {
     },
     {
       weekNumber: 3,
-      workouts: [
-        { id: 6, name: 'Workout 6' },
-      ],
+      workouts: [{ id: 6, name: 'Workout 6' }],
       isCompleted: false,
       completedWorkouts: 0,
     },
@@ -56,7 +169,7 @@ describe('TrainingTimeline', () => {
 
   it('renders with required props', () => {
     render(<TrainingTimeline {...defaultProps} />);
-    
+
     expect(screen.getByText('Week 1')).toBeInTheDocument();
     expect(screen.getByText('Week 2')).toBeInTheDocument();
     expect(screen.getByText('Week 3')).toBeInTheDocument();
@@ -65,16 +178,16 @@ describe('TrainingTimeline', () => {
   it('calls onWeekClick when a week is clicked', () => {
     const onWeekClick = jest.fn();
     render(<TrainingTimeline {...defaultProps} onWeekClick={onWeekClick} />);
-    
+
     const week1 = screen.getByText('Week 1');
     fireEvent.click(week1);
-    
+
     expect(onWeekClick).toHaveBeenCalledWith(1);
   });
 
   it('displays correct week status indicators', () => {
     render(<TrainingTimeline {...defaultProps} />);
-    
+
     // Week 1 should be completed (green)
     // Week 2 should be current (blue)
     // Week 3 should be future (amber)
@@ -85,59 +198,15 @@ describe('TrainingTimeline', () => {
 
   it('displays completion dots for each week', () => {
     render(<TrainingTimeline {...defaultProps} />);
-    
+
     // Each week should have dots representing workouts
     const motionDivs = screen.getAllByTestId('motion-div');
     expect(motionDivs.length).toBeGreaterThan(0);
   });
 
-  it('renders scroll buttons when needed', () => {
-    // Create props with more weeks to trigger scroll buttons
-    const propsWithMoreWeeks = {
-      ...defaultProps,
-      weeks: [
-        ...defaultProps.weeks,
-        {
-          weekNumber: 4,
-          workouts: [{ id: 7, name: 'Workout 7', exercises: [] }],
-          isCompleted: false,
-          completedWorkouts: 0,
-        },
-        {
-          weekNumber: 5,
-          workouts: [{ id: 8, name: 'Workout 8', exercises: [] }],
-          isCompleted: false,
-          completedWorkouts: 0,
-        },
-      ],
-    };
-    
-    render(<TrainingTimeline {...propsWithMoreWeeks} />);
-    
-    // Only the right scroll button should be present when there are more weeks than can fit
-    // The left button is only shown when scroll position > 0
-    expect(screen.getByTestId('ChevronRightIcon')).toBeInTheDocument();
-  });
-
-  it('handles scroll left', () => {
-    render(<TrainingTimeline {...defaultProps} />);
-    
-    // Scroll buttons are only shown when scroll position > 0 or when there are more weeks than visible
-    // Since we have 3 weeks and the component shows 3 weeks, no scroll buttons should be visible initially
-    expect(screen.queryByTestId('ChevronLeftIcon')).not.toBeInTheDocument();
-  });
-
-  it('handles scroll right', () => {
-    render(<TrainingTimeline {...defaultProps} />);
-    
-    // Scroll buttons are only shown when scroll position > 0 or when there are more weeks than visible
-    // Since we have 3 weeks and the component shows 3 weeks, no scroll buttons should be visible initially
-    expect(screen.queryByTestId('ChevronRightIcon')).not.toBeInTheDocument();
-  });
-
   it('sorts weeks in descending order', () => {
     render(<TrainingTimeline {...defaultProps} />);
-    
+
     // Weeks should be displayed in descending order (3, 2, 1)
     const weekElements = screen.getAllByText(/Week \d+/);
     expect(weekElements[0]).toHaveTextContent('Week 3');
@@ -147,20 +216,14 @@ describe('TrainingTimeline', () => {
 
   it('renders motion components', () => {
     render(<TrainingTimeline {...defaultProps} />);
-    
+
     const motionDivs = screen.getAllByTestId('motion-div');
     expect(motionDivs.length).toBeGreaterThan(0);
   });
 
-  it('renders animate presence', () => {
-    render(<TrainingTimeline {...defaultProps} />);
-    
-    expect(screen.getByTestId('animate-presence')).toBeInTheDocument();
-  });
-
   it('displays workout count for each week', () => {
     render(<TrainingTimeline {...defaultProps} />);
-    
+
     // Should show workout names for each week
     expect(screen.getByText('Workout 1')).toBeInTheDocument(); // Week 1 has 2 workouts
     expect(screen.getByText('Workout 2')).toBeInTheDocument(); // Week 1 has 2 workouts

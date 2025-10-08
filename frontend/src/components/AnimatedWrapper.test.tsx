@@ -1,19 +1,152 @@
 import { render, screen } from '@testing-library/react';
 import React from 'react';
 
-import { AnimatedWrapper, FadeIn, SlideInLeft, SlideInRight, SlideInUp, ScaleIn, HoverLift, HoverScale, HoverCard, Pulse, Bounce, Floating, QuestGlow, ProgramPulse, Shimmer, ProgramShimmer, PageTransition, Spinner, ButtonPress, Magnetic } from './AnimatedWrapper';
+import {
+  AnimatedWrapper,
+  FadeIn,
+  SlideInLeft,
+  SlideInRight,
+  SlideInUp,
+  ScaleIn,
+  HoverLift,
+  HoverScale,
+  HoverCard,
+  Pulse,
+  Bounce,
+  Floating,
+  QuestGlow,
+  ProgramPulse,
+  Shimmer,
+  ProgramShimmer,
+  PageTransition,
+  Spinner,
+  ButtonPress,
+  Magnetic,
+} from './AnimatedWrapper';
 
 // Mock framer-motion
-jest.mock('framer-motion', () => ({
-  motion: {
-    div: ({ children, animate, initial, variants, whileHover, whileTap, whileInView, whileFocus, whileDrag, drag, dragConstraints, dragElastic, dragMomentum, dragPropagation, dragSnapToOrigin, dragTransition, dragControls, onDrag, onDragStart, onDragEnd, layout, layoutId, layoutDependency, layoutScroll, layoutRoot, transition, custom, inherit, ...props }: any) => (
-      <div data-testid="motion-div" {...props}>{children}</div>
-    ),
-    span: ({ children, animate, initial, variants, whileHover, whileTap, whileInView, whileFocus, whileDrag, drag, dragConstraints, dragElastic, dragMomentum, dragPropagation, dragSnapToOrigin, dragTransition, dragControls, onDrag, onDragStart, onDragEnd, layout, layoutId, layoutDependency, layoutScroll, layoutRoot, transition, custom, inherit, ...props }: any) => (
-      <span data-testid="motion-span" {...props}>{children}</span>
-    ),
-  },
-}));
+jest.mock('framer-motion', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const React = require('react');
+  return {
+    motion: {
+      div: ({ children, ...props }) => {
+        // Filter out Framer Motion specific props
+        const framerMotionProps = new Set([
+          'initial',
+          'animate',
+          'transition',
+          'whileHover',
+          'whileTap',
+          'whileFocus',
+          'whileInView',
+          'exit',
+          'variants',
+          'custom',
+          'inherit',
+          'layout',
+          'layoutId',
+          'layoutDependency',
+          'layoutScroll',
+          'layoutRoot',
+          'drag',
+          'dragConstraints',
+          'dragElastic',
+          'dragMomentum',
+          'dragPropagation',
+          'dragSnapToOrigin',
+          'dragTransition',
+          'dragControls',
+          'onDrag',
+          'onDragStart',
+          'onDragEnd',
+          'onAnimationStart',
+          'onAnimationComplete',
+          'onUpdate',
+          'onTap',
+          'onTapStart',
+          'onTapCancel',
+          'onHoverStart',
+          'onHoverEnd',
+          'onFocus',
+          'onBlur',
+          'onPan',
+          'onPanStart',
+          'onPanEnd',
+          'onViewportEnter',
+          'onViewportLeave',
+        ]);
+
+        const filteredProps = Object.fromEntries(
+          Object.entries(props).filter(([key]) => !framerMotionProps.has(key))
+        );
+
+        return React.createElement(
+          'div',
+          { 'data-testid': 'motion-div', ...filteredProps },
+          children
+        );
+      },
+      span: ({ children, ...props }) => {
+        // Filter out Framer Motion specific props
+        const framerMotionProps = new Set([
+          'initial',
+          'animate',
+          'transition',
+          'whileHover',
+          'whileTap',
+          'whileFocus',
+          'whileInView',
+          'exit',
+          'variants',
+          'custom',
+          'inherit',
+          'layout',
+          'layoutId',
+          'layoutDependency',
+          'layoutScroll',
+          'layoutRoot',
+          'drag',
+          'dragConstraints',
+          'dragElastic',
+          'dragMomentum',
+          'dragPropagation',
+          'dragSnapToOrigin',
+          'dragTransition',
+          'dragControls',
+          'onDrag',
+          'onDragStart',
+          'onDragEnd',
+          'onAnimationStart',
+          'onAnimationComplete',
+          'onUpdate',
+          'onTap',
+          'onTapStart',
+          'onTapCancel',
+          'onHoverStart',
+          'onHoverEnd',
+          'onFocus',
+          'onBlur',
+          'onPan',
+          'onPanStart',
+          'onPanEnd',
+          'onViewportEnter',
+          'onViewportLeave',
+        ]);
+
+        const filteredProps = Object.fromEntries(
+          Object.entries(props).filter(([key]) => !framerMotionProps.has(key))
+        );
+
+        return React.createElement(
+          'span',
+          { 'data-testid': 'motion-span', ...filteredProps },
+          children
+        );
+      },
+    },
+  };
+});
 
 // Mock animations
 jest.mock('../utils/animations', () => ({
@@ -46,7 +179,7 @@ describe('AnimatedWrapper', () => {
 
   it('renders with default fadeIn animation', () => {
     render(<AnimatedWrapper>{testContent}</AnimatedWrapper>);
-    
+
     const motionDiv = screen.getByTestId('motion-div');
     expect(motionDiv).toBeInTheDocument();
     expect(screen.getByTestId('test-content')).toBeInTheDocument();
@@ -54,14 +187,14 @@ describe('AnimatedWrapper', () => {
 
   it('renders with custom animation type', () => {
     render(<AnimatedWrapper animation="slideInLeft">{testContent}</AnimatedWrapper>);
-    
+
     const motionDiv = screen.getByTestId('motion-div');
     expect(motionDiv).toBeInTheDocument();
   });
 
   it('renders with custom className', () => {
     render(<AnimatedWrapper className="custom-class">{testContent}</AnimatedWrapper>);
-    
+
     const motionDiv = screen.getByTestId('motion-div');
     expect(motionDiv).toHaveClass('custom-class');
   });
@@ -69,28 +202,28 @@ describe('AnimatedWrapper', () => {
   it('renders with custom style', () => {
     const customStyle = { color: 'red' };
     render(<AnimatedWrapper style={customStyle}>{testContent}</AnimatedWrapper>);
-    
+
     const motionDiv = screen.getByTestId('motion-div');
     expect(motionDiv).toHaveStyle('color: red');
   });
 
   it('renders with custom element type', () => {
     render(<AnimatedWrapper as="span">{testContent}</AnimatedWrapper>);
-    
+
     const motionSpan = screen.getByTestId('motion-span');
     expect(motionSpan).toBeInTheDocument();
   });
 
   it('renders continuous animations with animate prop', () => {
     render(<AnimatedWrapper animation="pulse">{testContent}</AnimatedWrapper>);
-    
+
     const motionDiv = screen.getByTestId('motion-div');
     expect(motionDiv).toBeInTheDocument();
   });
 
   it('renders hover animations with whileHover and whileTap', () => {
     render(<AnimatedWrapper animation="hoverLift">{testContent}</AnimatedWrapper>);
-    
+
     const motionDiv = screen.getByTestId('motion-div');
     expect(motionDiv).toBeInTheDocument();
   });
