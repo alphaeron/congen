@@ -338,25 +338,41 @@ class PerformanceTrackingService(
             return Mono.error(ValidationException("All test results must be for the same user and week"))
         }
 
-        // Upsert all test results
-        return Flux.fromIterable(testResults)
-            .flatMap { testResult -> userTestResultDAL.upsertUserTestResult(testResult) }
-            .collectList()
-            .flatMap { updatedTestResults ->
-                // Get current daily metrics and calculate new scores
-                userPerformanceMetricsDAL.selectUserPerformanceMetrics(keycloakId)
-                    .flatMap { dailyMetrics ->
-                        // Get ALL test results for the user to ensure we find all data
-                        userTestResultDAL.getUserTestResultsInRange(keycloakId, null, null)
-                            .flatMap { allTestResults ->
-                                // Convert test results to weekly test data for scoring
-                                val weeklyTest = convertTestResultsToWeeklyTest(allTestResults)
-                                performanceScoringService.calculatePerformanceScores(dailyMetrics, weeklyTest, "weekly_test_updated")
-                            }
-                    }.flatMap { scores ->
-                        // Insert new scores (historical tracking)
-                        userPerformanceScoresDAL.insertUserPerformanceScores(scores)
-                    }.then(Mono.just(updatedTestResults))
+        // Validate test names exist in test_protocol_config
+        return testProtocolConfigDAL.getAllTestProtocols()
+            .flatMap { protocols ->
+                val validTestNames = protocols.map { it.testName }.toSet()
+                val invalidTestNames = testResults.map { it.testName }.filter { it !in validTestNames }
+                if (invalidTestNames.isNotEmpty()) {
+                    return@flatMap Mono.error<List<UserTestResult>>(
+                        ValidationException("Invalid test names: ${invalidTestNames.joinToString()}")
+                    )
+                }
+
+                // Upsert all test results
+                Flux.fromIterable(testResults)
+                    .flatMap { testResult -> userTestResultDAL.upsertUserTestResult(testResult) }
+                    .collectList()
+                    .flatMap { updatedTestResults ->
+                        // Get current daily metrics and calculate new scores
+                        userPerformanceMetricsDAL.selectUserPerformanceMetrics(keycloakId)
+                            .flatMap { dailyMetrics ->
+                                // Get ALL test results for the user to ensure we find all data
+                                userTestResultDAL.getUserTestResultsInRange(keycloakId, null, null)
+                                    .flatMap { allTestResults ->
+                                        // Convert test results to weekly test data for scoring
+                                        val weeklyTest = convertTestResultsToWeeklyTest(allTestResults)
+                                        performanceScoringService.calculatePerformanceScores(
+                                            dailyMetrics,
+                                            weeklyTest,
+                                            "weekly_test_updated"
+                                        )
+                                    }
+                            }.flatMap { scores ->
+                                // Insert new scores (historical tracking)
+                                userPerformanceScoresDAL.insertUserPerformanceScores(scores)
+                            }.then(Mono.just(updatedTestResults))
+                    }
             }
     }
 

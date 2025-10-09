@@ -11,7 +11,6 @@ class UserEquipmentIntegrationTest : BaseIntegrationTest() {
     override fun setUp() {
         super.setUp()
         // Create a unique user for each test
-        val unique = System.nanoTime()
         userToken = getValidToken("user")
         userId = IntegrationTestHelpers.createTestUser(webTestClient, token = userToken)
         // Create user consent for GDPR compliance

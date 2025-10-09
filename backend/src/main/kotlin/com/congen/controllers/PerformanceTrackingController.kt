@@ -128,22 +128,13 @@ class PerformanceTrackingController(
         @RequestParam(value = "deep_sleep_minutes", required = false) deepSleepMinutes: Double?,
         @RequestParam(value = "subjective_tiredness", required = false) subjectiveTiredness: Int?
     ): Mono<ResponseEntity<UserPerformanceScores>> {
-        return keycloakUtil.getCurrentUserId().zipWith(keycloakUtil.getCurrentUserRoles()) { currentUserId, roles ->
-            Pair(currentUserId, roles)
-        }.flatMap { (currentUserId, roles) ->
-            val isAdminOrService = roles.contains("admin") || roles.contains("service")
-            val consentUserIdMono =
-                if (isAdminOrService) {
-                    Mono.just(currentUserId)
-                } else {
-                    Mono.just(currentUserId)
-                }
-            consentUserIdMono.flatMap { ownerId ->
-                gdprComplianceService.withUserConsent(ownerId) {
+        return keycloakUtil.getCurrentUserId()
+            .flatMap { currentUserId ->
+                gdprComplianceService.withUserConsent(currentUserId) {
                     // Create metrics object with only the provided fields
                     val fullMetrics =
                         UserPerformanceMetrics(
-                            keycloakId = ownerId,
+                            keycloakId = currentUserId,
                             vo2Max = vo2Max,
                             strain = strain,
                             recovery = recovery,
@@ -159,7 +150,6 @@ class PerformanceTrackingController(
                         .map { ResponseEntity.ok(it) }
                 }
             }
-        }
     }
 
     /**
@@ -253,11 +243,15 @@ class PerformanceTrackingController(
         return keycloakUtil.getCurrentUserId()
             .flatMap { keycloakId ->
                 gdprComplianceService.withUserConsent(keycloakId) {
-                    val startTimestamp = startDate?.let { Instant.parse(it) }
-                    val endTimestamp = endDate?.let { Instant.parse(it) }
+                    try {
+                        val startTimestamp = startDate?.let { Instant.parse(it) }
+                        val endTimestamp = endDate?.let { Instant.parse(it) }
 
-                    performanceTrackingService.getPerformanceScoresHistory(keycloakId, startTimestamp, endTimestamp)
-                        .map { ResponseEntity.ok(it) }
+                        performanceTrackingService.getPerformanceScoresHistory(keycloakId, startTimestamp, endTimestamp)
+                            .map { ResponseEntity.ok(it) }
+                    } catch (e: Exception) {
+                        Mono.just(ResponseEntity.badRequest().build())
+                    }
                 }
             }
     }
@@ -358,39 +352,44 @@ class PerformanceTrackingController(
         ]
     )
     fun submitWeeklyTest(
-        @RequestParam("week_start_timestamp") weekStartTimestamp: Instant,
-        @RequestParam("test_name") testName: String,
-        @RequestParam("status") status: TestStatus,
-        @RequestParam("result_value") resultValue: Double?
+        @RequestParam(value = "week_start_timestamp") weekStartTimestamp: String,
+        @RequestParam(value = "test_name") testName: String,
+        @RequestParam(value = "status") status: String,
+        @RequestParam(value = "result_value", required = false) resultValue: Double?
     ): Mono<ResponseEntity<List<UserTestResult>>> {
-        return keycloakUtil.getCurrentUserId().zipWith(keycloakUtil.getCurrentUserRoles()) { currentUserId, roles ->
-            Pair(currentUserId, roles)
-        }.flatMap { (currentUserId, roles) ->
-            val isAdminOrService = roles.contains("admin") || roles.contains("service")
-            val consentUserIdMono =
-                if (isAdminOrService) {
-                    Mono.just(currentUserId)
-                } else {
-                    Mono.just(currentUserId)
-                }
-            consentUserIdMono.flatMap { ownerId ->
-                gdprComplianceService.withUserConsent(ownerId) {
-                    // Create the test result with the authenticated user's keycloak_id
-                    val testResult =
-                        UserTestResult(
-                            id = null,
-                            keycloakId = ownerId,
-                            weekStartTimestamp = weekStartTimestamp,
-                            testName = testName,
-                            status = status,
-                            resultValue = resultValue,
-                            createdAt = Instant.now(),
-                            updatedAt = Instant.now()
-                        )
-                    performanceTrackingService.submitWeeklyTest(listOf(testResult))
-                        .map { ResponseEntity.ok(it) }
-                }
+        return try {
+            // Validate required parameters
+            if (weekStartTimestamp.isBlank() || testName.isBlank() || status.isBlank()) {
+                logger.error("Missing required parameters: week_start_timestamp=$weekStartTimestamp, test_name=$testName, status=$status")
+                return Mono.just(ResponseEntity.badRequest().build())
             }
+
+            val parsedWeekStartTimestamp = Instant.parse(weekStartTimestamp)
+            val parsedStatus = TestStatus.valueOf(status)
+
+            keycloakUtil.getCurrentUserId()
+                .flatMap { currentUserId ->
+                    gdprComplianceService.withUserConsent(currentUserId) {
+                        // Create the test result with the authenticated user's keycloak_id
+                        val testResult =
+                            UserTestResult(
+                                id = null,
+                                keycloakId = currentUserId,
+                                weekStartTimestamp = parsedWeekStartTimestamp,
+                                testName = testName,
+                                status = parsedStatus,
+                                resultValue = resultValue,
+                                createdAt = Instant.now(),
+                                updatedAt = Instant.now()
+                            )
+
+                        performanceTrackingService.submitWeeklyTest(listOf(testResult))
+                            .map { ResponseEntity.ok(it) }
+                    }
+                }
+        } catch (e: Exception) {
+            logger.error("Error parsing parameters in submitWeeklyTest", e)
+            Mono.just(ResponseEntity.badRequest().build())
         }
     }
 

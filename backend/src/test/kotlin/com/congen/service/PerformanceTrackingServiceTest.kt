@@ -575,6 +575,24 @@ class PerformanceTrackingServiceTest {
             .thenReturn(Mono.just(expectedScores))
         whenever(userPerformanceScoresDAL.insertUserPerformanceScores(expectedScores))
             .thenReturn(Mono.just(expectedScores))
+        whenever(testProtocolConfigDAL.getAllTestProtocols())
+            .thenReturn(
+                Mono.just(
+                    listOf(
+                        TestProtocol(
+                            testName = "vertical_jump",
+                            displayName = "Vertical Jump",
+                            description = "Test vertical jump height",
+                            unit = "cm",
+                            iconName = "jump",
+                            isRequired = true,
+                            displayOrder = 1,
+                            radarChartColor = "#FF0000",
+                            radarChartEnabled = true
+                        )
+                    )
+                )
+            )
 
         val result = performanceTrackingService.submitWeeklyTest(testResults)
 
