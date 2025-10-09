@@ -283,9 +283,7 @@ export const Workouts: React.FC<WorkoutsProps> = () => {
               onClick={() => openWizard(activeProgram.program)}
               disabled={isGenerating}
               loading={isGenerating}
-              title="Generate Next Week"
               subtitle="Ready to level up your training? Create your next workout week and keep progressing!"
-              icon="🎯"
               variant="primary"
             />
 

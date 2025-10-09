@@ -1,5 +1,323 @@
 digraph G {
   graph [rankdir=LR, fontsize=10];
   node [shape=plaintext];
+  "data_retention_policy" [label=<
+    <table border="1" cellborder="0" cellspacing="0" cellpadding="4">
+      <tr><td bgcolor="#E9C2F2" colspan="2"><b>data_retention_policy</b></td></tr>
+      <tr><td align="left">data_type</td><td align="left"><font color="#888888">character varying</font></td></tr>
+      <tr><td align="left">retention_period_days</td><td align="left"><font color="#888888">integer</font></td></tr>
+      <tr><td align="left">description</td><td align="left"><font color="#888888">text</font></td></tr>
+    </table>>];
 
+  "equipment" [label=<
+    <table border="1" cellborder="0" cellspacing="0" cellpadding="4">
+      <tr><td bgcolor="#E9C2F2" colspan="2"><b>equipment</b></td></tr>
+      <tr><td align="left">name</td><td align="left"><font color="#888888">character varying</font></td></tr>
+      <tr><td align="left">description</td><td align="left"><font color="#888888">text</font></td></tr>
+    </table>>];
+
+  "exercise" [label=<
+    <table border="1" cellborder="0" cellspacing="0" cellpadding="4">
+      <tr><td bgcolor="#E9C2F2" colspan="2"><b>exercise</b></td></tr>
+      <tr><td align="left">name</td><td align="left"><font color="#888888">character varying</font></td></tr>
+      <tr><td align="left">description</td><td align="left"><font color="#888888">text</font></td></tr>
+      <tr><td align="left">movement_type</td><td align="left"><font color="#888888">character varying</font></td></tr>
+      <tr><td align="left">is_unilateral</td><td align="left"><font color="#888888">boolean</font></td></tr>
+      <tr><td align="left">is_upper</td><td align="left"><font color="#888888">boolean</font></td></tr>
+      <tr><td align="left">is_accessory</td><td align="left"><font color="#888888">boolean</font></td></tr>
+    </table>>];
+
+  "exercise_equipment" [label=<
+    <table border="1" cellborder="0" cellspacing="0" cellpadding="4">
+      <tr><td bgcolor="#E9C2F2" colspan="2"><b>exercise_equipment</b></td></tr>
+      <tr><td align="left">exercise_name</td><td align="left"><font color="#888888">character varying</font></td></tr>
+      <tr><td align="left">equipment_name</td><td align="left"><font color="#888888">character varying</font></td></tr>
+    </table>>];
+
+  "exercise_muscle" [label=<
+    <table border="1" cellborder="0" cellspacing="0" cellpadding="4">
+      <tr><td bgcolor="#E9C2F2" colspan="2"><b>exercise_muscle</b></td></tr>
+      <tr><td align="left">exercise_name</td><td align="left"><font color="#888888">character varying</font></td></tr>
+      <tr><td align="left">muscle_name</td><td align="left"><font color="#888888">character varying</font></td></tr>
+    </table>>];
+
+  "exercise_workout_type" [label=<
+    <table border="1" cellborder="0" cellspacing="0" cellpadding="4">
+      <tr><td bgcolor="#E9C2F2" colspan="2"><b>exercise_workout_type</b></td></tr>
+      <tr><td align="left">exercise_name</td><td align="left"><font color="#888888">character varying</font></td></tr>
+      <tr><td align="left">movement_type</td><td align="left"><font color="#888888">character varying</font></td></tr>
+      <tr><td align="left">workout_type</td><td align="left"><font color="#888888">character varying</font></td></tr>
+    </table>>];
+
+  "gdpr_audit_log" [label=<
+    <table border="1" cellborder="0" cellspacing="0" cellpadding="4">
+      <tr><td bgcolor="#E9C2F2" colspan="2"><b>gdpr_audit_log</b></td></tr>
+      <tr><td align="left">id</td><td align="left"><font color="#888888">bigint</font></td></tr>
+      <tr><td align="left">keycloak_id</td><td align="left"><font color="#888888">character varying</font></td></tr>
+      <tr><td align="left">operation</td><td align="left"><font color="#888888">character varying</font></td></tr>
+      <tr><td align="left">data_type</td><td align="left"><font color="#888888">character varying</font></td></tr>
+      <tr><td align="left">performed_by</td><td align="left"><font color="#888888">character varying</font></td></tr>
+      <tr><td align="left">timestamp</td><td align="left"><font color="#888888">timestamp without time zone</font></td></tr>
+      <tr><td align="left">additional_info</td><td align="left"><font color="#888888">text</font></td></tr>
+    </table>>];
+
+  "muscle" [label=<
+    <table border="1" cellborder="0" cellspacing="0" cellpadding="4">
+      <tr><td bgcolor="#E9C2F2" colspan="2"><b>muscle</b></td></tr>
+      <tr><td align="left">name</td><td align="left"><font color="#888888">character varying</font></td></tr>
+      <tr><td align="left">description</td><td align="left"><font color="#888888">text</font></td></tr>
+    </table>>];
+
+  "program" [label=<
+    <table border="1" cellborder="0" cellspacing="0" cellpadding="4">
+      <tr><td bgcolor="#E9C2F2" colspan="2"><b>program</b></td></tr>
+      <tr><td align="left">id</td><td align="left"><font color="#888888">bigint</font></td></tr>
+      <tr><td align="left">name</td><td align="left"><font color="#888888">character varying</font></td></tr>
+      <tr><td align="left">current_week_number</td><td align="left"><font color="#888888">integer</font></td></tr>
+      <tr><td align="left">created_at</td><td align="left"><font color="#888888">timestamp without time zone</font></td></tr>
+      <tr><td align="left">updated_at</td><td align="left"><font color="#888888">timestamp without time zone</font></td></tr>
+      <tr><td align="left">is_active</td><td align="left"><font color="#888888">boolean</font></td></tr>
+      <tr><td align="left">user_id</td><td align="left"><font color="#888888">character varying</font></td></tr>
+    </table>>];
+
+  "program_preferences" [label=<
+    <table border="1" cellborder="0" cellspacing="0" cellpadding="4">
+      <tr><td bgcolor="#E9C2F2" colspan="2"><b>program_preferences</b></td></tr>
+      <tr><td align="left">program_days_per_week</td><td align="left"><font color="#888888">integer</font></td></tr>
+      <tr><td align="left">session_time_length_in_minutes</td><td align="left"><font color="#888888">integer</font></td></tr>
+      <tr><td align="left">created_at</td><td align="left"><font color="#888888">timestamp without time zone</font></td></tr>
+      <tr><td align="left">updated_at</td><td align="left"><font color="#888888">timestamp without time zone</font></td></tr>
+      <tr><td align="left">program_id</td><td align="left"><font color="#888888">bigint</font></td></tr>
+    </table>>];
+
+  "programmed_exercise" [label=<
+    <table border="1" cellborder="0" cellspacing="0" cellpadding="4">
+      <tr><td bgcolor="#E9C2F2" colspan="2"><b>programmed_exercise</b></td></tr>
+      <tr><td align="left">id</td><td align="left"><font color="#888888">bigint</font></td></tr>
+      <tr><td align="left">workout_stage_id</td><td align="left"><font color="#888888">bigint</font></td></tr>
+      <tr><td align="left">exercise_name</td><td align="left"><font color="#888888">character varying</font></td></tr>
+      <tr><td align="left">position</td><td align="left"><font color="#888888">integer</font></td></tr>
+      <tr><td align="left">notes</td><td align="left"><font color="#888888">text</font></td></tr>
+      <tr><td align="left">created_at</td><td align="left"><font color="#888888">timestamp without time zone</font></td></tr>
+      <tr><td align="left">updated_at</td><td align="left"><font color="#888888">timestamp without time zone</font></td></tr>
+    </table>>];
+
+  "programmed_workout" [label=<
+    <table border="1" cellborder="0" cellspacing="0" cellpadding="4">
+      <tr><td bgcolor="#E9C2F2" colspan="2"><b>programmed_workout</b></td></tr>
+      <tr><td align="left">id</td><td align="left"><font color="#888888">bigint</font></td></tr>
+      <tr><td align="left">program_id</td><td align="left"><font color="#888888">bigint</font></td></tr>
+      <tr><td align="left">day_number</td><td align="left"><font color="#888888">integer</font></td></tr>
+      <tr><td align="left">name</td><td align="left"><font color="#888888">character varying</font></td></tr>
+      <tr><td align="left">created_at</td><td align="left"><font color="#888888">timestamp without time zone</font></td></tr>
+      <tr><td align="left">updated_at</td><td align="left"><font color="#888888">timestamp without time zone</font></td></tr>
+    </table>>];
+
+  "set_scheme" [label=<
+    <table border="1" cellborder="0" cellspacing="0" cellpadding="4">
+      <tr><td bgcolor="#E9C2F2" colspan="2"><b>set_scheme</b></td></tr>
+      <tr><td align="left">id</td><td align="left"><font color="#888888">bigint</font></td></tr>
+      <tr><td align="left">programmed_exercise_id</td><td align="left"><font color="#888888">bigint</font></td></tr>
+      <tr><td align="left">set_number</td><td align="left"><font color="#888888">smallint</font></td></tr>
+      <tr><td align="left">is_amrap</td><td align="left"><font color="#888888">boolean</font></td></tr>
+      <tr><td align="left">is_emom</td><td align="left"><font color="#888888">boolean</font></td></tr>
+      <tr><td align="left">use_tempo</td><td align="left"><font color="#888888">boolean</font></td></tr>
+      <tr><td align="left">eccentric_tempo</td><td align="left"><font color="#888888">character</font></td></tr>
+      <tr><td align="left">isometric_tempo</td><td align="left"><font color="#888888">character</font></td></tr>
+      <tr><td align="left">concentric_tempo</td><td align="left"><font color="#888888">character</font></td></tr>
+      <tr><td align="left">target_weight</td><td align="left"><font color="#888888">numeric</font></td></tr>
+      <tr><td align="left">performed_weight</td><td align="left"><font color="#888888">numeric</font></td></tr>
+      <tr><td align="left">target_rep_count</td><td align="left"><font color="#888888">smallint</font></td></tr>
+      <tr><td align="left">performed_rep_count</td><td align="left"><font color="#888888">smallint</font></td></tr>
+      <tr><td align="left">rest_seconds</td><td align="left"><font color="#888888">smallint</font></td></tr>
+      <tr><td align="left">created_at</td><td align="left"><font color="#888888">timestamp without time zone</font></td></tr>
+      <tr><td align="left">updated_at</td><td align="left"><font color="#888888">timestamp without time zone</font></td></tr>
+      <tr><td align="left">band_weight_lbs</td><td align="left"><font color="#888888">numeric</font></td></tr>
+    </table>>];
+
+  "test_protocol_config" [label=<
+    <table border="1" cellborder="0" cellspacing="0" cellpadding="4">
+      <tr><td bgcolor="#E9C2F2" colspan="2"><b>test_protocol_config</b></td></tr>
+      <tr><td align="left">test_name</td><td align="left"><font color="#888888">character varying</font></td></tr>
+      <tr><td align="left">display_name</td><td align="left"><font color="#888888">character varying</font></td></tr>
+      <tr><td align="left">description</td><td align="left"><font color="#888888">text</font></td></tr>
+      <tr><td align="left">unit</td><td align="left"><font color="#888888">character varying</font></td></tr>
+      <tr><td align="left">icon_name</td><td align="left"><font color="#888888">character varying</font></td></tr>
+      <tr><td align="left">is_required</td><td align="left"><font color="#888888">boolean</font></td></tr>
+      <tr><td align="left">display_order</td><td align="left"><font color="#888888">integer</font></td></tr>
+      <tr><td align="left">radar_chart_color</td><td align="left"><font color="#888888">character varying</font></td></tr>
+      <tr><td align="left">radar_chart_enabled</td><td align="left"><font color="#888888">boolean</font></td></tr>
+      <tr><td align="left">created_at</td><td align="left"><font color="#888888">timestamp without time zone</font></td></tr>
+      <tr><td align="left">updated_at</td><td align="left"><font color="#888888">timestamp without time zone</font></td></tr>
+    </table>>];
+
+  "user" [label=<
+    <table border="1" cellborder="0" cellspacing="0" cellpadding="4">
+      <tr><td bgcolor="#E9C2F2" colspan="2"><b>user</b></td></tr>
+      <tr><td align="left">name</td><td align="left"><font color="#888888">character varying</font></td></tr>
+      <tr><td align="left">created_at</td><td align="left"><font color="#888888">timestamp without time zone</font></td></tr>
+      <tr><td align="left">updated_at</td><td align="left"><font color="#888888">timestamp without time zone</font></td></tr>
+      <tr><td align="left">keycloak_id</td><td align="left"><font color="#888888">character varying</font></td></tr>
+      <tr><td align="left">age</td><td align="left"><font color="#888888">character varying</font></td></tr>
+      <tr><td align="left">weight</td><td align="left"><font color="#888888">character varying</font></td></tr>
+      <tr><td align="left">height</td><td align="left"><font color="#888888">character varying</font></td></tr>
+      <tr><td align="left">gender</td><td align="left"><font color="#888888">character varying</font></td></tr>
+    </table>>];
+
+  "user_consent" [label=<
+    <table border="1" cellborder="0" cellspacing="0" cellpadding="4">
+      <tr><td bgcolor="#E9C2F2" colspan="2"><b>user_consent</b></td></tr>
+      <tr><td align="left">keycloak_id</td><td align="left"><font color="#888888">character varying</font></td></tr>
+      <tr><td align="left">data_processing_consent</td><td align="left"><font color="#888888">boolean</font></td></tr>
+      <tr><td align="left">consent_timestamp</td><td align="left"><font color="#888888">timestamp without time zone</font></td></tr>
+      <tr><td align="left">created_at</td><td align="left"><font color="#888888">timestamp without time zone</font></td></tr>
+      <tr><td align="left">updated_at</td><td align="left"><font color="#888888">timestamp without time zone</font></td></tr>
+    </table>>];
+
+  "user_equipment" [label=<
+    <table border="1" cellborder="0" cellspacing="0" cellpadding="4">
+      <tr><td bgcolor="#E9C2F2" colspan="2"><b>user_equipment</b></td></tr>
+      <tr><td align="left">equipment_name</td><td align="left"><font color="#888888">character varying</font></td></tr>
+      <tr><td align="left">created_at</td><td align="left"><font color="#888888">timestamp without time zone</font></td></tr>
+      <tr><td align="left">user_id</td><td align="left"><font color="#888888">character varying</font></td></tr>
+    </table>>];
+
+  "user_exercise_preference" [label=<
+    <table border="1" cellborder="0" cellspacing="0" cellpadding="4">
+      <tr><td bgcolor="#E9C2F2" colspan="2"><b>user_exercise_preference</b></td></tr>
+      <tr><td align="left">exercise_name</td><td align="left"><font color="#888888">character varying</font></td></tr>
+      <tr><td align="left">should_avoid</td><td align="left"><font color="#888888">boolean</font></td></tr>
+      <tr><td align="left">created_at</td><td align="left"><font color="#888888">timestamp without time zone</font></td></tr>
+      <tr><td align="left">user_id</td><td align="left"><font color="#888888">character varying</font></td></tr>
+    </table>>];
+
+  "user_one_rep_max" [label=<
+    <table border="1" cellborder="0" cellspacing="0" cellpadding="4">
+      <tr><td bgcolor="#E9C2F2" colspan="2"><b>user_one_rep_max</b></td></tr>
+      <tr><td align="left">exercise_name</td><td align="left"><font color="#888888">character varying</font></td></tr>
+      <tr><td align="left">one_rep_max</td><td align="left"><font color="#888888">numeric</font></td></tr>
+      <tr><td align="left">updated_at</td><td align="left"><font color="#888888">timestamp without time zone</font></td></tr>
+      <tr><td align="left">user_id</td><td align="left"><font color="#888888">character varying</font></td></tr>
+    </table>>];
+
+  "user_performance_metrics" [label=<
+    <table border="1" cellborder="0" cellspacing="0" cellpadding="4">
+      <tr><td bgcolor="#E9C2F2" colspan="2"><b>user_performance_metrics</b></td></tr>
+      <tr><td align="left">id</td><td align="left"><font color="#888888">integer</font></td></tr>
+      <tr><td align="left">keycloak_id</td><td align="left"><font color="#888888">character varying</font></td></tr>
+      <tr><td align="left">vo2_max</td><td align="left"><font color="#888888">numeric</font></td></tr>
+      <tr><td align="left">strain</td><td align="left"><font color="#888888">numeric</font></td></tr>
+      <tr><td align="left">recovery</td><td align="left"><font color="#888888">numeric</font></td></tr>
+      <tr><td align="left">hrv</td><td align="left"><font color="#888888">numeric</font></td></tr>
+      <tr><td align="left">sleep_score</td><td align="left"><font color="#888888">numeric</font></td></tr>
+      <tr><td align="left">rem_sleep_minutes</td><td align="left"><font color="#888888">numeric</font></td></tr>
+      <tr><td align="left">deep_sleep_minutes</td><td align="left"><font color="#888888">numeric</font></td></tr>
+      <tr><td align="left">subjective_tiredness</td><td align="left"><font color="#888888">integer</font></td></tr>
+      <tr><td align="left">created_at</td><td align="left"><font color="#888888">timestamp without time zone</font></td></tr>
+      <tr><td align="left">updated_at</td><td align="left"><font color="#888888">timestamp without time zone</font></td></tr>
+    </table>>];
+
+  "user_performance_scores" [label=<
+    <table border="1" cellborder="0" cellspacing="0" cellpadding="4">
+      <tr><td bgcolor="#E9C2F2" colspan="2"><b>user_performance_scores</b></td></tr>
+      <tr><td align="left">id</td><td align="left"><font color="#888888">integer</font></td></tr>
+      <tr><td align="left">keycloak_id</td><td align="left"><font color="#888888">character varying</font></td></tr>
+      <tr><td align="left">explosiveness_score</td><td align="left"><font color="#888888">numeric</font></td></tr>
+      <tr><td align="left">aerobic_capacity_score</td><td align="left"><font color="#888888">numeric</font></td></tr>
+      <tr><td align="left">recovery_score</td><td align="left"><font color="#888888">numeric</font></td></tr>
+      <tr><td align="left">reaction_time_score</td><td align="left"><font color="#888888">numeric</font></td></tr>
+      <tr><td align="left">mobility_score</td><td align="left"><font color="#888888">numeric</font></td></tr>
+      <tr><td align="left">strength_score</td><td align="left"><font color="#888888">numeric</font></td></tr>
+      <tr><td align="left">wilks_score</td><td align="left"><font color="#888888">numeric</font></td></tr>
+      <tr><td align="left">level</td><td align="left"><font color="#888888">integer</font></td></tr>
+      <tr><td align="left">level_change_reason</td><td align="left"><font color="#888888">character varying</font></td></tr>
+      <tr><td align="left">hp</td><td align="left"><font color="#888888">numeric</font></td></tr>
+      <tr><td align="left">hp_loss</td><td align="left"><font color="#888888">numeric</font></td></tr>
+      <tr><td align="left">mp</td><td align="left"><font color="#888888">numeric</font></td></tr>
+      <tr><td align="left">mp_loss</td><td align="left"><font color="#888888">numeric</font></td></tr>
+      <tr><td align="left">fatigue</td><td align="left"><font color="#888888">numeric</font></td></tr>
+      <tr><td align="left">fatigue_loss</td><td align="left"><font color="#888888">numeric</font></td></tr>
+      <tr><td align="left">skills</td><td align="left"><font color="#888888">ARRAY</font></td></tr>
+      <tr><td align="left">created_at</td><td align="left"><font color="#888888">timestamp without time zone</font></td></tr>
+    </table>>];
+
+  "user_test_results" [label=<
+    <table border="1" cellborder="0" cellspacing="0" cellpadding="4">
+      <tr><td bgcolor="#E9C2F2" colspan="2"><b>user_test_results</b></td></tr>
+      <tr><td align="left">id</td><td align="left"><font color="#888888">integer</font></td></tr>
+      <tr><td align="left">keycloak_id</td><td align="left"><font color="#888888">character varying</font></td></tr>
+      <tr><td align="left">week_start_timestamp</td><td align="left"><font color="#888888">timestamp without time zone</font></td></tr>
+      <tr><td align="left">test_name</td><td align="left"><font color="#888888">character varying</font></td></tr>
+      <tr><td align="left">status</td><td align="left"><font color="#888888">character varying</font></td></tr>
+      <tr><td align="left">result_value</td><td align="left"><font color="#888888">numeric</font></td></tr>
+      <tr><td align="left">created_at</td><td align="left"><font color="#888888">timestamp without time zone</font></td></tr>
+      <tr><td align="left">updated_at</td><td align="left"><font color="#888888">timestamp without time zone</font></td></tr>
+    </table>>];
+
+  "user_weak_muscle" [label=<
+    <table border="1" cellborder="0" cellspacing="0" cellpadding="4">
+      <tr><td bgcolor="#E9C2F2" colspan="2"><b>user_weak_muscle</b></td></tr>
+      <tr><td align="left">muscle_name</td><td align="left"><font color="#888888">character varying</font></td></tr>
+      <tr><td align="left">created_at</td><td align="left"><font color="#888888">timestamp without time zone</font></td></tr>
+      <tr><td align="left">user_id</td><td align="left"><font color="#888888">character varying</font></td></tr>
+    </table>>];
+
+  "user_weight_unit_preference" [label=<
+    <table border="1" cellborder="0" cellspacing="0" cellpadding="4">
+      <tr><td bgcolor="#E9C2F2" colspan="2"><b>user_weight_unit_preference</b></td></tr>
+      <tr><td align="left">exercise_name</td><td align="left"><font color="#888888">character varying</font></td></tr>
+      <tr><td align="left">preferred_unit</td><td align="left"><font color="#888888">character varying</font></td></tr>
+      <tr><td align="left">created_at</td><td align="left"><font color="#888888">timestamp without time zone</font></td></tr>
+      <tr><td align="left">updated_at</td><td align="left"><font color="#888888">timestamp without time zone</font></td></tr>
+      <tr><td align="left">user_id</td><td align="left"><font color="#888888">character varying</font></td></tr>
+    </table>>];
+
+  "workout_stage" [label=<
+    <table border="1" cellborder="0" cellspacing="0" cellpadding="4">
+      <tr><td bgcolor="#E9C2F2" colspan="2"><b>workout_stage</b></td></tr>
+      <tr><td align="left">id</td><td align="left"><font color="#888888">bigint</font></td></tr>
+      <tr><td align="left">programmed_workout_id</td><td align="left"><font color="#888888">bigint</font></td></tr>
+      <tr><td align="left">stage_type_id</td><td align="left"><font color="#888888">integer</font></td></tr>
+      <tr><td align="left">position</td><td align="left"><font color="#888888">smallint</font></td></tr>
+      <tr><td align="left">name</td><td align="left"><font color="#888888">character varying</font></td></tr>
+      <tr><td align="left">created_at</td><td align="left"><font color="#888888">timestamp without time zone</font></td></tr>
+      <tr><td align="left">updated_at</td><td align="left"><font color="#888888">timestamp without time zone</font></td></tr>
+    </table>>];
+
+  "workout_stage_type" [label=<
+    <table border="1" cellborder="0" cellspacing="0" cellpadding="4">
+      <tr><td bgcolor="#E9C2F2" colspan="2"><b>workout_stage_type</b></td></tr>
+      <tr><td align="left">id</td><td align="left"><font color="#888888">integer</font></td></tr>
+      <tr><td align="left">name</td><td align="left"><font color="#888888">character varying</font></td></tr>
+      <tr><td align="left">created_at</td><td align="left"><font color="#888888">timestamp without time zone</font></td></tr>
+    </table>>];
+
+  "exercise_equipment" -> "equipment" [label="equipment_name → name", fontsize=8, color=gray];
+  "exercise_equipment" -> "exercise" [label="exercise_name → name", fontsize=8, color=gray];
+  "exercise_muscle" -> "exercise" [label="exercise_name → name", fontsize=8, color=gray];
+  "exercise_muscle" -> "muscle" [label="muscle_name → name", fontsize=8, color=gray];
+  "exercise_workout_type" -> "exercise" [label="exercise_name → name", fontsize=8, color=gray];
+  "program" -> "user" [label="user_id → keycloak_id", fontsize=8, color=gray];
+  "program_preferences" -> "program" [label="program_id → id", fontsize=8, color=gray];
+  "programmed_exercise" -> "exercise" [label="exercise_name → name", fontsize=8, color=gray];
+  "programmed_exercise" -> "workout_stage" [label="workout_stage_id → id", fontsize=8, color=gray];
+  "programmed_workout" -> "program" [label="program_id → id", fontsize=8, color=gray];
+  "set_scheme" -> "programmed_exercise" [label="programmed_exercise_id → id", fontsize=8, color=gray];
+  "user_consent" -> "user" [label="keycloak_id → keycloak_id", fontsize=8, color=gray];
+  "user_equipment" -> "equipment" [label="equipment_name → name", fontsize=8, color=gray];
+  "user_equipment" -> "user" [label="user_id → keycloak_id", fontsize=8, color=gray];
+  "user_exercise_preference" -> "exercise" [label="exercise_name → name", fontsize=8, color=gray];
+  "user_exercise_preference" -> "user" [label="user_id → keycloak_id", fontsize=8, color=gray];
+  "user_one_rep_max" -> "exercise" [label="exercise_name → name", fontsize=8, color=gray];
+  "user_one_rep_max" -> "user" [label="user_id → keycloak_id", fontsize=8, color=gray];
+  "user_performance_metrics" -> "user" [label="keycloak_id → keycloak_id", fontsize=8, color=gray];
+  "user_performance_scores" -> "user" [label="keycloak_id → keycloak_id", fontsize=8, color=gray];
+  "user_test_results" -> "user" [label="keycloak_id → keycloak_id", fontsize=8, color=gray];
+  "user_test_results" -> "test_protocol_config" [label="test_name → test_name", fontsize=8, color=gray];
+  "user_weak_muscle" -> "muscle" [label="muscle_name → name", fontsize=8, color=gray];
+  "user_weak_muscle" -> "user" [label="user_id → keycloak_id", fontsize=8, color=gray];
+  "user_weight_unit_preference" -> "exercise" [label="exercise_name → name", fontsize=8, color=gray];
+  "user_weight_unit_preference" -> "user" [label="user_id → keycloak_id", fontsize=8, color=gray];
+  "workout_stage" -> "programmed_workout" [label="programmed_workout_id → id", fontsize=8, color=gray];
+  "workout_stage" -> "workout_stage_type" [label="stage_type_id → id", fontsize=8, color=gray];
 }

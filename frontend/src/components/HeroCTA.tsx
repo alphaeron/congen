@@ -8,9 +8,7 @@ interface HeroCTAProps {
   onClick: () => void;
   disabled?: boolean;
   loading?: boolean;
-  title: string;
   subtitle?: string;
-  icon?: string;
   variant?: 'primary' | 'secondary';
 }
 

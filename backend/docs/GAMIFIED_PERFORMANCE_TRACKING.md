@@ -45,16 +45,6 @@ The system tracks three distinct metrics inspired by RPG mechanics, each with un
 - **Sick or injured**: HP 🔻 Major drop, MP ↓ Likely, Fatigue 🔻 High
 - **After a full rest day with great sleep**: HP ↑ Slightly, MP ↑ Full, Fatigue 🔺 Recovered
 
-### 📅 Weekly Test Protocol Tracker
-- **Structured Testing Schedule**:
-  - Monday: Vertical Jump (MyJump2 app)
-  - Wednesday: Push-ups & Pull-ups (max in 1 minute)
-  - Friday: 12-minute Run + VO₂ Max calculation
-  - Any Day: HRV & HR Recovery (Oura/Whoop or manual)
-  - Any Day: Reflex Speed (Human Benchmark)
-- **Progress Tracking**: Visual completion status with editable results
-- **Auto-integration**: Completed tests automatically update performance metrics
-
 ### 🧭 RPG-Style Adventurer Status Card
 - **Character Profile**: Name, class, level, rank, guild
 - **Status Bars**: HP/MP/Fatigue with tooltips and color coding
@@ -63,7 +53,6 @@ The system tracks three distinct metrics inspired by RPG mechanics, each with un
 
 ### 🎯 Smart Skill Generation
 - **Threshold-based Skills**: Auto-generated based on performance levels
-- **Skill Tiers**: Bronze, Silver, Gold, Platinum with different requirements
 - **Progress Tracking**: Visual progress bars for skill development
 - **Motivational System**: Unlock new skills as performance improves
 
@@ -71,46 +60,6 @@ The system tracks three distinct metrics inspired by RPG mechanics, each with un
 - **Radar Chart**: 6-domain performance visualization with fitness terminology
 - **Status Bars**: RPG-style HP/MP/Fatigue indicators
 - **Progress Tracking**: Weekly test completion and skill advancement
-
-## 🏗️ Architecture
-
-### Backend Components
-
-#### Models
-- **UserPerformanceMetrics**: Raw performance data and wearable integration
-- **UserPerformanceScores**: Calculated scores, HP/MP/Fatigue, and skills
-- **UserWeeklyTest**: Weekly test protocol tracking and results
-
-#### Services
-- **PerformanceScoringService**: Core calculation engine with normalization functions
-- **PerformanceTrackingService**: Orchestrates metrics, scores, and weekly tests
-
-#### Data Access Layer
-- **UserPerformanceMetricsDAL**: CRUD operations for performance metrics
-- **UserPerformanceScoresDAL**: CRUD operations for calculated scores
-- **UserWeeklyTestDAL**: CRUD operations for weekly test protocol
-
-#### API Endpoints
-- `POST /performance/metrics` - Submit performance metrics
-- `GET /performance/scores` - Get current performance scores
-- `GET /performance/metrics` - Get current performance metrics
-- `POST /performance/weekly-test` - Submit weekly test results
-- `GET /performance/weekly-test/current` - Get current week's test protocol
-- `GET /performance/weekly-test/range` - Get weekly tests in date range
-
-### Frontend Components
-
-#### Core Components
-- **PerformanceDashboard**: Main dashboard with tabbed interface
-- **AdventurerStatusCard**: RPG-style character status display
-- **StatusBars**: HP/MP/Fatigue visualization
-- **PerformanceRadarChart**: 6-domain performance radar chart
-- **WeeklyTestTracker**: Weekly test protocol management
-- **SkillGenerator**: Auto-generated skills based on performance
-
-#### API Integration
-- **performanceTracking.ts**: API functions for all performance endpoints
-- **React Query Integration**: Caching, loading states, and error handling
 
 ## 🧮 Scoring Algorithms
 
@@ -188,85 +137,17 @@ level = 1 + (log(athleticismScore / 5 + 1) / log(2)) * 3
 
 ## 🎮 Gamification Elements
 
-### Character Progression
-- **Levels**: 1-20+ with increasing difficulty
-- **Ranks**: D, C, C+, B, B+, A, A+, S, S+ based on level
-- **Performance Profiles**: Auto-assigned based on performance profile
-- **Guilds**: Unlocked based on level progression
-
 ### Skill System
 - **Basic Skills**: Performance levels (40-59 score)
 - **Intermediate Skills**: Performance levels (60-79 score)
 - **Advanced Skills**: Performance levels (80-89 score)
 - **Elite Skills**: Performance levels (90+ score)
 
-### Weekly Quests
-- **Test Completion**: Complete weekly test protocol
+### Quests
+- **Test Completion**: Complete daily/wekly test protocols
 - **Performance Goals**: Beat personal records
 - **Recovery Targets**: Achieve high-recovery days
 - **Level Progression**: Reach specific athleticism levels
-
-## 🔌 Wearable Integration
-
-### Supported Devices
-- **Whoop**: Strain, recovery, HRV, sleep score
-- **Oura**: HRV, VO₂ max estimate, sleep stages
-- **Manual Input**: For users without wearables
-
-### Data Flow
-1. Wearable data syncs to performance metrics
-2. Metrics automatically calculate updated scores
-3. HP/MP/Fatigue values update in real-time
-4. Skills unlock based on new performance levels
-
-## 📱 User Interface
-
-### Dashboard Layout
-- **Overview Tab**: Adventurer card, status bars, radar chart
-- **Metrics Tab**: Full-width performance visualization
-- **Weekly Tests Tab**: Test protocol tracker
-- **Skills Tab**: Skill progression and achievements
-
-### Visual Design
-- **RPG Theme**: Gradient backgrounds, status bars, character cards
-- **Color Coding**: Health indicators, skill tiers, progress states
-- **Responsive Design**: Mobile-friendly with collapsible sections
-- **Accessibility**: Tooltips, ARIA labels, keyboard navigation
-
-## 🚀 Getting Started
-
-### Backend Setup
-1. Run database migrations to create performance tracking tables
-2. Deploy updated backend with new controllers and services
-3. Configure wearable API integrations (optional)
-
-### Frontend Integration
-1. Import PerformanceDashboard component
-2. Add to main Dashboard navigation
-3. Configure API endpoints and authentication
-
-### User Onboarding
-1. Complete initial performance assessment
-2. Set up wearable device integration (optional)
-3. Begin weekly test protocol
-4. Track progress and unlock skills
-
-## 🔧 Configuration
-
-### Performance Thresholds
-- Customize skill unlock requirements
-- Adjust level progression curves
-- Modify HP/MP/Fatigue calculations
-
-### Wearable Integration
-- Configure API keys for Whoop/Oura
-- Set up data sync intervals
-- Customize metric mappings
-
-### UI Customization
-- Modify color schemes and themes
-- Adjust component layouts
-- Customize skill descriptions
 
 ## 📊 Analytics & Insights
 
@@ -291,10 +172,9 @@ level = 1 + (log(athleticismScore / 5 + 1) / log(2)) * 3
 - **PvP Challenges**: Compare performance with other users
 - **Guild System**: Team-based challenges and competitions
 - **Seasonal Events**: Limited-time challenges and rewards
-- **AI Coaching**: Personalized recommendations based on performance
 
 ### Integration Expansions
-- **Additional Wearables**: Apple Watch, Garmin, Fitbit
+- **Wearables**: Whoop, Oura, Apple Watch, Garmin, Fitbit, ...
 - **Smart Home**: Integration with recovery devices
 - **Social Features**: Share achievements and progress
 

@@ -17,7 +17,7 @@ congen/
 ## Components
 
 - **backend/**: Contains the Spring Boot API, business logic, database migrations, and backend documentation. See [backend/README.md](backend/README.md) for full backend details, setup, and API documentation.
-- **frontend/**: (To be implemented) Contains the Node.js/TypeScript frontend application. Place your frontend code and documentation here.
+- **frontend/**: Contains the React/TypeScript frontend application with Material-UI components, authentication, and dashboard functionality.
 - **k8s/**: Shared Kubernetes manifests and overlays for deploying the backend (and eventually frontend) to local, staging, or production environments.
 
 ## Quick Start
@@ -45,16 +45,21 @@ Common backend Gradle tasks (run from the project root):
 ```
 
 ### Frontend
-- (To be implemented) Place your Node.js/TypeScript app in the `frontend/` directory.
-- Use standard npm/yarn scripts for build, test, and start.
+The frontend is a React application with TypeScript and Material-UI. See [frontend/README.md](frontend/README.md) for full setup instructions.
 
-Example:
+Quick start:
 ```bash
 cd frontend
 npm install
-npm run build
 npm start
 ```
+
+The frontend includes:
+- **Authentication**: Keycloak integration with OAuth2
+- **Dashboard**: User profile management and workout tracking
+- **Exercise Library**: Browse and search exercises
+- **Performance Tracking**: Gamified fitness metrics and scoring
+- **Responsive Design**: Mobile-friendly interface
 
 ## Building and Running
 - All backend Gradle tasks must be called with the `:backend:` prefix from the project root (e.g., `./gradlew :backend:build`).
@@ -62,7 +67,7 @@ npm start
 
 ## Contributing
 - See [backend/README.md](backend/README.md) for backend contribution guidelines.
-- Add frontend contribution guidelines to `frontend/README.md` as the UI is developed.
+- See [frontend/README.md](frontend/README.md) for frontend contribution guidelines.
 
 ## License
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.

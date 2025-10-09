@@ -1,5 +1,6 @@
 package com.congen.config
 
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.http.HttpMethod
@@ -28,6 +29,9 @@ import org.springframework.web.cors.reactive.CorsConfigurationSource
 @EnableWebFluxSecurity
 @EnableReactiveMethodSecurity(useAuthorizationManager = true)
 class SecurityConfig {
+    @Value("\${spring.profiles.active:default}")
+    private lateinit var activeProfile: String
+
     /**
      * Configures the security filter chain for the API.
      *
@@ -48,14 +52,23 @@ class SecurityConfig {
         return http
             .csrf { csrf -> csrf.disable() }
             .authorizeExchange { exchanges ->
-                exchanges
-                    // Allow all OPTIONS requests for CORS
-                    .pathMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                    // Allow health check endpoints without authentication
-                    .pathMatchers("/api/v1/health/**").permitAll()
-                    // Allow privacy policy endpoint without authentication
-                    .pathMatchers("/api/v1/gdpr/privacy_policy").permitAll()
-                    .anyExchange().authenticated()
+                val exchangeBuilder =
+                    exchanges
+                        // Allow all OPTIONS requests for CORS
+                        .pathMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        // Allow health check endpoints without authentication
+                        .pathMatchers("/api/v1/health/**").permitAll()
+                        // Allow privacy policy endpoint without authentication
+                        .pathMatchers("/api/v1/gdpr/privacy_policy").permitAll()
+
+                // Only allow OpenAPI documentation endpoints in non-production environments
+                if (activeProfile != "production") {
+                    exchangeBuilder
+                        .pathMatchers("/api/v1/api-docs", "/api/v1/api-docs/**").permitAll()
+                        .pathMatchers("/api/v1/swagger-ui.html", "/api/v1/swagger-ui/**").permitAll()
+                }
+
+                exchangeBuilder.anyExchange().authenticated()
             }
             .oauth2ResourceServer { oauth2 ->
                 oauth2.jwt { jwt ->

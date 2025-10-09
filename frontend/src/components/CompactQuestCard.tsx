@@ -930,7 +930,7 @@ export const CompactQuestCard: React.FC<CompactQuestCardProps> = ({
                           }}
                         >
                           <GameText variant="body2">
-                            ✅ Today&apos;s {metric.label.toLowerCase()} has already been recorded (
+                            Today&apos;s {metric.label.toLowerCase()} has already been recorded (
                             {displayValue}
                             {metric.unit}). Check back tomorrow to record your next result!
                           </GameText>
@@ -997,7 +997,7 @@ export const CompactQuestCard: React.FC<CompactQuestCardProps> = ({
                           }}
                         >
                           <GameText variant="body2">
-                            🏆 This week&apos;s {editingProtocol.display_name.toLowerCase()} has
+                            This week&apos;s {editingProtocol.display_name.toLowerCase()} has
                             already been recorded ({result} {editingProtocol.unit}). Check back next
                             week to record your next result!
                           </GameText>

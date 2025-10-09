@@ -23,8 +23,7 @@ task generateApiDocs(type: Exec) {
     description = 'Generate complete API documentation including OpenAPI specs and markdown'
 
     dependsOn 'createDocsStructure'
-    dependsOn ':setupTestPortForward'
-    finalizedBy ':cleanupPortForward'
+    dependsOn ':deployAll'
 
     commandLine 'bash', 'scripts/generate-api-docs.sh'
 

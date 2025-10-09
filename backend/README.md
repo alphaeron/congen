@@ -1,6 +1,6 @@
 # Congen Backend
 
-A Kotlin-based Spring Boot application that generates personalized workout programs using the conjugate method with advanced movement balance constraints. This application provides a RESTful API for managing exercises, programs, users, and their preferences, featuring intelligent exercise selection and balanced movement patterns.
+A Kotlin-based Spring Boot application that generates personalized workout programs using the conjugate method with advanced movement balance constraints. This application provides a RESTful API for managing exercises, programs, users, and their preferences, featuring intelligent exercise selection, balanced movement patterns, and gamified performance tracking.
 
 ## 🏗️ Architecture
 
@@ -26,6 +26,8 @@ The backend follows a layered architecture pattern:
 - **Models**: Define data structures and validation
 - **Utilities**: Shared validation and helper functions
 - **Configuration**: Application and database configuration
+- **Generator**: Conjugate workout generation algorithms
+- **Performance Tracking**: Gamified fitness metrics and scoring
 
 ## 🚀 Backend Quick Start
 
@@ -197,27 +199,7 @@ http://localhost:8888/api/v1
 ```
 
 ### Authentication
-Currently, the API does not require authentication. All endpoints are publicly accessible.
-
-### Common Response Formats
-
-#### Success Response
-```json
-{
-  "id": 1,
-  "name": "Example",
-  "created_at": "2024-01-01T00:00:00Z"
-}
-```
-
-#### Error Response
-```json
-{
-  "error": "Validation failed",
-  "message": "User age must be between 1 and 150, got: 0",
-  "timestamp": "2024-01-01T00:00:00Z"
-}
-```
+Authentication is implemented using Keycloak
 
 ### HTTP Status Codes
 
@@ -230,36 +212,6 @@ Currently, the API does not require authentication. All endpoints are publicly a
 - `500` - Internal Server Error
 
 ### Core Endpoints
-
-#### Users
-- `GET /user/` - Get all users
-- `GET /user/{id}` - Get user by ID
-- `POST /user/` - Create user
-- `PUT /user/{id}` - Update user
-- `DELETE /user/{id}` - Delete user
-
-#### Programs
-- `GET /program/` - Get all programs
-- `GET /program/{id}` - Get program by ID
-- `POST /program/` - Create program
-- `PUT /program/{id}` - Update program
-- `DELETE /program/{id}` - Delete program
-
-#### Exercises
-- `GET /exercise/` - Get all exercises
-- `GET /exercise/{id}` - Get exercise by ID
-- `POST /exercise/` - Create exercise
-- `PUT /exercise/{id}` - Update exercise
-- `DELETE /exercise/{id}` - Delete exercise
-
-#### User Program Preferences
-- `GET /user_program_preferences/{userId}` - Get user's program preferences
-- `POST /user_program_preferences/` - Create user program preferences
-- `PUT /user_program_preferences/{id}` - Update user program preferences
-- `DELETE /user_program_preferences/{id}` - Delete user program preferences
-
-#### Conjugate Workout Generator
-- `POST /conjugate_workout_generator/{program_id}` - Generate next week of workouts with movement balance constraints
 
 For detailed API documentation, see [docs/API_DOCUMENTATION.md](docs/API_DOCUMENTATION.md).
 
@@ -397,6 +349,12 @@ The backend implements intelligent movement balance constraints to ensure balanc
 - **Scoring Algorithm**: Exercises are scored based on their contribution to movement balance
 - **Integration**: Movement balance is integrated into primary, secondary, and accessory exercise selection
 
+## 🎮 Gamified Performance Tracking
+
+The backend includes a comprehensive gamified performance tracking system that converts fitness metrics into RPG-style scores and levels.
+
+For more information, see [GAMIFIED_PERFORMANCE_TRACKING.md](./GAMIFIED_PERFORMANCE_TRACKING.md)
+
 ## ⚖️ Weight Selection
 
 The backend automatically rounds calculated weights to match available equipment sizes, ensuring users can achieve the target weight using standard weightlifting equipment.
@@ -500,6 +458,12 @@ The backend uses PostgreSQL with the following main tables:
 - `user_program_preferences` - User preferences for programs
 - `user_exercise_preferences` - User preferences for exercises
 - `user_equipment` - Equipment available to users
+- `user_performance_metrics` - Daily performance metrics
+- `user_performance_scores` - Calculated performance scores
+- `user_weekly_tests` - Weekly test protocol tracking
+- `user_test_results` - Individual test results
+- `user_consent` - GDPR consent management
+- `audit_logs` - Data access audit trail
 
 ### Migrations
 
@@ -593,14 +557,6 @@ For questions, issues, or contributions, please:
 1. Check the [docs/](docs/) directory
 2. Search existing [issues](../../issues)
 3. Create a new issue with detailed information
-
-## 🔄 Version History
-
-- **v1.0.0** - Initial release with core workout generation functionality
-- **v1.1.0** - Added user preferences and program customization
-- **v1.2.0** - Enhanced validation and error handling
-
-For detailed changelog, see [../CHANGELOG.md](../CHANGELOG.md).
 
 ### Gradle Tasks
 

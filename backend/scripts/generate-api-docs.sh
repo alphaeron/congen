@@ -14,7 +14,12 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Configuration
-DOCS_DIR="docs"
+# Get the directory where this script is located
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Get the backend directory (parent of scripts directory)
+BACKEND_DIR="$(dirname "$SCRIPT_DIR")"
+# Set docs directory relative to backend directory
+DOCS_DIR="${BACKEND_DIR}/docs"
 API_DOCS_FILE="${DOCS_DIR}/API_DOCUMENTATION.md"
 OPENAPI_JSON_FILE="${DOCS_DIR}/openapi.json"
 OPENAPI_YAML_FILE="${DOCS_DIR}/openapi.yaml"
@@ -83,18 +88,27 @@ setup_port_forwarding() {
     pkill -f "kubectl port-forward" 2>/dev/null || true
     
     # Start port-forwarding in background
-    kubectl port-forward -n congen service/congen 8888:8888 > /dev/null 2>&1 &
+    kubectl port-forward -n congen service/backend 8888:8888 > /dev/null 2>&1 &
     PORT_FORWARD_PID=$!
     
     # Wait for port-forwarding to be ready
-    sleep 3
+    sleep 5
     
-    # Test if port-forwarding is working
-    if curl -s http://localhost:8888/api/v1/health/ > /dev/null; then
-        print_success "Port-forwarding is working"
-    else
-        print_warning "Port-forwarding may not be working properly"
-    fi
+    # Test if port-forwarding is working with retries
+    local retry_count=0
+    local max_retries=10
+    
+    while [[ ${retry_count} -lt ${max_retries} ]]; do
+        if curl -s http://localhost:8888/api/v1/health/ > /dev/null; then
+            print_success "Port-forwarding is working"
+            return 0
+        fi
+        print_status "Waiting for application to be ready... (attempt ${retry_count}/${max_retries})"
+        sleep 2
+        retry_count=$((retry_count + 1))
+    done
+    
+    print_warning "Port-forwarding established but application may not be ready yet"
 }
 
 # Function to cleanup port-forwarding
@@ -113,13 +127,11 @@ check_application_health() {
     check_kubernetes
     kubernetes_available=$?
     
-    if [[ ${kubernetes_available} -eq 0 ]]; then
-        # Use port-forwarding for Kubernetes
-        curl -s http://localhost:8888/api/v1/health/ > /dev/null
-        return $?
+    # Try to connect to the application with timeout
+    if curl -s --max-time 10 http://localhost:8888/api/v1/health/ > /dev/null; then
+        return 0
     else
-        curl -s http://localhost:8888/api/v1/health/ > /dev/null
-        return $?
+        return 1
     fi
 }
 
@@ -143,18 +155,35 @@ check_application() {
 
     if [[ ${kubernetes_available} -eq 0 ]]; then
         print_success "Found Kubernetes deployment"
-        setup_port_forwarding
-        local health_check_result
-        check_application_health
-        health_check_result=$?
         
-        if [[ ${health_check_result} -eq 0 ]]; then
-            print_success "Application is healthy via port-forwarding"
-            return 0
+        # Wait for backend pods to be ready (same as deploy script)
+        print_status "Waiting for backend pods to be ready..."
+        if kubectl wait --for=condition=ready pod -l app=backend -n congen --timeout=300s; then
+            print_success "Backend pods are ready"
         else
-            print_error "Application is not healthy via port-forwarding"
-            return 1
+            print_warning "Backend pods may still be starting up, but continuing..."
         fi
+        
+        setup_port_forwarding
+        
+        # Wait for application to be fully ready with health checks
+        print_status "Waiting for application to be fully ready..."
+        local max_attempts=30
+        local attempt=0
+        
+        while [[ ${attempt} -lt ${max_attempts} ]]; do
+            if check_application_health; then
+                print_success "Application is healthy via port-forwarding"
+                return 0
+            fi
+            
+            attempt=$((attempt + 1))
+            print_status "Waiting for application to be ready... (attempt ${attempt}/${max_attempts})"
+            sleep 5
+        done
+        
+        print_warning "Application health check failed after ${max_attempts} attempts, but continuing with documentation generation..."
+        return 0  # Continue anyway, the app might be starting up
     else
         print_warning "Kubernetes not available, checking local application..."
         local health_check_result
@@ -175,23 +204,89 @@ check_application() {
 generate_openapi_json() {
     print_status "Generating OpenAPI JSON specification..."
 
-    if curl -s http://localhost:8888/api/v1/api-docs > "${OPENAPI_JSON_FILE}"; then
-        print_success "OpenAPI JSON generated: ${OPENAPI_JSON_FILE}"
-    else
-        print_error "Failed to generate OpenAPI JSON"
-        return 1
-    fi
+    # Try the working endpoint with retries
+    local endpoints=("/api/v1/api-docs")
+    local retry_count=0
+    local max_retries=5
+    
+    for endpoint in "${endpoints[@]}"; do
+        print_status "Trying endpoint: http://localhost:8888${endpoint}"
+        
+        while [[ ${retry_count} -lt ${max_retries} ]]; do
+            # Get HTTP status code and response
+            local http_code
+            http_code=$(curl -s -w "%{http_code}" --max-time 30 "http://localhost:8888${endpoint}" -o "${OPENAPI_JSON_FILE}")
+            
+            if [[ ${http_code} -eq 200 ]]; then
+                # Check if the file contains valid JSON (not an error page)
+                if [[ -s "${OPENAPI_JSON_FILE}" ]] && jq empty "${OPENAPI_JSON_FILE}" 2>/dev/null; then
+                    print_success "OpenAPI JSON generated from ${endpoint}: ${OPENAPI_JSON_FILE}"
+                    return 0
+                else
+                    print_warning "Received invalid JSON response from ${endpoint}, retrying... (attempt ${retry_count}/${max_retries})"
+                    # Show first few lines for debugging
+                    print_status "Response preview: $(head -3 "${OPENAPI_JSON_FILE}" 2>/dev/null || echo 'Empty file')"
+                fi
+            else
+                print_warning "Failed to fetch OpenAPI JSON from ${endpoint} (HTTP ${http_code}), retrying... (attempt ${retry_count}/${max_retries})"
+                # Show first few lines for debugging
+                print_status "Response preview: $(head -3 "${OPENAPI_JSON_FILE}" 2>/dev/null || echo 'Empty file')"
+            fi
+            
+            retry_count=$((retry_count + 1))
+            sleep 5
+        done
+        
+        retry_count=0  # Reset for next endpoint
+    done
+    
+    print_error "Failed to generate OpenAPI JSON from any endpoint after ${max_retries} attempts each"
+    print_status "Available endpoints to check:"
+    print_status "  - http://localhost:8888/api/v1/api-docs"
+    return 1
 }
 
 # Function to generate OpenAPI YAML
 generate_openapi_yaml() {
     print_status "Generating OpenAPI YAML specification..."
 
-    if curl -s http://localhost:8888/api/v1/api-docs.yaml > "${OPENAPI_YAML_FILE}"; then
-        print_success "OpenAPI YAML generated: ${OPENAPI_YAML_FILE}"
-    else
-        print_warning "OpenAPI YAML generation failed (endpoint may not be available)"
-    fi
+    # Try the working endpoint with retries
+    local endpoints=("/api/v1/api-docs.yaml")
+    local retry_count=0
+    local max_retries=3
+    
+    for endpoint in "${endpoints[@]}"; do
+        print_status "Trying YAML endpoint: http://localhost:8888${endpoint}"
+        
+        while [[ ${retry_count} -lt ${max_retries} ]]; do
+            # Get HTTP status code and response
+            local http_code
+            http_code=$(curl -s -w "%{http_code}" --max-time 30 "http://localhost:8888${endpoint}" -o "${OPENAPI_YAML_FILE}")
+            
+            if [[ ${http_code} -eq 200 ]]; then
+                # Check if the file contains valid YAML (not an error page)
+                if [[ -s "${OPENAPI_YAML_FILE}" ]] && ! grep -q "404\|500\|error" "${OPENAPI_YAML_FILE}"; then
+                    print_success "OpenAPI YAML generated from ${endpoint}: ${OPENAPI_YAML_FILE}"
+                    return 0
+                else
+                    print_warning "Received invalid YAML response from ${endpoint}, retrying... (attempt ${retry_count}/${max_retries})"
+                    # Show first few lines for debugging
+                    print_status "Response preview: $(head -3 "${OPENAPI_YAML_FILE}" 2>/dev/null || echo 'Empty file')"
+                fi
+            else
+                print_warning "Failed to fetch OpenAPI YAML from ${endpoint} (HTTP ${http_code}), retrying... (attempt ${retry_count}/${max_retries})"
+                # Show first few lines for debugging
+                print_status "Response preview: $(head -3 "${OPENAPI_YAML_FILE}" 2>/dev/null || echo 'Empty file')"
+            fi
+            
+            retry_count=$((retry_count + 1))
+            sleep 3
+        done
+        
+        retry_count=0  # Reset for next endpoint
+    done
+    
+    print_warning "OpenAPI YAML generation failed from all endpoints (endpoint may not be available)"
 }
 
 # Function to generate markdown documentation from OpenAPI JSON

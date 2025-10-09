@@ -42,7 +42,7 @@ start_port_forward() {
     PORT_FORWARD_PID=$!
     # Wait for port to be available
     for _ in {1..30}; do
-        if psql -h localhost -p 5432 -U postgres -d postgres -c "SELECT 1;" > /dev/null 2>&1; then
+        if psql -h localhost -p 5432 -U postgres -d congen -c "SELECT 1;" > /dev/null 2>&1; then
             print_success "Port-forward established (PID: ${PORT_FORWARD_PID})"
             return 0
         fi
@@ -68,7 +68,7 @@ trap cleanup EXIT
 start_port_forward
 
 print_status "Querying tables and columns..."
-psql -h localhost -p 5432 -U postgres -d postgres -Atc "
+psql -h localhost -p 5432 -U postgres -d congen -Atc "
 SELECT table_name, column_name, data_type
 FROM information_schema.columns
 WHERE table_schema = 'public'
@@ -76,7 +76,7 @@ WHERE table_schema = 'public'
 ORDER BY table_name, ordinal_position;" > tables_columns.txt
 
 print_status "Querying foreign keys..."
-psql -h localhost -p 5432 -U postgres -d postgres -Atc "
+psql -h localhost -p 5432 -U postgres -d congen -Atc "
 SELECT
   tc.table_name AS source_table,
   kcu.column_name AS source_column,
