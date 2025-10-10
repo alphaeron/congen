@@ -21,8 +21,8 @@ import com.congen.dal.UserWeightUnitPreferenceDAL
 import com.congen.dal.WorkoutStageDAL
 import com.congen.dal.WorkoutStageTypeDAL
 import org.slf4j.LoggerFactory
-import org.springframework.boot.context.event.ApplicationReadyEvent
-import org.springframework.context.event.EventListener
+import org.springframework.boot.ApplicationArguments
+import org.springframework.boot.ApplicationRunner
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
@@ -61,18 +61,18 @@ class CacheWarmupService(
     private val programmedExerciseDAL: ProgrammedExerciseDAL,
     private val setSchemeDAL: SetSchemeDAL,
     private val cacheWarmupConfig: CacheWarmupConfig
-) {
+) : ApplicationRunner {
     private val logger = LoggerFactory.getLogger(CacheWarmupService::class.java)
 
     /**
      * Executes the cache warmup process on application startup.
      *
-     * This method is called by Spring Boot after the application is ready to serve requests.
-     * It builds a chain of warmup operations based on configuration and executes them
-     * reactively without blocking the main thread.
+     * This method is called by Spring Boot after the application context is initialized
+     * but before it starts serving requests. It builds a chain of warmup operations
+     * based on configuration and executes them synchronously to ensure the cache is
+     * fully warmed up before the application becomes ready.
      */
-    @EventListener(ApplicationReadyEvent::class)
-    fun onApplicationReady() {
+    override fun run(args: ApplicationArguments) {
         if (!cacheWarmupConfig.enabled) {
             logger.info("Cache warmup is disabled, skipping warmup process")
             return
@@ -81,36 +81,43 @@ class CacheWarmupService(
         logger.info("Starting cache warmup process")
         val startTime = System.currentTimeMillis()
 
-        // Build warmup chain based on configuration
-        var warmupChain = Mono.just(Unit)
+        try {
+            // Build warmup chain based on configuration
+            var warmupChain = Mono.just(Unit)
 
-        if (cacheWarmupConfig.warmupReferenceData) {
-            warmupChain = warmupChain.then(warmupReferenceData())
-        }
-
-        if (cacheWarmupConfig.warmupLists) {
-            warmupChain = warmupChain.then(warmupFrequentlyAccessedLists())
-        }
-
-        if (cacheWarmupConfig.warmupRelationships) {
-            warmupChain = warmupChain.then(warmupCoreRelationships())
-        }
-
-        if (cacheWarmupConfig.warmupUserData) {
-            warmupChain = warmupChain.then(warmupUserData())
-        }
-
-        warmupChain
-            .doOnSuccess {
-                val duration = System.currentTimeMillis() - startTime
-                logger.info("Cache warmup completed successfully in {} ms", duration)
+            if (cacheWarmupConfig.warmupReferenceData) {
+                warmupChain = warmupChain.then(warmupReferenceData())
             }
-            .doOnError { error ->
-                val duration = System.currentTimeMillis() - startTime
-                logger.error("Cache warmup failed after {} ms", duration, error)
+
+            if (cacheWarmupConfig.warmupLists) {
+                warmupChain = warmupChain.then(warmupFrequentlyAccessedLists())
             }
-            .onErrorComplete()
-            .subscribe()
+
+            if (cacheWarmupConfig.warmupRelationships) {
+                warmupChain = warmupChain.then(warmupCoreRelationships())
+            }
+
+            if (cacheWarmupConfig.warmupUserData) {
+                warmupChain = warmupChain.then(warmupUserData())
+            }
+
+            // Execute synchronously and block until completion
+            warmupChain
+                .doOnSuccess {
+                    val duration = System.currentTimeMillis() - startTime
+                    logger.info("Cache warmup completed successfully in {} ms", duration)
+                }
+                .doOnError { error ->
+                    val duration = System.currentTimeMillis() - startTime
+                    logger.error("Cache warmup failed after {} ms", duration, error)
+                }
+                .onErrorComplete()
+                .block() // Block until completion
+        } catch (e: Exception) {
+            val duration = System.currentTimeMillis() - startTime
+            logger.error("Cache warmup failed with exception after {} ms", duration, e)
+            // Don't throw the exception - let the application start even if cache warmup fails
+        }
     }
 
     /**

@@ -174,7 +174,7 @@ class PostgresConfig(
         val poolOptions: PoolOptions =
             PoolOptions()
                 .setMaxSize(poolSize)
-                .setMaxLifetime(300000)
+                .setMaxLifetime(60000)
 
         logger.debug("PostgreSQL connection configured - SSL Mode: {}", props.sslMode)
 
