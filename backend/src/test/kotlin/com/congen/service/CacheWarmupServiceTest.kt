@@ -34,6 +34,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.Mock
+import org.mockito.Mockito.mock
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.any
 import org.mockito.kotlin.atLeastOnce
@@ -198,7 +199,7 @@ class CacheWarmupServiceTest {
             whenever(muscleDAL.selectMuscleByName(muscleName)).thenReturn(Mono.just(createMockMuscle(muscleName)))
         }
 
-        cacheWarmupService.onApplicationReady()
+        cacheWarmupService.run(mock())
 
         // Verify all popular exercises were called
         listOf(
@@ -252,7 +253,7 @@ class CacheWarmupServiceTest {
         whenever(muscleDAL.selectMuscles()).thenReturn(Mono.just(muscles))
         whenever(workoutStageTypeDAL.selectWorkoutStageTypes()).thenReturn(Mono.just(workoutStageTypes))
 
-        cacheWarmupService.onApplicationReady()
+        cacheWarmupService.run(mock())
 
         verify(exerciseDAL).selectExercises()
         verify(equipmentDAL).selectEquipment()
@@ -283,7 +284,7 @@ class CacheWarmupServiceTest {
             ).thenReturn(Mono.just(exerciseWorkoutTypeRelationships))
         }
 
-        cacheWarmupService.onApplicationReady()
+        cacheWarmupService.run(mock())
 
         listOf("Bench Press", "Back Squat").forEach { exerciseName ->
             verify(exerciseMuscleDAL).selectExerciseMuscleByExercise(exerciseName)
@@ -322,7 +323,7 @@ class CacheWarmupServiceTest {
             exerciseWorkoutTypeDAL.selectExerciseWorkoutTypesByExercise(any())
         ).thenReturn(Mono.just(listOf(createMockExerciseWorkoutType("Exercise", "Type"))))
 
-        cacheWarmupService.onApplicationReady()
+        cacheWarmupService.run(mock())
 
         verify(exerciseDAL).selectExerciseByName("Back Squat")
         verify(exerciseDAL).selectExerciseByName("Bench Press")
@@ -355,7 +356,7 @@ class CacheWarmupServiceTest {
         whenever(exerciseWorkoutTypeDAL.selectExerciseWorkoutTypesByExercise(any())).thenReturn(Mono.error(RuntimeException("Error")))
 
         // The run method is asynchronous, so we need to wait a bit for the operations to complete
-        cacheWarmupService.onApplicationReady()
+        cacheWarmupService.run(mock())
 
         // Wait a bit for the reactive operations to complete
         Thread.sleep(100)
@@ -373,7 +374,7 @@ class CacheWarmupServiceTest {
     fun `should skip warmup when disabled in configuration`() {
         whenever(cacheWarmupConfig.enabled).thenReturn(false)
 
-        cacheWarmupService.onApplicationReady()
+        cacheWarmupService.run(mock())
 
         // Verify that no DAL methods were called since warmup is disabled
         verifyNoInteractions(
@@ -401,7 +402,7 @@ class CacheWarmupServiceTest {
         whenever(muscleDAL.selectMuscles()).thenReturn(Mono.just(listOf(createMockMuscle("Muscle"))))
         whenever(workoutStageTypeDAL.selectWorkoutStageTypes()).thenReturn(Mono.just(listOf(createMockWorkoutStageType())))
 
-        cacheWarmupService.onApplicationReady()
+        cacheWarmupService.run(mock())
 
         verify(exerciseDAL, never()).selectExerciseByName(any())
         verify(equipmentDAL, never()).selectEquipmentByName(any())
@@ -440,7 +441,7 @@ class CacheWarmupServiceTest {
         whenever(gdprComplianceDAL.hasUserConsent("user1")).thenReturn(Mono.just(true))
         whenever(programDAL.selectProgramsByUserId("user1")).thenReturn(Mono.just(listOf()))
 
-        cacheWarmupService.onApplicationReady()
+        cacheWarmupService.run(mock())
 
         verify(userDAL).selectRandomUserIds(2)
     }
