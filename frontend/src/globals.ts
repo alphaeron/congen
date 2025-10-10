@@ -24,9 +24,15 @@ export const BASE_URL =
 /**
  * The Keycloak URL for the current environment.
  */
-export const KEYCLOAK_URL = (DEPLOYMENT_ENVIRONMENT === 'local' || DEPLOYMENT_ENVIRONMENT === 'local-persist') ? `${BASE_URL}:8080` : BASE_URL;
+export const KEYCLOAK_URL =
+  DEPLOYMENT_ENVIRONMENT === 'local' || DEPLOYMENT_ENVIRONMENT === 'local-persist'
+    ? `${BASE_URL}:8080`
+    : BASE_URL;
 
 /**
  * The backend API URL for the current environment.
  */
-export const BACKEND_URL = (DEPLOYMENT_ENVIRONMENT === 'local' || DEPLOYMENT_ENVIRONMENT === 'local-persist') ? `${BASE_URL}:8888` : BASE_URL;
+export const BACKEND_URL =
+  DEPLOYMENT_ENVIRONMENT === 'local' || DEPLOYMENT_ENVIRONMENT === 'local-persist'
+    ? `${BASE_URL}:8888`
+    : BASE_URL;

@@ -22,7 +22,7 @@ Modular Gradle build system for the frontend project using `gradle-node-plugin`.
 ## Key Tasks
 
 | Task                | Description                          | Usage                                                     |
-| ------------------- | ------------------------------------ | ----------------------------------------------------------|
+| ------------------- | ------------------------------------ | --------------------------------------------------------- |
 | `buildApp`          | Environment-aware build              | `-Penvironment=local\|local-persist\|staging\|production` |
 | `dockerBuild`       | Build Docker image                   | `-Penvironment=local\|local-persist\|staging\|production` |
 | `prepareDeployment` | Build + patch manifests              | `-Penvironment=local\|local-persist\|staging\|production` |
