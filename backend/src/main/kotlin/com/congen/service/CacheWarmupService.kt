@@ -109,6 +109,7 @@ class CacheWarmupService(
                 val duration = System.currentTimeMillis() - startTime
                 logger.error("Cache warmup failed after {} ms", duration, error)
             }
+            .onErrorComplete()
             .subscribe()
     }
 
@@ -127,21 +128,27 @@ class CacheWarmupService(
                 .flatMap { exerciseName ->
                     exerciseDAL.selectExerciseByName(exerciseName)
                         .doOnSuccess { logger.debug("Warmed up exercise: {}", exerciseName) }
-                        .doOnError { logger.warn("Failed to warm up exercise: {}", exerciseName, it) }
+                        .doOnError { error ->
+                            logger.warn("Failed to warm up exercise: {} - {}", exerciseName, error.message)
+                        }
                         .onErrorComplete()
                 },
             Flux.fromIterable(cacheWarmupConfig.popularEquipment)
                 .flatMap { equipmentName ->
                     equipmentDAL.selectEquipmentByName(equipmentName)
                         .doOnSuccess { logger.debug("Warmed up equipment: {}", equipmentName) }
-                        .doOnError { logger.warn("Failed to warm up equipment: {}", equipmentName, it) }
+                        .doOnError { error ->
+                            logger.warn("Failed to warm up equipment: {} - {}", equipmentName, error.message)
+                        }
                         .onErrorComplete()
                 },
             Flux.fromIterable(cacheWarmupConfig.popularMuscles)
                 .flatMap { muscleName ->
                     muscleDAL.selectMuscleByName(muscleName)
                         .doOnSuccess { logger.debug("Warmed up muscle: {}", muscleName) }
-                        .doOnError { logger.warn("Failed to warm up muscle: {}", muscleName, it) }
+                        .doOnError { error ->
+                            logger.warn("Failed to warm up muscle: {} - {}", muscleName, error.message)
+                        }
                         .onErrorComplete()
                 }
         ).then(Mono.just(Unit))
@@ -159,19 +166,19 @@ class CacheWarmupService(
         return Flux.merge(
             exerciseDAL.selectExercises()
                 .doOnSuccess { logger.debug("Warmed up exercises list") }
-                .doOnError { logger.warn("Failed to warm up exercises list", it) }
+                .doOnError { error -> logger.warn("Failed to warm up exercises list - {}", error.message) }
                 .onErrorComplete(),
             equipmentDAL.selectEquipment()
                 .doOnSuccess { logger.debug("Warmed up equipment list") }
-                .doOnError { logger.warn("Failed to warm up equipment list", it) }
+                .doOnError { error -> logger.warn("Failed to warm up equipment list - {}", error.message) }
                 .onErrorComplete(),
             muscleDAL.selectMuscles()
                 .doOnSuccess { logger.debug("Warmed up muscles list") }
-                .doOnError { logger.warn("Failed to warm up muscles list", it) }
+                .doOnError { error -> logger.warn("Failed to warm up muscles list - {}", error.message) }
                 .onErrorComplete(),
             workoutStageTypeDAL.selectWorkoutStageTypes()
                 .doOnSuccess { logger.debug("Warmed up workout stage types list") }
-                .doOnError { logger.warn("Failed to warm up workout stage types list", it) }
+                .doOnError { error -> logger.warn("Failed to warm up workout stage types list - {}", error.message) }
                 .onErrorComplete()
         ).then(Mono.just(Unit))
     }

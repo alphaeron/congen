@@ -8,8 +8,10 @@ import io.vertx.sqlclient.SqlClient
 import org.slf4j.LoggerFactory
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.boot.context.properties.EnableConfigurationProperties
+import org.springframework.context.ApplicationListener
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.context.event.ContextClosedEvent
 
 /**
  * Configuration properties for PostgreSQL database connections.
@@ -75,7 +77,7 @@ class PostgresConfig(
      * The properties for configuring PostgreSQL connections.
      */
     private val props: PostgresProperties
-) {
+) : ApplicationListener<ContextClosedEvent> {
     companion object {
         /** Logger instance for this class. */
         private val logger = LoggerFactory.getLogger(PostgresConfig::class.java)
@@ -86,6 +88,12 @@ class PostgresConfig(
         /** Number of connections in the writer pool. */
         private val CONNECTION_POOL_COUNT_WRITER = 10
     }
+
+    /** Reference to the reader connection pool for shutdown. */
+    private var readerPool: SqlClient? = null
+
+    /** Reference to the writer connection pool for shutdown. */
+    private var writerPool: SqlClient? = null
 
     /**
      * Creates and configures the PostgreSQL writer connection pool.
@@ -100,7 +108,9 @@ class PostgresConfig(
     fun postgresDBWriter(vertx: Vertx): SqlClient {
         logger.info("Initializing PostgreSQL writer connection on port {}", props.port)
         return try {
-            buildSqlClient(vertx, props.writer.host, CONNECTION_POOL_COUNT_WRITER)
+            val client = buildSqlClient(vertx, props.writer.host, CONNECTION_POOL_COUNT_WRITER)
+            writerPool = client
+            client
         } catch (e: Exception) {
             logger.error("Failed to initialize PostgreSQL writer connection", e)
             throw e
@@ -120,7 +130,9 @@ class PostgresConfig(
     fun postgresDBReader(vertx: Vertx): SqlClient {
         logger.info("Initializing PostgreSQL reader connection on port {}", props.port)
         return try {
-            buildSqlClient(vertx, props.reader.host, CONNECTION_POOL_COUNT_READER)
+            val client = buildSqlClient(vertx, props.reader.host, CONNECTION_POOL_COUNT_READER)
+            readerPool = client
+            client
         } catch (e: Exception) {
             logger.error("Failed to initialize PostgreSQL reader connection", e)
             throw e
@@ -172,5 +184,44 @@ class PostgresConfig(
             .with(poolOptions)
             .using(vertx)
             .build()
+    }
+
+    /**
+     * Handles application context shutdown to gracefully close PostgreSQL connection pools.
+     *
+     * This method ensures that database connection pools are properly closed during
+     * application shutdown, preventing connection leaks and ensuring clean shutdown.
+     * It follows the same pattern as the Memcached configuration for consistency.
+     *
+     * @param event The context closed event
+     */
+    override fun onApplicationEvent(event: ContextClosedEvent) {
+        try {
+            logger.info("Application context closing, shutting down PostgreSQL connection pools...")
+
+            // Close reader pool
+            readerPool?.let { pool ->
+                try {
+                    pool.close()
+                    logger.debug("PostgreSQL reader pool closed successfully")
+                } catch (e: Exception) {
+                    logger.warn("Error closing PostgreSQL reader pool", e)
+                }
+            }
+
+            // Close writer pool
+            writerPool?.let { pool ->
+                try {
+                    pool.close()
+                    logger.debug("PostgreSQL writer pool closed successfully")
+                } catch (e: Exception) {
+                    logger.warn("Error closing PostgreSQL writer pool", e)
+                }
+            }
+
+            logger.info("PostgreSQL connection pools shutdown complete")
+        } catch (e: Exception) {
+            logger.warn("Error during PostgreSQL connection pools shutdown", e)
+        }
     }
 }
