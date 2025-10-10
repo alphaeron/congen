@@ -3,7 +3,7 @@
 import groovy.json.JsonSlurper
 
 // Get environment from project property, default to 'local'
-ext.environment = project.hasProperty('environment') ? project.environment : 'local'
+ext.environment = project.hasProperty('environment') ? project.getProperty('environment') : 'local'
 
 task dockerBuild {
     group = 'build'
@@ -15,13 +15,13 @@ task dockerBuild {
         if (file('dist').exists()) {
             println "📦 Ensuring fresh build for Docker image..."
         }
-        def buildType = (project.environment == 'production') ? 'production' : 'debug'
+        def buildType = (project.hasProperty('environment') && project.getProperty('environment') == 'production') ? 'production' : 'debug'
         
         def packageJson = file('package.json')
         def version = new JsonSlurper().parse(packageJson).version
         def hash = 'git rev-parse --short HEAD'.execute(null, projectDir).text.trim()
         def timestamp = System.currentTimeMillis()
-        def tag = buildType == 'production' ? "${version}.${hash}" : "${version}.${hash}-${timestamp}-debug"
+        def tag = buildType == 'production' ? "${version}.${hash}" : "${version}.${hash}-${project.hasProperty('environment') ? project.getProperty('environment') : 'local'}-${timestamp}-debug"
         def image = "congen-ui:${tag}"
         
         if (!file('dist').exists()) {
@@ -89,9 +89,10 @@ task prepareLocalImage {
         }
         println "✅ Image loaded into minikube: ${project.ext.frontendImageTag}"
 
-        // Generate image tag patch for local with the current tag
-        generateFrontendImageTagPatchForEnvironment('local', project.ext.frontendImageTag)
-        println "✅ Generated frontend image tag patch for local: ${project.ext.frontendImageTag}"
+        // Generate image tag patch for the current environment with the current tag
+        def environment = project.hasProperty('environment') ? project.getProperty('environment') : 'local'
+        generateFrontendImageTagPatchForEnvironment(environment, project.ext.frontendImageTag)
+        println "✅ Generated frontend image tag patch for ${environment}: ${project.ext.frontendImageTag}"
     }
 }
 
@@ -128,7 +129,8 @@ task prepareRemoteImage {
         println "✅ Image pushed to remote registry: ${remoteImageName}"
 
         // Generate image tag patch for remote environment
-        generateFrontendImageTagPatchForEnvironment(project.environment, remoteImageName)
+        def environment = project.hasProperty('environment') ? project.getProperty('environment') : 'local'
+        generateFrontendImageTagPatchForEnvironment(environment, remoteImageName)
     }
 }
 
@@ -145,9 +147,9 @@ task prepareDeployment {
 
 // Configure prepareDeployment dependencies based on environment
 prepareDeployment.configure {
-    if (project.environment == 'local') {
+    if (project.hasProperty('environment') && (project.getProperty('environment') == 'local' || project.getProperty('environment') == 'local-persist')) {
         dependsOn prepareLocalImage
-    } else if (project.environment == 'staging' || project.environment == 'production') {
+    } else if (project.hasProperty('environment') && (project.getProperty('environment') == 'staging' || project.getProperty('environment') == 'production')) {
         dependsOn prepareRemoteImage
     }
 } 

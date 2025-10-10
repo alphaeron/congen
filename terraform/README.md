@@ -101,6 +101,28 @@ cp terraform.tfvars.example terraform.tfvars
 terraform init && terraform apply
 ```
 
+### Local-Persist Development
+
+**Purpose**: Development and testing on local machine with persistent storage
+**Configuration**:
+- Keycloak URL: `http://localhost:8080`
+- Frontend redirects: `http://localhost:3000/*`
+- Database: Local PostgreSQL with persistent hostPath storage
+- Security: HTTP (acceptable for local)
+- Storage: Data persists between deployments
+
+**Deploy**:
+```bash
+# Deploy application to local Kubernetes with persistent storage
+./gradlew deployAll -Penvironment=local-persist -PmountDir=/path/to/data
+
+# Deploy Terraform configuration (uses same directory as local)
+cd terraform/environments/local
+cp terraform.tfvars.example terraform.tfvars
+# Edit terraform.tfvars
+terraform init && terraform apply
+```
+
 ### Staging Environment
 
 **Purpose**: Pre-production testing and validation

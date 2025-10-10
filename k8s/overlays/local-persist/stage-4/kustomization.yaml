@@ -1,0 +1,17 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: congen
+
+resources:
+- ../../../base/stage-4
+
+patches:
+- path: patches/congen-secret-patch.yaml
+  target:
+    kind: Secret
+    name: congen-secret
+- path: patches/keycloak-secret-patch.yaml
+  target:
+    kind: Secret
+    name: keycloak-secret

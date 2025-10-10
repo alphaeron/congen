@@ -220,7 +220,7 @@ Run all Kubernetes validation tasks:
 
 ### Configuration Properties
 
-- **`environment`**: Target environment (local, staging, production) - **Required**
+- **`environment`**: Target environment (local, local-persist, staging, production) - **Required**
 - **`stage`**: Stage number (1-6) for `deployStage` task - **Required for deployStage**
 - **`remoteRegistry`**: Remote registry URL (required for staging/production)
 - **`remoteRegistryNamespace`**: Registry namespace (default: congen)

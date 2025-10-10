@@ -12,7 +12,7 @@ Overlays provide environment-specific customization through:
 
 ## Directory Structure
 
-Each environment (`local`, `staging`, `production`) contains:
+Each environment (`local`, `local-persist`, `staging`, `production`) contains:
 
 - `stage-3-infrastructure.yaml` - **Stage 3**: Infrastructure components
 - `stage-4-secrets.yaml` - **Stage 4**: Secrets bootstrapping (dummy values from base)
@@ -105,6 +105,15 @@ Deploys ingress with environment-specific configuration.
 - **Database Credentials**: Hardcoded test values (postgres/postgres) via secret patch
 - **Networking**: NodePort services, basic ingress, PostgreSQL network access
 - **Resources**: PostgreSQL deployment, service, configmap, PVC
+
+### Local-Persist Environment
+- **PostgreSQL**: Deployed in Kubernetes with persistent hostPath storage
+- **Secrets**: Dummy values in manifests, updated dynamically during deployment
+- **Database Credentials**: Hardcoded test values (postgres/postgres) via secret patch
+- **Networking**: NodePort services, basic ingress, PostgreSQL network access
+- **Resources**: PostgreSQL deployment, service, configmap with hostPath volume mount
+- **Storage**: Persistent data directory mounted from host system
+- **Terraform**: Uses same configuration as local environment
 
 ### Staging Environment
 - **Database**: External PostgreSQL (not deployed in Kubernetes)

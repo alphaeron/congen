@@ -260,8 +260,5 @@ logging.level.com.congen.service.CacheWarmupService=DEBUG
 
 Potential improvements for the cache warmup system:
 
-- **Analytics-Driven**: Use actual usage data to determine popular items
-- **Dynamic Configuration**: Update popular items without restart
-- **Progressive Warmup**: Warm up data in stages based on priority
 - **Health Checks**: Verify warmup effectiveness and cache health
 - **Metrics**: Expose warmup metrics for monitoring

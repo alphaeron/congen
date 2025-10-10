@@ -27,7 +27,7 @@ Bootstrap Keycloak with Terraform client credentials grant.
 
 OPTIONS:
     -u, --url URL           Keycloak server URL (REQUIRED)
-    -e, --environment ENV   Environment name (REQUIRED: local, staging, production)
+    -e, --environment ENV   Environment name (REQUIRED: local, local-persist, staging, production)
     -r, --realm REALM       Master realm name (default: master)
     -c, --client-id ID      Terraform client ID (default: terraform)
     -a, --admin-user USER   Admin username (will prompt if not provided)
@@ -75,14 +75,14 @@ if [[ -z "${KEYCLOAK_URL}" ]]; then
 fi
 
 if [[ -z "${ENVIRONMENT}" ]]; then
-    print_error "Environment is required. Use -e or --environment to specify it (local, staging, production)."
+    print_error "Environment is required. Use -e or --environment to specify it (local, local-persist, staging, production)."
     usage
     exit 1
 fi
 
 # Validate environment value
-if [[ "${ENVIRONMENT}" != "local" && "${ENVIRONMENT}" != "staging" && "${ENVIRONMENT}" != "production" ]]; then
-    echo -e "${RED}[ERROR]${NC} Invalid environment: ${ENVIRONMENT}. Must be one of: local, staging, production"
+if [[ "${ENVIRONMENT}" != "local" && "${ENVIRONMENT}" != "local-persist" && "${ENVIRONMENT}" != "staging" && "${ENVIRONMENT}" != "production" ]]; then
+    echo -e "${RED}[ERROR]${NC} Invalid environment: ${ENVIRONMENT}. Must be one of: local, local-persist, staging, production"
     usage
     exit 1
 fi
@@ -106,7 +106,11 @@ print_error() {
 # Get admin credentials from terraform.tfvars if not provided
 if [[ -z "${ADMIN_USERNAME}" ]]; then
     # Try to get from terraform.tfvars
-    tfvars_file="terraform/environments/${ENVIRONMENT}/terraform.tfvars"
+    if [[ "${ENVIRONMENT}" == "local-persist" ]]; then
+        tfvars_file="terraform/environments/local/terraform.tfvars"
+    else
+        tfvars_file="terraform/environments/${ENVIRONMENT}/terraform.tfvars"
+    fi
     if [[ -f "${tfvars_file}" ]]; then
         # Check if admin_username is defined in tfvars
         tfvars_username=$(grep "^admin_username" "${tfvars_file}" | cut -d'=' -f2 | tr -d ' "' || true)
@@ -127,7 +131,11 @@ fi
 
 if [[ -z "${ADMIN_PASSWORD}" ]]; then
     # Try to get from terraform.tfvars
-    tfvars_file="terraform/environments/${ENVIRONMENT}/terraform.tfvars"
+    if [[ "${ENVIRONMENT}" == "local-persist" ]]; then
+        tfvars_file="terraform/environments/local/terraform.tfvars"
+    else
+        tfvars_file="terraform/environments/${ENVIRONMENT}/terraform.tfvars"
+    fi
     if [[ -f "${tfvars_file}" ]]; then
         # Check if admin_password is defined in tfvars
         tfvars_password=$(grep "^admin_password" "${tfvars_file}" | cut -d'=' -f2 | tr -d ' "' || true)
@@ -406,7 +414,11 @@ generate_terraform_config() {
     
     print_status "Updating Terraform variables file..."
     
-    local tfvars_file="terraform/environments/${ENVIRONMENT}/terraform.tfvars"
+    if [[ "${ENVIRONMENT}" == "local-persist" ]]; then
+        local tfvars_file="terraform/environments/local/terraform.tfvars"
+    else
+        local tfvars_file="terraform/environments/${ENVIRONMENT}/terraform.tfvars"
+    fi
     
     # Check if keycloak_client_secret already exists in the file
     if grep -q "^keycloak_client_secret" "${tfvars_file}" 2>/dev/null; then
@@ -513,7 +525,11 @@ main() {
     print_status "Next steps:"
     print_status "1. Review the generated terraform.tfvars file"
     print_status "2. Ensure terraform.tfvars is in your .gitignore"
-    print_status "3. Run 'terraform init' in terraform/environments/${ENVIRONMENT}"
+    if [[ "${ENVIRONMENT}" == "local-persist" ]]; then
+        print_status "3. Run 'terraform init' in terraform/environments/local"
+    else
+        print_status "3. Run 'terraform init' in terraform/environments/${ENVIRONMENT}"
+    fi
     print_status "4. Run 'terraform apply' to create your Keycloak resources"
 }
 

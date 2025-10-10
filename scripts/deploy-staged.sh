@@ -14,6 +14,7 @@ NC='\033[0m' # No Color
 ENVIRONMENT=""
 KEYCLOAK_URL=""
 STAGE=""
+MOUNT_DIRECTORY=""
 
 # Function to display usage
 usage() {
@@ -23,13 +24,15 @@ Usage: $0 [OPTIONS]
 Perform staged deployment of Congen application.
 
 OPTIONS:
-    -e, --environment ENV   Environment name (REQUIRED: local, staging, production)
+    -e, --environment ENV   Environment name (REQUIRED: local, local-persist, staging, production)
     -u, --keycloak-url URL  Keycloak URL for bootstrap (default: http://localhost:8080)
     --stage STAGE           Deploy specific stage only (1-10)
+    -m, --mount-dir DIR     Mount directory for persistent storage (local-persist only)
     -h, --help              Show this help message
 
 EXAMPLES:
     $0 -e local                    # Full deployment for local environment
+    $0 -e local-persist -m /path/to/data  # Local deployment with persistent storage
     $0 -e staging -u https://keycloak.staging.example.com  # Staging deployment
     $0 -e local --stage 1          # Deploy only Stage 1 (Namespace)
     $0 -e local --stage 2          # Deploy only Stage 2 (Service Account)
@@ -39,15 +42,17 @@ EOF
 }
 
 # Parse command line arguments
-while getopts "e:u:h-:" opt; do
+while getopts "e:u:m:h-:" opt; do
     case ${opt} in
         e) ENVIRONMENT="${OPTARG}" ;;
         u) KEYCLOAK_URL="${OPTARG}" ;;
+        m) MOUNT_DIRECTORY="${OPTARG}" ;;
         h) usage; exit 0 ;;
         -)
             case "${OPTARG}" in
                 environment) ENVIRONMENT="${!OPTIND}"; OPTIND=$((OPTIND + 1)) ;;
                 keycloak-url) KEYCLOAK_URL="${!OPTIND}"; OPTIND=$((OPTIND + 1)) ;;
+                mount-dir) MOUNT_DIRECTORY="${!OPTIND}"; OPTIND=$((OPTIND + 1)) ;;
                 stage) STAGE="${!OPTIND}"; OPTIND=$((OPTIND + 1)) ;;
                 help) usage; exit 0 ;;
                 *) echo "Unknown option --${OPTARG}" >&2; usage; exit 1 ;;
@@ -60,6 +65,7 @@ done
 if [[ -z "${KEYCLOAK_URL}" ]]; then
     case "${ENVIRONMENT}" in
         local) KEYCLOAK_URL="http://localhost:8080" ;;
+        local-persist) KEYCLOAK_URL="http://localhost:8080" ;;
         staging) KEYCLOAK_URL="https://keycloak.staging.congen.com" ;;
         production) KEYCLOAK_URL="https://keycloak.congen.com" ;;
         *) echo "Unknown environment: ${ENVIRONMENT}" >&2; exit 1 ;;
@@ -68,14 +74,21 @@ fi
 
 # Validate required arguments
 if [[ -z "${ENVIRONMENT}" ]]; then
-    echo -e "${RED}[ERROR]${NC} Environment is required. Use -e or --environment to specify it (local, staging, production)."
+    echo -e "${RED}[ERROR]${NC} Environment is required. Use -e or --environment to specify it (local, local-persist, staging, production)."
+    usage
+    exit 1
+fi
+
+# Validate mount directory for local-persist environment
+if [[ "${ENVIRONMENT}" == "local-persist" && -z "${MOUNT_DIRECTORY}" ]]; then
+    echo -e "${RED}[ERROR]${NC} Mount directory is required for local-persist environment. Use -m or --mount-dir to specify it."
     usage
     exit 1
 fi
 
 # Validate environment value
-if [[ "${ENVIRONMENT}" != "local" && "${ENVIRONMENT}" != "staging" && "${ENVIRONMENT}" != "production" ]]; then
-    echo -e "${RED}[ERROR]${NC} Invalid environment: ${ENVIRONMENT}. Must be one of: local, staging, production"
+if [[ "${ENVIRONMENT}" != "local" && "${ENVIRONMENT}" != "local-persist" && "${ENVIRONMENT}" != "staging" && "${ENVIRONMENT}" != "production" ]]; then
+    echo -e "${RED}[ERROR]${NC} Invalid environment: ${ENVIRONMENT}. Must be one of: local, local-persist, staging, production"
     usage
     exit 1
 fi
@@ -146,6 +159,128 @@ deploy_service_account() {
     fi
 }
 
+# Function to setup minikube mount for local-persist
+setup_minikube_mount() {
+    if [[ "${ENVIRONMENT}" == "local-persist" && -n "${MOUNT_DIRECTORY}" ]]; then
+        print_status "Setting up minikube mount for local-persist..."
+        
+        # Check if the mount is already active by looking for the process
+        if ! pgrep -f "minikube mount.*${MOUNT_DIRECTORY}" > /dev/null; then
+            print_status "Mounting ${MOUNT_DIRECTORY} to /host${MOUNT_DIRECTORY} in minikube with uid=999, gid=999..."
+            # Start the mount in the background with correct ownership
+            nohup minikube mount "${MOUNT_DIRECTORY}:/host${MOUNT_DIRECTORY}" --uid=999 --gid=999 > /dev/null 2>&1 &
+            sleep 2  # Give it a moment to establish the mount
+            print_success "Minikube mount established with correct ownership"
+        else
+            print_success "Minikube mount already active"
+        fi
+    fi
+}
+
+# Function to generate postgres mount patch for local-persist
+generate_postgres_mount_patch() {
+    if [[ "${ENVIRONMENT}" == "local-persist" && -n "${MOUNT_DIRECTORY}" ]]; then
+        print_status "Generating postgres mount patch for local-persist..."
+        
+        # Create the postgres deployment with hostPath mount
+        # Note: The directory will be mounted using minikube mount command
+        cat > "k8s/overlays/local-persist/stage-5/postgres-deployment.yaml" << EOF
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres
+  namespace: congen
+  labels:
+    app: postgres
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 999
+        fsGroup: 999
+      containers:
+      - name: postgres
+        image: postgres:15-alpine
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 999
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+        ports:
+        - containerPort: 5432
+        env:
+        - name: POSTGRES_DB
+          valueFrom:
+            secretKeyRef:
+              name: congen-secret
+              key: PGDATABASE
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: congen-secret
+              key: PGUSER
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: congen-secret
+              key: PGPASSWORD
+        - name: PGDATA
+          value: /var/lib/postgresql/data/pgdata
+        - name: POSTGRES_INITDB_ARGS
+          value: "--auth-host=scram-sha-256 --auth-local=trust"
+        volumeMounts:
+        - name: postgres-storage
+          mountPath: /var/lib/postgresql/data
+        - name: postgres-config
+          mountPath: /etc/postgresql/postgresql.conf
+          subPath: postgresql.conf
+        resources:
+          requests:
+            memory: "100Mi"
+            cpu: "250m"
+          limits:
+            memory: "250Mi"
+            cpu: "500m"
+        livenessProbe:
+          exec:
+            command:
+            - pg_isready
+            - -U
+            - postgres
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          exec:
+            command:
+            - pg_isready
+            - -U
+            - postgres
+          initialDelaySeconds: 5
+          periodSeconds: 5
+      volumes:
+      - name: postgres-storage
+        hostPath:
+          path: /host${MOUNT_DIRECTORY}
+          type: Directory
+      - name: postgres-config
+        configMap:
+          name: postgres-config
+EOF
+        
+        print_success "Postgres deployment generated: k8s/overlays/local-persist/stage-5/postgres-deployment.yaml"
+    fi
+}
+
 # Function to deploy infrastructure
 deploy_infrastructure() {
     print_step "3" "Deploying Infrastructure"
@@ -186,6 +321,12 @@ deploy_secrets() {
 # Function to deploy database migrations
 deploy_database_migrations() {
     print_step "5" "Deploying Database Migrations"
+    
+    # Setup minikube mount for local-persist environment
+    setup_minikube_mount
+    
+    # Generate postgres mount patch for local-persist environment
+    generate_postgres_mount_patch
     
     print_status "Deploying database migrations to Kubernetes..."
     if kubectl apply -k "k8s/overlays/${ENVIRONMENT}/stage-5"; then
@@ -280,7 +421,11 @@ apply_terraform() {
     print_status "Bootstrapping Keycloak for Terraform..."
     bootstrap_keycloak
     
-    local terraform_dir="terraform/environments/${ENVIRONMENT}"
+    if [[ "${ENVIRONMENT}" == "local-persist" ]]; then
+        local terraform_dir="terraform/environments/local"
+    else
+        local terraform_dir="terraform/environments/${ENVIRONMENT}"
+    fi
     
     print_status "Initializing Terraform..."
     cd "${terraform_dir}" || exit

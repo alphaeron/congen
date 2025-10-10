@@ -155,7 +155,7 @@ For detailed Kubernetes deployment instructions, see [../k8s/README.md](../k8s/R
 The backend implements production-ready CORS (Cross-Origin Resource Sharing) security with environment-based configuration.
 
 #### Security Features
-- **Environment-Based Configuration**: Different settings for local, staging, and production
+- **Environment-Based Configuration**: Different settings for local, local-persist, staging, and production
 - **Origin Validation**: Whitelist-based origin validation with HTTPS enforcement in production
 - **Rate Limiting**: CORS violation rate limiting (10 violations per IP per 5 minutes)
 - **Security Headers**: Comprehensive security headers including CSP, HSTS, and XSS protection
@@ -563,7 +563,7 @@ For questions, issues, or contributions, please:
 The following Gradle tasks are available for backend operations:
 
 #### Deployment Tasks
-- `:backend:deployToKubernetes` - Deploy to specified environment (requires -Penvironment=local|staging|production)
+- `:backend:deployToKubernetes` - Deploy to specified environment (requires -Penvironment=local|local-persist|staging|production)
 
 #### Build Tasks
 - `:backend:jibDockerBuild` - Build Docker image locally using JIB

@@ -1,0 +1,17 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: migration-service
+  namespace: congen
+spec:
+  template:
+    spec:
+      initContainers:
+      - name: wait-for-postgres
+        image: mirror.gcr.io/busybox:1.35
+        command: ['sh', '-c', 'timeout 180 sh -c "until nc -z postgres 5432; do echo waiting for postgres; sleep 2; done; echo postgres is ready;" || (echo "Timeout waiting for postgres"; exit 1)']
+      containers:
+      - name: migration-service
+        env:
+        - name: MIGRATION_LABELS
+          value: "test" 

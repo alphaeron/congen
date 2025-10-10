@@ -4,7 +4,7 @@
 task kubeval(type: Exec, group: 'verification') {
     description = 'Lint Kubernetes manifests with kubeval for all base and overlay environments'
     commandLine 'sh', '-c', '''
-        for env in "base" "overlays/production" "overlays/staging" "overlays/local"; do
+        for env in "base" "overlays/production" "overlays/staging" "overlays/local" "overlays/local-persist"; do
             case "$env" in
                 "base")
                     env_display="Base"
@@ -17,6 +17,9 @@ task kubeval(type: Exec, group: 'verification') {
                     ;;
                 "overlays/local")
                     env_display="Local"
+                    ;;
+                "overlays/local-persist")
+                    env_display="Local-Persist"
                     ;;
             esac
             echo "=== Kubeval Linting ${env_display} Environment ==="
@@ -45,6 +48,8 @@ task kubeLinter(type: Exec, group: 'verification') {
         kube-linter lint --exclude=latest-tag,no-read-only-root-fs,unset-cpu-requirements,unset-memory-requirements,run-as-non-root,mismatching-selector,job-ttl-seconds-after-finished k8s/overlays/staging &&
         echo "=== Linting Local Overlay (Development) ===" &&
         kube-linter lint --exclude=latest-tag,no-read-only-root-fs,unset-cpu-requirements,unset-memory-requirements,run-as-non-root,mismatching-selector,job-ttl-seconds-after-finished k8s/overlays/local &&
+        echo "=== Linting Local-Persist Overlay (Development with Persistence) ===" &&
+        kube-linter lint --exclude=latest-tag,no-read-only-root-fs,unset-cpu-requirements,unset-memory-requirements,run-as-non-root,mismatching-selector,job-ttl-seconds-after-finished k8s/overlays/local-persist &&
         echo "=== Linting Base Kubernetes Resources ===" &&
         kube-linter lint --exclude=latest-tag,no-read-only-root-fs,unset-cpu-requirements,unset-memory-requirements,run-as-non-root,non-existent-service-account k8s/base
     '''
@@ -52,8 +57,9 @@ task kubeLinter(type: Exec, group: 'verification') {
 
 task kubectlDryRun(type: Exec, group: 'verification') {
     description = 'Validate all stages in base and overlay environments with kubectl dry-run'
+    dependsOn setupLocalKubernetes
     commandLine 'sh', '-c', '''
-        for env in "base" "overlays/production" "overlays/staging" "overlays/local"; do
+        for env in "base" "overlays/production" "overlays/staging" "overlays/local" "overlays/local-persist"; do
             case "$env" in
                 "base")
                     env_display="Base"
@@ -66,6 +72,9 @@ task kubectlDryRun(type: Exec, group: 'verification') {
                     ;;
                 "overlays/local")
                     env_display="Local"
+                    ;;
+                "overlays/local-persist")
+                    env_display="Local-Persist"
                     ;;
             esac
             echo "=== Dry Run ${env_display} Stages ==="
@@ -332,8 +341,10 @@ task checkLicenses(group: 'verification', description: 'Check for forbidden lice
 }
 
 task quickLint(group: 'verification', description: 'Run all linting except securityAudit') {
+    dependsOn setupLocalKubernetes
     dependsOn subprojects.collect { it.path + ':allLint' }
     dependsOn shellCheck, kubeCheck, gradleCheck, terraformCheck, jsonCheck, checkLicenses
+    finalizedBy cleanupLocalKubernetes
 }
 
 // Comprehensive linting task that includes Gradle files and security audit

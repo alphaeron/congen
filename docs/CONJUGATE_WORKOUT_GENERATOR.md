@@ -550,7 +550,7 @@ End-to-end tests verify:
 ### Generate Next Week
 - **Endpoint**: `POST /conjugate_workout_generator/{program_id}`
 - **Description**: Generates the next week of workouts for an existing program
-- **Parameters**: 
+- **Parameters**:
   - `program_id` (path): ID of the existing program
 - **Response**: Updated program with new workouts
 - **Features**:
@@ -574,19 +574,14 @@ Potential improvements include:
 - Advanced weak point analysis based on performance data
 - Machine learning for exercise selection optimization
 - Integration with wearable devices for real-time feedback
-- Seasonal periodization planning
-- Competition preparation programs
 - Configuration management for different training styles
 - Plugin architecture for new exercise selection algorithms
-- Performance optimization of individual components
 - Feature extensions for new workout types or periodization schemes
 - Enhanced reference exercise detection with machine learning
 - Dynamic exercise similarity scoring based on user performance patterns
 - Advanced weight estimation algorithms for specialized exercises
 - Real-time exercise difficulty adjustment based on user feedback
 - Integration with nutrition and recovery tracking
-- Advanced periodization schemes (block periodization, wave loading)
-- Competition peak programming
 - Injury prevention and rehabilitation integration
 - Advanced movement balance algorithms with machine learning
 - Dynamic movement balance adjustment based on user performance feedback

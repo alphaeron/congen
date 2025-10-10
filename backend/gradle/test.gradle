@@ -81,9 +81,11 @@ tasks.register('integrationTest', Test) {
 
 // Configure the environment for integration tests
 project.afterEvaluate {
-    // Set environment for integration test deployment
+    // Set environment for integration test deployment (only if not already set)
     integrationTest.doFirst {
-        project.ext.environment = 'local'
+        if (!project.hasProperty('environment')) {
+            project.ext.environment = 'local'
+        }
         println "🎯 Integration test deployment environment: ${project.ext.environment}"
     }
 }

@@ -24,7 +24,7 @@ Usage: $0 [OPTIONS]
 Update Kubernetes secrets with Terraform outputs.
 
 OPTIONS:
-    -e, --environment ENV   Environment name (REQUIRED: local, staging, production)
+    -e, --environment ENV   Environment name (REQUIRED: local, local-persist, staging, production)
     -t, --terraform-dir DIR Terraform directory (default: terraform/environments/{environment})
     -h, --help              Show this help message
 
@@ -55,19 +55,23 @@ done
 
 # Set default terraform directory if not provided
 if [[ -z "${TERRAFORM_DIR}" ]]; then
-    TERRAFORM_DIR="terraform/environments/${ENVIRONMENT}"
+    if [[ "${ENVIRONMENT}" == "local-persist" ]]; then
+        TERRAFORM_DIR="terraform/environments/local"
+    else
+        TERRAFORM_DIR="terraform/environments/${ENVIRONMENT}"
+    fi
 fi
 
 # Validate required arguments
 if [[ -z "${ENVIRONMENT}" ]]; then
-    echo -e "${RED}[ERROR]${NC} Environment is required. Use -e or --environment to specify it (local, staging, production)."
+    echo -e "${RED}[ERROR]${NC} Environment is required. Use -e or --environment to specify it (local, local-persist, staging, production)."
     usage
     exit 1
 fi
 
 # Validate environment value
-if [[ "${ENVIRONMENT}" != "local" && "${ENVIRONMENT}" != "staging" && "${ENVIRONMENT}" != "production" ]]; then
-    echo -e "${RED}[ERROR]${NC} Invalid environment: ${ENVIRONMENT}. Must be one of: local, staging, production"
+if [[ "${ENVIRONMENT}" != "local" && "${ENVIRONMENT}" != "local-persist" && "${ENVIRONMENT}" != "staging" && "${ENVIRONMENT}" != "production" ]]; then
+    echo -e "${RED}[ERROR]${NC} Invalid environment: ${ENVIRONMENT}. Must be one of: local, local-persist, staging, production"
     usage
     exit 1
 fi

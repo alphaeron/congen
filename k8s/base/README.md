@@ -1,6 +1,6 @@
 # Base Kubernetes Resources
 
-This directory contains the base Kubernetes resources that are shared across all environments (local, staging, production).
+This directory contains the base Kubernetes resources that are shared across all environments (local, local-persist, staging, production).
 
 ## Overview
 

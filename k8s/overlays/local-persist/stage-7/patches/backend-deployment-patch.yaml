@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+spec:
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+      containers:
+      - name: backend
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: "local"
+        - name: GDPR_AUDIT_ENABLED
+          value: "false"
+        - name: DATA_RETENTION_CHECK_ENABLED
+          value: "false"
+        - name: JVM_HEAP_MIN
+          value: "256m"
+        - name: JVM_HEAP_MAX
+          value: "384m"
+        - name: JVM_METASPACE_MIN
+          value: "64M"
+        - name: JVM_METASPACE_MAX
+          value: "128M"
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1000
+          readOnlyRootFilesystem: true
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "250m"

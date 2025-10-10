@@ -1,12 +1,10 @@
-// Version information for deployment
-def versionInfo = versionDetails()
-def timestamp = new Date().getTime()
-
 // Get environment from project property, default to 'local'
 ext.environment = project.hasProperty('environment') ? project.getProperty('environment') : 'local'
 
-// Generate final image tag
-def tag = "${versionInfo.branchName}-${versionInfo.gitHash}-${environment}-${timestamp}"
+// Create image tag at top level
+def versionInfo = versionDetails()
+def timestamp = new Date().getTime()
+def tag = "${versionInfo.branchName}-${versionInfo.gitHash}-${ext.environment}-${timestamp}"
 
 // Configurable registry settings
 def localRegistryPort = project.hasProperty('localRegistryPort') ? project.getProperty('localRegistryPort') : '5001'
@@ -123,9 +121,10 @@ task prepareLocalImage {
         }
         println "✅ Image loaded into minikube: backend:${tag}"
 
-        // Generate image tag patch for local with the current tag
-        generateImageTagPatchForEnvironment('local', "backend:${tag}")
-        println "✅ Generated image tag patch for local: backend:${tag}"
+        // Generate image tag patch for the current environment with the current tag
+        def environment = project.hasProperty('environment') ? project.getProperty('environment') : 'local'
+        generateImageTagPatchForEnvironment(environment, "backend:${tag}")
+        println "✅ Generated image tag patch for ${environment}: backend:${tag}"
     }
 }
 
@@ -162,6 +161,7 @@ task prepareRemoteImage {
         println "✅ Image pushed to remote registry: ${remoteImageName}"
 
         // Generate image tag patch for remote environment
+        def environment = project.hasProperty('environment') ? project.getProperty('environment') : 'local'
         generateImageTagPatchForEnvironment(environment, remoteImageName)
     }
 }
@@ -200,8 +200,8 @@ task prepareDeployment {
 }
 
 prepareDeployment.dependsOn createMigrationsConfigMap
-if (project.environment == 'local') {
+if (project.hasProperty('environment') && (project.getProperty('environment') == 'local' || project.getProperty('environment') == 'local-persist')) {
     prepareDeployment.dependsOn prepareLocalImage
-} else if (project.environment == 'staging' || project.environment == 'production') {
+} else if (project.hasProperty('environment') && (project.getProperty('environment') == 'staging' || project.getProperty('environment') == 'production')) {
     prepareDeployment.dependsOn prepareRemoteImage
 }

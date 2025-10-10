@@ -3,7 +3,7 @@
 import groovy.json.JsonSlurper
 
 // Get environment from project property, default to 'local'
-ext.environment = project.hasProperty('environment') ? project.environment : 'local'
+ext.environment = project.hasProperty('environment') ? project.getProperty('environment') : 'local'
 
 task dockerBuild {
     group = 'build'
@@ -21,13 +21,14 @@ task dockerBuild {
     }
     
     doLast {
-        def buildType = (project.environment == 'production') ? 'production' : 'debug'
+        def environment = project.hasProperty('environment') ? project.getProperty('environment') : 'local'
+        def buildType = (environment == 'production') ? 'production' : 'debug'
         
         def packageJson = file('package.json')
         def version = new JsonSlurper().parse(packageJson).version
         def hash = 'git rev-parse --short HEAD'.execute(null, projectDir).text.trim()
         def timestamp = System.currentTimeMillis()
-        def tag = buildType == 'production' ? "${version}.${hash}" : "${version}.${hash}-${timestamp}-debug"
+        def tag = buildType == 'production' ? "${version}.${hash}" : "${version}.${hash}-${environment}-${timestamp}-debug"
         def image = "keycloak-theme:${tag}"
         
         println "🐳 Building ${buildType} Docker image: ${image}"
@@ -91,9 +92,10 @@ task prepareLocalImage {
         }
         println "✅ Image loaded into minikube: ${project.ext.themeImageTag}"
 
-        // Generate image tag patch for local with the current tag
-        generateThemeImageTagPatchForEnvironment('local', project.ext.themeImageTag)
-        println "✅ Generated keycloak theme image tag patch for local: ${project.ext.themeImageTag}"
+        // Generate image tag patch for the current environment with the current tag
+        def environment = project.hasProperty('environment') ? project.getProperty('environment') : 'local'
+        generateThemeImageTagPatchForEnvironment(environment, project.ext.themeImageTag)
+        println "✅ Generated keycloak theme image tag patch for ${environment}: ${project.ext.themeImageTag}"
     }
 }
 
@@ -130,7 +132,8 @@ task prepareRemoteImage {
         println "✅ Image pushed to remote registry: ${remoteImageName}"
 
         // Generate image tag patch for remote environment
-        generateThemeImageTagPatchForEnvironment(project.environment, remoteImageName)
+        def environment = project.hasProperty('environment') ? project.getProperty('environment') : 'local'
+        generateThemeImageTagPatchForEnvironment(environment, remoteImageName)
     }
 }
 
@@ -146,9 +149,9 @@ task prepareDeployment {
 
 // Configure prepareDeployment dependencies based on environment
 prepareDeployment.configure {
-    if (project.environment == 'local') {
+    if (project.hasProperty('environment') && (project.getProperty('environment') == 'local' || project.getProperty('environment') == 'local-persist')) {
         dependsOn prepareLocalImage
-    } else if (project.environment == 'staging' || project.environment == 'production') {
+    } else if (project.hasProperty('environment') && (project.getProperty('environment') == 'staging' || project.getProperty('environment') == 'production')) {
         dependsOn prepareRemoteImage
     }
 }

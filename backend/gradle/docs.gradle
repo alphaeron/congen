@@ -14,8 +14,10 @@
  * - ./gradlew dokkaHtml - Generate Kotlin documentation
  */
 
-// Set environment to local for documentation tasks
-project.ext.environment = 'local'
+// Set environment to local for documentation tasks (only if not already set)
+if (!project.hasProperty('environment')) {
+    project.ext.environment = 'local'
+}
 
 // Task to generate API documentation
 task generateApiDocs(type: Exec) {
@@ -114,8 +116,10 @@ task generateSchemaDot(type: Exec) {
     group = 'Documentation'
     description = 'Generate Graphviz DOT file from Liquibase migrations'
 
-    // Ensure the environment is set to local
-    project.ext.environment = 'local'
+    // Ensure the environment is set to local (only if not already set)
+    if (!project.hasProperty('environment')) {
+        project.ext.environment = 'local'
+    }
 
     // Ensure the cluster is deployed before schema extraction
     dependsOn ':deployAll'

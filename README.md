@@ -18,7 +18,7 @@ congen/
 
 - **backend/**: Contains the Spring Boot API, business logic, database migrations, and backend documentation. See [backend/README.md](backend/README.md) for full backend details, setup, and API documentation.
 - **frontend/**: Contains the React/TypeScript frontend application with Material-UI components, authentication, and dashboard functionality.
-- **k8s/**: Shared Kubernetes manifests and overlays for deploying the backend (and eventually frontend) to local, staging, or production environments.
+- **k8s/**: Shared Kubernetes manifests and overlays for deploying the backend (and eventually frontend) to local, local-persist, staging, or production environments.
 
 ## Quick Start
 

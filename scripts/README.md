@@ -4,45 +4,48 @@ This directory contains utility scripts for the Congen project.
 
 ## Scripts
 
-### `start-minikube-local.sh`
+### `deploy-staged.sh`
 
-**Purpose**: Start the Congen minikube deployment with persistent storage for local development.
+**Purpose**: Deploy the Congen application using staged deployment with support for persistent storage.
 
 **Prerequisites**:
 - [minikube](https://minikube.sigs.k8s.io/docs/start/) installed and configured
 - [kubectl](https://kubernetes.io/docs/tasks/tools/) installed
-- [curl](https://curl.se/) for health checks
-- [netcat](https://nmap.org/ncat/) for port checking
+- [terraform](https://terraform.io/) installed
 - Gradle wrapper (`gradlew`) in project root
 
 **What it does**:
 
-1. **Checks prerequisites** - Validates all required tools are available
-2. **Creates persistent storage** - Sets up local data directories for PostgreSQL
-3. **Deploys PostgreSQL** - Creates custom PostgreSQL deployment with hostPath mounting
-4. **Deploys application** - Uses `./gradlew deployAll -Penvironment=local` for full deployment
-5. **Updates backend config** - Patches backend to use local PostgreSQL
-6. **Sets up port forwarding** - Makes all services accessible on localhost
-7. **Verifies services** - Quick health checks for all services
+1. **Deploys in stages** - Deploys application components in dependency order
+2. **Supports persistent storage** - Can mount host directories for data persistence
+3. **Manages Keycloak** - Sets up Keycloak authentication and authorization
+4. **Updates secrets** - Dynamically updates Kubernetes secrets with Terraform outputs
+5. **Validates deployment** - Ensures all components are properly deployed
 
 **Usage**:
 
 ```bash
-# Use default data directory (~/.congen/minikube-data)
-./scripts/start-minikube-local.sh
+# Deploy to local environment
+./scripts/deploy-staged.sh -e local
 
-# Use custom data directory
-./scripts/start-minikube-local.sh -d /path/to/custom/data
+# Deploy to local environment with persistent storage
+./scripts/deploy-staged.sh -e local-persist -m /path/to/data
 
-# Use temporary data directory
-./scripts/start-minikube-local.sh --data-dir /tmp/congen-data
+# Deploy to staging environment
+./scripts/deploy-staged.sh -e staging
+
+# Deploy specific stage only
+./scripts/deploy-staged.sh -e local --stage 5
 
 # Show help
-./scripts/start-minikube-local.sh --help
+./scripts/deploy-staged.sh --help
 ```
 
 **Command Line Options**:
-- `-d, --data-dir DIR`: Data directory for persistent storage (default: ~/.congen/minikube-data)
+- `-e, --environment ENV`: Environment name (REQUIRED: local, local-persist, staging, production)
+- `-m, --mount-dir DIR`: Mount directory for persistent storage (local-persist only)
+- `--stage STAGE`: Deploy specific stage only (1-10)
+- `-u, --keycloak-url URL`: Keycloak URL for bootstrap (default: environment-specific)
 - `--help, -h`: Show help message
 
 **Service Access**:
@@ -51,50 +54,15 @@ This directory contains utility scripts for the Congen project.
 - Keycloak: http://localhost:8080
 - PostgreSQL: localhost:5432
 
-**Data Storage**:
-- PostgreSQL data: `{data-dir}/postgres/`
-- All data persists between restarts
-- Default location: `~/.congen/minikube-data/`
-
-### `stop-minikube-local.sh`
-
-**Purpose**: Stop the Congen minikube deployment and clean up port forwarding.
-
-**Prerequisites**:
-- [kubectl](https://kubernetes.io/docs/tasks/tools/) installed (for deployment cleanup)
-
-**What it does**:
-
-1. **Stops port forwarding** - Kills all port forward processes and cleans up PID files
-2. **Stops deployments** - Deletes all application deployments and services
-3. **Preserves data** - Data remains in the directory used when starting
-4. **Optionally stops minikube** - Can stop minikube to save system resources
-
-**Usage**:
-
-```bash
-# Stop application and port forwarding, keep minikube running
-./scripts/stop-minikube-local.sh
-
-# Stop everything including minikube (saves system resources)
-./scripts/stop-minikube-local.sh --stop-minikube
-
-# Show help
-./scripts/stop-minikube-local.sh --help
-```
-
-**Command Line Options**:
-- `--stop-minikube`: Also stop the minikube profile (saves resources)
-- `--help, -h`: Show help message
-
-**Data Preservation**:
-- Data is preserved in the directory used when starting the application
-- To start fresh, manually delete the data directory before restarting
+**Data Storage** (local-persist only):
+- PostgreSQL data: Mounted from specified directory
+- Data persists between deployments
+- Use `-m /path/to/data` to specify storage location
 
 **Integration**:
 - Works with the existing Gradle deployment system
-- Complements `./gradlew deployAll -Penvironment=local`
-- Can be used alongside manual Gradle deployments
+- Can be called directly or via `./gradlew deployAll -Penvironment=local-persist -PmountDir=/path/to/data`
+- Supports all deployment stages for complete application setup
 
 ### `update-k8s-secrets.sh`
 
@@ -139,7 +107,7 @@ This directory contains utility scripts for the Congen project.
 ```
 
 **Command Line Options**:
-- `-e, --environment ENV`: Environment name (REQUIRED: local, staging, production)
+- `-e, --environment ENV`: Environment name (REQUIRED: local, local-persist, staging, production)
 - `-t, --terraform-dir DIR`: Terraform directory (default: terraform/environments/{environment})
 - `-h, --help`: Show help message
 
@@ -184,7 +152,7 @@ This directory contains utility scripts for the Congen project.
    - `manage-clients`
 
 3. **Updates Terraform variables file**:
-   - Updates `terraform/environments/{environment}/terraform.tfvars` with the client secret
+   - Updates `terraform/environments/{environment}/terraform.tfvars` with the client secret (local-persist uses local directory)
    - If the file doesn't exist, creates it with the client secret
    - If the file exists, updates the existing `keycloak_client_secret` value
    - Preserves any existing variables in the file
@@ -213,7 +181,7 @@ chmod +x scripts/setup-keycloak-terraform.sh
 
 **Command Line Options**:
 - `-u, --url URL`: Keycloak server URL (REQUIRED)
-- `-e, --environment ENV`: Environment name (REQUIRED: local, staging, production)
+- `-e, --environment ENV`: Environment name (REQUIRED: local, local-persist, staging, production)
 - `-r, --realm REALM`: Master realm name (default: master)
 - `-c, --client-id ID`: Terraform client ID (default: terraform)
 - `-a, --admin-user USER`: Admin username (will prompt if not provided)
@@ -222,14 +190,15 @@ chmod +x scripts/setup-keycloak-terraform.sh
 
 **Output**:
 - Creates the Terraform client in Keycloak
-- Updates `terraform/environments/{environment}/terraform.tfvars` with the client secret
+- Updates `terraform/environments/{environment}/terraform.tfvars` with the client secret (local-persist uses local directory)
 - Preserves existing variables in the terraform.tfvars file
 
 **Security Notes**:
 - The `terraform.tfvars` file contains the client secret and should never be committed to version control
 - Ensure `terraform/environments/*/terraform.tfvars` is in your `.gitignore` file
 - The client secret is used for Terraform to authenticate with Keycloak's admin API
-- Each environment (local, staging, production) has its own terraform.tfvars file
+- Each environment (local, local-persist, staging, production) has its own terraform.tfvars file
+- Note: local-persist uses the same Terraform directory as local (terraform/environments/local)
 
 **Troubleshooting**:
 
@@ -247,7 +216,7 @@ If the script fails with API errors:
 After running the script:
 1. Review the updated `terraform.tfvars` file
 2. Ensure `terraform.tfvars` is in your `.gitignore` file
-3. Run `terraform init` in `terraform/environments/{environment}`
+3. Run `terraform init` in `terraform/environments/{environment}` (use `local` for local-persist)
 4. Run `terraform apply` to create your Keycloak resources
 
 **References**:

@@ -6,7 +6,7 @@ plugins {
 description = 'Congen Keycloak Account Theme'
 
 // Get environment from project property, default to 'local'
-ext.environment = project.hasProperty('environment') ? project.environment : 'local'
+ext.environment = project.hasProperty('environment') ? project.getProperty('environment') : 'local'
 
 // Custom npm tasks with environment variables
 task npmBuildWithEnv(type: com.github.gradle.node.npm.task.NpmTask) {
@@ -31,10 +31,10 @@ task buildApp {
     description = 'Build the application (uses environment to determine build type)'
     dependsOn npm_install
 
-    def buildType = (project.environment == 'production') ? 'production' : 'debug'
+    def buildType = (project.hasProperty('environment') && project.getProperty('environment') == 'production') ? 'production' : 'debug'
 
     doFirst {
-        println "🌍 Building keycloak account theme for environment: ${project.environment}"
+        println "🌍 Building keycloak account theme for environment: ${project.hasProperty('environment') ? project.getProperty('environment') : 'local'}"
     }
 
     if (buildType == 'production') {

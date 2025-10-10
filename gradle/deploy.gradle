@@ -5,7 +5,13 @@ ext.environment = project.hasProperty('environment') ? project.getProperty('envi
 
 // Helper function to build command line arguments for deploy-staged.sh
 def buildDeployStagedArgs(stage = null) {
-    def args = ['-e', project.environment]
+    def environment = project.hasProperty('environment') ? project.getProperty('environment') : 'local'
+    def args = ['-e', environment]
+    
+    // Add mount directory for local-persist environment
+    if (environment == 'local-persist' && project.hasProperty('mountDir')) {
+        args += ['-m', project.getProperty('mountDir')]
+    }
     
     // Add stage-specific arguments if provided
     if (stage) {
@@ -80,6 +86,31 @@ task cleanupPortForward {
     }
 }
 
+task cleanupLocalKubernetes {
+    description = 'Cleanup local Kubernetes environment (stop minikube)'
+    group = 'kubernetes'
+    doLast {
+        println "🧹 Cleaning up local Kubernetes environment..."
+        def minikubeStatus = exec {
+            commandLine 'minikube', 'status'
+            ignoreExitValue = true
+            standardOutput = new ByteArrayOutputStream()
+            errorOutput = new ByteArrayOutputStream()
+        }
+        if (minikubeStatus.exitValue == 0) {
+            println "Stopping minikube..."
+            exec {
+                commandLine 'minikube', 'stop'
+                ignoreExitValue = true
+            }
+            println "✅ Minikube stopped"
+        } else {
+            println "Minikube is not running, nothing to clean up"
+        }
+        println "✅ Local Kubernetes environment cleaned up"
+    }
+}
+
 // Unified stage deployment task
 task deployStage {
     group = 'deployment'
@@ -97,7 +128,7 @@ task deployStage {
         }
         
         // Check if Stage 10 is being deployed to local environment
-        if (stageNum == 10 && project.environment == 'local') {
+        if (stageNum == 10 && (project.hasProperty('environment') && (project.getProperty('environment') == 'local' || project.getProperty('environment') == 'local-persist'))) {
             throw new GradleException("Stage ${stageNum} is not applicable for local environment")
         }
     }
@@ -117,7 +148,8 @@ task deployStage {
             10: "Horizontal Pod Autoscaler",
         ]
         
-        println "🚀 Deploying Stage ${stageNum}: ${stageDescriptions[stageNum]} for environment: ${project.environment}"
+        def environment = project.hasProperty('environment') ? project.getProperty('environment') : 'local'
+        println "🚀 Deploying Stage ${stageNum}: ${stageDescriptions[stageNum]} for environment: ${environment}"
         def args = buildDeployStagedArgs(stageNum.toString())
         def cmdLine = ['scripts/deploy-staged.sh'] + args
         exec {
@@ -132,7 +164,7 @@ task deployAll {
     group = 'deployment'
     description = 'Prepare and deploy all subprojects to Kubernetes using staged deployment'
     
-    inputs.property("environment", project.environment)
+    inputs.property("environment", project.hasProperty('environment') ? project.getProperty('environment') : 'local')
     inputs.property("timestamp", { System.currentTimeMillis() })
     outputs.file("${buildDir}/deployAll.timestamp")
     
@@ -140,13 +172,14 @@ task deployAll {
     outputs.upToDateWhen { false }
     
     // Force task to always run
-    if (project.environment == 'local') {
+    if (project.hasProperty('environment') && (project.getProperty('environment') == 'local' || project.getProperty('environment') == 'local-persist')) {
         dependsOn setupLocalKubernetes
     }
     dependsOn ':confirmDeployment'
     
     doFirst {
-        println "🚀 Starting staged deployment for environment: ${project.environment}"
+        def environment = project.hasProperty('environment') ? project.getProperty('environment') : 'local'
+        println "🚀 Starting staged deployment for environment: ${environment}"
     }
     
     doLast {
@@ -157,7 +190,7 @@ task deployAll {
         
         // Deploy all stages in sequence
         def stages = [1, 2, 3, 4, 5, 6, 7, 8, 9]
-        if (project.environment != 'local') {
+        if (project.hasProperty('environment') && project.getProperty('environment') != 'local' && project.getProperty('environment') != 'local-persist') {
             stages << 10  // Add Stage 10 for staging/production
         }
         
@@ -179,7 +212,7 @@ task confirmDeployment {
     description = 'Confirm production deployment with user input'
     group = 'kubernetes'
     doLast {
-        if (project.environment == 'production') {
+        if (project.hasProperty('environment') && project.getProperty('environment') == 'production') {
             def response = System.console()?.readLine("Are you sure you want to deploy to production? (y/N): ")
             if (response != 'y' && response != 'Y') {
                 throw new GradleException("Production deployment cancelled")
