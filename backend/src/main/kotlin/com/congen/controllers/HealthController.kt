@@ -115,11 +115,35 @@ class HealthController(
 
                 ResponseEntity.status(statusCode).body(healthResponse)
             }
+            .onErrorResume { error ->
+                logger.error("Health check failed with error", error)
+                // Return a basic health response even if the full health check fails
+                val fallbackResponse =
+                    HealthCheckResponse(
+                        status = HealthStatus.FAIL,
+                        version = "unknown",
+                        releaseId = "unknown",
+                        serviceId = "congen",
+                        description = "Congen Exercise API Health Check (Fallback)",
+                        checks =
+                            mapOf(
+                                "application" to
+                                    listOf(
+                                        com.congen.model.HealthCheck(
+                                            componentId = "congen-api",
+                                            componentType = "service",
+                                            status = HealthStatus.FAIL,
+                                            output = "Health check service failed: ${error.message}",
+                                            links = mapOf("self" to "/health"),
+                                            time = java.time.Instant.now()
+                                        )
+                                    )
+                            )
+                    )
+                Mono.just(ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(fallbackResponse))
+            }
             .doOnSuccess { response ->
                 logger.debug("Health check completed with status: {}", response.body?.status)
-            }
-            .doOnError { error ->
-                logger.error("Health check failed", error)
             }
     }
 }

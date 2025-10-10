@@ -166,15 +166,15 @@ class PostgresConfig(
                 .setPassword(props.password)
                 .setCachePreparedStatements(true)
                 .setPipeliningLimit(256)
-                .setIdleTimeout(10000)
-                .setReconnectAttempts(2)
+                .setIdleTimeout(30000)
+                .setReconnectAttempts(5)
                 .setReconnectInterval(1000)
                 .setSsl(props.sslMode)
 
         val poolOptions: PoolOptions =
             PoolOptions()
                 .setMaxSize(poolSize)
-                .setMaxLifetime(60000)
+                .setMaxLifetime(300000)
 
         logger.debug("PostgreSQL connection configured - SSL Mode: {}", props.sslMode)
 
