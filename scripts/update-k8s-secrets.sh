@@ -25,7 +25,7 @@ Update Kubernetes secrets with Terraform outputs.
 
 OPTIONS:
     -e, --environment ENV   Environment name (REQUIRED: local, local-persist, staging, production)
-    -t, --terraform-dir DIR Terraform directory (default: terraform/environments/{environment})
+    -t, --terraform-dir DIR Terraform directory (default: terraform/environments/{environment}/keycloak)
     -h, --help              Show this help message
 
 EXAMPLES:
@@ -56,9 +56,9 @@ done
 # Set default terraform directory if not provided
 if [[ -z "${TERRAFORM_DIR}" ]]; then
     if [[ "${ENVIRONMENT}" == "local-persist" ]]; then
-        TERRAFORM_DIR="terraform/environments/local"
+        TERRAFORM_DIR="terraform/environments/local/keycloak"
     else
-        TERRAFORM_DIR="terraform/environments/${ENVIRONMENT}"
+        TERRAFORM_DIR="terraform/environments/${ENVIRONMENT}/keycloak"
     fi
 fi
 

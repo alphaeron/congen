@@ -422,9 +422,9 @@ apply_terraform() {
     bootstrap_keycloak
     
     if [[ "${ENVIRONMENT}" == "local-persist" ]]; then
-        local terraform_dir="terraform/environments/local"
+        local terraform_dir="terraform/environments/local/keycloak"
     else
-        local terraform_dir="terraform/environments/${ENVIRONMENT}"
+        local terraform_dir="terraform/environments/${ENVIRONMENT}/keycloak"
     fi
     
     print_status "Initializing Terraform..."

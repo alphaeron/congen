@@ -107,9 +107,9 @@ print_error() {
 if [[ -z "${ADMIN_USERNAME}" ]]; then
     # Try to get from terraform.tfvars
     if [[ "${ENVIRONMENT}" == "local-persist" ]]; then
-        tfvars_file="terraform/environments/local/terraform.tfvars"
+        tfvars_file="terraform/environments/local/keycloak/terraform.tfvars"
     else
-        tfvars_file="terraform/environments/${ENVIRONMENT}/terraform.tfvars"
+        tfvars_file="terraform/environments/${ENVIRONMENT}/keycloak/terraform.tfvars"
     fi
     if [[ -f "${tfvars_file}" ]]; then
         # Check if admin_username is defined in tfvars
@@ -132,9 +132,9 @@ fi
 if [[ -z "${ADMIN_PASSWORD}" ]]; then
     # Try to get from terraform.tfvars
     if [[ "${ENVIRONMENT}" == "local-persist" ]]; then
-        tfvars_file="terraform/environments/local/terraform.tfvars"
+        tfvars_file="terraform/environments/local/keycloak/terraform.tfvars"
     else
-        tfvars_file="terraform/environments/${ENVIRONMENT}/terraform.tfvars"
+        tfvars_file="terraform/environments/${ENVIRONMENT}/keycloak/terraform.tfvars"
     fi
     if [[ -f "${tfvars_file}" ]]; then
         # Check if admin_password is defined in tfvars
@@ -415,9 +415,9 @@ generate_terraform_config() {
     print_status "Updating Terraform variables file..."
     
     if [[ "${ENVIRONMENT}" == "local-persist" ]]; then
-        local tfvars_file="terraform/environments/local/terraform.tfvars"
+        local tfvars_file="terraform/environments/local/keycloak/terraform.tfvars"
     else
-        local tfvars_file="terraform/environments/${ENVIRONMENT}/terraform.tfvars"
+        local tfvars_file="terraform/environments/${ENVIRONMENT}/keycloak/terraform.tfvars"
     fi
     
     # Check if keycloak_client_secret already exists in the file
@@ -526,9 +526,9 @@ main() {
     print_status "1. Review the generated terraform.tfvars file"
     print_status "2. Ensure terraform.tfvars is in your .gitignore"
     if [[ "${ENVIRONMENT}" == "local-persist" ]]; then
-        print_status "3. Run 'terraform init' in terraform/environments/local"
+        print_status "3. Run 'terraform init' in terraform/environments/local/keycloak"
     else
-        print_status "3. Run 'terraform init' in terraform/environments/${ENVIRONMENT}"
+        print_status "3. Run 'terraform init' in terraform/environments/${ENVIRONMENT}/keycloak"
     fi
     print_status "4. Run 'terraform apply' to create your Keycloak resources"
 }

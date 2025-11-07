@@ -15,7 +15,7 @@ provider "keycloak" {
 }
 
 module "keycloak" {
-  source = "../../modules/keycloak"
+  source = "../../../modules/keycloak"
 
   # Pass through all variables
   realm_name              = var.realm_name

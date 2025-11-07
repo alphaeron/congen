@@ -241,12 +241,12 @@ task terraformValidate(type: Exec, group: 'verification') {
         }
     }
     commandLine 'sh', '-c', '''
-        echo "=== Validating Local Environment ===" &&
-        cd terraform/environments/local && terraform init -backend=false && terraform validate &&
-        echo "=== Validating Staging Environment ===" &&
-        cd ../staging && terraform init -backend=false && terraform validate &&
-        echo "=== Validating Production Environment ===" &&
-        cd ../production && terraform init -backend=false && terraform validate
+        echo "=== Validating Local Keycloak ===" &&
+        cd terraform/environments/local/keycloak && terraform init -backend=false && terraform validate &&
+        echo "=== Validating Staging Keycloak ===" &&
+        cd ../../staging/keycloak && terraform init -backend=false && terraform validate &&
+        echo "=== Validating Production Keycloak ===" &&
+        cd ../../production/keycloak && terraform init -backend=false && terraform validate
     '''
 }
 

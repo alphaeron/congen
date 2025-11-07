@@ -108,7 +108,7 @@ This directory contains utility scripts for the Congen project.
 
 **Command Line Options**:
 - `-e, --environment ENV`: Environment name (REQUIRED: local, local-persist, staging, production)
-- `-t, --terraform-dir DIR`: Terraform directory (default: terraform/environments/{environment})
+- `-t, --terraform-dir DIR`: Terraform directory (default: terraform/environments/{environment}/keycloak)
 - `-h, --help`: Show help message
 
 **Security Notes**:
@@ -152,7 +152,7 @@ This directory contains utility scripts for the Congen project.
    - `manage-clients`
 
 3. **Updates Terraform variables file**:
-   - Updates `terraform/environments/{environment}/terraform.tfvars` with the client secret (local-persist uses local directory)
+   - Updates `terraform/environments/{environment}/keycloak/terraform.tfvars` with the client secret (local-persist uses local directory)
    - If the file doesn't exist, creates it with the client secret
    - If the file exists, updates the existing `keycloak_client_secret` value
    - Preserves any existing variables in the file
@@ -190,15 +190,15 @@ chmod +x scripts/setup-keycloak-terraform.sh
 
 **Output**:
 - Creates the Terraform client in Keycloak
-- Updates `terraform/environments/{environment}/terraform.tfvars` with the client secret (local-persist uses local directory)
+- Updates `terraform/environments/{environment}/keycloak/terraform.tfvars` with the client secret (local-persist uses local directory)
 - Preserves existing variables in the terraform.tfvars file
 
 **Security Notes**:
 - The `terraform.tfvars` file contains the client secret and should never be committed to version control
-- Ensure `terraform/environments/*/terraform.tfvars` is in your `.gitignore` file
+- Ensure `terraform/environments/*/keycloak/terraform.tfvars` is in your `.gitignore` file
 - The client secret is used for Terraform to authenticate with Keycloak's admin API
 - Each environment (local, local-persist, staging, production) has its own terraform.tfvars file
-- Note: local-persist uses the same Terraform directory as local (terraform/environments/local)
+- Note: local-persist uses the same Terraform directory as local (terraform/environments/local/keycloak)
 
 **Troubleshooting**:
 
@@ -216,7 +216,7 @@ If the script fails with API errors:
 After running the script:
 1. Review the updated `terraform.tfvars` file
 2. Ensure `terraform.tfvars` is in your `.gitignore` file
-3. Run `terraform init` in `terraform/environments/{environment}` (use `local` for local-persist)
+3. Run `terraform init` in `terraform/environments/{environment}/keycloak` (use `local/keycloak` for local-persist)
 4. Run `terraform apply` to create your Keycloak resources
 
 **References**:

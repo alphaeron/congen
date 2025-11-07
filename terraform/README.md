@@ -33,8 +33,14 @@ terraform/
 │   └── keycloak/           # Reusable Keycloak module
 ├── environments/
 │   ├── local/              # Local development (minikube)
+│   │   ├── keycloak/       # Keycloak infrastructure
+│   │   └── infrastructure/  # Cloud resources (future)
 │   ├── staging/            # Staging environment
+│   │   ├── keycloak/       # Keycloak infrastructure
+│   │   └── infrastructure/ # Cloud resources (future)
 │   └── production/         # Production environment
+│       ├── keycloak/       # Keycloak infrastructure
+│       └── infrastructure/  # Cloud resources (future)
 └── README.md
 ```
 
@@ -62,7 +68,7 @@ terraform/
 
 3. **Deploy Terraform Configuration**:
    ```bash
-   cd terraform/environments/local
+   cd terraform/environments/local/keycloak
    cp terraform.tfvars.example terraform.tfvars
    # Edit terraform.tfvars with your passwords
    terraform init
@@ -95,7 +101,7 @@ terraform/
 ./gradlew deployAll -Penvironment=local
 
 # Deploy Terraform configuration
-cd terraform/environments/local
+cd terraform/environments/local/keycloak
 cp terraform.tfvars.example terraform.tfvars
 # Edit terraform.tfvars
 terraform init && terraform apply
@@ -117,7 +123,7 @@ terraform init && terraform apply
 ./gradlew deployAll -Penvironment=local-persist -PmountDir=/path/to/data
 
 # Deploy Terraform configuration (uses same directory as local)
-cd terraform/environments/local
+cd terraform/environments/local/keycloak
 cp terraform.tfvars.example terraform.tfvars
 # Edit terraform.tfvars
 terraform init && terraform apply
@@ -138,7 +144,7 @@ terraform init && terraform apply
 ./gradlew deployAll -Penvironment=staging
 
 # Deploy Terraform configuration
-cd terraform/environments/staging
+cd terraform/environments/staging/keycloak
 cp terraform.tfvars.example terraform.tfvars
 # Edit terraform.tfvars with staging credentials
 terraform init && terraform apply
@@ -159,7 +165,7 @@ terraform init && terraform apply
 ./gradlew deployAll -Penvironment=production
 
 # Deploy Terraform configuration
-cd terraform/environments/production
+cd terraform/environments/production/keycloak
 cp terraform.tfvars.example terraform.tfvars
 # Edit terraform.tfvars with strong production passwords
 terraform init && terraform apply
@@ -195,7 +201,7 @@ terraform init && terraform apply
    ```bash
    # Start local environment
    ./gradlew deployAll -Penvironment=local
-   cd terraform/environments/local && terraform apply
+   cd terraform/environments/local/keycloak && terraform apply
    
    # Develop and test
    ./gradlew :backend:bootRun
@@ -206,7 +212,7 @@ terraform init && terraform apply
    ```bash
    # Deploy to staging
    ./gradlew deployAll -Penvironment=staging
-   cd terraform/environments/staging && terraform apply
+   cd terraform/environments/staging/keycloak && terraform apply
    
    # Test in staging environment
    ```
@@ -215,7 +221,7 @@ terraform init && terraform apply
    ```bash
    # Deploy to production
    ./gradlew deployAll -Penvironment=production
-   cd terraform/environments/production && terraform apply
+   cd terraform/environments/production/keycloak && terraform apply
    ```
 
 ### Database Changes
@@ -322,8 +328,9 @@ terraform apply
 
 1. **Create Environment Directory**:
    ```bash
-   mkdir -p terraform/environments/new-environment
-   cp -r terraform/environments/staging/* terraform/environments/new-environment/
+   mkdir -p terraform/environments/new-environment/keycloak
+   mkdir -p terraform/environments/new-environment/infrastructure
+   cp -r terraform/environments/staging/keycloak/* terraform/environments/new-environment/keycloak/
    ```
 
 2. **Customize Configuration**:
@@ -333,7 +340,7 @@ terraform apply
 
 3. **Test Deployment**:
    ```bash
-   cd terraform/environments/new-environment
+   cd terraform/environments/new-environment/keycloak
    terraform init && terraform plan
    ```
 
@@ -353,7 +360,7 @@ terraform apply
 3. **Use Module in Environments**:
    ```hcl
    module "new_module" {
-     source = "../../modules/new-module"
+     source = "../../../modules/new-module"
      # ... variables
    }
    ```

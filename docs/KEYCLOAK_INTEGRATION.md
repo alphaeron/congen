@@ -65,7 +65,7 @@ Keycloak uses the same PostgreSQL cluster as the backend application but with a 
 
 3. **Provision Keycloak infrastructure with Terraform**:
    ```bash
-   cd terraform/environments/local
+   cd terraform/environments/local/keycloak
    cp terraform.tfvars.example terraform.tfvars
    # Edit terraform.tfvars with your passwords
    terraform init

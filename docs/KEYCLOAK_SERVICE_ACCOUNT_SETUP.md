@@ -35,7 +35,7 @@ The Congen application uses a dedicated service account for backend-to-Keycloak 
 Copy the example variables file and configure your environment:
 
 ```bash
-cd terraform/keycloak
+cd terraform/environments/local/keycloak
 cp terraform.tfvars.example terraform.tfvars
 ```
 
