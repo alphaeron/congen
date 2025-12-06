@@ -1,0 +1,39 @@
+# Project Configuration
+project_name = "congen"
+aws_region   = "us-east-1"
+
+# Availability Zones (must specify at least 2 for high availability)
+availability_zones = ["us-east-1a", "us-east-1b"]
+
+# VPC Configuration
+vpc_cidr             = "10.0.0.0/16"
+public_subnet_cidrs  = ["10.0.1.0/24", "10.0.2.0/24"]
+private_subnet_cidrs = ["10.0.11.0/24", "10.0.12.0/24"]
+database_subnet_cidrs = ["10.0.21.0/24", "10.0.22.0/24"]
+
+# Domain Configuration
+domain_name = "congen.com"
+subdomain   = "staging"
+
+# EKS Configuration
+eks_cluster_version     = "1.28"
+eks_node_instance_types = ["t3.medium"]
+eks_node_desired_size   = 1
+eks_node_min_size       = 1
+eks_node_max_size       = 2
+
+# RDS Configuration
+rds_instance_class          = "db.r6g.large"
+rds_engine_version          = "15.4"
+rds_database_name           = "congen"
+rds_username                = "postgres"  # Sensitive - use environment variable or secrets manager
+rds_backup_retention_period = 7
+
+# ElastiCache Configuration
+elasticache_node_type      = "cache.t3.micro"
+elasticache_num_cache_nodes = 1
+elasticache_engine_version  = "1.6.20"
+
+# Monitoring
+sns_alert_email = "alerts@congen.com"
+

@@ -32,7 +32,7 @@ spec:
           valueFrom:
             secretKeyRef:
               name: congen-secret
-              key: PGHOST
+              key: PGWRITERHOST
         - name: PGPORT
           valueFrom:
             secretKeyRef:

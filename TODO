@@ -1,3 +1,18 @@
+add ecr registry to provisioning somewhere
+
+fluxcd
+
+Move keycloak deployment into terraform?
+
+
+Can I mirror the staging/production setup for local environment kubernetes overlay and terraform, for local validation as well?  create a plan to do this.
+
+
+
+
+
+
+
 assets, and object storage for assets
 
 
@@ -18,11 +33,7 @@ Liftalizer (video analysis) service
 
 Health metric visualization impact on performance page.
 
-hashicorp vault for staging/production
-
 remove timeout duration from workout generation exceeded error message.  the user facing error messages should not contain implementation details
-
-congen database for congen?  Or maybe aws terraform will handle that.
 
 Write a gradle task to check for all component updates and apply them
 

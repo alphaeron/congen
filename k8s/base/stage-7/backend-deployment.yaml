@@ -32,17 +32,9 @@ spec:
         envFrom:
         - configMapRef:
             name: backend-config
-        - secretRef:
-            name: congen-secret
         env:
         - name: SERVER_PORT
           value: "8888"
-        - name: PGWRITERHOST
-          value: "postgres"
-        - name: PGREADERHOST
-          value: "postgres"
-        - name: PGPORT
-          value: "5432"
         startupProbe:
           httpGet:
             path: /api/v1/health/

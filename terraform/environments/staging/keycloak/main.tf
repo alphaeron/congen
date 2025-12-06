@@ -1,13 +1,3 @@
-terraform {
-  required_version = "= 1.12.2"
-  required_providers {
-    keycloak = {
-      source  = "keycloak/keycloak"
-      version = "= 5.3.0"
-    }
-  }
-}
-
 provider "keycloak" {
   client_id     = "terraform"
   client_secret = var.keycloak_client_secret

@@ -44,17 +44,20 @@ jib {
         appRoot = '/app'
         workingDirectory = '/app/classes'
         creationTime = 'USE_CURRENT_TIMESTAMP'
-        entrypoint = [
-            'sh', '-c',
-            'java -XX:+UseG1GC ' +
-            '-Xms${JVM_HEAP_MIN:-256m} -Xmx${JVM_HEAP_MAX:-384m} ' +
-            '-XX:MetaspaceSize=${JVM_METASPACE_MIN:-64M} -XX:MaxMetaspaceSize=${JVM_METASPACE_MAX:-128M} ' +
-            '-XX:ActiveProcessorCount=2 ' +
-            '-Djava.security.edg=file:/dev/./urandom ' +
-            '-Dspring.profiles.active=${SPRING_PROFILES_ACTIVE:-local} ' +
-            '-classpath /app/resources:/app/classes:/app/libs/* ' +
-            'com.congen.CongenApplicationKt'
-        ]
+        // Copy the entrypoint wrapper script into the image
+        extraDirectories {
+            paths {
+                path {
+                    from = file('scripts')
+                    into = '/app/scripts'
+                }
+            }
+            permissions = [
+                '/app/scripts/entrypoint-wrapper.sh': '755'
+            ]
+        }
+        // Use the wrapper script as entrypoint - it sources Vault secrets and execs the Java command
+        entrypoint = ['/app/scripts/entrypoint-wrapper.sh']
     }
 }
 

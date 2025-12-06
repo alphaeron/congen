@@ -1,13 +1,3 @@
-terraform {
-  required_version = "= 1.12.2"
-  required_providers {
-    keycloak = {
-      source  = "keycloak/keycloak"
-      version = "= 5.3.0"
-    }
-  }
-}
-
 # Create the Congen realm
 resource "keycloak_realm" "congen" {
   realm                          = var.realm_name

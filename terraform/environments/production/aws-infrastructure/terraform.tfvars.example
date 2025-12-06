@@ -1,0 +1,50 @@
+# Project Configuration
+project_name = "congen"
+aws_region   = "us-east-1"
+
+# Availability Zones (must specify at least 2 for high availability, 3 for production)
+availability_zones = ["us-east-1a", "us-east-1b", "us-east-1c"]
+
+# VPC Configuration
+vpc_cidr             = "10.0.0.0/16"
+public_subnet_cidrs  = ["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24"]
+private_subnet_cidrs = ["10.0.11.0/24", "10.0.12.0/24", "10.0.13.0/24"]
+database_subnet_cidrs = ["10.0.21.0/24", "10.0.22.0/24", "10.0.23.0/24"]
+
+# Domain Configuration
+domain_name = "congen.com"
+subdomain   = ""  # Empty for root domain
+
+# Cross-Region Backup
+enable_cross_region_backup = true
+backup_region             = "us-west-2"
+
+# EKS Configuration
+eks_cluster_version     = "1.28"
+eks_node_instance_types = ["t3.large", "t3.xlarge"]
+eks_node_desired_size   = 2
+eks_node_min_size       = 2
+eks_node_max_size       = 4
+
+# RDS Configuration
+rds_instance_class          = "db.r6g.xlarge"
+rds_engine_version          = "15.4"
+rds_database_name           = "congen"
+rds_username                = "postgres"  # Sensitive - use environment variable or secrets manager
+rds_backup_retention_period = 30
+rds_read_replica_count     = 1
+
+# ElastiCache Configuration
+elasticache_node_type      = "cache.r6g.large"
+elasticache_num_cache_nodes = 3
+elasticache_engine_version  = "1.6.20"
+elasticache_snapshot_retention_limit = 5
+
+# Vault Configuration
+vault_replicas     = 3  # High availability
+vault_storage_size = "20Gi"
+enable_vault_audit_logging = true
+vault_audit_log_retention_days = 90
+
+# Monitoring
+sns_alert_email = "alerts@congen.com"

@@ -11,7 +11,30 @@ spec:
     metadata:
       labels:
         app: backend
+      annotations:
+        vault.hashicorp.com/agent-inject: "true"
+        vault.hashicorp.com/role: "backend"
+        vault.hashicorp.com/agent-inject-secret-database: "secret/data/congen/production/database"
+        vault.hashicorp.com/agent-inject-template-database: |
+          {{- with secret "secret/data/congen/production/database" -}}
+          export PGUSER="{{ .Data.data.username }}"
+          export PGPASSWORD="{{ .Data.data.password }}"
+          export PGDATABASE="{{ .Data.data.database_name }}"
+          export PGWRITERHOST="{{ .Data.data.writer_endpoint }}"
+          export PGREADERHOST="{{ .Data.data.reader_endpoint }}"
+          export PGPORT="{{ .Data.data.port }}"
+          {{- end }}
+        vault.hashicorp.com/agent-inject-secret-cache: "secret/data/congen/production/cache"
+        vault.hashicorp.com/agent-inject-template-cache: |
+          {{- with secret "secret/data/congen/production/cache" -}}
+          export MEMCACHED_HOST="{{ .Data.data.configuration_endpoint }}"
+          export MEMCACHED_PORT="{{ .Data.data.port }}"
+          export MEMCACHED_USE_ELASTICACHE="{{ .Data.data.use_elasticache }}"
+          {{- end }}
+        vault.hashicorp.com/agent-pre-populate: "true"
+        vault.hashicorp.com/agent-pre-populate-only: "false"
     spec:
+      serviceAccountName: congen-svc
       securityContext:
         runAsNonRoot: true
         runAsUser: 1000
