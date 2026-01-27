@@ -8,11 +8,10 @@ import net.rubyeye.xmemcached.utils.AddrUtil
 import org.slf4j.LoggerFactory
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.boot.context.properties.EnableConfigurationProperties
-import org.springframework.context.ApplicationListener
+import org.springframework.beans.factory.DisposableBean
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Primary
-import org.springframework.context.event.ContextClosedEvent
 import reactor.core.scheduler.Scheduler
 import reactor.core.scheduler.Schedulers
 import java.io.IOException
@@ -81,10 +80,12 @@ class MemcachedConfig(
      * The properties for configuring Memcached connections.
      */
     private val props: MemcachedProperties
-) : ApplicationListener<ContextClosedEvent> {
+) : DisposableBean {
     companion object {
         private val logger = LoggerFactory.getLogger(MemcachedConfig::class.java)
     }
+
+    private var memcachedClientInstance: MemcachedClient? = null
 
     /**
      * Creates and configures the Memcached client.
@@ -99,13 +100,15 @@ class MemcachedConfig(
     @Bean
     @Primary
     fun memcachedClient(): MemcachedClient {
-        return if (props.useElasticache) {
+        val client = if (props.useElasticache) {
             logger.info("Using AWS ElastiCache client configuration")
             createElasticacheClient()
         } else {
             logger.info("Using standard Memcached client configuration")
             createStandardMemcachedClient()
         }
+        memcachedClientInstance = client
+        return client
     }
 
     /**
@@ -243,19 +246,24 @@ class MemcachedConfig(
     }
 
     /**
-     * Handles application context shutdown to gracefully close Memcached client.
-     * This is called when Spring's application context is closing, which is the proper
-     * lifecycle event for cleanup operations.
+     * Destroys the bean and gracefully closes the Memcached client.
+     *
+     * This method is called by Spring during bean destruction, which occurs during
+     * application shutdown. Using DisposableBean ensures cleanup only happens
+     * during actual application shutdown, not during context refresh or premature closure.
+     *
+     * This method ensures that the Memcached client is properly shut down during
+     * application shutdown, preventing connection leaks and ensuring clean shutdown.
      */
-    override fun onApplicationEvent(event: ContextClosedEvent) {
-        try {
-            logger.info("Application context closing, shutting down Memcached client...")
-            // Get the Memcached client bean and shut it down immediately
-            val client = event.applicationContext.getBean(MemcachedClient::class.java)
-            client.shutdown()
-            logger.info("Memcached client shutdown complete")
-        } catch (e: Exception) {
-            logger.warn("Error during Memcached client shutdown", e)
+    override fun destroy() {
+        memcachedClientInstance?.let { client ->
+            try {
+                logger.info("Shutting down Memcached client...")
+                client.shutdown()
+                logger.info("Memcached client shutdown complete")
+            } catch (e: Exception) {
+                logger.warn("Error during Memcached client shutdown", e)
+            }
         }
     }
 }
