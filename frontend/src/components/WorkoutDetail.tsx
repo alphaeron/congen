@@ -325,6 +325,23 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
     return null;
   }, [userData, workoutId]);
 
+  // Calculate day within week and week number
+  const dayInWeekData = useMemo(() => {
+    if (!workoutData || !userData?.training_programs?.length) return null;
+
+    const activeProgram = userData.training_programs.find(
+      (program: ProgramWithWorkouts) => program.program.is_active
+    );
+    if (!activeProgram) return null;
+
+    const workoutsPerWeek = activeProgram.program_preferences?.program_days_per_week || 3;
+    const dayNumber = workoutData.workout.day_number;
+    const weekNumber = Math.ceil(dayNumber / workoutsPerWeek);
+    const dayInWeek = dayNumber - workoutsPerWeek * (weekNumber - 1);
+
+    return { dayInWeek, weekNumber, totalDayNumber: dayNumber };
+  }, [workoutData, userData]);
+
   // Update parent component with workout details for breadcrumb
   useEffect(() => {
     if (workoutData && onWorkoutDetailsUpdate) {
@@ -645,7 +662,8 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
         {/* Header Section */}
         <WorkoutHeader
           context="day"
-          dayNumber={workoutData?.workout.day_number}
+          dayNumber={dayInWeekData?.dayInWeek}
+          totalDayNumber={dayInWeekData?.totalDayNumber}
           workoutName={workoutData?.workout.workout_name}
           totalExercises={progressMetrics?.totalExercises}
           completedExercises={progressMetrics?.completedExercises}

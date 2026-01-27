@@ -119,9 +119,12 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
     const allWorkouts = activeProgramData.workouts;
     const filteredWorkouts = allWorkouts
       .map(workoutWithStages => {
-        const dayInWeek = workoutWithStages.workout.day_number;
+        const dayNumber = workoutWithStages.workout.day_number;
         // Only include workouts that fall within the current week's day range
-        if (dayInWeek >= weekStartDay && dayInWeek <= weekEndDay) {
+        if (dayNumber >= weekStartDay && dayNumber <= weekEndDay) {
+          // Calculate the day within the week (1-based for display)
+          // Formula: dayInWeek = dayNumber - workoutsPerWeek * (weekNumber - 1)
+          const dayInWeek = dayNumber - workoutsPerWeek * (weekNumber - 1);
           return { workout: workoutWithStages, weekNumber: weekNumber, dayInWeek };
         }
         return null;
@@ -370,6 +373,8 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
                                     cursor: 'pointer',
                                     borderRadius: 1,
                                     mb: 1,
+                                    px: 1,
+                                    py: 0.5,
                                     border: 1,
                                     borderColor: 'divider',
                                     backgroundColor: 'transparent',
@@ -434,7 +439,7 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
                                           variant="caption"
                                           textVariant="secondary"
                                           component="span"
-                                          sx={{ ml: 1 }}
+                                          sx={{ ml: 0.5 }}
                                         >
                                           • {workoutProgress.completedExercises}/
                                           {workoutProgress.totalExercises} exercises
