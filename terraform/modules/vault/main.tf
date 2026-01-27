@@ -8,7 +8,7 @@ locals {
   }
 
   vault_address = "https://vault.${var.vault_namespace}.svc.cluster.local:8200"
-  
+
   # Vault root token for provider configuration
   vault_root_token = data.aws_secretsmanager_secret_version.vault_root_token.secret_string
 }

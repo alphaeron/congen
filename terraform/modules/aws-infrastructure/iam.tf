@@ -2,12 +2,12 @@ resource "aws_cloudtrail" "main" {
   count                         = var.enable_cloudtrail ? 1 : 0
   name                          = "${local.name_prefix}-cloudtrail"
   s3_bucket_name                = aws_s3_bucket.cloudtrail[0].id
-  include_global_service_events  = true
-  is_multi_region_trail          = true
-  enable_logging                 = true
-  enable_log_file_validation     = true
+  include_global_service_events = true
+  is_multi_region_trail         = true
+  enable_logging                = true
+  enable_log_file_validation    = true
   cloud_watch_logs_group_arn    = "${aws_cloudwatch_log_group.cloudtrail[0].arn}:*"
-  cloud_watch_logs_role_arn      = aws_iam_role.cloudtrail[0].arn
+  cloud_watch_logs_role_arn     = aws_iam_role.cloudtrail[0].arn
 
   tags = merge(
     local.common_tags,
@@ -63,7 +63,7 @@ resource "aws_s3_bucket_public_access_block" "cloudtrail" {
 
 data "aws_iam_policy_document" "cloudtrail_s3" {
   count = var.enable_cloudtrail ? 1 : 0
-  
+
   # Deny insecure connections (HTTPS only)
   statement {
     sid    = "DenyInsecureConnections"
@@ -72,7 +72,7 @@ data "aws_iam_policy_document" "cloudtrail_s3" {
       type        = "*"
       identifiers = ["*"]
     }
-    actions   = ["s3:*"]
+    actions = ["s3:*"]
     resources = [
       aws_s3_bucket.cloudtrail[0].arn,
       "${aws_s3_bucket.cloudtrail[0].arn}/*",
@@ -148,8 +148,8 @@ data "aws_iam_policy_document" "cloudtrail" {
 }
 
 resource "aws_iam_role" "cloudtrail" {
-  count              = var.enable_cloudtrail ? 1 : 0
-  name               = "${local.name_prefix}-cloudtrail"
+  count = var.enable_cloudtrail ? 1 : 0
+  name  = "${local.name_prefix}-cloudtrail"
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [

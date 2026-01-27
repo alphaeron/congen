@@ -30,9 +30,9 @@ data "aws_iam_policy_document" "eks_kms" {
 }
 
 resource "aws_kms_key" "eks" {
-  description             = "KMS key for EKS cluster secrets encryption"
-  enable_key_rotation     = false
-  policy                  = data.aws_iam_policy_document.eks_kms.json
+  description         = "KMS key for EKS cluster secrets encryption"
+  enable_key_rotation = false
+  policy              = data.aws_iam_policy_document.eks_kms.json
 
   lifecycle {
     prevent_destroy = true

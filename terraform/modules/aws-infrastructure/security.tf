@@ -44,11 +44,11 @@ resource "aws_security_group" "eks_node" {
   }
 
   ingress {
-    description     = "All traffic from other EKS nodes"
-    from_port       = 0
-    to_port         = 0
-    protocol        = "-1"
-    self            = true
+    description = "All traffic from other EKS nodes"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    self        = true
   }
 
   # EKS nodes require outbound access for:

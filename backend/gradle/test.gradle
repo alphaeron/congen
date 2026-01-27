@@ -35,11 +35,11 @@ dependencies {
     integrationTestImplementation 'org.mockito:mockito-core:5.18.0'
     integrationTestImplementation 'org.mockito:mockito-junit-jupiter:5.18.0'
     integrationTestImplementation 'org.mockito.kotlin:mockito-kotlin:5.4.0'
-    integrationTestImplementation 'org.testcontainers:junit-jupiter:1.19.7'
-    integrationTestImplementation 'org.testcontainers:postgresql:1.19.7'
+    integrationTestImplementation 'org.testcontainers:junit-jupiter:1.21.4'
+    integrationTestImplementation 'org.testcontainers:postgresql:1.21.4'
     integrationTestImplementation 'com.buralotech.oss.testcontainers:memcached:1.0.3'
     integrationTestImplementation 'com.github.dasniko:testcontainers-keycloak:3.8.0'
-    
+
     // Liquibase dependencies for database migrations
     integrationTestImplementation 'org.liquibase:liquibase-core:4.26.0'
     integrationTestImplementation 'org.postgresql:postgresql:42.7.3'

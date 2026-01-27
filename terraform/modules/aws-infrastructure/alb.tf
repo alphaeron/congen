@@ -34,10 +34,10 @@ resource "aws_lb" "main" {
   security_groups    = [aws_security_group.alb.id]
   subnets            = aws_subnet.public[*].id
 
-  enable_deletion_protection = var.alb_enable_deletion_protection
-  enable_http2              = true
+  enable_deletion_protection       = var.alb_enable_deletion_protection
+  enable_http2                     = true
   enable_cross_zone_load_balancing = true
-  idle_timeout              = var.alb_idle_timeout
+  idle_timeout                     = var.alb_idle_timeout
 
   access_logs {
     bucket  = aws_s3_bucket.alb_logs.id
@@ -100,7 +100,7 @@ data "aws_iam_policy_document" "alb_logs" {
       type        = "*"
       identifiers = ["*"]
     }
-    actions   = ["s3:*"]
+    actions = ["s3:*"]
     resources = [
       aws_s3_bucket.alb_logs.arn,
       "${aws_s3_bucket.alb_logs.arn}/*",
@@ -141,10 +141,10 @@ resource "aws_s3_bucket_policy" "alb_logs" {
 }
 
 resource "aws_lb_target_group" "ingress_controller" {
-  name     = "${local.name_prefix}-ingress-controller-tg"
-  port     = var.ingress_controller_service_port
-  protocol = "HTTP"
-  vpc_id   = aws_vpc.main.id
+  name        = "${local.name_prefix}-ingress-controller-tg"
+  port        = var.ingress_controller_service_port
+  protocol    = "HTTP"
+  vpc_id      = aws_vpc.main.id
   target_type = "ip"
 
   health_check {

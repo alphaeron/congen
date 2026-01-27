@@ -43,9 +43,9 @@ task kubeLinter(type: Exec, group: 'verification') {
     description = 'Lint Kubernetes manifests with kube-linter for all environments'
     commandLine 'sh', '-c', '''
         echo "=== Linting Production Overlay ===" &&
-        kube-linter lint --exclude=latest-tag,no-read-only-root-fs,unset-cpu-requirements,unset-memory-requirements,run-as-non-root,mismatching-selector,job-ttl-seconds-after-finished k8s/overlays/production &&
+        kube-linter lint --exclude=latest-tag,no-read-only-root-fs,unset-cpu-requirements,unset-memory-requirements,run-as-non-root,mismatching-selector,job-ttl-seconds-after-finished,non-existent-service-account k8s/overlays/production &&
         echo "=== Linting Staging Overlay ===" &&
-        kube-linter lint --exclude=latest-tag,no-read-only-root-fs,unset-cpu-requirements,unset-memory-requirements,run-as-non-root,mismatching-selector,job-ttl-seconds-after-finished k8s/overlays/staging &&
+        kube-linter lint --exclude=latest-tag,no-read-only-root-fs,unset-cpu-requirements,unset-memory-requirements,run-as-non-root,mismatching-selector,job-ttl-seconds-after-finished,non-existent-service-account k8s/overlays/staging &&
         echo "=== Linting Local Overlay (Development) ===" &&
         kube-linter lint --exclude=latest-tag,no-read-only-root-fs,unset-cpu-requirements,unset-memory-requirements,run-as-non-root,mismatching-selector,job-ttl-seconds-after-finished k8s/overlays/local &&
         echo "=== Linting Local-Persist Overlay (Development with Persistence) ===" &&

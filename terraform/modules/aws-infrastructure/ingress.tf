@@ -42,7 +42,7 @@ resource "helm_release" "ingress_nginx" {
           }
         }
         podDisruptionBudget = {
-          enabled     = var.ingress_controller_enable_pdb
+          enabled      = var.ingress_controller_enable_pdb
           minAvailable = var.ingress_controller_enable_pdb ? var.ingress_controller_pdb_min_available : null
         }
         affinity = var.ingress_controller_enable_pod_anti_affinity ? {

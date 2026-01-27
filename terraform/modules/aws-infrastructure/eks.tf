@@ -142,7 +142,7 @@ resource "aws_eks_node_group" "main" {
 
   remote_access {
     ec2_ssh_key               = null
-    source_security_group_ids  = []
+    source_security_group_ids = []
   }
 
   labels = {

@@ -6,9 +6,9 @@ import io.vertx.pgclient.PgConnectOptions
 import io.vertx.sqlclient.PoolOptions
 import io.vertx.sqlclient.SqlClient
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.DisposableBean
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.boot.context.properties.EnableConfigurationProperties
-import org.springframework.beans.factory.DisposableBean
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 

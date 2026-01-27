@@ -5,9 +5,9 @@ data "aws_secretsmanager_secret_version" "vault_root_token" {
 
 # Configure Vault provider for secret injection configuration
 provider "vault" {
-  alias   = "config"
-  address = var.vault_address
-  token   = data.aws_secretsmanager_secret_version.vault_root_token.secret_string
+  alias           = "config"
+  address         = var.vault_address
+  token           = data.aws_secretsmanager_secret_version.vault_root_token.secret_string
   skip_tls_verify = false
 }
 

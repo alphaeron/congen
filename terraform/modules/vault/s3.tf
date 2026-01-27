@@ -61,7 +61,7 @@ data "aws_iam_policy_document" "vault_storage_bucket" {
       type        = "*"
       identifiers = ["*"]
     }
-    actions   = ["s3:*"]
+    actions = ["s3:*"]
     resources = [
       aws_s3_bucket.vault_storage.arn,
       "${aws_s3_bucket.vault_storage.arn}/*",
@@ -80,7 +80,7 @@ data "aws_iam_policy_document" "vault_storage_bucket" {
       type        = "*"
       identifiers = ["*"]
     }
-    actions   = ["s3:*"]
+    actions = ["s3:*"]
     resources = [
       aws_s3_bucket.vault_storage.arn,
       "${aws_s3_bucket.vault_storage.arn}/*",

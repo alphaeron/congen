@@ -44,9 +44,9 @@ data "external" "terraform_service_account_token" {
 # Token is retrieved from AWS Secrets Manager via local value
 # Note: Provider blocks are evaluated early, so we use the local which references the data source
 provider "vault" {
-  alias   = "config"
-  address = local.vault_address
-  token   = local.vault_root_token
+  alias           = "config"
+  address         = local.vault_address
+  token           = local.vault_root_token
   skip_tls_verify = false
 }
 

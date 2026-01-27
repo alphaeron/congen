@@ -62,7 +62,7 @@ class CacheWarmupService(
     private val cacheWarmupConfig: CacheWarmupConfig
 ) : SmartLifecycle {
     private val logger = LoggerFactory.getLogger(CacheWarmupService::class.java)
-    
+
     @Volatile
     private var running = false
 

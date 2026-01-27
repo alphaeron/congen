@@ -413,6 +413,62 @@ bootstrap_keycloak() {
     fi
 }
 
+# Function to process and display jq-extracted list items
+# Usage: process_jq_list <json_response_var> <jq_expression> <error_message>
+# Example: process_jq_list "${realms_response}" '.[].realm' "(none or error reading realms)"
+process_jq_list() {
+    local json_response="$1"
+    local jq_expression="$2"
+    local error_message="$3"
+    
+    local jq_output
+    jq_output=$(echo "${json_response}" | jq -r "${jq_expression}" 2>/dev/null || true)
+    if [[ -n "${jq_output}" ]]; then
+        echo "${jq_output}" | while read -r item; do
+            if [[ -n "${item}" ]]; then
+                print_status "  - ${item}"
+            fi
+        done || print_status "  ${error_message}"
+    else
+        print_status "  ${error_message}"
+    fi
+}
+
+# Function to extract a value from a tfvars file
+# Usage: get_tfvars_value <file_path> <key_pattern> <default_value>
+# Example: get_tfvars_value "${tfvars_file}" "^admin_username" "admin"
+# Returns: The extracted value or the default value if not found
+get_tfvars_value() {
+    local file_path="$1"
+    local key_pattern="$2"
+    local default_value="$3"
+    
+    if [[ ! -f "${file_path}" ]]; then
+        echo "${default_value}"
+        return
+    fi
+    
+    local grep_output
+    grep_output=$(grep "${key_pattern}" "${file_path}" 2>/dev/null || true)
+    if [[ -n "${grep_output}" ]]; then
+        local cut_output
+        cut_output=$(echo "${grep_output}" | cut -d'=' -f2 2>/dev/null || true)
+        if [[ -n "${cut_output}" ]]; then
+            local trimmed_value
+            trimmed_value=$(echo "${cut_output}" | tr -d ' "' 2>/dev/null || echo "${default_value}")
+            if [[ -n "${trimmed_value}" ]]; then
+                echo "${trimmed_value}"
+            else
+                echo "${default_value}"
+            fi
+        else
+            echo "${default_value}"
+        fi
+    else
+        echo "${default_value}"
+    fi
+}
+
 # Function to log existing Keycloak resources
 log_existing_keycloak_resources() {
     print_status "Querying Keycloak for existing resources..."
@@ -432,24 +488,25 @@ log_existing_keycloak_resources() {
     if [[ "${ENVIRONMENT}" == "local" || "${ENVIRONMENT}" == "local-persist" ]]; then
         if command -v kubectl &> /dev/null; then
             base64_flag="-d"
-            if [[ "$(uname)" == "Darwin" ]]; then
+            uname_output=$(uname 2>/dev/null || true)
+            if [[ "${uname_output}" == "Darwin" ]]; then
                 base64_flag="-D"
             fi
-            admin_username=$(kubectl get secret keycloak-secret -n congen -o jsonpath='{.data.KC_BOOTSTRAP_ADMIN_USERNAME}' 2>/dev/null | base64 ${base64_flag} 2>/dev/null || true)
-            admin_password=$(kubectl get secret keycloak-secret -n congen -o jsonpath='{.data.KC_BOOTSTRAP_ADMIN_PASSWORD}' 2>/dev/null | base64 ${base64_flag} 2>/dev/null || true)
+            admin_username=$(kubectl get secret keycloak-secret -n congen -o jsonpath='{.data.KC_BOOTSTRAP_ADMIN_USERNAME}' 2>/dev/null | base64 "${base64_flag}" 2>/dev/null || true)
+            admin_password=$(kubectl get secret keycloak-secret -n congen -o jsonpath='{.data.KC_BOOTSTRAP_ADMIN_PASSWORD}' 2>/dev/null | base64 "${base64_flag}" 2>/dev/null || true)
         fi
     fi
     
     # Fallback to tfvars if not from K8s
     if [[ -z "${admin_username}" && -f "${tfvars_file}" ]]; then
-        admin_username=$(grep "^admin_username" "${tfvars_file}" | cut -d'=' -f2 | tr -d ' "' || echo "admin")
+        admin_username=$(get_tfvars_value "${tfvars_file}" "^admin_username" "admin")
     fi
     if [[ -z "${admin_username}" ]]; then
         admin_username="admin"
     fi
     
     if [[ -z "${admin_password}" && -f "${tfvars_file}" ]]; then
-        admin_password=$(grep "^admin_password" "${tfvars_file}" | cut -d'=' -f2 | tr -d ' "' || true)
+        admin_password=$(get_tfvars_value "${tfvars_file}" "^admin_password" "")
     fi
     
     if [[ -z "${admin_password}" ]]; then
@@ -481,11 +538,7 @@ log_existing_keycloak_resources() {
         "${KEYCLOAK_URL}/admin/realms" 2>/dev/null || echo "[]")
     
     print_status "Existing realms:"
-    echo "${realms_response}" | jq -r '.[].realm' 2>/dev/null | while read -r realm; do
-        if [[ -n "${realm}" ]]; then
-            print_status "  - ${realm}"
-        fi
-    done || print_status "  (none or error reading realms)"
+    process_jq_list "${realms_response}" '.[].realm' "(none or error reading realms)"
     
     # List roles in congen realm
     print_status "Listing existing roles in 'congen' realm..."
@@ -496,11 +549,7 @@ log_existing_keycloak_resources() {
         "${KEYCLOAK_URL}/admin/realms/congen/roles" 2>/dev/null || echo "[]")
     
     print_status "Existing roles in 'congen' realm:"
-    echo "${roles_response}" | jq -r '.[].name' 2>/dev/null | while read -r role; do
-        if [[ -n "${role}" ]]; then
-            print_status "  - ${role}"
-        fi
-    done || print_status "  (none or error reading roles)"
+    process_jq_list "${roles_response}" '.[].name' "(none or error reading roles)"
     
     # List clients in congen realm
     print_status "Listing existing clients in 'congen' realm..."
@@ -511,11 +560,7 @@ log_existing_keycloak_resources() {
         "${KEYCLOAK_URL}/admin/realms/congen/clients" 2>/dev/null || echo "[]")
     
     print_status "Existing clients in 'congen' realm:"
-    echo "${clients_response}" | jq -r '.[].clientId' 2>/dev/null | while read -r client; do
-        if [[ -n "${client}" ]]; then
-            print_status "  - ${client}"
-        fi
-    done || print_status "  (none or error reading clients)"
+    process_jq_list "${clients_response}" '.[].clientId' "(none or error reading clients)"
     
     # List users in congen realm
     print_status "Listing existing users in 'congen' realm..."
@@ -526,11 +571,7 @@ log_existing_keycloak_resources() {
         "${KEYCLOAK_URL}/admin/realms/congen/users" 2>/dev/null || echo "[]")
     
     print_status "Existing users in 'congen' realm:"
-    echo "${users_response}" | jq -r '.[] | "\(.username) (\(.email // "no email"))"' 2>/dev/null | while read -r user; do
-        if [[ -n "${user}" ]]; then
-            print_status "  - ${user}"
-        fi
-    done || print_status "  (none or error reading users)"
+    process_jq_list "${users_response}" '.[] | "\(.username) (\(.email // "no email"))"' "(none or error reading users)"
 }
 
 # Function to import a Keycloak resource into Terraform state
@@ -545,12 +586,12 @@ import_keycloak_resource() {
     local import_id="$3"
     local resource_name="$4"
     
-    if ! terraform state list 2>/dev/null | grep -q "${state_pattern}"; then
+    terraform_state_list=$(terraform state list 2>/dev/null || true)
+    if ! echo "${terraform_state_list}" | grep -q "${state_pattern}"; then
         if [[ -n "${import_id}" && "${import_id}" != "null" ]]; then
             print_status "Importing ${resource_name}..."
             local import_output
-            import_output=$(terraform import "${terraform_resource}" "${import_id}" 2>&1)
-            if [[ $? -eq 0 ]]; then
+            if import_output=$(terraform import "${terraform_resource}" "${import_id}" 2>&1); then
                 print_success "Imported ${resource_name}"
             else
                 print_warning "${resource_name} import failed: ${import_output}"
@@ -589,48 +630,49 @@ apply_terraform() {
     # Check what's in Terraform state
     print_status "Checking Terraform state for existing resources..."
     local realm_name
-    realm_name=$(grep 'realm_name\s*=' terraform.tfvars 2>/dev/null | cut -d'=' -f2 | tr -d ' "' || echo "congen")
+    realm_name=$(get_tfvars_value "terraform.tfvars" 'realm_name\s*=' "congen")
     if [[ -z "${realm_name}" ]]; then
         realm_name="congen"
     fi
     
     print_status "Resources in Terraform state:"
-    if terraform state list 2>/dev/null | grep -q "module.keycloak.keycloak_realm.congen"; then
+    terraform_state_list=$(terraform state list 2>/dev/null || true)
+    if echo "${terraform_state_list}" | grep -q "module.keycloak.keycloak_realm.congen"; then
         print_status "  ✓ Realm 'congen' is in state"
     else
         print_status "  ✗ Realm 'congen' is NOT in state"
     fi
     
-    if terraform state list 2>/dev/null | grep -q "module.keycloak.keycloak_role.admin_role"; then
+    if echo "${terraform_state_list}" | grep -q "module.keycloak.keycloak_role.admin_role"; then
         print_status "  ✓ Role 'admin' is in state"
     else
         print_status "  ✗ Role 'admin' is NOT in state"
     fi
     
-    if terraform state list 2>/dev/null | grep -q "module.keycloak.keycloak_role.service_role"; then
+    if echo "${terraform_state_list}" | grep -q "module.keycloak.keycloak_role.service_role"; then
         print_status "  ✓ Role 'service' is in state"
     else
         print_status "  ✗ Role 'service' is NOT in state"
     fi
     
-    if terraform state list 2>/dev/null | grep -q "module.keycloak.keycloak_openid_client.backend_client"; then
+    if echo "${terraform_state_list}" | grep -q "module.keycloak.keycloak_openid_client.backend_client"; then
         print_status "  ✓ Client 'congen-backend' is in state"
     else
         print_status "  ✗ Client 'congen-backend' is NOT in state"
     fi
     
-    if terraform state list 2>/dev/null | grep -q "module.keycloak.keycloak_openid_client.frontend_client"; then
+    if echo "${terraform_state_list}" | grep -q "module.keycloak.keycloak_openid_client.frontend_client"; then
         print_status "  ✓ Client 'congen-frontend' is in state"
     else
         print_status "  ✗ Client 'congen-frontend' is NOT in state"
     fi
     
     # Import realm if not in state (simple case - no UUID lookup needed)
-    if ! terraform state list 2>/dev/null | grep -q "module.keycloak.keycloak_realm.congen"; then
+    terraform_state_list=$(terraform state list 2>/dev/null || true)
+    if ! echo "${terraform_state_list}" | grep -q "module.keycloak.keycloak_realm.congen"; then
         print_status "Importing realm '${realm_name}' into Terraform state..."
         local import_output
-        import_output=$(terraform import "module.keycloak.keycloak_realm.congen" "${realm_name}" 2>&1)
-        if [[ $? -eq 0 ]]; then
+        if import_output=$(terraform import "module.keycloak.keycloak_realm.congen" "${realm_name}" 2>&1); then
             print_success "Successfully imported realm"
         else
             print_warning "Realm import failed: ${import_output}"
@@ -650,21 +692,22 @@ apply_terraform() {
     local admin_password=""
     
     if [[ -f "${tfvars_file}" ]]; then
-        admin_username=$(grep "^admin_username" "${tfvars_file}" | cut -d'=' -f2 | tr -d ' "' || true)
-        admin_password=$(grep "^admin_password" "${tfvars_file}" | cut -d'=' -f2 | tr -d ' "' || true)
+        admin_username=$(get_tfvars_value "${tfvars_file}" "^admin_username" "")
+        admin_password=$(get_tfvars_value "${tfvars_file}" "^admin_password" "")
     fi
     
     if [[ "${ENVIRONMENT}" == "local" || "${ENVIRONMENT}" == "local-persist" ]]; then
         if command -v kubectl &> /dev/null; then
             base64_flag="-d"
-            if [[ "$(uname)" == "Darwin" ]]; then
+            uname_output=$(uname 2>/dev/null || true)
+            if [[ "${uname_output}" == "Darwin" ]]; then
                 base64_flag="-D"
             fi
             if [[ -z "${admin_username}" ]]; then
-                admin_username=$(kubectl get secret keycloak-secret -n congen -o jsonpath='{.data.KC_BOOTSTRAP_ADMIN_USERNAME}' 2>/dev/null | base64 ${base64_flag} 2>/dev/null || true)
+                admin_username=$(kubectl get secret keycloak-secret -n congen -o jsonpath='{.data.KC_BOOTSTRAP_ADMIN_USERNAME}' 2>/dev/null | base64 "${base64_flag}" 2>/dev/null || true)
             fi
             if [[ -z "${admin_password}" ]]; then
-                admin_password=$(kubectl get secret keycloak-secret -n congen -o jsonpath='{.data.KC_BOOTSTRAP_ADMIN_PASSWORD}' 2>/dev/null | base64 ${base64_flag} 2>/dev/null || true)
+                admin_password=$(kubectl get secret keycloak-secret -n congen -o jsonpath='{.data.KC_BOOTSTRAP_ADMIN_PASSWORD}' 2>/dev/null | base64 "${base64_flag}" 2>/dev/null || true)
             fi
         fi
     fi
@@ -704,8 +747,8 @@ apply_terraform() {
             if [[ -f "${tfvars_file}" ]]; then
                 local tfvars_backend_id
                 local tfvars_frontend_id
-                tfvars_backend_id=$(grep "^backend_client_id" "${tfvars_file}" | cut -d'=' -f2 | tr -d ' "' || echo "")
-                tfvars_frontend_id=$(grep "^frontend_client_id" "${tfvars_file}" | cut -d'=' -f2 | tr -d ' "' || echo "")
+                tfvars_backend_id=$(get_tfvars_value "${tfvars_file}" "^backend_client_id" "")
+                tfvars_frontend_id=$(get_tfvars_value "${tfvars_file}" "^frontend_client_id" "")
                 if [[ -n "${tfvars_backend_id}" ]]; then
                     backend_client_id="${tfvars_backend_id}"
                 fi
@@ -753,7 +796,8 @@ apply_terraform() {
                     "${realm_name}/${frontend_client_uuid}" \
                     "frontend client"
                 
-                if ! terraform state list 2>/dev/null | grep -q "module.keycloak.keycloak_openid_audience_protocol_mapper.frontend_to_backend_audience_mapper"; then
+                terraform_state_list=$(terraform state list 2>/dev/null || true)
+                if ! echo "${terraform_state_list}" | grep -q "module.keycloak.keycloak_openid_audience_protocol_mapper.frontend_to_backend_audience_mapper"; then
                     local mappers_response
                     mappers_response=$(curl -s -X GET \
                         -H "Authorization: Bearer ${access_token}" \
@@ -775,7 +819,7 @@ apply_terraform() {
             local admin_email="admin@congen.com"
             if [[ -f "${tfvars_file}" ]]; then
                 local tfvars_email
-                tfvars_email=$(grep "^admin_email" "${tfvars_file}" | cut -d'=' -f2 | tr -d ' "' || echo "")
+                tfvars_email=$(get_tfvars_value "${tfvars_file}" "^admin_email" "")
                 if [[ -n "${tfvars_email}" ]]; then
                     admin_email="${tfvars_email}"
                 fi

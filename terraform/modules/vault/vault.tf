@@ -23,9 +23,9 @@ resource "helm_release" "vault" {
         }
 
         ha = {
-          enabled = var.vault_replicas > 1
+          enabled  = var.vault_replicas > 1
           replicas = var.vault_replicas
-          config = <<-EOT
+          config   = <<-EOT
             ui = true
             
             listener "tcp" {
@@ -51,8 +51,8 @@ resource "helm_release" "vault" {
         }
 
         dataStorage = {
-          enabled = true
-          size    = var.vault_storage_size
+          enabled      = true
+          size         = var.vault_storage_size
           storageClass = ""
         }
 

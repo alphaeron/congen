@@ -80,26 +80,28 @@ class TwoDayWorkoutStageGenerationService(
             selectPrimaryExercise(
                 userExercisePool = preparedData.userExercisePool,
                 workoutType = "maximal_effort",
-                dayType = dayType,
+                dayType = primaryMovementType,
                 movementBalanceState = movementBalanceState,
                 exerciseWorkoutTypeMappings = preparedData.exerciseWorkoutTypeMappings,
                 exerciseMuscleMappings = preparedData.exerciseMuscleMappings,
                 exerciseEquipmentMappings = preparedData.exerciseEquipmentMappings
             )
 
-        // Select secondary DE exercise
-        val workoutType = if (dayType.startsWith("DE_")) "dynamic_effort" else "maximal_effort"
+        // Select secondary DE exercise (this is a primary movement, not an accessory)
         val secondaryExerciseMono =
-            selectConditioningExercise(
-                userExercisePool = preparedData.userExercisePool,
-                weakMuscles = preparedData.weakMuscles,
-                workoutType = workoutType,
-                dayType = dayType,
-                movementBalanceState = movementBalanceState,
-                exerciseWorkoutTypeMappings = preparedData.exerciseWorkoutTypeMappings,
-                exerciseMuscleMappings = preparedData.exerciseMuscleMappings,
-                exerciseEquipmentMappings = preparedData.exerciseEquipmentMappings
-            )
+            if (secondaryMovementType != null) {
+                selectPrimaryExercise(
+                    userExercisePool = preparedData.userExercisePool,
+                    workoutType = "dynamic_effort",
+                    dayType = secondaryMovementType,
+                    movementBalanceState = movementBalanceState,
+                    exerciseWorkoutTypeMappings = preparedData.exerciseWorkoutTypeMappings,
+                    exerciseMuscleMappings = preparedData.exerciseMuscleMappings,
+                    exerciseEquipmentMappings = preparedData.exerciseEquipmentMappings
+                )
+            } else {
+                Mono.error(IllegalStateException("Secondary movement type is null for dayType: $dayType"))
+            }
 
         // Generate set schemes for both exercises
         val primarySetSchemesMono =

@@ -125,7 +125,8 @@ get_k8s_admin_password() {
     fi
     
     local base64_flag="-d"
-    if [[ "$(uname)" == "Darwin" ]]; then
+    uname_output=$(uname 2>/dev/null || true)
+    if [[ "${uname_output}" == "Darwin" ]]; then
         base64_flag="-D"
     fi
     
@@ -137,7 +138,7 @@ get_k8s_admin_password() {
     fi
     
     local decoded_password
-    decoded_password=$(echo "${secret_value}" | base64 ${base64_flag} 2>/dev/null)
+    decoded_password=$(echo "${secret_value}" | base64 "${base64_flag}" 2>/dev/null)
     if [[ -z "${decoded_password}" ]]; then
         print_warning "Failed to decode password from Kubernetes secret" >&2
         return 1
@@ -156,10 +157,11 @@ get_k8s_admin_password() {
 get_k8s_admin_username() {
     if command -v kubectl &> /dev/null; then
         base64_flag="-d"
-        if [[ "$(uname)" == "Darwin" ]]; then
+        uname_output=$(uname 2>/dev/null || true)
+        if [[ "${uname_output}" == "Darwin" ]]; then
             base64_flag="-D"
         fi
-        kubectl get secret keycloak-secret -n congen -o jsonpath='{.data.KC_BOOTSTRAP_ADMIN_USERNAME}' 2>/dev/null | base64 ${base64_flag} 2>/dev/null || true
+        kubectl get secret keycloak-secret -n congen -o jsonpath='{.data.KC_BOOTSTRAP_ADMIN_USERNAME}' 2>/dev/null | base64 "${base64_flag}" 2>/dev/null || true
     fi
 }
 

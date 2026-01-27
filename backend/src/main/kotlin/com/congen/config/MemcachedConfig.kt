@@ -6,9 +6,9 @@ import net.rubyeye.xmemcached.XMemcachedClientBuilder
 import net.rubyeye.xmemcached.aws.AWSElasticCacheClientBuilder
 import net.rubyeye.xmemcached.utils.AddrUtil
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.DisposableBean
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.boot.context.properties.EnableConfigurationProperties
-import org.springframework.beans.factory.DisposableBean
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Primary
@@ -100,13 +100,14 @@ class MemcachedConfig(
     @Bean
     @Primary
     fun memcachedClient(): MemcachedClient {
-        val client = if (props.useElasticache) {
-            logger.info("Using AWS ElastiCache client configuration")
-            createElasticacheClient()
-        } else {
-            logger.info("Using standard Memcached client configuration")
-            createStandardMemcachedClient()
-        }
+        val client =
+            if (props.useElasticache) {
+                logger.info("Using AWS ElastiCache client configuration")
+                createElasticacheClient()
+            } else {
+                logger.info("Using standard Memcached client configuration")
+                createStandardMemcachedClient()
+            }
         memcachedClientInstance = client
         return client
     }
