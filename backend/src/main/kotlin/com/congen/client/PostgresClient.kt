@@ -14,6 +14,7 @@ import io.vertx.sqlclient.Tuple
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Mono
+import reactor.core.scheduler.Schedulers
 import java.net.ConnectException
 import java.util.concurrent.CompletionStage
 import kotlin.reflect.KClass
@@ -314,6 +315,7 @@ class PostgresClient(
                         }
                 },
         )
+            .publishOn(Schedulers.boundedElastic())
     }
 
     /**
@@ -466,6 +468,7 @@ class PostgresClient(
                 }
             }.toCompletionStage()
         )
+            .publishOn(Schedulers.boundedElastic())
             .onErrorMap { throwable: Throwable ->
                 when (throwable) {
                     is ConnectException -> {
