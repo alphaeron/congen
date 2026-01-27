@@ -4,5 +4,4 @@ kind: Kustomization
 namespace: congen
 
 resources:
-- congen-secret.yaml
 - keycloak-secret.yaml

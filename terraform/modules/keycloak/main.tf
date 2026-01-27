@@ -119,6 +119,8 @@ resource "keycloak_user_roles" "backend_service_roles" {
 }
 
 # Create default admin user
+# Note: initial_password is only used when creating a new user.
+# For imported users, the password is ignored due to lifecycle block.
 resource "keycloak_user" "admin_user" {
   realm_id = keycloak_realm.congen.id
   username = var.admin_username
@@ -131,6 +133,12 @@ resource "keycloak_user" "admin_user" {
   initial_password {
     value     = var.admin_password
     temporary = false
+  }
+
+  lifecycle {
+    ignore_changes = [
+      initial_password
+    ]
   }
 }
 

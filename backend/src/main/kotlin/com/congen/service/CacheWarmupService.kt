@@ -21,8 +21,7 @@ import com.congen.dal.UserWeightUnitPreferenceDAL
 import com.congen.dal.WorkoutStageDAL
 import com.congen.dal.WorkoutStageTypeDAL
 import org.slf4j.LoggerFactory
-import org.springframework.boot.ApplicationArguments
-import org.springframework.boot.ApplicationRunner
+import org.springframework.context.SmartLifecycle
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
@@ -31,9 +30,9 @@ import reactor.core.publisher.Mono
  * Service responsible for warming up the application cache on startup.
  *
  * This service pre-loads frequently accessed data into the cache before the
- * application starts serving requests, reducing latency for initial user interactions.
- * It uses Spring's ApplicationRunner to execute after the application context is
- * initialized but before it starts serving requests.
+ * application reports as ready, reducing latency for initial user interactions.
+ * It uses SmartLifecycle to ensure warmup completes before the application reports
+ * as ready, preventing shutdown during warmup.
  *
  * The warmup process is configurable and can be enabled/disabled via properties.
  * Different sections of the cache can be warmed up independently based on configuration.
@@ -61,63 +60,90 @@ class CacheWarmupService(
     private val programmedExerciseDAL: ProgrammedExerciseDAL,
     private val setSchemeDAL: SetSchemeDAL,
     private val cacheWarmupConfig: CacheWarmupConfig
-) : ApplicationRunner {
+) : SmartLifecycle {
     private val logger = LoggerFactory.getLogger(CacheWarmupService::class.java)
+    
+    @Volatile
+    private var running = false
 
     /**
-     * Executes the cache warmup process on application startup.
+     * Returns the phase order for this lifecycle component.
      *
-     * This method is called by Spring Boot after the application context is initialized
-     * but before it starts serving requests. It builds a chain of warmup operations
-     * based on configuration and executes them synchronously to ensure the cache is
-     * fully warmed up before the application becomes ready.
+     * Using a high phase number ensures this runs after most other components
+     * are initialized, but before the application reports as ready.
      */
-    override fun run(args: ApplicationArguments) {
+    override fun getPhase(): Int {
+        return Int.MAX_VALUE - 1
+    }
+
+    /**
+     * Returns whether this component is currently running.
+     */
+    override fun isRunning(): Boolean {
+        return running
+    }
+
+    /**
+     * Starts the cache warmup process.
+     *
+     * This method is called by Spring Boot during the lifecycle phase, ensuring
+     * warmup completes before the application reports as ready. It builds a chain
+     * of warmup operations based on configuration and executes them synchronously.
+     */
+    override fun start() {
         if (!cacheWarmupConfig.enabled) {
             logger.info("Cache warmup is disabled, skipping warmup process")
+            running = true
             return
         }
 
+        running = true
         logger.info("Starting cache warmup process")
         val startTime = System.currentTimeMillis()
 
-        try {
-            // Build warmup chain based on configuration
-            var warmupChain = Mono.just(Unit)
+        // Build warmup chain based on configuration
+        var warmupChain = Mono.just(Unit)
 
-            if (cacheWarmupConfig.warmupReferenceData) {
-                warmupChain = warmupChain.then(warmupReferenceData())
-            }
-
-            if (cacheWarmupConfig.warmupLists) {
-                warmupChain = warmupChain.then(warmupFrequentlyAccessedLists())
-            }
-
-            if (cacheWarmupConfig.warmupRelationships) {
-                warmupChain = warmupChain.then(warmupCoreRelationships())
-            }
-
-            if (cacheWarmupConfig.warmupUserData) {
-                warmupChain = warmupChain.then(warmupUserData())
-            }
-
-            // Execute synchronously and block until completion
-            warmupChain
-                .doOnSuccess {
-                    val duration = System.currentTimeMillis() - startTime
-                    logger.info("Cache warmup completed successfully in {} ms", duration)
-                }
-                .doOnError { error ->
-                    val duration = System.currentTimeMillis() - startTime
-                    logger.error("Cache warmup failed after {} ms", duration, error)
-                }
-                .onErrorComplete()
-                .block() // Block until completion
-        } catch (e: Exception) {
-            val duration = System.currentTimeMillis() - startTime
-            logger.error("Cache warmup failed with exception after {} ms", duration, e)
-            // Don't throw the exception - let the application start even if cache warmup fails
+        if (cacheWarmupConfig.warmupReferenceData) {
+            warmupChain = warmupChain.then(warmupReferenceData())
         }
+
+        if (cacheWarmupConfig.warmupLists) {
+            warmupChain = warmupChain.then(warmupFrequentlyAccessedLists())
+        }
+
+        if (cacheWarmupConfig.warmupRelationships) {
+            warmupChain = warmupChain.then(warmupCoreRelationships())
+        }
+
+        if (cacheWarmupConfig.warmupUserData) {
+            warmupChain = warmupChain.then(warmupUserData())
+        }
+
+        // Execute asynchronously without blocking the lifecycle thread
+        // This prevents InterruptedException and allows the application to start
+        // while warmup completes in the background
+        warmupChain
+            .doOnSuccess {
+                val duration = System.currentTimeMillis() - startTime
+                logger.info("Cache warmup completed successfully in {} ms", duration)
+            }
+            .doOnError { error ->
+                val duration = System.currentTimeMillis() - startTime
+                logger.error("Cache warmup failed after {} ms", duration, error)
+            }
+            .onErrorComplete()
+            .subscribe() // Subscribe to start the reactive chain without blocking
+    }
+
+    /**
+     * Stops this lifecycle component.
+     *
+     * This is called during application shutdown. We mark as not running
+     * but don't need to do any cleanup since warmup is a one-time operation.
+     */
+    override fun stop() {
+        running = false
     }
 
     /**

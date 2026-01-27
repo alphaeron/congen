@@ -413,6 +413,152 @@ bootstrap_keycloak() {
     fi
 }
 
+# Function to log existing Keycloak resources
+log_existing_keycloak_resources() {
+    print_status "Querying Keycloak for existing resources..."
+    
+    # Get admin credentials
+    local admin_username
+    local admin_password
+    local tfvars_file
+    
+    if [[ "${ENVIRONMENT}" == "local-persist" ]]; then
+        tfvars_file="terraform/environments/local/keycloak/terraform.tfvars"
+    else
+        tfvars_file="terraform/environments/${ENVIRONMENT}/keycloak/terraform.tfvars"
+    fi
+    
+    # Get admin credentials - for local environments, prioritize Kubernetes secret
+    if [[ "${ENVIRONMENT}" == "local" || "${ENVIRONMENT}" == "local-persist" ]]; then
+        if command -v kubectl &> /dev/null; then
+            base64_flag="-d"
+            if [[ "$(uname)" == "Darwin" ]]; then
+                base64_flag="-D"
+            fi
+            admin_username=$(kubectl get secret keycloak-secret -n congen -o jsonpath='{.data.KC_BOOTSTRAP_ADMIN_USERNAME}' 2>/dev/null | base64 ${base64_flag} 2>/dev/null || true)
+            admin_password=$(kubectl get secret keycloak-secret -n congen -o jsonpath='{.data.KC_BOOTSTRAP_ADMIN_PASSWORD}' 2>/dev/null | base64 ${base64_flag} 2>/dev/null || true)
+        fi
+    fi
+    
+    # Fallback to tfvars if not from K8s
+    if [[ -z "${admin_username}" && -f "${tfvars_file}" ]]; then
+        admin_username=$(grep "^admin_username" "${tfvars_file}" | cut -d'=' -f2 | tr -d ' "' || echo "admin")
+    fi
+    if [[ -z "${admin_username}" ]]; then
+        admin_username="admin"
+    fi
+    
+    if [[ -z "${admin_password}" && -f "${tfvars_file}" ]]; then
+        admin_password=$(grep "^admin_password" "${tfvars_file}" | cut -d'=' -f2 | tr -d ' "' || true)
+    fi
+    
+    if [[ -z "${admin_password}" ]]; then
+        print_warning "Cannot get admin password, skipping Keycloak resource logging"
+        return
+    fi
+    
+    # Get admin token
+    local token_response
+    token_response=$(curl -s -X POST \
+        -H "Content-Type: application/x-www-form-urlencoded" \
+        -d "username=${admin_username}&password=${admin_password}&grant_type=password&client_id=admin-cli" \
+        "${KEYCLOAK_URL}/realms/master/protocol/openid-connect/token" 2>/dev/null || echo "")
+    
+    local access_token
+    access_token=$(echo "${token_response}" | jq -r '.access_token' 2>/dev/null || echo "")
+    
+    if [[ "${access_token}" == "null" || -z "${access_token}" ]]; then
+        print_warning "Failed to get admin token, skipping Keycloak resource logging"
+        return
+    fi
+    
+    # List all realms
+    print_status "Listing existing realms in Keycloak..."
+    local realms_response
+    realms_response=$(curl -s -X GET \
+        -H "Authorization: Bearer ${access_token}" \
+        -H "Content-Type: application/json" \
+        "${KEYCLOAK_URL}/admin/realms" 2>/dev/null || echo "[]")
+    
+    print_status "Existing realms:"
+    echo "${realms_response}" | jq -r '.[].realm' 2>/dev/null | while read -r realm; do
+        if [[ -n "${realm}" ]]; then
+            print_status "  - ${realm}"
+        fi
+    done || print_status "  (none or error reading realms)"
+    
+    # List roles in congen realm
+    print_status "Listing existing roles in 'congen' realm..."
+    local roles_response
+    roles_response=$(curl -s -X GET \
+        -H "Authorization: Bearer ${access_token}" \
+        -H "Content-Type: application/json" \
+        "${KEYCLOAK_URL}/admin/realms/congen/roles" 2>/dev/null || echo "[]")
+    
+    print_status "Existing roles in 'congen' realm:"
+    echo "${roles_response}" | jq -r '.[].name' 2>/dev/null | while read -r role; do
+        if [[ -n "${role}" ]]; then
+            print_status "  - ${role}"
+        fi
+    done || print_status "  (none or error reading roles)"
+    
+    # List clients in congen realm
+    print_status "Listing existing clients in 'congen' realm..."
+    local clients_response
+    clients_response=$(curl -s -X GET \
+        -H "Authorization: Bearer ${access_token}" \
+        -H "Content-Type: application/json" \
+        "${KEYCLOAK_URL}/admin/realms/congen/clients" 2>/dev/null || echo "[]")
+    
+    print_status "Existing clients in 'congen' realm:"
+    echo "${clients_response}" | jq -r '.[].clientId' 2>/dev/null | while read -r client; do
+        if [[ -n "${client}" ]]; then
+            print_status "  - ${client}"
+        fi
+    done || print_status "  (none or error reading clients)"
+    
+    # List users in congen realm
+    print_status "Listing existing users in 'congen' realm..."
+    local users_response
+    users_response=$(curl -s -X GET \
+        -H "Authorization: Bearer ${access_token}" \
+        -H "Content-Type: application/json" \
+        "${KEYCLOAK_URL}/admin/realms/congen/users" 2>/dev/null || echo "[]")
+    
+    print_status "Existing users in 'congen' realm:"
+    echo "${users_response}" | jq -r '.[] | "\(.username) (\(.email // "no email"))"' 2>/dev/null | while read -r user; do
+        if [[ -n "${user}" ]]; then
+            print_status "  - ${user}"
+        fi
+    done || print_status "  (none or error reading users)"
+}
+
+# Function to import a Keycloak resource into Terraform state
+# Usage: import_keycloak_resource <state_pattern> <terraform_resource> <import_id> <resource_name>
+#   state_pattern: Pattern to check in terraform state list (e.g., "module.keycloak.keycloak_role.admin_role")
+#   terraform_resource: Full Terraform resource path (e.g., "module.keycloak.keycloak_role.admin_role")
+#   import_id: Import ID (e.g., "${realm_name}/${resource_id}")
+#   resource_name: Human-readable name for logging (e.g., "admin role")
+import_keycloak_resource() {
+    local state_pattern="$1"
+    local terraform_resource="$2"
+    local import_id="$3"
+    local resource_name="$4"
+    
+    if ! terraform state list 2>/dev/null | grep -q "${state_pattern}"; then
+        if [[ -n "${import_id}" && "${import_id}" != "null" ]]; then
+            print_status "Importing ${resource_name}..."
+            local import_output
+            import_output=$(terraform import "${terraform_resource}" "${import_id}" 2>&1)
+            if [[ $? -eq 0 ]]; then
+                print_success "Imported ${resource_name}"
+            else
+                print_warning "${resource_name} import failed: ${import_output}"
+            fi
+        fi
+    fi
+}
+
 # Function to apply Terraform
 apply_terraform() {
     print_step "7" "Bootstrapping Keycloak and Applying Terraform Configuration"
@@ -420,6 +566,9 @@ apply_terraform() {
     # Bootstrap Keycloak first
     print_status "Bootstrapping Keycloak for Terraform..."
     bootstrap_keycloak
+    
+    # Log existing Keycloak resources for debugging
+    log_existing_keycloak_resources
     
     if [[ "${ENVIRONMENT}" == "local-persist" ]]; then
         local terraform_dir="terraform/environments/local/keycloak"
@@ -435,6 +584,217 @@ apply_terraform() {
         print_error "Terraform initialization failed"
         cd - > /dev/null || exit
         exit 1
+    fi
+    
+    # Check what's in Terraform state
+    print_status "Checking Terraform state for existing resources..."
+    local realm_name
+    realm_name=$(grep 'realm_name\s*=' terraform.tfvars 2>/dev/null | cut -d'=' -f2 | tr -d ' "' || echo "congen")
+    if [[ -z "${realm_name}" ]]; then
+        realm_name="congen"
+    fi
+    
+    print_status "Resources in Terraform state:"
+    if terraform state list 2>/dev/null | grep -q "module.keycloak.keycloak_realm.congen"; then
+        print_status "  ✓ Realm 'congen' is in state"
+    else
+        print_status "  ✗ Realm 'congen' is NOT in state"
+    fi
+    
+    if terraform state list 2>/dev/null | grep -q "module.keycloak.keycloak_role.admin_role"; then
+        print_status "  ✓ Role 'admin' is in state"
+    else
+        print_status "  ✗ Role 'admin' is NOT in state"
+    fi
+    
+    if terraform state list 2>/dev/null | grep -q "module.keycloak.keycloak_role.service_role"; then
+        print_status "  ✓ Role 'service' is in state"
+    else
+        print_status "  ✗ Role 'service' is NOT in state"
+    fi
+    
+    if terraform state list 2>/dev/null | grep -q "module.keycloak.keycloak_openid_client.backend_client"; then
+        print_status "  ✓ Client 'congen-backend' is in state"
+    else
+        print_status "  ✗ Client 'congen-backend' is NOT in state"
+    fi
+    
+    if terraform state list 2>/dev/null | grep -q "module.keycloak.keycloak_openid_client.frontend_client"; then
+        print_status "  ✓ Client 'congen-frontend' is in state"
+    else
+        print_status "  ✗ Client 'congen-frontend' is NOT in state"
+    fi
+    
+    # Import realm if not in state (simple case - no UUID lookup needed)
+    if ! terraform state list 2>/dev/null | grep -q "module.keycloak.keycloak_realm.congen"; then
+        print_status "Importing realm '${realm_name}' into Terraform state..."
+        local import_output
+        import_output=$(terraform import "module.keycloak.keycloak_realm.congen" "${realm_name}" 2>&1)
+        if [[ $? -eq 0 ]]; then
+            print_success "Successfully imported realm"
+        else
+            print_warning "Realm import failed: ${import_output}"
+        fi
+    fi
+    
+    # Auto-import all existing resources from Keycloak
+    print_status "Auto-importing existing resources from Keycloak..."
+    local tfvars_file
+    if [[ "${ENVIRONMENT}" == "local-persist" ]]; then
+        tfvars_file="terraform/environments/local/keycloak/terraform.tfvars"
+    else
+        tfvars_file="terraform/environments/${ENVIRONMENT}/keycloak/terraform.tfvars"
+    fi
+    
+    local admin_username=""
+    local admin_password=""
+    
+    if [[ -f "${tfvars_file}" ]]; then
+        admin_username=$(grep "^admin_username" "${tfvars_file}" | cut -d'=' -f2 | tr -d ' "' || true)
+        admin_password=$(grep "^admin_password" "${tfvars_file}" | cut -d'=' -f2 | tr -d ' "' || true)
+    fi
+    
+    if [[ "${ENVIRONMENT}" == "local" || "${ENVIRONMENT}" == "local-persist" ]]; then
+        if command -v kubectl &> /dev/null; then
+            base64_flag="-d"
+            if [[ "$(uname)" == "Darwin" ]]; then
+                base64_flag="-D"
+            fi
+            if [[ -z "${admin_username}" ]]; then
+                admin_username=$(kubectl get secret keycloak-secret -n congen -o jsonpath='{.data.KC_BOOTSTRAP_ADMIN_USERNAME}' 2>/dev/null | base64 ${base64_flag} 2>/dev/null || true)
+            fi
+            if [[ -z "${admin_password}" ]]; then
+                admin_password=$(kubectl get secret keycloak-secret -n congen -o jsonpath='{.data.KC_BOOTSTRAP_ADMIN_PASSWORD}' 2>/dev/null | base64 ${base64_flag} 2>/dev/null || true)
+            fi
+        fi
+    fi
+    
+    if [[ -n "${admin_password}" ]]; then
+        local token_response
+        token_response=$(curl -s -X POST \
+            -H "Content-Type: application/x-www-form-urlencoded" \
+            -d "username=${admin_username}&password=${admin_password}&grant_type=password&client_id=admin-cli" \
+            "${KEYCLOAK_URL}/realms/master/protocol/openid-connect/token" 2>/dev/null || echo "")
+        local access_token
+        access_token=$(echo "${token_response}" | jq -r '.access_token' 2>/dev/null || echo "")
+        
+        if [[ -n "${access_token}" && "${access_token}" != "null" ]]; then
+            print_status "Successfully obtained admin token for auto-import"
+            
+            local roles_response
+            roles_response=$(curl -s -X GET \
+                -H "Authorization: Bearer ${access_token}" \
+                -H "Content-Type: application/json" \
+                "${KEYCLOAK_URL}/admin/realms/${realm_name}/roles" 2>/dev/null || echo "[]")
+            
+            local clients_response
+            clients_response=$(curl -s -X GET \
+                -H "Authorization: Bearer ${access_token}" \
+                -H "Content-Type: application/json" \
+                "${KEYCLOAK_URL}/admin/realms/${realm_name}/clients" 2>/dev/null || echo "[]")
+            
+            local users_response
+            users_response=$(curl -s -X GET \
+                -H "Authorization: Bearer ${access_token}" \
+                -H "Content-Type: application/json" \
+                "${KEYCLOAK_URL}/admin/realms/${realm_name}/users" 2>/dev/null || echo "[]")
+            
+            local backend_client_id="congen-backend"
+            local frontend_client_id="congen-frontend"
+            if [[ -f "${tfvars_file}" ]]; then
+                local tfvars_backend_id
+                local tfvars_frontend_id
+                tfvars_backend_id=$(grep "^backend_client_id" "${tfvars_file}" | cut -d'=' -f2 | tr -d ' "' || echo "")
+                tfvars_frontend_id=$(grep "^frontend_client_id" "${tfvars_file}" | cut -d'=' -f2 | tr -d ' "' || echo "")
+                if [[ -n "${tfvars_backend_id}" ]]; then
+                    backend_client_id="${tfvars_backend_id}"
+                fi
+                if [[ -n "${tfvars_frontend_id}" ]]; then
+                    frontend_client_id="${tfvars_frontend_id}"
+                fi
+            fi
+            
+            local admin_role_id
+            admin_role_id=$(echo "${roles_response}" | jq -r ".[] | select(.name == \"admin\") | .id" 2>/dev/null || echo "")
+            if [[ -n "${admin_role_id}" && "${admin_role_id}" != "null" ]]; then
+                import_keycloak_resource \
+                    "module.keycloak.keycloak_role.admin_role" \
+                    "module.keycloak.keycloak_role.admin_role" \
+                    "${realm_name}/${admin_role_id}" \
+                    "admin role"
+            fi
+            
+            local service_role_id
+            service_role_id=$(echo "${roles_response}" | jq -r ".[] | select(.name == \"service\") | .id" 2>/dev/null || echo "")
+            if [[ -n "${service_role_id}" && "${service_role_id}" != "null" ]]; then
+                import_keycloak_resource \
+                    "module.keycloak.keycloak_role.service_role" \
+                    "module.keycloak.keycloak_role.service_role" \
+                    "${realm_name}/${service_role_id}" \
+                    "service role"
+            fi
+            
+            local backend_client_uuid
+            backend_client_uuid=$(echo "${clients_response}" | jq -r ".[] | select(.clientId == \"${backend_client_id}\") | .id" 2>/dev/null || echo "")
+            if [[ -n "${backend_client_uuid}" && "${backend_client_uuid}" != "null" ]]; then
+                import_keycloak_resource \
+                    "module.keycloak.keycloak_openid_client.backend_client" \
+                    "module.keycloak.keycloak_openid_client.backend_client" \
+                    "${realm_name}/${backend_client_uuid}" \
+                    "backend client"
+            fi
+            
+            local frontend_client_uuid=""
+            frontend_client_uuid=$(echo "${clients_response}" | jq -r ".[] | select(.clientId == \"${frontend_client_id}\") | .id" 2>/dev/null || echo "")
+            if [[ -n "${frontend_client_uuid}" && "${frontend_client_uuid}" != "null" ]]; then
+                import_keycloak_resource \
+                    "module.keycloak.keycloak_openid_client.frontend_client" \
+                    "module.keycloak.keycloak_openid_client.frontend_client" \
+                    "${realm_name}/${frontend_client_uuid}" \
+                    "frontend client"
+                
+                if ! terraform state list 2>/dev/null | grep -q "module.keycloak.keycloak_openid_audience_protocol_mapper.frontend_to_backend_audience_mapper"; then
+                    local mappers_response
+                    mappers_response=$(curl -s -X GET \
+                        -H "Authorization: Bearer ${access_token}" \
+                        -H "Content-Type: application/json" \
+                        "${KEYCLOAK_URL}/admin/realms/${realm_name}/clients/${frontend_client_uuid}/protocol-mappers/models" 2>/dev/null || echo "[]")
+                    
+                    local mapper_id
+                    mapper_id=$(echo "${mappers_response}" | jq -r ".[] | select(.name == \"frontend-to-backend-audience-mapper\") | .id" 2>/dev/null || echo "")
+                    if [[ -n "${mapper_id}" && "${mapper_id}" != "null" ]]; then
+                        import_keycloak_resource \
+                            "module.keycloak.keycloak_openid_audience_protocol_mapper.frontend_to_backend_audience_mapper" \
+                            "module.keycloak.keycloak_openid_audience_protocol_mapper.frontend_to_backend_audience_mapper" \
+                            "${realm_name}/client/${frontend_client_uuid}/${mapper_id}" \
+                            "protocol mapper"
+                    fi
+                fi
+            fi
+            
+            local admin_email="admin@congen.com"
+            if [[ -f "${tfvars_file}" ]]; then
+                local tfvars_email
+                tfvars_email=$(grep "^admin_email" "${tfvars_file}" | cut -d'=' -f2 | tr -d ' "' || echo "")
+                if [[ -n "${tfvars_email}" ]]; then
+                    admin_email="${tfvars_email}"
+                fi
+            fi
+            
+            local user_uuid
+            user_uuid=$(echo "${users_response}" | jq -r ".[] | select(.email == \"${admin_email}\") | .id" 2>/dev/null || echo "")
+            if [[ -n "${user_uuid}" && "${user_uuid}" != "null" ]]; then
+                import_keycloak_resource \
+                    "module.keycloak.keycloak_user.admin_user" \
+                    "module.keycloak.keycloak_user.admin_user" \
+                    "${realm_name}/${user_uuid}" \
+                    "admin user"
+            fi
+        else
+            print_warning "Could not get admin token for auto-import, will proceed without importing existing resources"
+        fi
+    else
+        print_warning "Could not get admin password for auto-import, will proceed without importing existing resources"
     fi
     
     print_status "Checking for Terraform changes..."
@@ -465,12 +825,26 @@ apply_terraform() {
         # Run terraform apply with progress indication
         print_status "Running terraform apply..."
 
-        if terraform apply -auto-approve; then
+        local apply_output
+        apply_output=$(terraform apply -auto-approve 2>&1)
+        local apply_exit_code=$?
+        
+        if [[ ${apply_exit_code} -eq 0 ]]; then
             print_success "Terraform applied successfully"
-            # Set a flag to indicate Terraform changes were applied
             export TERRAFORM_NO_CHANGES=false
+        elif echo "${apply_output}" | grep -q "409 Conflict"; then
+            print_error "Terraform apply failed: Resources already exist in Keycloak but not in Terraform state"
+            print_error "This typically happens when Terraform state was lost. You need to either:"
+            print_error "1. Manually import existing resources using: terraform import <resource> <id>"
+            print_error "2. Or delete the existing resources from Keycloak and let Terraform recreate them"
+            print_error ""
+            print_error "Failed resources:"
+            echo "${apply_output}" | grep -A 2 "409 Conflict" || true
+            cd - > /dev/null || exit
+            exit 1
         else
             print_error "Terraform apply failed"
+            echo "${apply_output}"
             cd - > /dev/null || exit
             exit 1
         fi

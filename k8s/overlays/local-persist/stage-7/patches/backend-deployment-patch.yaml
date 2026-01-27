@@ -17,6 +17,11 @@ spec:
         fsGroup: 1000
       containers:
       - name: backend
+        envFrom:
+        - configMapRef:
+            name: backend-config
+        - secretRef:
+            name: congen-secret
         env:
         - name: SPRING_PROFILES_ACTIVE
           value: "local"

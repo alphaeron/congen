@@ -8,10 +8,9 @@ import io.vertx.sqlclient.SqlClient
 import org.slf4j.LoggerFactory
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.boot.context.properties.EnableConfigurationProperties
-import org.springframework.context.ApplicationListener
+import org.springframework.beans.factory.DisposableBean
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.context.event.ContextClosedEvent
 
 /**
  * Configuration properties for PostgreSQL database connections.
@@ -77,7 +76,7 @@ class PostgresConfig(
      * The properties for configuring PostgreSQL connections.
      */
     private val props: PostgresProperties
-) : ApplicationListener<ContextClosedEvent> {
+) : DisposableBean {
     companion object {
         /** Logger instance for this class. */
         private val logger = LoggerFactory.getLogger(PostgresConfig::class.java)
@@ -187,17 +186,18 @@ class PostgresConfig(
     }
 
     /**
-     * Handles application context shutdown to gracefully close PostgreSQL connection pools.
+     * Destroys the bean and gracefully closes PostgreSQL connection pools.
+     *
+     * This method is called by Spring during bean destruction, which occurs during
+     * application shutdown. Using DisposableBean ensures cleanup only happens
+     * during actual application shutdown, not during context refresh or premature closure.
      *
      * This method ensures that database connection pools are properly closed during
      * application shutdown, preventing connection leaks and ensuring clean shutdown.
-     * It follows the same pattern as the Memcached configuration for consistency.
-     *
-     * @param event The context closed event
      */
-    override fun onApplicationEvent(event: ContextClosedEvent) {
+    override fun destroy() {
         try {
-            logger.info("Application context closing, shutting down PostgreSQL connection pools...")
+            logger.info("Shutting down PostgreSQL connection pools...")
 
             // Close reader pool
             readerPool?.let { pool ->

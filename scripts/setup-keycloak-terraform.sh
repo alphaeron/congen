@@ -103,45 +103,168 @@ print_error() {
     echo -e "${RED}[ERROR]${NC} $1" >&2
 }
 
-# Get admin credentials from terraform.tfvars if not provided
-if [[ -z "${ADMIN_USERNAME}" ]]; then
-    # Try to get from terraform.tfvars
+# Function to get terraform.tfvars file path
+get_tfvars_file() {
     if [[ "${ENVIRONMENT}" == "local-persist" ]]; then
-        tfvars_file="terraform/environments/local/keycloak/terraform.tfvars"
+        echo "terraform/environments/local/keycloak/terraform.tfvars"
     else
-        tfvars_file="terraform/environments/${ENVIRONMENT}/keycloak/terraform.tfvars"
+        echo "terraform/environments/${ENVIRONMENT}/keycloak/terraform.tfvars"
     fi
+}
+
+# Function to get password from Kubernetes secret
+get_k8s_admin_password() {
+    if ! command -v kubectl &> /dev/null; then
+        print_warning "kubectl not found, cannot read from Kubernetes secret" >&2
+        return 1
+    fi
+    
+    if ! kubectl get secret keycloak-secret -n congen &>/dev/null; then
+        print_warning "Kubernetes secret 'keycloak-secret' not found in namespace 'congen'" >&2
+        return 1
+    fi
+    
+    local base64_flag="-d"
+    if [[ "$(uname)" == "Darwin" ]]; then
+        base64_flag="-D"
+    fi
+    
+    local secret_value
+    secret_value=$(kubectl get secret keycloak-secret -n congen -o jsonpath='{.data.KC_BOOTSTRAP_ADMIN_PASSWORD}' 2>/dev/null)
+    if [[ -z "${secret_value}" ]]; then
+        print_warning "KC_BOOTSTRAP_ADMIN_PASSWORD key not found in Kubernetes secret" >&2
+        return 1
+    fi
+    
+    local decoded_password
+    decoded_password=$(echo "${secret_value}" | base64 ${base64_flag} 2>/dev/null)
+    if [[ -z "${decoded_password}" ]]; then
+        print_warning "Failed to decode password from Kubernetes secret" >&2
+        return 1
+    fi
+    
+    if [[ "${decoded_password}" == "dummy-admin-password" ]]; then
+        print_warning "Kubernetes secret contains dummy password 'dummy-admin-password'" >&2
+        print_warning "For fresh deployments, this is the actual password Keycloak will use" >&2
+        print_warning "The script will proceed with this password" >&2
+    fi
+    
+    echo "${decoded_password}"
+}
+
+# Function to get username from Kubernetes secret
+get_k8s_admin_username() {
+    if command -v kubectl &> /dev/null; then
+        base64_flag="-d"
+        if [[ "$(uname)" == "Darwin" ]]; then
+            base64_flag="-D"
+        fi
+        kubectl get secret keycloak-secret -n congen -o jsonpath='{.data.KC_BOOTSTRAP_ADMIN_USERNAME}' 2>/dev/null | base64 ${base64_flag} 2>/dev/null || true
+    fi
+}
+
+# Function to create terraform.tfvars file if it doesn't exist
+create_tfvars_if_missing() {
+    local tfvars_file
+    tfvars_file=$(get_tfvars_file)
+    
+    if [[ ! -f "${tfvars_file}" ]]; then
+        print_status "terraform.tfvars file not found, creating it..."
+        
+        # Ensure directory exists
+        local tfvars_dir
+        tfvars_dir=$(dirname "${tfvars_file}")
+        if ! mkdir -p "${tfvars_dir}"; then
+            print_error "Failed to create directory: ${tfvars_dir}"
+            exit 1
+        fi
+        
+        # Determine default values based on environment
+        local default_admin_username="admin"
+        local default_admin_password="admin"
+        
+        if [[ "${ENVIRONMENT}" == "local" || "${ENVIRONMENT}" == "local-persist" ]]; then
+            # For local environments, read from Kubernetes secret
+            print_status "Reading admin credentials from Kubernetes secret for local environment..."
+            local k8s_username
+            local k8s_password
+            k8s_username=$(get_k8s_admin_username)
+            k8s_password=$(get_k8s_admin_password)
+            
+            if [[ -n "${k8s_username}" ]]; then
+                default_admin_username="${k8s_username}"
+                print_status "Using admin username from Kubernetes secret: ${default_admin_username}"
+            fi
+            
+            if [[ -n "${k8s_password}" ]]; then
+                default_admin_password="${k8s_password}"
+                print_status "Using admin password from Kubernetes secret"
+            else
+                print_warning "Could not read admin password from Kubernetes secret, using default"
+            fi
+        else
+            # For staging/production, we need to prompt or require password
+            print_warning "terraform.tfvars file will be created, but admin_password must be set"
+            print_warning "For ${ENVIRONMENT} environment, please set a secure password"
+        fi
+        
+        # Create the file with only the variables the script needs
+        # (admin_username and admin_password are read by the script)
+        # (keycloak_client_secret will be added by the script later)
+        if ! cat > "${tfvars_file}" << EOF
+# Keycloak Admin Credentials (required by bootstrap script)
+admin_username = "${default_admin_username}"
+admin_password = "${default_admin_password}"
+
+# Keycloak client secret for Terraform provider (will be populated by bootstrap script)
+# keycloak_client_secret = ""
+EOF
+        then
+            print_error "Failed to create terraform.tfvars file at ${tfvars_file}"
+            exit 1
+        fi
+        
+        print_success "Created terraform.tfvars file at ${tfvars_file}"
+        if [[ "${ENVIRONMENT}" != "local" && "${ENVIRONMENT}" != "local-persist" ]]; then
+            print_warning "⚠️  IMPORTANT: Please update admin_password in ${tfvars_file} with a secure password"
+        fi
+    fi
+}
+
+# Create terraform.tfvars if it doesn't exist
+create_tfvars_if_missing
+
+# For bootstrap, we need master realm admin credentials (not congen realm admin)
+# Read username from terraform.tfvars if not provided via command line
+if [[ -z "${ADMIN_USERNAME}" ]]; then
+    tfvars_file=$(get_tfvars_file)
     if [[ -f "${tfvars_file}" ]]; then
-        # Check if admin_username is defined in tfvars
         tfvars_username=$(grep "^admin_username" "${tfvars_file}" | cut -d'=' -f2 | tr -d ' "' || true)
         if [[ -n "${tfvars_username}" ]]; then
             ADMIN_USERNAME="${tfvars_username}"
-            print_status "Using admin username from terraform.tfvars: ${ADMIN_USERNAME}"
+            print_status "Using master realm admin username from terraform.tfvars: ${ADMIN_USERNAME}"
         else
-            # Use default from variables.tf
-            ADMIN_USERNAME="admin"
-            print_status "Using default admin username: ${ADMIN_USERNAME}"
+            print_error "Admin username not found in terraform.tfvars and not provided via command line"
+            print_error "Please set admin_username in ${tfvars_file} or provide via -a option"
+            exit 1
         fi
     else
-        # Use default from variables.tf
-        ADMIN_USERNAME="admin"
-        print_status "Using default admin username: ${ADMIN_USERNAME}"
+        print_error "terraform.tfvars file not found at ${tfvars_file}"
+        print_error "Please create the file or provide admin username via -a option"
+        exit 1
     fi
+else
+    print_status "Using admin username from command line argument: ${ADMIN_USERNAME}"
 fi
 
+# For bootstrap, we need master realm admin password from terraform.tfvars
 if [[ -z "${ADMIN_PASSWORD}" ]]; then
-    # Try to get from terraform.tfvars
-    if [[ "${ENVIRONMENT}" == "local-persist" ]]; then
-        tfvars_file="terraform/environments/local/keycloak/terraform.tfvars"
-    else
-        tfvars_file="terraform/environments/${ENVIRONMENT}/keycloak/terraform.tfvars"
-    fi
+    tfvars_file=$(get_tfvars_file)
     if [[ -f "${tfvars_file}" ]]; then
-        # Check if admin_password is defined in tfvars
         tfvars_password=$(grep "^admin_password" "${tfvars_file}" | cut -d'=' -f2 | tr -d ' "' || true)
         if [[ -n "${tfvars_password}" ]]; then
             ADMIN_PASSWORD="${tfvars_password}"
-            print_status "Using admin password from terraform.tfvars"
+            print_status "Using master realm admin password from terraform.tfvars"
         else
             print_error "Admin password not found in terraform.tfvars and not provided via command line"
             print_error "Please set admin_password in ${tfvars_file} or provide via -p option"
@@ -149,7 +272,7 @@ if [[ -z "${ADMIN_PASSWORD}" ]]; then
         fi
     else
         print_error "terraform.tfvars file not found at ${tfvars_file}"
-        print_error "Please provide admin password via -p option"
+        print_error "Please create the file or provide admin password via -p option"
         exit 1
     fi
 fi
@@ -168,8 +291,8 @@ get_admin_token() {
     
     # Validate token
     if [[ "${access_token}" == "null" || -z "${access_token}" ]]; then
-        print_error "Failed to get admin token"
-        echo "Response: ${token_response}"
+        print_error "Failed to get admin token from ${MASTER_REALM} realm"
+        print_error "Response: ${token_response}"
         exit 1
     fi
 

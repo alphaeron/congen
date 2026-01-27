@@ -5,12 +5,9 @@ namespace: congen
 
 resources:
 - ../../../base/stage-4
+- congen-secret.yaml
 
 patches:
-- path: patches/congen-secret-patch.yaml
-  target:
-    kind: Secret
-    name: congen-secret
 - path: patches/keycloak-secret-patch.yaml
   target:
     kind: Secret

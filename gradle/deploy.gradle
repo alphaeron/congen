@@ -55,6 +55,54 @@ task setupLocalKubernetes {
     }
 }
 
+task loadThirdPartyImagesIntoMinikube {
+    description = 'Load third-party Docker images into minikube for local deployments'
+    group = 'kubernetes'
+    mustRunAfter setupLocalKubernetes
+    
+    doFirst {
+        def environment = project.hasProperty('environment') ? project.getProperty('environment') : 'local'
+        if (environment != 'local' && environment != 'local-persist') {
+            println "⏭️  Skipping third-party image loading for non-local environment: ${environment}"
+            return
+        }
+        
+        println "📦 Loading third-party images into minikube for ${environment} environment..."
+        
+        def images = [
+            'postgres:15-alpine',
+            'postgres:15',
+            'memcached:1.6.39-alpine',
+            'sfat/liquibase:4.11.0',
+            'mirror.gcr.io/busybox:1.35',
+            'quay.io/keycloak/keycloak:26.3.2',
+            'stakater/reloader:v1.0.46'
+        ]
+        
+        images.each { image ->
+            println "  Loading ${image}..."
+            def output = new ByteArrayOutputStream()
+            def result = exec {
+                commandLine 'docker', 'images', '-q', image
+                ignoreExitValue = true
+                standardOutput = output
+            }
+            
+            if (result.exitValue == 0 && output.toString().trim()) {
+                exec {
+                    commandLine 'minikube', 'image', 'load', image
+                    ignoreExitValue = false
+                }
+                println "  ✅ Loaded ${image} into minikube"
+            } else {
+                println "  ⚠️  Image ${image} not found locally, skipping. Run getimages.sh first to pull images."
+            }
+        }
+        
+        println "✅ Third-party image loading complete"
+    }
+}
+
 task setupTestPortForward {
     description = 'Setup port forwarding for integration tests'
     group = 'kubernetes'
@@ -174,6 +222,7 @@ task deployAll {
     // Force task to always run
     if (project.hasProperty('environment') && (project.getProperty('environment') == 'local' || project.getProperty('environment') == 'local-persist')) {
         dependsOn setupLocalKubernetes
+        dependsOn loadThirdPartyImagesIntoMinikube
     }
     dependsOn ':confirmDeployment'
     
@@ -230,4 +279,8 @@ deployAll.configure {
 // Configure deployStage task dependencies after all tasks are available
 deployStage.configure {
     dependsOn subprojects.collect { it.path + ':prepareDeployment' }
+    if (project.hasProperty('environment') && (project.getProperty('environment') == 'local' || project.getProperty('environment') == 'local-persist')) {
+        dependsOn setupLocalKubernetes
+        dependsOn loadThirdPartyImagesIntoMinikube
+    }
 }
