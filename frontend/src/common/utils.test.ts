@@ -3,6 +3,8 @@ import {
   capitalizeEachWord,
   categorizeExerciseVolume,
   formatWeightWithUnit,
+  convertDisplayWeightToKg,
+  KG_TO_LBS,
 } from './utils';
 
 describe('capitalizeFirstLetter', () => {
@@ -87,7 +89,7 @@ describe('formatWeightWithUnit', () => {
     expect(formatWeightWithUnit(null, 'KG')).toBe('-');
   });
 
-  it('rounds lbs to whole or one decimal to avoid conversion artifacts', () => {
+  it('rounds lbs to nearest 0.5 lbs to avoid conversion artifacts', () => {
     expect(formatWeightWithUnit(6.8, 'LBS')).toBe('15 lbs');
     expect(formatWeightWithUnit(18.14, 'LBS')).toBe('40 lbs');
     expect(formatWeightWithUnit(27.22, 'LBS')).toBe('60 lbs');
@@ -95,9 +97,11 @@ describe('formatWeightWithUnit', () => {
     expect(formatWeightWithUnit(72.57, 'LBS')).toBe('160 lbs');
   });
 
-  it('formats fractional lbs with one decimal', () => {
-    expect(formatWeightWithUnit(6.94, 'LBS')).toBe('15.3 lbs');
+  it('rounds lbs to nearest 0.5 lbs increment', () => {
+    expect(formatWeightWithUnit(6.94, 'LBS')).toBe('15.5 lbs');
     expect(formatWeightWithUnit(11.34, 'LBS')).toBe('25 lbs');
+    expect(formatWeightWithUnit(6.92, 'LBS')).toBe('15.5 lbs');
+    expect(formatWeightWithUnit(6.81, 'LBS')).toBe('15 lbs');
   });
 
   it('formats kg with two decimal places', () => {
@@ -108,5 +112,27 @@ describe('formatWeightWithUnit', () => {
   it('omits unit when includeUnit is false', () => {
     expect(formatWeightWithUnit(6.8, 'LBS', false)).toBe('15');
     expect(formatWeightWithUnit(100, 'KG', false)).toBe('100');
+  });
+
+  it('returns parseable number when includeUnit is false for form initial values', () => {
+    expect(parseFloat(formatWeightWithUnit(72.57, 'LBS', false)) || 0).toBe(160);
+    expect(parseFloat(formatWeightWithUnit(6.94, 'LBS', false)) || 0).toBe(15.5);
+    expect(parseFloat(formatWeightWithUnit(0, 'LBS', false)) || 0).toBe(0);
+  });
+});
+
+describe('convertDisplayWeightToKg', () => {
+  it('returns weight unchanged when preferred unit is KG', () => {
+    expect(convertDisplayWeightToKg(100, 'KG')).toBe(100);
+  });
+
+  it('converts lbs to kg when preferred unit is LBS', () => {
+    expect(convertDisplayWeightToKg(160, 'LBS')).toBeCloseTo(72.574, 2);
+  });
+});
+
+describe('KG_TO_LBS', () => {
+  it('is the standard conversion factor', () => {
+    expect(KG_TO_LBS).toBe(2.20462);
   });
 });

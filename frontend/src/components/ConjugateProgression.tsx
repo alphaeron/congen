@@ -16,6 +16,7 @@ import { LineChart } from './LineChart';
 import { LoadingSpinner } from './LoadingSpinner';
 import { PieChart } from './PieChart';
 import type { Exercise, UserOneRepMax } from '../api/types';
+import { formatWeightWithUnit, KG_TO_LBS } from '../common/utils';
 import { useData } from '../contexts/DataContext';
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
@@ -96,7 +97,7 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = () => {
   const columnHelper = createColumnHelper<{
     exerciseName: string;
     oneRepMax: number;
-    unit: string;
+    displayWeight: string;
   }>();
 
   const columns = [
@@ -106,34 +107,29 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = () => {
     }),
     columnHelper.accessor('oneRepMax', {
       header: '1RM',
-      cell: info => `${info.getValue()} ${info.row.original.unit}`,
+      cell: info => info.row.original.displayWeight,
     }),
   ];
 
-  // Process 1RM data for table
+  // Process 1RM data for table (normalize to kg, then use common formatter)
   const tableData = useMemo(() => {
     return oneRepMaxes.map(oneRepMax => {
-      // Find user's preferred unit for this exercise
       const weightUnitPreference = weightUnitPreferences.find(
         pref => pref.exercise_name === oneRepMax.exercise_name
       );
-
-      // Convert weight to user's preferred unit if available
-      let displayWeight = oneRepMax.one_rep_max;
-      let displayUnit = oneRepMax.unit;
-
-      if (weightUnitPreference?.preferred_unit === 'KG' && oneRepMax.unit === 'LBS') {
-        displayWeight = Math.round(oneRepMax.one_rep_max / 2.20462);
-        displayUnit = 'KG';
-      } else if (weightUnitPreference?.preferred_unit === 'LBS' && oneRepMax.unit === 'KG') {
-        displayWeight = Math.round(oneRepMax.one_rep_max * 2.20462);
-        displayUnit = 'LBS';
-      }
+      const preferredUnit = weightUnitPreference?.preferred_unit as 'KG' | 'LBS' | undefined;
+      const weightInKg =
+        oneRepMax.unit === 'LBS'
+          ? oneRepMax.one_rep_max / KG_TO_LBS
+          : oneRepMax.one_rep_max;
+      const displayWeight = formatWeightWithUnit(weightInKg, preferredUnit);
+      const oneRepMaxNumeric =
+        parseFloat(formatWeightWithUnit(weightInKg, preferredUnit, false)) || 0;
 
       return {
         exerciseName: oneRepMax.exercise_name,
-        oneRepMax: displayWeight,
-        unit: displayUnit,
+        oneRepMax: oneRepMaxNumeric,
+        displayWeight,
       };
     });
   }, [oneRepMaxes, weightUnitPreferences]);

@@ -6,16 +6,6 @@ import React from 'react';
 import { SetSchemeForm, type SetSchemeFormData } from './SetSchemeForm';
 import type { UserWeightUnitPreference } from '../api/types';
 
-// Mock the convertWeightToPounds utility
-jest.mock('../common/utils', () => ({
-  convertWeightToPounds: jest.fn((weight: number, preferredUnit: 'KG' | 'LBS' | undefined) => {
-    if (preferredUnit === 'KG') {
-      return weight * 2.20462; // Convert kg to lbs
-    }
-    return weight; // Already in lbs or default
-  }),
-}));
-
 const mockWeightUnitPreferences: UserWeightUnitPreference[] = [
   {
     user_id: 'user1',

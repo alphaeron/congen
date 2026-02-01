@@ -3,7 +3,7 @@ import React from 'react';
 
 import { GameText } from './GameTheme';
 import type { UserWeightUnitPreference } from '../api/types';
-import { convertWeightToPounds } from '../common/utils';
+import { convertDisplayWeightToKg } from '../common/utils';
 
 import type { useForm } from '@tanstack/react-form';
 
@@ -49,21 +49,8 @@ export const SetSchemeForm: React.FC<SetSchemeFormProps> = ({
   const preferredUnit = weightUnitPreference?.preferred_unit;
   const weightUnitLabel = preferredUnit === 'LBS' ? 'lbs' : 'kg';
 
-  // Convert weight values for display
-  const convertWeightForDisplay = (weight: number): number => {
-    if (preferredUnit === 'LBS') {
-      return convertWeightToPounds(weight, 'KG');
-    }
-    return weight;
-  };
-
-  // Convert weight values for storage
-  const convertWeightForStorage = (weight: number): number => {
-    if (preferredUnit === 'LBS') {
-      return weight / 2.20462; // Convert lbs to kg
-    }
-    return weight;
-  };
+  const convertWeightForStorage = (weight: number): number =>
+    convertDisplayWeightToKg(weight, preferredUnit as 'KG' | 'LBS' | undefined);
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -217,9 +204,7 @@ export const SetSchemeForm: React.FC<SetSchemeFormProps> = ({
                   label={`Performed Weight (${weightUnitLabel})`}
                   type="text"
                   inputProps={{ inputMode: 'decimal' }}
-                  value={
-                    field.state.value ? convertWeightForDisplay(field.state.value).toString() : ''
-                  }
+                  value={field.state.value ? field.state.value.toString() : ''}
                   onChange={e => {
                     const inputValue = e.target.value;
                     // Allow any valid numeric input including decimals

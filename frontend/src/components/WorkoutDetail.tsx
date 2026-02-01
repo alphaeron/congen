@@ -48,7 +48,11 @@ import type {
   ProgrammedWorkoutWithStages,
   ProgrammedExerciseWithSetSchemes,
 } from '../api/types';
-import { replaceUnderscoresWithSpaces, formatWeightWithUnit } from '../common/utils';
+import {
+  replaceUnderscoresWithSpaces,
+  formatWeightWithUnit,
+  convertDisplayWeightToKg,
+} from '../common/utils';
 import { useData } from '../contexts/DataContext';
 import { exportWorkoutToPDF } from '../utils/exportUtils';
 import { calculateWorkoutProgress } from '../utils/progressUtils';
@@ -129,15 +133,14 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
   const [availableExercises, setAvailableExercises] = useState<Exercise[]>([]);
   const [loadingExercises, setLoadingExercises] = useState(false);
 
-  // Weight conversion functions for Add Exercise dialog
   const convertWeightForStorage = (weight: number, exerciseName: string): number => {
     const weightUnitPreference = weightUnitPreferences.find(
       pref => pref.exercise_name === exerciseName
     );
-    if (weightUnitPreference?.preferred_unit === 'LBS') {
-      return weight / 2.20462; // Convert lbs to kg
-    }
-    return weight;
+    return convertDisplayWeightToKg(
+      weight,
+      weightUnitPreference?.preferred_unit as 'KG' | 'LBS' | undefined
+    );
   };
 
   // Form for set scheme details in Add Exercise dialog

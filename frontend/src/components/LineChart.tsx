@@ -9,7 +9,7 @@ import type {
   ProgrammedWorkoutWithStages,
   WorkoutStageWithExercises,
 } from '../api/types';
-import { formatDate } from '../common/utils';
+import { formatDate, KG_TO_LBS } from '../common/utils';
 import { createCongenNivoTheme, congenColorSchemes } from '../theme/nivoTheme';
 
 interface LineChartProps {
@@ -109,7 +109,8 @@ export const LineChart: React.FC<LineChartProps> = ({
               const bandWeight = setScheme.band_weight_lbs
                 ? (setScheme.band_weight_lbs as { weight_lbs: number })?.weight_lbs || 0
                 : 0;
-              totalVolume += (weight + bandWeight) * reps;
+              const convertedWeight = weight * KG_TO_LBS;
+              totalVolume += (convertedWeight + bandWeight) * reps;
             });
           });
         });

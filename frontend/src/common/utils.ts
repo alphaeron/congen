@@ -95,28 +95,6 @@ export function getDateInBrowserTimezone(dateInput: Date): string {
 }
 
 /**
- * Convert weight to pounds based on user's preferred unit.
- *
- * @param weight The weight value to convert
- * @param preferredUnit The user's preferred unit for this exercise
- * @returns Weight converted to pounds
- */
-export function convertWeightToPounds(
-  weight: number,
-  preferredUnit: 'KG' | 'LBS' | undefined
-): number {
-  if (!weight) return 0;
-
-  switch (preferredUnit) {
-    case 'KG':
-      return weight * 2.20462; // Convert kg to lbs
-    case 'LBS':
-    default:
-      return weight; // Already in lbs or default to lbs
-  }
-}
-
-/**
  * Categorizes exercise volume based on workout type and exercise properties.
  *
  * This function determines whether an exercise's volume should be counted as
@@ -186,10 +164,30 @@ export function categorizeExerciseVolume(
   return result;
 }
 
+/** Conversion factor: 1 kg = 2.20462 lbs. Used for display and volume calculations. */
+export const KG_TO_LBS = 2.20462;
+
+/**
+ * Converts a weight from the user's display unit to kg for storage.
+ *
+ * @param weight The weight value in the user's display unit
+ * @param preferredUnit The user's preferred display unit
+ * @returns Weight in kg
+ */
+export function convertDisplayWeightToKg(
+  weight: number,
+  preferredUnit: 'KG' | 'LBS' | undefined
+): number {
+  if (preferredUnit === 'LBS') {
+    return weight / KG_TO_LBS;
+  }
+  return weight;
+}
+
 /**
  * Formats weight with appropriate unit based on user preferences.
  *
- * @param weight The weight value to format
+ * @param weight The weight value to format (in kg)
  * @param preferredUnit The user's preferred unit for this exercise
  * @param includeUnit Whether to include the unit in the output (default: true)
  * @returns Formatted weight string with unit
@@ -203,13 +201,11 @@ export function formatWeightWithUnit(
     return '-';
   }
 
-  // All weights are stored in KG in the database
-  // Convert to user's preferred unit if needed
   let displayWeight = weight;
   let displayUnit: string;
 
   if (preferredUnit === 'LBS') {
-    displayWeight = weight * 2.20462;
+    displayWeight = weight * KG_TO_LBS;
     displayUnit = 'lbs';
   } else {
     displayUnit = 'kg';
@@ -217,15 +213,11 @@ export function formatWeightWithUnit(
 
   let formattedNumber: string;
   if (preferredUnit === 'LBS') {
-    const tenths = Math.round(displayWeight * 10);
-    const integerPart = Math.floor(tenths / 10);
-    const fractionalPart = tenths % 10;
-    formattedNumber =
-      fractionalPart === 0 ? String(integerPart) : `${integerPart}.${fractionalPart}`;
+    const roundedLbs = Math.round(displayWeight * 2) / 2;
+    formattedNumber = roundedLbs.toString();
   } else {
-    const hundredths = Math.round(displayWeight * 100);
-    const roundedWeight = hundredths / 100;
-    formattedNumber = roundedWeight.toString();
+    const roundedKg = Math.round(displayWeight * 100) / 100;
+    formattedNumber = roundedKg.toString();
   }
 
   if (includeUnit) {

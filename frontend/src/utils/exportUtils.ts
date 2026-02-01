@@ -6,22 +6,12 @@ import type {
   ProgramWithWorkouts,
   UserWeightUnitPreference,
 } from '../api/types';
-import { capitalizeEachWord } from '../common/utils';
+import { capitalizeEachWord, formatWeightWithUnit } from '../common/utils';
 
 export interface ExportOptions {
   title: string;
   filename: string;
 }
-
-/**
- * Format weight with unit
- */
-const formatWeightWithUnit = (weight: number, unit: 'KG' | 'LBS'): string => {
-  if (unit === 'LBS') {
-    return `${(weight * 2.20462).toFixed(1)} lbs`;
-  }
-  return `${weight.toFixed(1)} kg`;
-};
 
 /**
  * Sanitize text to prevent PDF formatting issues and ensure proper dash rendering
@@ -119,7 +109,10 @@ const prepareWorkoutTableData = (
         exerciseName,
         totalSets.toString(),
         firstSetScheme.target_rep_count?.toString() || '0',
-        formatWeightWithUnit(firstSetScheme.target_weight || 0, weightUnit as 'KG' | 'LBS'),
+        formatWeightWithUnit(
+          firstSetScheme.target_weight ?? 0,
+          weightUnit as 'KG' | 'LBS'
+        ),
         firstSetScheme.rest_seconds?.toString() || '0',
         '', // No notes field in SetScheme interface
       ]);

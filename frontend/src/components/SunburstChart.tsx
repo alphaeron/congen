@@ -5,11 +5,11 @@ import React, { useState, useMemo } from 'react';
 
 import { GameText, GameCard } from './GameTheme';
 import {
-  WeightUnit,
   type ProgrammedWorkoutWithStages,
   type WorkoutStageWithExercises,
   type UserWeightUnitPreference,
 } from '../api/types';
+import { KG_TO_LBS } from '../common/utils';
 import { createCongenNivoTheme } from '../theme/nivoTheme';
 
 // Custom layer to display total volume in the center
@@ -102,7 +102,6 @@ interface SunburstChartProps {
 export const SunburstChart: React.FC<SunburstChartProps> = ({
   workoutData,
   exerciseMuscleData,
-  weightUnitPreferences,
   selectedExercise,
 }) => {
   const theme = useTheme();
@@ -113,18 +112,6 @@ export const SunburstChart: React.FC<SunburstChartProps> = ({
   const workouts = useMemo(() => {
     return workoutData ? [workoutData] : [];
   }, [workoutData]);
-
-  // Helper function to convert weight to pounds (consistent with StreamChart)
-  const convertWeightToPounds = (weight: number, exerciseName: string): number => {
-    const preference = weightUnitPreferences.find(pref => pref.exercise_name === exerciseName);
-    const userUnit = preference?.preferred_unit || WeightUnit.LBS;
-
-    if (userUnit === WeightUnit.KG) {
-      return weight * 2.20462; // Convert kg to lbs
-    } else {
-      return weight; // Already in lbs or default to lbs
-    }
-  };
 
   // Create exerciseMap from workout data for volume calculations
   const exerciseMap = useMemo(() => {
@@ -141,14 +128,14 @@ export const SunburstChart: React.FC<SunburstChartProps> = ({
           // Always get or create the exercise entry
           const existing = map.get(exerciseName) || { totalVolume: 0 };
 
-          // Calculate volume from set schemes
+          // Calculate volume from set schemes (weights from API are in kg; use lbs for consistent volume)
           let exerciseVolume = 0;
           exercise.set_schemes?.forEach(setScheme => {
             const weight = setScheme.performed_weight || setScheme.target_weight;
             const reps = setScheme.performed_rep_count || setScheme.target_rep_count;
 
             if (weight && reps) {
-              const convertedWeight = convertWeightToPounds(weight, exerciseName);
+              const convertedWeight = weight * KG_TO_LBS;
               exerciseVolume += convertedWeight * reps;
             }
           });
@@ -161,7 +148,7 @@ export const SunburstChart: React.FC<SunburstChartProps> = ({
     });
 
     return map;
-  }, [workouts, weightUnitPreferences]);
+  }, [workouts]);
 
   // Calculate exercise statistics for sunburst chart
   const exerciseStats = useMemo(() => {

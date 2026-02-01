@@ -294,7 +294,6 @@ export const Workouts: React.FC<WorkoutsProps> = () => {
                 <VolumeOverviewCards
                   userDataExport={userData}
                   exerciseData={exerciseData}
-                  weightUnitPreferences={weightUnitPreferences}
                   height={200}
                 />
               )}

@@ -15,6 +15,7 @@ import React from 'react';
 
 import { GameText, GAME_CLASSES } from './GameTheme';
 import type { Exercise } from '../api/types';
+import { formatWeightWithUnit, KG_TO_LBS } from '../common/utils';
 
 interface OneRepMaxData {
   exerciseName: string;
@@ -253,8 +254,16 @@ export const OneRepMaxInputStep: React.FC<OneRepMaxInputStepProps> = ({
               >
                 <GameText variant="body2" textVariant="secondary">
                   <strong>Calculated 1RM:</strong>{' '}
-                  {calculateOneRepMax(currentInput.weight, currentInput.reps).toFixed(1)}{' '}
-                  {currentInput.unit}
+                  {(() => {
+                    const oneRepMax =
+                      calculateOneRepMax(currentInput.weight || 0, currentInput.reps || 0);
+                    const weightInKg =
+                      currentInput.unit === 'LBS' ? oneRepMax / KG_TO_LBS : oneRepMax;
+                    return formatWeightWithUnit(
+                      weightInKg,
+                      currentInput.unit as 'KG' | 'LBS' | undefined
+                    );
+                  })()}
                 </GameText>
                 <GameText variant="caption" textVariant="secondary">
                   (Using Epley formula: 1RM = weight × (1 + reps ÷ 30))

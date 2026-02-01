@@ -10,6 +10,7 @@ import type {
   WorkoutStageWithExercises,
   UserWeightUnitPreference,
 } from '../api/types';
+import { KG_TO_LBS } from '../common/utils';
 import { createCongenNivoTheme } from '../theme/nivoTheme';
 
 interface PieChartProps {
@@ -36,7 +37,6 @@ interface PieChartProps {
  */
 export const PieChart: React.FC<PieChartProps> = ({
   userDataExport,
-  weightUnitPreferences = [],
   title = 'Exercise Distribution',
   description = 'Volume by workout stage',
   height = 300,
@@ -78,17 +78,7 @@ export const PieChart: React.FC<PieChartProps> = ({
               ? (setScheme.band_weight_lbs as { weight_lbs: number })?.weight_lbs || 0
               : 0;
 
-            // Get user's weight unit preference for this exercise
-            const weightUnitPreference = weightUnitPreferences.find(
-              pref => pref.exercise_name === exerciseWithSchemes.exercise.exercise_name
-            );
-
-            // Convert weight to pounds for consistent calculations
-            let convertedWeight = weight;
-            if (weightUnitPreference?.preferred_unit === 'KG') {
-              convertedWeight = weight * 2.20462; // Convert KG to LBS
-            }
-
+            const convertedWeight = weight * KG_TO_LBS;
             stageVolume += (convertedWeight + bandWeight) * reps;
           });
 
@@ -107,7 +97,7 @@ export const PieChart: React.FC<PieChartProps> = ({
       frequency: 1, // Not used for pie chart
       maxWeight: 0, // Not used for pie chart
     }));
-  }, [workouts, weightUnitPreferences]);
+  }, [workouts]);
 
   // Prepare chart data
   const chartData = useMemo(() => {

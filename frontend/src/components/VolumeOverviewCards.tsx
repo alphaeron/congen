@@ -6,21 +6,19 @@ import React, { useMemo } from 'react';
 import { GameCard, GameText, GAME_CLASSES } from './GameTheme';
 import type {
   UserDataExport,
-  UserWeightUnitPreference,
   ProgramWithWorkouts,
   Exercise,
 } from '../api/types';
 import {
   categorizeExerciseVolume,
-  convertWeightToPounds,
   replaceUnderscoresWithSpaces,
   formatDate,
+  KG_TO_LBS,
 } from '../common/utils';
 
 interface VolumeOverviewCardsProps {
   userDataExport: UserDataExport | null;
   exerciseData: Map<string, Exercise>;
-  weightUnitPreferences: UserWeightUnitPreference[];
   height?: number;
 }
 
@@ -48,13 +46,11 @@ interface VolumeCardData {
  *
  * @param userDataExport The raw user data export containing all workout information
  * @param exerciseData Map of exercise data for categorization
- * @param weightUnitPreferences User's weight unit preferences for conversion
  * @return Volume Overview Cards component
  */
 export const VolumeOverviewCards: React.FC<VolumeOverviewCardsProps> = ({
   userDataExport,
   exerciseData,
-  weightUnitPreferences,
 }) => {
   // Extract workouts from the raw data
   const workouts = useMemo(() => {
@@ -93,17 +89,8 @@ export const VolumeOverviewCards: React.FC<VolumeOverviewCardsProps> = ({
                 ? (setScheme.band_weight_lbs as { weight_lbs?: number })?.weight_lbs || 0
                 : 0;
 
-              // Get user's preferred weight unit for this exercise
               const exerciseName = exerciseWithSchemes.exercise.exercise_name;
-              const weightUnitPreference = weightUnitPreferences.find(
-                pref => pref.exercise_name === exerciseName
-              );
-
-              // Convert weight to pounds for consistent calculations
-              const convertedWeight = convertWeightToPounds(
-                weight,
-                weightUnitPreference?.preferred_unit as 'KG' | 'LBS' | undefined
-              );
+              const convertedWeight = weight * KG_TO_LBS;
               const totalWeight = convertedWeight + bandWeight; // bandWeight is already in lbs
               const setVolume = totalWeight * reps;
 
@@ -130,7 +117,7 @@ export const VolumeOverviewCards: React.FC<VolumeOverviewCardsProps> = ({
         };
       })
       .slice(-10); // Last 10 workouts
-  }, [workouts, exerciseData, weightUnitPreferences]);
+  }, [workouts, exerciseData]);
 
   // Prepare card data with trends and targets
   const cardData = useMemo((): VolumeCardData[] => {

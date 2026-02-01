@@ -9,6 +9,7 @@ import { SetSchemeForm } from './SetSchemeForm';
 import { deleteProgrammedExercise } from '../api/programmedExercise';
 import { updateSetScheme } from '../api/setScheme';
 import type { ProgrammedExerciseWithSetSchemes, UserWeightUnitPreference } from '../api/types';
+import { formatWeightWithUnit, convertDisplayWeightToKg } from '../common/utils';
 
 interface SetSchemeEditorProps {
   exercise: ProgrammedExerciseWithSetSchemes;
@@ -75,30 +76,21 @@ export const SetSchemeEditor: React.FC<SetSchemeEditorProps> = ({
   );
   const preferredUnit = weightUnitPreference?.preferred_unit;
 
-  // Convert weight values for storage
-  const convertWeightForStorage = (weight: number): number => {
-    if (preferredUnit === 'LBS') {
-      return weight / 2.20462; // Convert lbs to kg
-    }
-    return weight;
-  };
-
-  // Convert weight values for display
-  const convertWeightForDisplay = (weight: number): number => {
-    if (preferredUnit === 'LBS') {
-      return weight * 2.20462; // Convert kg to lbs
-    }
-    return weight;
-  };
+  const convertWeightForStorage = (weight: number): number =>
+    convertDisplayWeightToKg(weight, preferredUnit);
 
   const form = useForm({
     defaultValues: {
       totalSets: exercise.set_schemes.length,
       targetWeight: firstSetScheme?.target_weight
-        ? convertWeightForDisplay(firstSetScheme.target_weight)
+        ? parseFloat(
+            formatWeightWithUnit(firstSetScheme.target_weight, preferredUnit, false)
+          ) || 0
         : 0,
       performedWeight: firstSetScheme?.performed_weight
-        ? convertWeightForDisplay(firstSetScheme.performed_weight)
+        ? parseFloat(
+            formatWeightWithUnit(firstSetScheme.performed_weight, preferredUnit, false)
+          ) || undefined
         : undefined,
       targetReps: firstSetScheme?.target_rep_count || 0,
       performedReps: firstSetScheme?.performed_rep_count || undefined,

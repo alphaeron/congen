@@ -8,8 +8,7 @@ import { GameCard, GameText, GameTextSecondary, GAME_CLASSES } from './GameTheme
 import { LoadingSpinner } from './LoadingSpinner';
 import { RichTextDisplay } from './RichTextDisplay';
 import type { Exercise, ExerciseEquipment, ExerciseMuscle, Equipment, Muscle } from '../api/types';
-import { capitalizeEachWord } from '../common/utils';
-import { convertWeightToPounds } from '../common/utils';
+import { capitalizeEachWord, formatWeightWithUnit } from '../common/utils';
 import { useData } from '../contexts/DataContext';
 
 /**
@@ -112,20 +111,6 @@ export function ExerciseDetails(
     if (!weightUnitPreferences || !exercise) return null;
     return weightUnitPreferences.find(pref => pref.exercise_name === exercise.name);
   }, [weightUnitPreferences, exercise]);
-
-  // Get display weight and unit for 1RM
-  const displayWeight = React.useMemo(() => {
-    if (!exerciseOneRepMax) return null;
-
-    const preferredUnit = weightUnitPreference?.preferred_unit as 'KG' | 'LBS' | undefined;
-    const weightInLbs = convertWeightToPounds(exerciseOneRepMax.one_rep_max, preferredUnit);
-    const unit = preferredUnit === 'KG' ? 'kg' : 'lbs';
-
-    return {
-      weight: weightInLbs,
-      unit: unit,
-    };
-  }, [exerciseOneRepMax, weightUnitPreference]);
 
   if (isLoading || !props.exerciseName || !exercise) {
     return <LoadingSpinner message="Loading exercise details..." fullHeight={true} />;
@@ -374,14 +359,17 @@ export function ExerciseDetails(
                         Performance
                       </GameText>
                       <Box sx={{ textAlign: 'center' }}>
-                        {displayWeight ? (
+                        {exerciseOneRepMax ? (
                           <React.Fragment>
                             <GameText
                               variant="h3"
                               className={GAME_CLASSES.textBold}
                               color="var(--game-cyan)"
                             >
-                              {displayWeight.weight.toFixed(1)} {displayWeight.unit}
+                              {formatWeightWithUnit(
+                                exerciseOneRepMax.one_rep_max,
+                                weightUnitPreference?.preferred_unit as 'KG' | 'LBS' | undefined
+                              )}
                             </GameText>
                             <GameTextSecondary variant="body2">1RM Record</GameTextSecondary>
                             <GameTextSecondary variant="caption" className={GAME_CLASSES.textMuted}>

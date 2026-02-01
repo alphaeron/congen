@@ -95,17 +95,9 @@ describe('VolumeOverviewCards', () => {
     ],
   ]);
 
-  const mockWeightUnitPreferences = [
-    {
-      exercise_name: 'Bench Press',
-      preferred_unit: 'KG',
-    },
-  ];
-
   const defaultProps = {
     userDataExport: mockUserDataExport,
     exerciseData: mockExerciseData,
-    weightUnitPreferences: mockWeightUnitPreferences,
   };
 
   it('renders with required props', () => {
