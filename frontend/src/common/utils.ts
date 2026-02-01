@@ -209,20 +209,28 @@ export function formatWeightWithUnit(
   let displayUnit: string;
 
   if (preferredUnit === 'LBS') {
-    // Convert from KG to LBS
     displayWeight = weight * 2.20462;
     displayUnit = 'lbs';
   } else {
-    // Default to KG (no conversion needed)
     displayUnit = 'kg';
   }
 
-  // Round to 2 decimal places for display
-  const roundedWeight = Math.round(displayWeight * 100) / 100;
-
-  if (includeUnit) {
-    return `${roundedWeight} ${displayUnit}`;
+  let formattedNumber: string;
+  if (preferredUnit === 'LBS') {
+    const tenths = Math.round(displayWeight * 10);
+    const integerPart = Math.floor(tenths / 10);
+    const fractionalPart = tenths % 10;
+    formattedNumber =
+      fractionalPart === 0 ? String(integerPart) : `${integerPart}.${fractionalPart}`;
+  } else {
+    const hundredths = Math.round(displayWeight * 100);
+    const roundedWeight = hundredths / 100;
+    formattedNumber = roundedWeight.toString();
   }
 
-  return roundedWeight.toString();
+  if (includeUnit) {
+    return `${formattedNumber} ${displayUnit}`;
+  }
+
+  return formattedNumber;
 }

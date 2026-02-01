@@ -1,4 +1,9 @@
-import { capitalizeFirstLetter, capitalizeEachWord, categorizeExerciseVolume } from './utils';
+import {
+  capitalizeFirstLetter,
+  capitalizeEachWord,
+  categorizeExerciseVolume,
+  formatWeightWithUnit,
+} from './utils';
 
 describe('capitalizeFirstLetter', () => {
   it('Only capitalizes the first word', () => {
@@ -71,5 +76,37 @@ describe('categorizeExerciseVolume', () => {
     expect(result.dynamicEffortVolume).toBe(100);
     expect(result.maxEffortVolume).toBe(0);
     expect(result.accessoryVolume).toBe(0);
+  });
+});
+
+describe('formatWeightWithUnit', () => {
+  it('returns "-" for null, undefined, or 0 weight', () => {
+    expect(formatWeightWithUnit(null, 'LBS')).toBe('-');
+    expect(formatWeightWithUnit(undefined, 'LBS')).toBe('-');
+    expect(formatWeightWithUnit(0, 'LBS')).toBe('-');
+    expect(formatWeightWithUnit(null, 'KG')).toBe('-');
+  });
+
+  it('rounds lbs to whole or one decimal to avoid conversion artifacts', () => {
+    expect(formatWeightWithUnit(6.8, 'LBS')).toBe('15 lbs');
+    expect(formatWeightWithUnit(18.14, 'LBS')).toBe('40 lbs');
+    expect(formatWeightWithUnit(27.22, 'LBS')).toBe('60 lbs');
+    expect(formatWeightWithUnit(61.23, 'LBS')).toBe('135 lbs');
+    expect(formatWeightWithUnit(72.57, 'LBS')).toBe('160 lbs');
+  });
+
+  it('formats fractional lbs with one decimal', () => {
+    expect(formatWeightWithUnit(6.94, 'LBS')).toBe('15.3 lbs');
+    expect(formatWeightWithUnit(11.34, 'LBS')).toBe('25 lbs');
+  });
+
+  it('formats kg with two decimal places', () => {
+    expect(formatWeightWithUnit(100, 'KG')).toBe('100 kg');
+    expect(formatWeightWithUnit(67.5, 'KG')).toBe('67.5 kg');
+  });
+
+  it('omits unit when includeUnit is false', () => {
+    expect(formatWeightWithUnit(6.8, 'LBS', false)).toBe('15');
+    expect(formatWeightWithUnit(100, 'KG', false)).toBe('100');
   });
 });
