@@ -724,8 +724,13 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
           unit
         );
 
-        // Refresh data to ensure all components have the latest data
         await loadData(true);
+        setUserOneRepMaxes(prev => {
+          const without = prev.filter(orm => orm.exercise_name !== exerciseName);
+          return [...without, result].sort((a, b) =>
+            a.exercise_name.localeCompare(b.exercise_name)
+          );
+        });
         return result;
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'Failed to save one rep max';

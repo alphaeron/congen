@@ -120,12 +120,6 @@ export const OneRepMaxRecords: React.FC<OneRepMaxRecordsProps> = () => {
           await loadAllExercises();
         }
 
-        // Load user one rep maxes if not already loaded
-        if (userOneRepMaxes.length === 0) {
-          await loadUserOneRepMaxes();
-        }
-
-        // Extract one rep maxes from userData as fallback
         let fallbackData: UserOneRepMax[] = [];
         if (Array.isArray(userData.user_one_rep_max)) {
           fallbackData = userData.user_one_rep_max as unknown as UserOneRepMax[];
@@ -135,7 +129,15 @@ export const OneRepMaxRecords: React.FC<OneRepMaxRecordsProps> = () => {
         ) {
           fallbackData = Object.values(userData.user_one_rep_max) as unknown as UserOneRepMax[];
         }
-        setOneRepMaxes(fallbackData);
+
+        let dataToShow: UserOneRepMax[];
+        if (userOneRepMaxes.length > 0) {
+          dataToShow = userOneRepMaxes;
+        } else {
+          const loaded = await loadUserOneRepMaxes();
+          dataToShow = loaded.length > 0 ? loaded : fallbackData;
+        }
+        setOneRepMaxes(dataToShow);
       } catch {
         setError('Failed to load 1RM records data');
       } finally {

@@ -28,6 +28,14 @@ import { WizardStep } from '../api/types';
 import type { Program, UserExercisePoolResponse, Exercise, UserOneRepMax } from '../api/types';
 import { useData } from '../contexts/DataContext';
 
+interface OneRepMaxInputData {
+  exerciseName: string;
+  reps?: number;
+  weight?: number;
+  unit?: string;
+  declined?: boolean;
+}
+
 interface WorkoutGenerationWizardProps {
   open: boolean;
   onClose: () => void;
@@ -52,12 +60,13 @@ export const WorkoutGenerationWizard: React.FC<WorkoutGenerationWizardProps> = (
   program,
 }) => {
   const { enqueueSnackbar } = useSnackbar();
-  const { userData } = useData(); // Only get userData for 1RM check, no other DataContext functions
+  const { userData, upsertUserOneRepMax } = useData();
   const [currentStep, setCurrentStep] = useState<WizardStep>(WizardStep.WORKOUT_GENERATION);
   const [generatedWorkout, setGeneratedWorkout] = useState<Program | null>(null);
   const [exercisePool, setExercisePool] = useState<UserExercisePoolResponse | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isUpdatingWorkout, setIsUpdatingWorkout] = useState(false);
+  const [oneRepMaxInputs, setOneRepMaxInputs] = useState<OneRepMaxInputData[]>([]);
   const [oneRepMaxNavigation, setOneRepMaxNavigation] = useState<{
     onSkipExercise: () => void;
     onSkipRemaining: () => void;
@@ -168,14 +177,27 @@ export const WorkoutGenerationWizard: React.FC<WorkoutGenerationWizardProps> = (
     setCurrentStep(WizardStep.UPDATING_WORKOUT_WITH_1RM);
   };
 
+  const calculateOneRepMaxFromRepsWeight = (weight: number, reps: number): number => {
+    return weight * (1 + reps / 30);
+  };
+
   const handleWorkoutUpdate = async () => {
     setIsUpdatingWorkout(true);
 
     try {
-      // Make API call to update workout with 1RM data (backend will fetch from database)
+      const inputsToPersist = oneRepMaxInputs.filter(
+        input => !input.declined && input.weight != null && input.weight > 0
+      );
+      for (const input of inputsToPersist) {
+        const reps = input.reps ?? 1;
+        const weight = input.weight ?? 0;
+        const unit = input.unit ?? 'KG';
+        const oneRepMax = calculateOneRepMaxFromRepsWeight(weight, reps);
+        await upsertUserOneRepMax(input.exerciseName, oneRepMax, unit);
+      }
+
       const updatedWorkout = await updateWorkoutWithOneRepMax(program.id);
 
-      // Show success message and close - no DataContext refresh needed
       enqueueSnackbar('Workout updated successfully!', { variant: 'success' });
       onComplete(updatedWorkout);
     } catch {
@@ -254,6 +276,7 @@ export const WorkoutGenerationWizard: React.FC<WorkoutGenerationWizardProps> = (
               handleOneRepMaxSubmission();
             }}
             onComplete={() => handleOneRepMaxSubmission()}
+            onInputsChange={setOneRepMaxInputs}
             onNavigationChange={setOneRepMaxNavigation}
           />
         );

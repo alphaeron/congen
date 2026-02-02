@@ -171,18 +171,17 @@ describe('OneRepMaxRecords', () => {
       ...mockUseData,
       userData: { user_one_rep_max: [] },
       userOneRepMaxes: [],
+      loadUserOneRepMaxes: jest.fn().mockResolvedValue([]),
     };
 
     jest.mocked(jest.requireMock('../contexts/DataContext').useData).mockReturnValue(emptyMock);
 
     render(<OneRepMaxRecords />);
 
-    // Wait for the component to finish loading
     await waitFor(() => {
       expect(screen.queryByText('Loading 1RM records...')).not.toBeInTheDocument();
     });
 
-    // The component should render the empty state
     expect(screen.getByText('No 1RM Records Found')).toBeInTheDocument();
     expect(
       screen.getByText('Start recording your 1RM values to track your strength progress over time.')
@@ -190,28 +189,42 @@ describe('OneRepMaxRecords', () => {
   });
 
   it('renders search functionality', async () => {
+    const emptyMock = {
+      ...mockUseData,
+      userData: { user_one_rep_max: [] },
+      userOneRepMaxes: [],
+      loadUserOneRepMaxes: jest.fn().mockResolvedValue([]),
+    };
+
+    jest.mocked(jest.requireMock('../contexts/DataContext').useData).mockReturnValue(emptyMock);
+
     render(<OneRepMaxRecords />);
 
-    // Wait for the component to finish loading
     await waitFor(() => {
       expect(screen.queryByText('Loading 1RM records...')).not.toBeInTheDocument();
     });
 
-    // The component shows empty state when no records are found, so no search field
     expect(screen.getByText('No 1RM Records Found')).toBeInTheDocument();
     expect(screen.queryByTestId('game-text-field')).not.toBeInTheDocument();
   });
 
   it('displays record count', async () => {
+    const emptyMock = {
+      ...mockUseData,
+      userData: { user_one_rep_max: [] },
+      userOneRepMaxes: [],
+      loadUserOneRepMaxes: jest.fn().mockResolvedValue([]),
+    };
+
+    jest.mocked(jest.requireMock('../contexts/DataContext').useData).mockReturnValue(emptyMock);
+
     render(<OneRepMaxRecords />);
 
-    // Wait for the component to finish loading
     await waitFor(() => {
       expect(screen.queryByText('Loading 1RM records...')).not.toBeInTheDocument();
     });
 
-    // The component should display the record count (0 when no records)
-    expect(screen.getByText('0')).toBeInTheDocument(); // Record count
+    expect(screen.getByText('0')).toBeInTheDocument();
   });
 
   it('handles form submission', async () => {
