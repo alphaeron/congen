@@ -7,7 +7,7 @@ import React, { useState } from 'react';
 import { GameText } from './GameTheme';
 import { SetSchemeForm } from './SetSchemeForm';
 import { deleteProgrammedExercise } from '../api/programmedExercise';
-import { updateSetScheme } from '../api/setScheme';
+import { createSetScheme, deleteSetScheme, updateSetScheme } from '../api/setScheme';
 import type { ProgrammedExerciseWithSetSchemes, UserWeightUnitPreference } from '../api/types';
 import { formatWeightWithUnit, convertDisplayWeightToKg } from '../common/utils';
 
@@ -75,25 +75,31 @@ export const SetSchemeEditor: React.FC<SetSchemeEditorProps> = ({
     pref => pref.exercise_name === exercise.exercise.exercise_name
   );
   const preferredUnit = weightUnitPreference?.preferred_unit;
+  const unit = (preferredUnit as 'KG' | 'LBS' | undefined) ?? undefined;
 
   const convertWeightForStorage = (weight: number): number =>
-    convertDisplayWeightToKg(weight, preferredUnit);
-
+    convertDisplayWeightToKg(weight, unit);
   const form = useForm({
     defaultValues: {
       totalSets: exercise.set_schemes.length,
       targetWeight: firstSetScheme?.target_weight
-        ? parseFloat(
-            formatWeightWithUnit(firstSetScheme.target_weight, preferredUnit, false)
-          ) || 0
+        ? parseFloat(formatWeightWithUnit(firstSetScheme.target_weight, unit, false)) || 0
         : 0,
       performedWeight: firstSetScheme?.performed_weight
-        ? parseFloat(
-            formatWeightWithUnit(firstSetScheme.performed_weight, preferredUnit, false)
-          ) || undefined
+        ? parseFloat(formatWeightWithUnit(firstSetScheme.performed_weight, unit, false)) || undefined
         : undefined,
       targetReps: firstSetScheme?.target_rep_count || 0,
       performedReps: firstSetScheme?.performed_rep_count || undefined,
+      performedRepsBySet: exercise.set_schemes
+        .sort((a, b) => a.set_number - b.set_number)
+        .map(s => s.performed_rep_count),
+      performedWeightBySet: exercise.set_schemes
+        .sort((a, b) => a.set_number - b.set_number)
+        .map(s =>
+          s.performed_weight != null
+            ? parseFloat(formatWeightWithUnit(s.performed_weight, unit, false)) || undefined
+            : undefined
+        ),
       restSeconds: firstSetScheme?.rest_seconds || 0,
       useTempo: firstSetScheme?.use_tempo || false,
       eccentricTempo: firstSetScheme?.eccentric_tempo || '',
@@ -106,9 +112,23 @@ export const SetSchemeEditor: React.FC<SetSchemeEditorProps> = ({
       try {
         setSaving(true);
 
-        // Update all set schemes with the same values
-        const updatePromises = exercise.set_schemes.map(setScheme =>
-          updateSetScheme(
+        const currentCount = exercise.set_schemes.length;
+        const newTotal = Math.max(1, Math.floor(Number(value.totalSets) || 1));
+        const sortedSchemes = [...exercise.set_schemes].sort(
+          (a, b) => a.set_number - b.set_number
+        );
+        const programmedExerciseId = exercise.exercise.id;
+        const performedBySet = value.performedRepsBySet ?? [];
+        const performedWeightBySet = value.performedWeightBySet ?? [];
+        const targetWeightKg = convertWeightForStorage(value.targetWeight);
+
+        const schemesToUpdate = sortedSchemes.slice(0, newTotal);
+        const updatePromises = schemesToUpdate.map(setScheme => {
+          const setIndex = setScheme.set_number - 1;
+          const weightDisplay = performedWeightBySet[setIndex];
+          const performedWeightKg =
+            weightDisplay != null ? convertWeightForStorage(weightDisplay) : undefined;
+          return updateSetScheme(
             setScheme.id,
             setScheme.programmed_exercise_id,
             setScheme.set_number,
@@ -118,36 +138,61 @@ export const SetSchemeEditor: React.FC<SetSchemeEditorProps> = ({
             value.eccentricTempo || undefined,
             value.isometricTempo || undefined,
             value.concentricTempo || undefined,
-            convertWeightForStorage(value.targetWeight),
-            value.performedWeight ? convertWeightForStorage(value.performedWeight) : undefined,
+            targetWeightKg,
+            performedWeightKg,
             value.targetReps,
-            value.performedReps,
-            value.restSeconds
-          )
+            performedBySet[setIndex] ?? value.performedReps,
+            value.restSeconds,
+            unit ?? 'KG'
+          );
+        });
+
+        const createPromises: Promise<typeof exercise.set_schemes[0]>[] = [];
+        if (newTotal > currentCount) {
+          for (let setNumber = currentCount + 1; setNumber <= newTotal; setNumber++) {
+            const setIndex = setNumber - 1;
+            const performedRep = performedBySet[setIndex] ?? value.performedReps;
+            const weightDisplay = performedWeightBySet[setIndex];
+            const performedWeightKg =
+              weightDisplay != null ? convertWeightForStorage(weightDisplay) : undefined;
+            createPromises.push(
+              createSetScheme(
+                programmedExerciseId,
+                setNumber,
+                value.isAmrap,
+                value.isEmom,
+                value.useTempo,
+                value.eccentricTempo || undefined,
+                value.isometricTempo || undefined,
+                value.concentricTempo || undefined,
+                targetWeightKg,
+                performedWeightKg,
+                value.targetReps,
+                performedRep,
+                value.restSeconds,
+                unit ?? 'KG'
+              )
+            );
+          }
+        }
+
+        const toDelete = newTotal < currentCount ? sortedSchemes.slice(newTotal) : [];
+        const deletePromises = toDelete.map(setScheme => deleteSetScheme(setScheme.id));
+
+        const [updated, created] = await Promise.all([
+          Promise.all(updatePromises),
+          Promise.all(createPromises),
+          Promise.all(deletePromises),
+        ]).then(([upd, cr]) => [upd, cr] as [typeof upd, typeof cr]);
+
+        const mergedSchemes = [...updated, ...created].sort(
+          (a, b) => a.set_number - b.set_number
         );
 
-        await Promise.all(updatePromises);
-
-        // Update the local state
         const updatedExercise = {
           ...exercise,
-          exercise: {
-            ...exercise.exercise,
-          },
-          set_schemes: exercise.set_schemes.map(setScheme => ({
-            ...setScheme,
-            target_weight: value.targetWeight,
-            performed_weight: value.performedWeight,
-            target_rep_count: value.targetReps,
-            performed_rep_count: value.performedReps,
-            rest_seconds: value.restSeconds,
-            use_tempo: value.useTempo,
-            eccentric_tempo: value.eccentricTempo,
-            isometric_tempo: value.isometricTempo,
-            concentric_tempo: value.concentricTempo,
-            is_amrap: value.isAmrap,
-            is_emom: value.isEmom,
-          })),
+          exercise: { ...exercise.exercise },
+          set_schemes: mergedSchemes,
         };
 
         onExerciseUpdate(updatedExercise);
@@ -224,6 +269,7 @@ export const SetSchemeEditor: React.FC<SetSchemeEditorProps> = ({
                 exerciseName={exercise.exercise.exercise_name}
                 weightUnitPreferences={weightUnitPreferences}
                 showPerformedFields={true}
+                showPerformedRepsPerSet={true}
                 showTempoFields={true}
                 showSetTypeFields={true}
               />

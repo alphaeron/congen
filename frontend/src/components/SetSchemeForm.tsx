@@ -3,7 +3,6 @@ import React from 'react';
 
 import { GameText } from './GameTheme';
 import type { UserWeightUnitPreference } from '../api/types';
-import { convertDisplayWeightToKg } from '../common/utils';
 
 import type { useForm } from '@tanstack/react-form';
 
@@ -13,6 +12,8 @@ export interface SetSchemeFormData {
   performedWeight?: number;
   targetReps: number;
   performedReps?: number;
+  performedRepsBySet?: (number | undefined)[];
+  performedWeightBySet?: (number | undefined)[];
   restSeconds: number;
   useTempo: boolean;
   eccentricTempo: string;
@@ -28,6 +29,7 @@ export interface SetSchemeFormProps {
   exerciseName?: string;
   weightUnitPreferences?: UserWeightUnitPreference[];
   showPerformedFields?: boolean;
+  showPerformedRepsPerSet?: boolean;
   showTempoFields?: boolean;
   showSetTypeFields?: boolean;
 }
@@ -38,6 +40,7 @@ export const SetSchemeForm: React.FC<SetSchemeFormProps> = ({
   exerciseName,
   weightUnitPreferences = [],
   showPerformedFields = true,
+  showPerformedRepsPerSet = false,
   showTempoFields = true,
   showSetTypeFields = true,
 }) => {
@@ -48,9 +51,6 @@ export const SetSchemeForm: React.FC<SetSchemeFormProps> = ({
 
   const preferredUnit = weightUnitPreference?.preferred_unit;
   const weightUnitLabel = preferredUnit === 'LBS' ? 'lbs' : 'kg';
-
-  const convertWeightForStorage = (weight: number): number =>
-    convertDisplayWeightToKg(weight, preferredUnit as 'KG' | 'LBS' | undefined);
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -187,8 +187,8 @@ export const SetSchemeForm: React.FC<SetSchemeFormProps> = ({
           </form.Field>
         </Box>
 
-        {/* Performed Weight */}
-        {showPerformedFields && (
+        {/* Performed Weight (single field when not per-set) */}
+        {showPerformedFields && !showPerformedRepsPerSet && (
           <Box sx={{ flex: '1 1 200px', minWidth: 200 }}>
             <form.Field
               name="performedWeight"
@@ -207,20 +207,16 @@ export const SetSchemeForm: React.FC<SetSchemeFormProps> = ({
                   value={field.state.value ? field.state.value.toString() : ''}
                   onChange={e => {
                     const inputValue = e.target.value;
-                    // Allow any valid numeric input including decimals
                     if (inputValue === '' || /^\d*\.?\d*$/.test(inputValue)) {
-                      // Store the raw input value to preserve decimal points during typing
                       field.handleChange(inputValue);
                     }
                   }}
                   onBlur={e => {
-                    // Convert to number on blur for validation
                     const inputValue = e.target.value;
                     if (inputValue !== '') {
                       const numValue = parseFloat(inputValue);
                       if (!isNaN(numValue) && numValue >= 0) {
-                        const storageValue = convertWeightForStorage(numValue);
-                        field.handleChange(storageValue);
+                        field.handleChange(numValue);
                       }
                     } else {
                       field.handleChange(undefined);
@@ -280,8 +276,8 @@ export const SetSchemeForm: React.FC<SetSchemeFormProps> = ({
           </form.Field>
         </Box>
 
-        {/* Performed Reps */}
-        {showPerformedFields && (
+        {/* Performed Reps: single field (e.g. add exercise) or per-set (edit exercise) */}
+        {showPerformedFields && !showPerformedRepsPerSet && (
           <Box sx={{ flex: '1 1 200px', minWidth: 200 }}>
             <form.Field
               name="performedReps"
@@ -300,19 +296,16 @@ export const SetSchemeForm: React.FC<SetSchemeFormProps> = ({
                   value={field.state.value ? field.state.value.toString() : ''}
                   onChange={e => {
                     const inputValue = e.target.value;
-                    // Allow any valid numeric input including decimals
                     if (inputValue === '' || /^\d*\.?\d*$/.test(inputValue)) {
-                      // Store the raw input value to preserve decimal points during typing
                       field.handleChange(inputValue);
                     }
                   }}
                   onBlur={e => {
-                    // Convert to integer on blur for validation
                     const inputValue = e.target.value;
                     if (inputValue !== '') {
                       const numValue = parseFloat(inputValue);
                       if (!isNaN(numValue) && numValue >= 0) {
-                        field.handleChange(Math.floor(numValue)); // Ensure integer for reps
+                        field.handleChange(Math.floor(numValue));
                       }
                     } else {
                       field.handleChange(undefined);
@@ -328,6 +321,125 @@ export const SetSchemeForm: React.FC<SetSchemeFormProps> = ({
           </Box>
         )}
       </Box>
+
+      {showPerformedFields && showPerformedRepsPerSet && (
+        <React.Fragment>
+          <Divider sx={{ my: 1 }} />
+          <GameText variant="subtitle2" gutterBottom>
+            Set Performance
+          </GameText>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+            {Array.from(
+              {
+                length: Math.max(1, Math.floor(Number(form.state.values.totalSets) || 1)),
+              },
+              (_, i) => (
+                <Box
+                  key={i}
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 2,
+                    flexWrap: 'wrap',
+                  }}
+                >
+                  <GameText variant="body2" sx={{ minWidth: 44 }}>
+                    Set {i + 1}
+                  </GameText>
+                  <form.Field name="performedRepsBySet">
+                    {field => {
+                      const arr = field.state.value ?? [];
+                      return (
+                        <TextField
+                          size="small"
+                          label="Reps"
+                          type="text"
+                          inputProps={{
+                            inputMode: 'numeric',
+                            'aria-label': `Performed reps set ${i + 1}`,
+                          }}
+                          sx={{ width: 80 }}
+                          value={arr[i] !== undefined && arr[i] !== null ? String(arr[i]) : ''}
+                          onChange={e => {
+                            const inputValue = e.target.value;
+                            if (inputValue === '' || /^\d*$/.test(inputValue)) {
+                              const next = [...arr];
+                              while (next.length < i + 1) next.push(undefined);
+                              next[i] =
+                                inputValue === '' ? undefined : Math.floor(parseFloat(inputValue));
+                              field.handleChange(next);
+                            }
+                          }}
+                          onBlur={e => {
+                            const inputValue = e.target.value;
+                            const next: (number | undefined)[] = [...arr];
+                            while (next.length < i + 1) next.push(undefined);
+                            if (inputValue === '') {
+                              next[i] = undefined;
+                            } else {
+                              const n = parseFloat(inputValue);
+                              next[i] = !isNaN(n) && n >= 0 ? Math.floor(n) : undefined;
+                            }
+                            field.handleChange(next);
+                          }}
+                          disabled={saving}
+                          placeholder="-"
+                        />
+                      );
+                    }}
+                  </form.Field>
+                  <form.Field name="performedWeightBySet">
+                    {field => {
+                      const arr = field.state.value ?? [];
+                      return (
+                        <TextField
+                          size="small"
+                          label={`Weight (${weightUnitLabel})`}
+                          type="text"
+                          inputProps={{
+                            inputMode: 'decimal',
+                            'aria-label': `Performed weight set ${i + 1}`,
+                          }}
+                          sx={{ width: 100 }}
+                          value={
+                            arr[i] !== undefined && arr[i] !== null ? String(arr[i]) : ''
+                          }
+                          onChange={e => {
+                            const inputValue = e.target.value;
+                            if (inputValue === '' || /^\d*\.?\d*$/.test(inputValue)) {
+                              const next = [...arr];
+                              while (next.length < i + 1) next.push(undefined);
+                              next[i] =
+                                inputValue === ''
+                                  ? undefined
+                                  : parseFloat(inputValue);
+                              field.handleChange(next);
+                            }
+                          }}
+                          onBlur={e => {
+                            const inputValue = e.target.value;
+                            const next: (number | undefined)[] = [...arr];
+                            while (next.length < i + 1) next.push(undefined);
+                            if (inputValue === '') {
+                              next[i] = undefined;
+                            } else {
+                              const n = parseFloat(inputValue);
+                              next[i] = !isNaN(n) && n >= 0 ? n : undefined;
+                            }
+                            field.handleChange(next);
+                          }}
+                          disabled={saving}
+                          placeholder="-"
+                        />
+                      );
+                    }}
+                  </form.Field>
+                </Box>
+              )
+            )}
+          </Box>
+        </React.Fragment>
+      )}
 
       {/* Tempo Settings */}
       {showTempoFields && (
