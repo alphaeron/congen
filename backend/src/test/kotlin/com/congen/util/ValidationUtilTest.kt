@@ -137,33 +137,29 @@ class ValidationUtilTest {
     @Test
     fun `validateTargetWeight should pass for valid weights`() {
         assertDoesNotThrow { ValidationUtil.validateTargetWeight(null) }
+        assertDoesNotThrow { ValidationUtil.validateTargetWeight(BigDecimal.ZERO) }
         assertDoesNotThrow { ValidationUtil.validateTargetWeight(BigDecimal("0.01")) }
         assertDoesNotThrow { ValidationUtil.validateTargetWeight(BigDecimal("100.5")) }
     }
 
     @Test
     fun `validateTargetWeight should throw for invalid weights`() {
-        val exception1 = assertThrows<ValidationException> { ValidationUtil.validateTargetWeight(BigDecimal.ZERO) }
-        assertEquals("Target weight must be greater than 0, got: 0", exception1.message)
-
-        val exception2 = assertThrows<ValidationException> { ValidationUtil.validateTargetWeight(BigDecimal("-1")) }
-        assertEquals("Target weight must be greater than 0, got: -1", exception2.message)
+        val exception = assertThrows<ValidationException> { ValidationUtil.validateTargetWeight(BigDecimal("-1")) }
+        assertEquals("Target weight must be greater than or equal to 0, got: -1", exception.message)
     }
 
     @Test
     fun `validatePerformedWeight should pass for valid weights`() {
         assertDoesNotThrow { ValidationUtil.validatePerformedWeight(null) }
+        assertDoesNotThrow { ValidationUtil.validatePerformedWeight(BigDecimal.ZERO) }
         assertDoesNotThrow { ValidationUtil.validatePerformedWeight(BigDecimal("0.01")) }
         assertDoesNotThrow { ValidationUtil.validatePerformedWeight(BigDecimal("100.5")) }
     }
 
     @Test
     fun `validatePerformedWeight should throw for invalid weights`() {
-        val exception1 = assertThrows<ValidationException> { ValidationUtil.validatePerformedWeight(BigDecimal.ZERO) }
-        assertEquals("Performed weight must be greater than 0, got: 0", exception1.message)
-
-        val exception2 = assertThrows<ValidationException> { ValidationUtil.validatePerformedWeight(BigDecimal("-1")) }
-        assertEquals("Performed weight must be greater than 0, got: -1", exception2.message)
+        val exception = assertThrows<ValidationException> { ValidationUtil.validatePerformedWeight(BigDecimal("-1")) }
+        assertEquals("Performed weight must be greater than or equal to 0, got: -1", exception.message)
     }
 
     @Test
@@ -373,16 +369,15 @@ class ValidationUtilTest {
     }
 
     @Test
-    fun `validateTargetWeightWithUnit should throw for target weight too low after conversion`() {
+    fun `validateTargetWeightWithUnit should throw for target weight negative after conversion`() {
         val mockUnitConverter = createMockUnitConverter()
-        // Mock conversion: 0.5 lbs -> 0 kg (too low)
-        whenever(mockUnitConverter.toKg(BigDecimal("0.5"), WeightUnit.LBS)).thenReturn(BigDecimal.ZERO)
+        whenever(mockUnitConverter.toKg(BigDecimal("0.5"), WeightUnit.LBS)).thenReturn(BigDecimal("-0.1"))
 
         val exception =
             assertThrows<ValidationException> {
                 ValidationUtil.validateTargetWeightWithUnit(BigDecimal("0.5"), WeightUnit.LBS, mockUnitConverter)
             }
-        assertEquals("Target weight must be greater than 0, got: 0", exception.message)
+        assertEquals("Target weight must be greater than or equal to 0, got: -0.1", exception.message)
     }
 
     @Test
@@ -423,16 +418,15 @@ class ValidationUtilTest {
     }
 
     @Test
-    fun `validatePerformedWeightWithUnit should throw for performed weight too low after conversion`() {
+    fun `validatePerformedWeightWithUnit should throw for performed weight negative after conversion`() {
         val mockUnitConverter = createMockUnitConverter()
-        // Mock conversion: 0.1 lbs -> 0 kg (too low)
-        whenever(mockUnitConverter.toKg(BigDecimal("0.1"), WeightUnit.LBS)).thenReturn(BigDecimal.ZERO)
+        whenever(mockUnitConverter.toKg(BigDecimal("0.1"), WeightUnit.LBS)).thenReturn(BigDecimal("-0.05"))
 
         val exception =
             assertThrows<ValidationException> {
                 ValidationUtil.validatePerformedWeightWithUnit(BigDecimal("0.1"), WeightUnit.LBS, mockUnitConverter)
             }
-        assertEquals("Performed weight must be greater than 0, got: 0", exception.message)
+        assertEquals("Performed weight must be greater than or equal to 0, got: -0.05", exception.message)
     }
 
     private fun createMockUnitConverter(): UnitConverter {

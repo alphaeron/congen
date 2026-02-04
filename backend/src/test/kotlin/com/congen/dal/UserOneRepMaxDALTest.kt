@@ -251,7 +251,7 @@ class UserOneRepMaxDALTest {
                 ($1, $2, $3)
             ON CONFLICT (user_id, exercise_name)
             DO UPDATE SET
-                one_rep_max = EXCLUDED.one_rep_max,
+                one_rep_max = GREATEST(user_one_rep_max.one_rep_max, EXCLUDED.one_rep_max),
                 updated_at = NOW()
             """.trimIndent()
         whenever(

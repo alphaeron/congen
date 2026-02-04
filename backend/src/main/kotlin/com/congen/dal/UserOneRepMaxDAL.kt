@@ -180,8 +180,8 @@ class UserOneRepMaxDAL(
     /**
      * Creates or updates a user-exercise one rep max in the database.
      *
-     * This method performs an upsert operation - if a 1RM exists for the specified user and exercise,
-     * it will be updated; otherwise, a new 1RM will be created.
+     * If a row exists, updates it only when the new value is greater (GREATEST),
+     * so concurrent requests avoid duplicate key errors and the stored 1RM is the maximum seen.
      *
      * @param userId The Keycloak identifier of the user
      * @param exerciseName The name of the exercise
@@ -199,7 +199,6 @@ class UserOneRepMaxDAL(
         oneRepMax: BigDecimal,
     ): Mono<UserOneRepMax> {
         logger.debug("Upserting user one rep max: {} - {} - {}", userId, exerciseName, oneRepMax)
-        // Validate all CHECK constraints
         ValidationUtil.validateOneRepMax(oneRepMax)
         return postgresClient.update(
             """
@@ -209,7 +208,7 @@ class UserOneRepMaxDAL(
                 ($1, $2, $3)
             ON CONFLICT (user_id, exercise_name)
             DO UPDATE SET
-                one_rep_max = EXCLUDED.one_rep_max,
+                one_rep_max = GREATEST(user_one_rep_max.one_rep_max, EXCLUDED.one_rep_max),
                 updated_at = NOW()
             """.trimIndent(),
             userId,

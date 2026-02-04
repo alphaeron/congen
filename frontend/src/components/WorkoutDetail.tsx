@@ -182,7 +182,7 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
           convertWeightForStorage(value.targetWeight, selectedExercise.name),
           value.targetReps,
           value.restSeconds,
-          value.performedWeight
+          value.performedWeight != null
             ? convertWeightForStorage(value.performedWeight, selectedExercise.name)
             : undefined,
           value.performedReps,

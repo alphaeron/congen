@@ -1,10 +1,7 @@
 package com.congen.service
 
-import com.congen.client.PostgresClient
 import com.congen.dal.ProgrammedExerciseDAL
 import com.congen.dal.SetSchemeDAL
-import com.congen.exceptions.DatabaseQueryException
-import com.congen.exceptions.NoResultsFoundException
 import com.congen.model.Band
 import com.congen.model.SetScheme
 import com.congen.model.WeightUnit
@@ -14,6 +11,7 @@ import com.congen.util.ValidationUtil
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Mono
+
 import java.math.BigDecimal
 
 /**
@@ -46,7 +44,6 @@ import java.math.BigDecimal
  * @param userOneRepMaxService Service for user one rep max operations
  * @param unitConverter Service for unit conversions
  * @param oneRepMaxCalculator Service for one rep max calculations
- * @param postgresClient Database client with transaction support
  *
  * @author Congen Development Team
  * @since 1.0.0
@@ -57,8 +54,7 @@ class SetSchemeService(
     private val programmedExerciseDAL: ProgrammedExerciseDAL,
     private val userOneRepMaxService: UserOneRepMaxService,
     private val unitConverter: UnitConverter,
-    private val oneRepMaxCalculator: OneRepMaxCalculator,
-    private val postgresClient: PostgresClient
+    private val oneRepMaxCalculator: OneRepMaxCalculator
 ) {
     companion object {
         /** Logger instance for this class. */
@@ -352,91 +348,30 @@ class SetSchemeService(
                         val performedWeight = setScheme.performedWeight!!
                         val performedReps = setScheme.performedRepCount
 
-                        if (performedReps == null || performedReps <= 0) {
+                        if (performedWeight <= BigDecimal.ZERO) {
+                            logger.debug(
+                                "Skipping 1RM update for user {} exercise {} - zero weight (bodyweight)",
+                                userId,
+                                exerciseName
+                            )
+                            Mono.fromCallable { Unit }.then()
+                        } else if (performedReps == null || performedReps <= 0) {
                             logger.debug(
                                 "Skipping 1RM update for user {} exercise {} - no valid rep count: {}",
                                 userId,
                                 exerciseName,
                                 performedReps
                             )
-                            Mono.empty<Void>()
+                            Mono.fromCallable { Unit }.then()
                         } else {
                             val estimatedOneRepMax =
                                 oneRepMaxCalculator.estimateOneRepMax(performedWeight, performedReps)
-
-                            postgresClient.withTransaction {
-                                selectAndUpdateOneRepMaxIfHigher(userId, exerciseName, estimatedOneRepMax)
-                                    .onErrorResume(NoResultsFoundException::class.java) {
-                                        userOneRepMaxService.insertUserOneRepMax(userId, exerciseName, estimatedOneRepMax)
-                                            .doOnSuccess {
-                                                logger.info(
-                                                    "Created new 1RM for user {} exercise {}: {} (calculated from {} × {} reps)",
-                                                    userId,
-                                                    exerciseName,
-                                                    estimatedOneRepMax,
-                                                    performedWeight,
-                                                    performedReps
-                                                )
-                                            }
-                                            .onErrorResume { e ->
-                                                if (e is DatabaseQueryException && e.message?.contains("duplicate key") == true) {
-                                                    selectAndUpdateOneRepMaxIfHigher(userId, exerciseName, estimatedOneRepMax)
-                                                        .then(userOneRepMaxService.selectUserOneRepMax(userId, exerciseName))
-                                                } else {
-                                                    Mono.error(e)
-                                                }
-                                            }
-                                            .then()
-                                    }
-                                    .then()
-                            }
+                            userOneRepMaxService.upsertUserOneRepMax(userId, exerciseName, estimatedOneRepMax, "KG")
+                                .then()
                         }
                     }
             }
             .then()
-    }
-
-    /**
-     * Loads the current 1RM in KG and updates it if the estimated value is higher.
-     *
-     * Used for both the normal update path and the concurrent-insert race path
-     * (duplicate key on insert): in both cases we "update in place" via this single path.
-     *
-     * @param userId The Keycloak user ID
-     * @param exerciseName The exercise name
-     * @param estimatedOneRepMax The estimated 1RM in kg
-     * @return Mono that completes when the check/update is done
-     */
-    private fun selectAndUpdateOneRepMaxIfHigher(
-        userId: String,
-        exerciseName: String,
-        estimatedOneRepMax: BigDecimal
-    ): Mono<Void> {
-        return userOneRepMaxService.selectUserOneRepMax(userId, exerciseName, "KG")
-            .flatMap { currentOneRepMax ->
-                if (estimatedOneRepMax > currentOneRepMax.oneRepMax) {
-                    userOneRepMaxService.updateUserOneRepMax(userId, exerciseName, estimatedOneRepMax)
-                        .doOnSuccess {
-                            logger.info(
-                                "Updated 1RM for user {} exercise {} from {} to {}",
-                                userId,
-                                exerciseName,
-                                currentOneRepMax.oneRepMax,
-                                estimatedOneRepMax
-                            )
-                        }
-                        .then()
-                } else {
-                    logger.debug(
-                        "No 1RM update needed for user {} exercise {} - estimated {} not greater than current {}",
-                        userId,
-                        exerciseName,
-                        estimatedOneRepMax,
-                        currentOneRepMax.oneRepMax
-                    )
-                    Mono.empty<Void>()
-                }
-            }
     }
 
     /**

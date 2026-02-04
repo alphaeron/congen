@@ -208,7 +208,7 @@ class SetSchemeDALTest {
                 eccentricTempo = null,
                 isometricTempo = null,
                 concentricTempo = null,
-                targetWeight = BigDecimal.ZERO,
+                targetWeight = BigDecimal("-1.0"),
                 performedWeight = BigDecimal("100.0"),
                 targetRepCount = 5,
                 performedRepCount = 5,

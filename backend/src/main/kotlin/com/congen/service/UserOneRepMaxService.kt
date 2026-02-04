@@ -147,6 +147,8 @@ class UserOneRepMaxService(
     /**
      * Creates or updates a user one rep max record (upsert operation).
      *
+     * When a row already exists, it is updated only if the new value is greater.
+     *
      * @param userId The Keycloak identifier of the user
      * @param exerciseName The name of the exercise
      * @param oneRepMax The one rep max weight value

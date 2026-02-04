@@ -27,10 +27,10 @@ import java.math.BigDecimal
  * ### Set Scheme Validations
  * - [validateSetNumber] - Validates set number (> 0)
  * - [validateTempo] - Validates tempo format (single digit 0-9)
- * - [validateTargetWeight] - Validates target weight (> 0)
- * - [validatePerformedWeight] - Validates performed weight (> 0)
- * - [validateTargetWeightWithUnit] - Validates target weight with unit conversion (> 0 kg equivalent)
- * - [validatePerformedWeightWithUnit] - Validates performed weight with unit conversion (> 0 kg equivalent)
+ * - [validateTargetWeight] - Validates target weight (>= 0, for bodyweight exercises)
+ * - [validatePerformedWeight] - Validates performed weight (>= 0, for bodyweight exercises)
+ * - [validateTargetWeightWithUnit] - Validates target weight with unit conversion (>= 0 kg equivalent)
+ * - [validatePerformedWeightWithUnit] - Validates performed weight with unit conversion (>= 0 kg equivalent)
  * - [validateTargetRepCount] - Validates target reps (1-1000)
  * - [validatePerformedRepCount] - Validates performed reps (1-1000)
  * - [validateRestSeconds] - Validates rest time (0-3600 seconds)
@@ -172,26 +172,26 @@ object ValidationUtil {
     }
 
     /**
-     * Validates target weight for set schemes (DB: > 0).
+     * Validates target weight for set schemes (DB: >= 0). Allows zero for bodyweight exercises.
      * @param weight Target weight
-     * @throws ValidationException if not > 0
+     * @throws ValidationException if not >= 0
      */
     fun validateTargetWeight(weight: BigDecimal?) {
-        if (weight != null && weight <= BigDecimal.ZERO) {
-            val message = "Target weight must be greater than 0, got: $weight"
+        if (weight != null && weight < BigDecimal.ZERO) {
+            val message = "Target weight must be greater than or equal to 0, got: $weight"
             logger.error(message)
             throw ValidationException(message)
         }
     }
 
     /**
-     * Validates performed weight for set schemes (DB: > 0).
+     * Validates performed weight for set schemes (DB: >= 0). Allows zero for bodyweight exercises.
      * @param weight Performed weight
-     * @throws ValidationException if not > 0
+     * @throws ValidationException if not >= 0
      */
     fun validatePerformedWeight(weight: BigDecimal?) {
-        if (weight != null && weight <= BigDecimal.ZERO) {
-            val message = "Performed weight must be greater than 0, got: $weight"
+        if (weight != null && weight < BigDecimal.ZERO) {
+            val message = "Performed weight must be greater than or equal to 0, got: $weight"
             logger.error(message)
             throw ValidationException(message)
         }
@@ -286,13 +286,13 @@ object ValidationUtil {
     }
 
     /**
-     * Validates target weight with unit conversion for set schemes (DB: > 0 kg equivalent).
+     * Validates target weight with unit conversion for set schemes (DB: >= 0 kg equivalent).
      *
      * @param weight Target weight value in the specified unit, or null
      * @param unit The unit of the weight value
      * @param unitConverter Utility for unit conversions
      * @return The weight converted to kg if validation passes, or null if input was null
-     * @throws ValidationException if not > 0 after conversion to kg
+     * @throws ValidationException if not >= 0 after conversion to kg
      */
     fun validateTargetWeightWithUnit(
         weight: BigDecimal?,
@@ -306,13 +306,13 @@ object ValidationUtil {
     }
 
     /**
-     * Validates performed weight with unit conversion for set schemes (DB: > 0 kg equivalent).
+     * Validates performed weight with unit conversion for set schemes (DB: >= 0 kg equivalent).
      *
      * @param weight Performed weight value in the specified unit, or null
      * @param unit The unit of the weight value
      * @param unitConverter Utility for unit conversions
      * @return The weight converted to kg if validation passes, or null if input was null
-     * @throws ValidationException if not > 0 after conversion to kg
+     * @throws ValidationException if not >= 0 after conversion to kg
      */
     fun validatePerformedWeightWithUnit(
         weight: BigDecimal?,

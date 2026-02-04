@@ -1,6 +1,5 @@
 package com.congen.service
 
-import com.congen.client.PostgresClient
 import com.congen.dal.ProgrammedExerciseDAL
 import com.congen.dal.SetSchemeDAL
 import com.congen.exceptions.NoResultsFoundException
@@ -20,7 +19,6 @@ import org.mockito.ArgumentMatchers.anyInt
 import org.mockito.ArgumentMatchers.anyLong
 import org.mockito.kotlin.any
 import org.mockito.kotlin.anyOrNull
-import org.mockito.kotlin.doAnswer
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.never
@@ -45,7 +43,6 @@ class SetSchemeServiceTest {
     private lateinit var programmedExerciseDAL: ProgrammedExerciseDAL
     private lateinit var userOneRepMaxService: UserOneRepMaxService
     private lateinit var unitConversionService: UnitConverter
-    private lateinit var postgresClient: PostgresClient
     private lateinit var setSchemeService: SetSchemeService
 
     private val now = sampleInstant()
@@ -64,14 +61,7 @@ class SetSchemeServiceTest {
         programmedExerciseDAL = mock()
         userOneRepMaxService = mock()
         unitConversionService = mock()
-        postgresClient = mock()
         val oneRepMaxCalculator = OneRepMaxCalculator()
-
-        // Mock PostgresClient.withTransaction to execute the block directly
-        doAnswer { invocation ->
-            val block = invocation.getArgument<() -> Mono<kotlin.Unit>>(0)
-            block.invoke()
-        }.whenever(postgresClient).withTransaction(any<() -> Mono<kotlin.Unit>>())
 
         setSchemeService =
             SetSchemeService(
@@ -79,8 +69,7 @@ class SetSchemeServiceTest {
                 programmedExerciseDAL,
                 userOneRepMaxService,
                 unitConversionService,
-                oneRepMaxCalculator,
-                postgresClient
+                oneRepMaxCalculator
             )
     }
 
@@ -207,8 +196,6 @@ class SetSchemeServiceTest {
         ).thenReturn(Mono.just(setScheme))
         whenever(programmedExerciseDAL.getUserIdFromProgrammedExercise(programmedExerciseId)).thenReturn(Mono.just(userId))
         whenever(programmedExerciseDAL.selectProgrammedExerciseById(programmedExerciseId)).thenReturn(Mono.just(programmedExercise))
-        whenever(userOneRepMaxService.selectUserOneRepMax(userId, exerciseName, null)).thenReturn(Mono.just(currentOneRepMax))
-        whenever(userOneRepMaxService.updateUserOneRepMax(userId, exerciseName, performedWeightInKg)).thenReturn(Mono.just(newOneRepMax))
 
         val result =
             setSchemeService.updateSetSchemeWithUnit(
@@ -294,6 +281,7 @@ class SetSchemeServiceTest {
                 id = setSchemeId,
                 programmedExerciseId = programmedExerciseId,
                 performedWeight = performedWeight,
+                performedRepCount = 1,
                 createdAt = now,
                 updatedAt = now
             )
@@ -324,8 +312,9 @@ class SetSchemeServiceTest {
         ).thenReturn(Mono.just(setScheme))
         whenever(programmedExerciseDAL.getUserIdFromProgrammedExercise(programmedExerciseId)).thenReturn(Mono.just(userId))
         whenever(programmedExerciseDAL.selectProgrammedExerciseById(programmedExerciseId)).thenReturn(Mono.just(programmedExercise))
-        whenever(userOneRepMaxService.selectUserOneRepMax(userId, exerciseName, null)).thenReturn(Mono.just(currentOneRepMax))
-        whenever(userOneRepMaxService.updateUserOneRepMax(userId, exerciseName, newOneRepMaxValue)).thenReturn(Mono.just(newOneRepMax))
+        whenever(
+            userOneRepMaxService.upsertUserOneRepMax(eq(userId), eq(exerciseName), any(), eq("KG"))
+        ).thenReturn(Mono.just(newOneRepMax))
 
         val result =
             setSchemeService.updateSetSchemeWithUnit(
@@ -368,7 +357,7 @@ class SetSchemeServiceTest {
                 targetWeight = null,
                 performedWeight = BigDecimal("150.0"),
                 targetRepCount = null,
-                performedRepCount = null,
+                performedRepCount = 1,
                 restSeconds = null,
                 createdAt = now,
                 updatedAt = now,
@@ -400,10 +389,7 @@ class SetSchemeServiceTest {
         whenever(programmedExerciseDAL.getUserIdFromProgrammedExercise(2L)).thenReturn(Mono.just("different-user-id"))
         whenever(programmedExerciseDAL.selectProgrammedExerciseById(2L)).thenReturn(Mono.just(programmedExercise))
         whenever(
-            userOneRepMaxService.selectUserOneRepMax("different-user-id", "Deadlift", null)
-        ).thenReturn(Mono.error(NoResultsFoundException("not found")))
-        whenever(
-            userOneRepMaxService.insertUserOneRepMax("different-user-id", "Deadlift", BigDecimal("150.0"))
+            userOneRepMaxService.upsertUserOneRepMax(eq("different-user-id"), eq("Deadlift"), any(), eq("KG"))
         ).thenReturn(Mono.just(newOneRepMax))
 
         val result =
@@ -480,12 +466,12 @@ class SetSchemeServiceTest {
             .verifyComplete()
 
         verify(programmedExerciseDAL, never()).selectProgrammedExerciseById(any())
-        verify(userOneRepMaxService, never()).selectUserOneRepMax(any(), any(), any())
+        verify(userOneRepMaxService, never()).upsertUserOneRepMax(any(), any(), any(), any())
     }
 
     @Test
     fun `should update set scheme without 1RM update when performed weight is not greater`() {
-        val setScheme = mockSetScheme(performedWeight = BigDecimal("80.0"))
+        val setScheme = mockSetScheme(performedWeight = BigDecimal("80.0"), performedRepCount = 1)
         val programmedExercise = mockProgrammedExercise(id = programmedExerciseId, exerciseName = exerciseName)
         val currentOneRepMax = mockUserOneRepMax(userId = userId, exerciseName = exerciseName, oneRepMax = BigDecimal("100.0"))
 
@@ -510,7 +496,9 @@ class SetSchemeServiceTest {
         ).thenReturn(Mono.just(setScheme))
         whenever(programmedExerciseDAL.getUserIdFromProgrammedExercise(programmedExerciseId)).thenReturn(Mono.just(userId))
         whenever(programmedExerciseDAL.selectProgrammedExerciseById(programmedExerciseId)).thenReturn(Mono.just(programmedExercise))
-        whenever(userOneRepMaxService.selectUserOneRepMax(userId, exerciseName, null)).thenReturn(Mono.just(currentOneRepMax))
+        whenever(
+            userOneRepMaxService.upsertUserOneRepMax(eq(userId), eq(exerciseName), any(), eq("KG"))
+        ).thenReturn(Mono.just(currentOneRepMax))
 
         val result =
             setSchemeService.updateSetSchemeWithUnit(
@@ -536,13 +524,12 @@ class SetSchemeServiceTest {
             .expectNext(setScheme)
             .verifyComplete()
 
-        verify(userOneRepMaxService, never()).updateUserOneRepMax(any(), any(), any())
-        verify(userOneRepMaxService, never()).insertUserOneRepMax(any(), any(), any())
+        verify(userOneRepMaxService, times(1)).upsertUserOneRepMax(eq(userId), eq(exerciseName), any(), eq("KG"))
     }
 
     @Test
     fun `should handle decimal one rep max values correctly`() {
-        val setScheme = mockSetScheme(performedWeight = BigDecimal("120.5"))
+        val setScheme = mockSetScheme(performedWeight = BigDecimal("120.5"), performedRepCount = 1)
         val programmedExercise = mockProgrammedExercise(id = programmedExerciseId, exerciseName = exerciseName)
         val currentOneRepMax = mockUserOneRepMax(userId = userId, exerciseName = exerciseName, oneRepMax = BigDecimal("120.0"))
         val newOneRepMax = mockUserOneRepMax(userId = userId, exerciseName = exerciseName, oneRepMax = BigDecimal("120.5"))
@@ -568,8 +555,9 @@ class SetSchemeServiceTest {
         ).thenReturn(Mono.just(setScheme))
         whenever(programmedExerciseDAL.getUserIdFromProgrammedExercise(programmedExerciseId)).thenReturn(Mono.just(userId))
         whenever(programmedExerciseDAL.selectProgrammedExerciseById(programmedExerciseId)).thenReturn(Mono.just(programmedExercise))
-        whenever(userOneRepMaxService.selectUserOneRepMax(userId, exerciseName, null)).thenReturn(Mono.just(currentOneRepMax))
-        whenever(userOneRepMaxService.updateUserOneRepMax(userId, exerciseName, BigDecimal("120.5"))).thenReturn(Mono.just(newOneRepMax))
+        whenever(
+            userOneRepMaxService.upsertUserOneRepMax(eq(userId), eq(exerciseName), any(), eq("KG"))
+        ).thenReturn(Mono.just(newOneRepMax))
 
         val result =
             setSchemeService.updateSetSchemeWithUnit(

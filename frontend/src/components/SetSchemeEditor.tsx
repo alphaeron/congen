@@ -85,10 +85,15 @@ export const SetSchemeEditor: React.FC<SetSchemeEditorProps> = ({
       targetWeight: firstSetScheme?.target_weight
         ? parseFloat(formatWeightWithUnit(firstSetScheme.target_weight, unit, false)) || 0
         : 0,
-      performedWeight: firstSetScheme?.performed_weight
-        ? parseFloat(formatWeightWithUnit(firstSetScheme.performed_weight, unit, false)) ||
-          undefined
-        : undefined,
+      performedWeight:
+        firstSetScheme?.performed_weight != null
+          ? (() => {
+              const n = parseFloat(
+                formatWeightWithUnit(firstSetScheme.performed_weight, unit, false)
+              );
+              return Number.isNaN(n) ? undefined : n;
+            })()
+          : undefined,
       targetReps: firstSetScheme?.target_rep_count || 0,
       performedReps: firstSetScheme?.performed_rep_count || undefined,
       performedRepsBySet: exercise.set_schemes
@@ -96,11 +101,11 @@ export const SetSchemeEditor: React.FC<SetSchemeEditorProps> = ({
         .map(s => s.performed_rep_count),
       performedWeightBySet: exercise.set_schemes
         .sort((a, b) => a.set_number - b.set_number)
-        .map(s =>
-          s.performed_weight != null
-            ? parseFloat(formatWeightWithUnit(s.performed_weight, unit, false)) || undefined
-            : undefined
-        ),
+        .map(s => {
+          if (s.performed_weight == null) return undefined;
+          const n = parseFloat(formatWeightWithUnit(s.performed_weight, unit, false));
+          return Number.isNaN(n) ? undefined : n;
+        }),
       restSeconds: firstSetScheme?.rest_seconds || 0,
       useTempo: firstSetScheme?.use_tempo || false,
       eccentricTempo: firstSetScheme?.eccentric_tempo || '',

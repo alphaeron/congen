@@ -135,7 +135,7 @@ export const createSetScheme = (
   if (eccentricTempo !== undefined) params.append('eccentric_tempo', eccentricTempo);
   if (isometricTempo !== undefined) params.append('isometric_tempo', isometricTempo);
   if (concentricTempo !== undefined) params.append('concentric_tempo', concentricTempo);
-  params.append('target_weight', (targetWeight ?? 1).toString());
+  if (targetWeight !== undefined) params.append('target_weight', targetWeight.toString());
   if (performedWeight !== undefined) params.append('performed_weight', performedWeight.toString());
   params.append('target_rep_count', (targetRepCount ?? 1).toString());
   if (performedRepCount !== undefined)
