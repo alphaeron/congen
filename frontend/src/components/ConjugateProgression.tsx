@@ -119,9 +119,7 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = () => {
       );
       const preferredUnit = weightUnitPreference?.preferred_unit as 'KG' | 'LBS' | undefined;
       const weightInKg =
-        oneRepMax.unit === 'LBS'
-          ? oneRepMax.one_rep_max / KG_TO_LBS
-          : oneRepMax.one_rep_max;
+        oneRepMax.unit === 'LBS' ? oneRepMax.one_rep_max / KG_TO_LBS : oneRepMax.one_rep_max;
       const displayWeight = formatWeightWithUnit(weightInKg, preferredUnit);
       const oneRepMaxNumeric =
         parseFloat(formatWeightWithUnit(weightInKg, preferredUnit, false)) || 0;

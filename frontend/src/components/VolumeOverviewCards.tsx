@@ -4,11 +4,7 @@ import { motion } from 'framer-motion';
 import React, { useMemo } from 'react';
 
 import { GameCard, GameText, GAME_CLASSES } from './GameTheme';
-import type {
-  UserDataExport,
-  ProgramWithWorkouts,
-  Exercise,
-} from '../api/types';
+import type { UserDataExport, ProgramWithWorkouts, Exercise } from '../api/types';
 import {
   categorizeExerciseVolume,
   replaceUnderscoresWithSpaces,

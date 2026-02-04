@@ -86,7 +86,8 @@ export const SetSchemeEditor: React.FC<SetSchemeEditorProps> = ({
         ? parseFloat(formatWeightWithUnit(firstSetScheme.target_weight, unit, false)) || 0
         : 0,
       performedWeight: firstSetScheme?.performed_weight
-        ? parseFloat(formatWeightWithUnit(firstSetScheme.performed_weight, unit, false)) || undefined
+        ? parseFloat(formatWeightWithUnit(firstSetScheme.performed_weight, unit, false)) ||
+          undefined
         : undefined,
       targetReps: firstSetScheme?.target_rep_count || 0,
       performedReps: firstSetScheme?.performed_rep_count || undefined,
@@ -114,9 +115,7 @@ export const SetSchemeEditor: React.FC<SetSchemeEditorProps> = ({
 
         const currentCount = exercise.set_schemes.length;
         const newTotal = Math.max(1, Math.floor(Number(value.totalSets) || 1));
-        const sortedSchemes = [...exercise.set_schemes].sort(
-          (a, b) => a.set_number - b.set_number
-        );
+        const sortedSchemes = [...exercise.set_schemes].sort((a, b) => a.set_number - b.set_number);
         const programmedExerciseId = exercise.exercise.id;
         const performedBySet = value.performedRepsBySet ?? [];
         const performedWeightBySet = value.performedWeightBySet ?? [];
@@ -143,11 +142,11 @@ export const SetSchemeEditor: React.FC<SetSchemeEditorProps> = ({
             value.targetReps,
             performedBySet[setIndex] ?? value.performedReps,
             value.restSeconds,
-            unit ?? 'KG'
+            'KG'
           );
         });
 
-        const createPromises: Promise<typeof exercise.set_schemes[0]>[] = [];
+        const createPromises: Promise<(typeof exercise.set_schemes)[0]>[] = [];
         if (newTotal > currentCount) {
           for (let setNumber = currentCount + 1; setNumber <= newTotal; setNumber++) {
             const setIndex = setNumber - 1;
@@ -170,7 +169,7 @@ export const SetSchemeEditor: React.FC<SetSchemeEditorProps> = ({
                 value.targetReps,
                 performedRep,
                 value.restSeconds,
-                unit ?? 'KG'
+                'KG'
               )
             );
           }
@@ -185,9 +184,7 @@ export const SetSchemeEditor: React.FC<SetSchemeEditorProps> = ({
           Promise.all(deletePromises),
         ]).then(([upd, cr]) => [upd, cr] as [typeof upd, typeof cr]);
 
-        const mergedSchemes = [...updated, ...created].sort(
-          (a, b) => a.set_number - b.set_number
-        );
+        const mergedSchemes = [...updated, ...created].sort((a, b) => a.set_number - b.set_number);
 
         const updatedExercise = {
           ...exercise,

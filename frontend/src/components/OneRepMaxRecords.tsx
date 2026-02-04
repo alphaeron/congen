@@ -170,9 +170,7 @@ export const OneRepMaxRecords: React.FC<OneRepMaxRecordsProps> = () => {
     columnHelper.accessor('oneRepMax', {
       header: '1RM',
       cell: info => (
-        <div style={{ textAlign: 'center', width: '100%' }}>
-          {info.row.original.displayWeight}
-        </div>
+        <div style={{ textAlign: 'center', width: '100%' }}>{info.row.original.displayWeight}</div>
       ),
     }),
     columnHelper.accessor('updatedAt', {
@@ -193,9 +191,7 @@ export const OneRepMaxRecords: React.FC<OneRepMaxRecordsProps> = () => {
       );
       const preferredUnit = weightUnitPreference?.preferred_unit as 'KG' | 'LBS' | undefined;
       const weightInKg =
-        oneRepMax.unit === 'LBS'
-          ? oneRepMax.one_rep_max / KG_TO_LBS
-          : oneRepMax.one_rep_max;
+        oneRepMax.unit === 'LBS' ? oneRepMax.one_rep_max / KG_TO_LBS : oneRepMax.one_rep_max;
       const displayWeight = formatWeightWithUnit(weightInKg, preferredUnit);
       const oneRepMaxNumeric =
         parseFloat(formatWeightWithUnit(weightInKg, preferredUnit, false)) || 0;

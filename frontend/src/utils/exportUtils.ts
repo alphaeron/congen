@@ -109,10 +109,7 @@ const prepareWorkoutTableData = (
         exerciseName,
         totalSets.toString(),
         firstSetScheme.target_rep_count?.toString() || '0',
-        formatWeightWithUnit(
-          firstSetScheme.target_weight ?? 0,
-          weightUnit as 'KG' | 'LBS'
-        ),
+        formatWeightWithUnit(firstSetScheme.target_weight ?? 0, weightUnit as 'KG' | 'LBS'),
         firstSetScheme.rest_seconds?.toString() || '0',
         '', // No notes field in SetScheme interface
       ]);

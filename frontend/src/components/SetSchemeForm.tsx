@@ -401,18 +401,13 @@ export const SetSchemeForm: React.FC<SetSchemeFormProps> = ({
                             'aria-label': `Performed weight set ${i + 1}`,
                           }}
                           sx={{ width: 100 }}
-                          value={
-                            arr[i] !== undefined && arr[i] !== null ? String(arr[i]) : ''
-                          }
+                          value={arr[i] !== undefined && arr[i] !== null ? String(arr[i]) : ''}
                           onChange={e => {
                             const inputValue = e.target.value;
                             if (inputValue === '' || /^\d*\.?\d*$/.test(inputValue)) {
                               const next = [...arr];
                               while (next.length < i + 1) next.push(undefined);
-                              next[i] =
-                                inputValue === ''
-                                  ? undefined
-                                  : parseFloat(inputValue);
+                              next[i] = inputValue === '' ? undefined : parseFloat(inputValue);
                               field.handleChange(next);
                             }
                           }}

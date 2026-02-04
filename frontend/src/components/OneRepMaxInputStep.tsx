@@ -255,8 +255,10 @@ export const OneRepMaxInputStep: React.FC<OneRepMaxInputStepProps> = ({
                 <GameText variant="body2" textVariant="secondary">
                   <strong>Calculated 1RM:</strong>{' '}
                   {(() => {
-                    const oneRepMax =
-                      calculateOneRepMax(currentInput.weight || 0, currentInput.reps || 0);
+                    const oneRepMax = calculateOneRepMax(
+                      currentInput.weight || 0,
+                      currentInput.reps || 0
+                    );
                     const weightInKg =
                       currentInput.unit === 'LBS' ? oneRepMax / KG_TO_LBS : oneRepMax;
                     return formatWeightWithUnit(

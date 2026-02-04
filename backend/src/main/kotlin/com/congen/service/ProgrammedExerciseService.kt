@@ -52,109 +52,15 @@ class ProgrammedExerciseService(
 
     /**
      * Updates an existing programmed exercise record in the database.
-     * When totalSets is provided, creates or deletes set schemes so the count matches.
-     *
-     * @param id Programmed exercise ID
-     * @param workoutStageId Workout stage ID
-     * @param exerciseName Exercise name
-     * @param position Position in stage
-     * @param notes Optional notes
-     * @param totalSets Optional target number of set schemes; when provided, set schemes are created or deleted to match
-     * @return Mono containing the updated programmed exercise
+     * @see ProgrammedExerciseDAL.updateProgrammedExercise
      */
     fun updateProgrammedExercise(
         id: Long,
         workoutStageId: Long,
         exerciseName: String,
         position: Int,
-        notes: String?,
-        totalSets: Int? = null,
-    ): Mono<ProgrammedExercise> {
-        return programmedExerciseDAL.updateProgrammedExercise(id, workoutStageId, exerciseName, position, notes)
-            .flatMap { updated ->
-                if (totalSets != null && totalSets > 0) {
-                    adjustSetSchemeCount(id, totalSets).thenReturn(updated)
-                } else {
-                    Mono.just(updated)
-                }
-            }
-    }
-
-    /**
-     * Adjusts the number of set schemes for a programmed exercise to match totalSets.
-     * Creates new set schemes (copying from the first existing set) or deletes excess set schemes.
-     *
-     * @param programmedExerciseId The programmed exercise ID
-     * @param totalSets The desired number of set schemes
-     * @return Mono that completes when the adjustment is done
-     */
-    fun adjustSetSchemeCount(programmedExerciseId: Long, totalSets: Int): Mono<Void> {
-        return setSchemeService.selectSetSchemesByProgrammedExerciseId(programmedExerciseId)
-            .flatMap { existing ->
-                val currentCount = existing.size
-                val sorted = existing.sortedBy { it.setNumber }
-                when {
-                    totalSets > currentCount -> {
-                        val template = sorted.firstOrNull()
-                        Flux.range(currentCount + 1, totalSets - currentCount)
-                            .flatMap { setNumber ->
-                                createSetSchemeFromTemplate(programmedExerciseId, setNumber, template)
-                            }
-                            .then()
-                    }
-                    totalSets < currentCount -> {
-                        val toDelete = sorted.drop(totalSets)
-                        Flux.fromIterable(toDelete)
-                            .flatMap { setScheme -> setSchemeService.deleteSetScheme(setScheme.id).then() }
-                            .then()
-                    }
-                    else -> Mono.fromCallable { Unit }.then()
-                }
-            }
-            .then()
-    }
-
-    private fun createSetSchemeFromTemplate(
-        programmedExerciseId: Long,
-        setNumber: Int,
-        template: SetScheme?,
-    ): Mono<SetScheme> {
-        return if (template != null) {
-            setSchemeService.insertSetScheme(
-                programmedExerciseId = programmedExerciseId,
-                setNumber = setNumber,
-                isAmrap = template.isAmrap,
-                isEmom = template.isEmom,
-                useTempo = template.useTempo,
-                eccentricTempo = template.eccentricTempo,
-                isometricTempo = template.isometricTempo,
-                concentricTempo = template.concentricTempo,
-                targetWeight = template.targetWeight?.toString(),
-                performedWeight = template.performedWeight?.toString(),
-                targetRepCount = template.targetRepCount,
-                performedRepCount = template.performedRepCount,
-                restSeconds = template.restSeconds,
-                unit = "KG",
-            )
-        } else {
-            setSchemeService.insertSetScheme(
-                programmedExerciseId = programmedExerciseId,
-                setNumber = setNumber,
-                isAmrap = false,
-                isEmom = false,
-                useTempo = false,
-                eccentricTempo = null,
-                isometricTempo = null,
-                concentricTempo = null,
-                targetWeight = "1",
-                performedWeight = null,
-                targetRepCount = 1,
-                performedRepCount = null,
-                restSeconds = 60,
-                unit = "KG",
-            )
-        }
-    }
+        notes: String?
+    ): Mono<ProgrammedExercise> = programmedExerciseDAL.updateProgrammedExercise(id, workoutStageId, exerciseName, position, notes)
 
     /**
      * Deletes a programmed exercise record from the database.
