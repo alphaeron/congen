@@ -2,14 +2,9 @@ package com.congen
 
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.slf4j.LoggerFactory
 import java.math.BigDecimal
 
 class MovementBalanceIntegrationTest : BaseIntegrationTest() {
-    companion object {
-        private val logger = LoggerFactory.getLogger(MovementBalanceIntegrationTest::class.java)
-    }
-
     private var userId: String = ""
     private lateinit var userToken: String
 

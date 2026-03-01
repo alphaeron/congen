@@ -145,15 +145,16 @@ class ExerciseSelectionServiceTest {
     }
 
     @Test
-    fun `selectWarmupExercises should select appropriate warmup exercises`() {
+    fun `selectWarmupExercises should select appropriate warmup exercises without duplicates`() {
         val primaryExercise = createSampleExercise("Bench Press", MovementType.HORIZONTAL_PUSH)
-        val warmupExercise = createSampleExercise("Push-ups", MovementType.HORIZONTAL_PUSH).copy(isAccessory = true)
+        val warmup1 = createSampleExercise("Push-ups", MovementType.HORIZONTAL_PUSH).copy(isAccessory = true)
+        val warmup2 = createSampleExercise("Band Rows", MovementType.HORIZONTAL_PULL).copy(isAccessory = true)
+        val warmup3 = createSampleExercise("4-way neck", MovementType.ISOLATION).copy(isAccessory = true)
         val preparedData = createSamplePreparedData()
 
-        // Use a real UserExercisePool instead of a mock
         val realUserExercisePool =
             UserExercisePool(
-                allExercises = listOf(warmupExercise),
+                allExercises = listOf(warmup1, warmup2, warmup3),
                 preferences = emptyList(),
                 userEquipment = createSampleUserEquipment(),
                 exerciseEquipmentMappings = createSampleExerciseEquipmentMappings(),
@@ -175,7 +176,9 @@ class ExerciseSelectionServiceTest {
             )
 
         StepVerifier.create(result)
-            .expectNext(listOf(warmupExercise, warmupExercise, warmupExercise))
+            .expectNextMatches { list ->
+                list.size == 3 && list.map { it.name }.toSet().size == 3
+            }
             .verifyComplete()
     }
 

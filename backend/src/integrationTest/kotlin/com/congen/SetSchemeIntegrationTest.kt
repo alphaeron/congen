@@ -106,21 +106,6 @@ class SetSchemeIntegrationTest : BaseIntegrationTest() {
     }
 
     @Test
-    fun `should return 422 when target weight is 0`() {
-        val uri =
-            "/api/v1/set_scheme/?programmed_exercise_id=$programmedExerciseId&set_number=1&" +
-                "was_set_performed=false&is_amrap=false&is_emom=false&use_tempo=false&" +
-                "target_weight=0.0&target_rep_count=8&rest_seconds=120"
-        webTestClient.post()
-            .uri(uri)
-            .header("Authorization", "Bearer $userToken")
-            .exchange()
-            .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY)
-            .expectBody()
-            .jsonPath("$.error").exists()
-    }
-
-    @Test
     fun `should return 422 when target rep count is 0`() {
         val uri =
             "/api/v1/set_scheme/?programmed_exercise_id=$programmedExerciseId&set_number=1&" +

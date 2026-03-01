@@ -41,6 +41,8 @@ class ExercisePoolFactory(
      * @param exerciseEquipmentMappings Pre-computed mappings of exercise names to their equipment requirements
      * @param exerciseMuscleMappings Pre-computed mappings of exercise names to their muscle targets
      * @param userId The user ID to create the pool for
+     * @param excludedForWeek Exercise names already used in other workouts this week (no duplicates across workouts)
+     * @param minAvailablePerCategory Minimum exercises to leave per category (2-day/3-day need 2x for ME+DE per workout)
      * @return The user's exercise pool
      */
     fun createPoolFromPreparedData(
@@ -50,15 +52,18 @@ class ExercisePoolFactory(
         previouslyUsedExercises: List<ProgrammedExercise>,
         exerciseEquipmentMappings: Map<String, List<ExerciseEquipment>>,
         exerciseMuscleMappings: Map<String, List<ExerciseMuscle>>,
-        userId: String
+        userId: String,
+        excludedForWeek: Set<String> = emptySet(),
+        minAvailablePerCategory: Int = 1
     ): UserExercisePool {
-        // Apply sliding window logic to determine which exercises should be excluded
-        val excludedExercises =
+        val slidingWindowExcluded =
             applySlidingWindowLogic(
                 allExercises = allExercises,
                 preferences = userExercisePreferences,
-                previouslyUsedExercises = previouslyUsedExercises
+                previouslyUsedExercises = previouslyUsedExercises,
+                minAvailablePerCategory = minAvailablePerCategory
             )
+        val excludedExercises = (slidingWindowExcluded + excludedForWeek).toSet()
 
         logger.info(
             "Created exercise pool with sliding window logic: {} total exercises, {} excluded, {} available",
@@ -75,7 +80,7 @@ class ExercisePoolFactory(
             exerciseMuscleMappings = exerciseMuscleMappings,
             previouslyUsedExercises = previouslyUsedExercises.map { it.exerciseName },
             userId = userId,
-            excludedExercises = excludedExercises.toSet()
+            excludedExercises = excludedExercises
         )
     }
 
@@ -87,13 +92,16 @@ class ExercisePoolFactory(
      * @param allExercises All available exercises in the system
      * @param preferences User's exercise preferences
      * @param previouslyUsedExercises List of previously used exercises
+     * @param minAvailablePerCategory Minimum to leave per category (2-day/3-day use 4/6 for ME+DE; 4-day uses 4)
      * @return List of exercise names that should be excluded from the current pool
      */
     private fun applySlidingWindowLogic(
         allExercises: List<Exercise>,
         preferences: List<UserExercisePreference>,
-        previouslyUsedExercises: List<ProgrammedExercise>
+        previouslyUsedExercises: List<ProgrammedExercise>,
+        minAvailablePerCategory: Int = 1
     ): List<String> {
+        val minAvailable = maxOf(1, minAvailablePerCategory)
         // Filter exercises by user preferences first
         val preferenceFilteredExercises =
             allExercises.filter { exercise ->
@@ -156,13 +164,11 @@ class ExercisePoolFactory(
                 .map { it.exerciseName }
                 .distinct()
 
-        // Simple sliding window: exclude the most recent exercises in each category
-        // Window size = total available exercises in category (ensures all exercises are used before repetition)
-        // But ensure we don't exclude ALL exercises - leave at least 1 available
-        val excludedPrimaryUpperExercises = allUsedPrimaryUpperExercises.take(maxOf(1, availablePrimaryUpperExercises.size - 1))
-        val excludedPrimaryLowerExercises = allUsedPrimaryLowerExercises.take(maxOf(1, availablePrimaryLowerExercises.size - 1))
-        val excludedAccessoryUpperExercises = allUsedAccessoryUpperExercises.take(maxOf(1, availableAccessoryUpperExercises.size - 1))
-        val excludedAccessoryLowerExercises = allUsedAccessoryLowerExercises.take(maxOf(1, availableAccessoryLowerExercises.size - 1))
+        val excludeCount = { available: Int -> maxOf(0, available - minAvailable) }
+        val excludedPrimaryUpperExercises = allUsedPrimaryUpperExercises.take(excludeCount(availablePrimaryUpperExercises.size))
+        val excludedPrimaryLowerExercises = allUsedPrimaryLowerExercises.take(excludeCount(availablePrimaryLowerExercises.size))
+        val excludedAccessoryUpperExercises = allUsedAccessoryUpperExercises.take(excludeCount(availableAccessoryUpperExercises.size))
+        val excludedAccessoryLowerExercises = allUsedAccessoryLowerExercises.take(excludeCount(availableAccessoryLowerExercises.size))
 
         val excludedExercises =
             excludedPrimaryUpperExercises + excludedPrimaryLowerExercises +

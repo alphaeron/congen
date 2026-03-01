@@ -192,9 +192,6 @@ class UserExercisePool(
     fun refreshPool(): Boolean {
         val currentUsedCount = usedExerciseNames.size
 
-        // Simple refresh: add back exercises that are not currently available
-        // The sliding window exclusions are handled by the ExercisePoolFactory when creating the pool
-        // When we refresh, we want to restore the pool to its original state (minus current week usage)
         val exercisesToRefresh =
             allExercises.filter { exercise ->
                 val preference = preferences.find { pref -> pref.exerciseName == exercise.name }
@@ -205,18 +202,17 @@ class UserExercisePool(
                         else -> true
                     }
 
-                // For primary upper body exercises, exclude dumbbell exercises
                 val isPrimaryUpperBody = !exercise.isAccessory && exercise.isUpper
                 val isDumbbellExercise = exercise.name.lowercase().contains("dumbbell")
                 val shouldExcludeDumbbell = isPrimaryUpperBody && isDumbbellExercise
 
-                // Apply sliding window exclusions that were calculated in ExercisePoolFactory
                 val isExcludedBySlidingWindow = excludedExercises.contains(exercise.name)
+                val isUsedThisWorkout = usedExerciseNames.contains(exercise.name)
 
-                // Add back exercises that are not currently available and not excluded by sliding window
                 shouldInclude &&
                     !isExcludedBySlidingWindow &&
                     !shouldExcludeDumbbell &&
+                    !isUsedThisWorkout &&
                     !availableExercises.containsKey(exercise.name)
             }
 
@@ -241,11 +237,12 @@ class UserExercisePool(
     }
 
     /**
-     * Gets the number of exercises that have been used in the current week.
+     * Returns the set of exercise names that have been used (marked and removed from the pool).
+     * Used so the generator can exclude these from the next workout's pool in the same week.
      *
-     * @return Number of used exercises
+     * @return Copy of the set of used exercise names
      */
-    fun getUsedExerciseCount(): Int = usedExerciseNames.size
+    fun getUsedExerciseNames(): Set<String> = usedExerciseNames.toSet()
 
     /**
      * Filters exercises by equipment availability reactively.

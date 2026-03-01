@@ -162,41 +162,9 @@ class ConjugateWorkoutGeneratorService(
                             allExerciseWorkoutTypes.groupBy { it.exerciseName }
                                 .mapValues { (_, workoutTypes) -> workoutTypes.map { it.workoutType } }
 
-                        // Extract exercise names from previously programmed exercises
                         val previouslyProgrammedExerciseNames = previouslyProgrammedExercises.map { it.exerciseName }
+                        val usedThisWeek = mutableSetOf<String>()
 
-                        // Create user exercise pool from prepared data
-                        val userExercisePool =
-                            exercisePoolFactory.createPoolFromPreparedData(
-                                allExercises = allExercises,
-                                userEquipment = userEquipment,
-                                userExercisePreferences = userExercisePreferences,
-                                previouslyUsedExercises = previouslyProgrammedExercises,
-                                exerciseEquipmentMappings = exerciseEquipmentMappings,
-                                exerciseMuscleMappings = exerciseMuscleMappings,
-                                userId = program.userId
-                            )
-
-                        // Stage 1: Data Preparation - Prepare all required data upfront
-                        val preparedData =
-                            WorkoutGenerationPreparedData(
-                                userExercisePool = userExercisePool,
-                                oneRepMaxes = oneRepMaxes,
-                                programPreferences = programPreferences,
-                                weakMuscles = weakMuscles,
-                                currentWeekNumber = program.currentWeekNumber,
-                                userId = program.userId,
-                                weightUnitPreferences = weightUnitMap,
-                                exerciseMuscleMappings = exerciseMuscleMappings,
-                                exerciseWorkoutTypeMappings = exerciseWorkoutTypeMappings,
-                                exerciseEquipmentMappings = exerciseEquipmentMappings,
-                                previouslyProgrammedExercises = previouslyProgrammedExerciseNames,
-                                allExercises = allExercises,
-                                userEquipment = userEquipment,
-                                userExercisePreferences = userExercisePreferences
-                            )
-
-                        // Stage 2: Workout Generation - Generate all workouts using prepared data
                         Flux.fromIterable(template)
                             .index()
                             .concatMap { workoutTuple ->
@@ -206,13 +174,52 @@ class ConjugateWorkoutGeneratorService(
 
                                 logger.debug("Generating workout for day {} of program {}", dayNumber, program.id)
 
-                                // Generate workout stages using prepared data
+                                val minAvailablePerCategory =
+                                    when (programPreferences.programDaysPerWeek) {
+                                        2 -> 4
+                                        3 -> 6
+                                        else -> programPreferences.programDaysPerWeek
+                                    }
+                                val userExercisePool =
+                                    exercisePoolFactory.createPoolFromPreparedData(
+                                        allExercises = allExercises,
+                                        userEquipment = userEquipment,
+                                        userExercisePreferences = userExercisePreferences,
+                                        previouslyUsedExercises = previouslyProgrammedExercises,
+                                        exerciseEquipmentMappings = exerciseEquipmentMappings,
+                                        exerciseMuscleMappings = exerciseMuscleMappings,
+                                        userId = program.userId,
+                                        excludedForWeek = usedThisWeek,
+                                        minAvailablePerCategory = minAvailablePerCategory
+                                    )
+
+                                val preparedData =
+                                    WorkoutGenerationPreparedData(
+                                        userExercisePool = userExercisePool,
+                                        oneRepMaxes = oneRepMaxes,
+                                        programPreferences = programPreferences,
+                                        weakMuscles = weakMuscles,
+                                        currentWeekNumber = program.currentWeekNumber,
+                                        userId = program.userId,
+                                        weightUnitPreferences = weightUnitMap,
+                                        exerciseMuscleMappings = exerciseMuscleMappings,
+                                        exerciseWorkoutTypeMappings = exerciseWorkoutTypeMappings,
+                                        exerciseEquipmentMappings = exerciseEquipmentMappings,
+                                        previouslyProgrammedExercises = previouslyProgrammedExerciseNames,
+                                        allExercises = allExercises,
+                                        userEquipment = userEquipment,
+                                        userExercisePreferences = userExercisePreferences
+                                    )
+
                                 workoutStageGenerationOrchestrator.generateWorkoutStages(
                                     programId = program.id,
                                     dayNumber = dayNumber,
                                     dayType = dayTemplate.type,
                                     preparedData = preparedData
-                                )
+                                ).flatMap { result ->
+                                    usedThisWeek.addAll(userExercisePool.getUsedExerciseNames())
+                                    Mono.just(result)
+                                }
                             }
                             .collectList()
                             .flatMap { workoutResults ->

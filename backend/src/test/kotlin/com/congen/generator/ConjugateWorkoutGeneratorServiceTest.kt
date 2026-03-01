@@ -155,7 +155,7 @@ class ConjugateWorkoutGeneratorServiceTest {
         // Mock the exercise pool factory
         val samplePreparedData = createSamplePreparedData()
         whenever(
-            exercisePoolFactory.createPoolFromPreparedData(any(), any(), any(), any(), any(), any(), any())
+            exercisePoolFactory.createPoolFromPreparedData(any(), any(), any(), any(), any(), any(), any(), any(), any())
         ).thenReturn(samplePreparedData.userExercisePool)
 
         // Mock the DAL methods for atomic workout generation
@@ -206,7 +206,7 @@ class ConjugateWorkoutGeneratorServiceTest {
         // Mock the exercise pool factory
         val samplePreparedData = createSamplePreparedData()
         whenever(
-            exercisePoolFactory.createPoolFromPreparedData(any(), any(), any(), any(), any(), any(), any())
+            exercisePoolFactory.createPoolFromPreparedData(any(), any(), any(), any(), any(), any(), any(), any(), any())
         ).thenReturn(samplePreparedData.userExercisePool)
 
         // Mock the DAL methods for atomic workout generation
@@ -391,7 +391,7 @@ class ConjugateWorkoutGeneratorServiceTest {
         // Mock the exercise pool factory
         val samplePreparedData = createSamplePreparedData()
         whenever(
-            exercisePoolFactory.createPoolFromPreparedData(any(), any(), any(), any(), any(), any(), any())
+            exercisePoolFactory.createPoolFromPreparedData(any(), any(), any(), any(), any(), any(), any(), any(), any())
         ).thenReturn(samplePreparedData.userExercisePool)
 
         // Mock the DAL methods for atomic workout generation

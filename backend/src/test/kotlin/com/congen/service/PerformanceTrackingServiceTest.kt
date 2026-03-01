@@ -631,6 +631,8 @@ class PerformanceTrackingServiceTest {
                 )
             )
 
+        whenever(testProtocolConfigDAL.getAllTestProtocols()).thenReturn(Mono.just(emptyList()))
+
         val result = performanceTrackingService.submitWeeklyTest(testResults)
 
         StepVerifier.create(result)
