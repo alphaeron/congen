@@ -232,9 +232,18 @@ class ExerciseSelectionService(
                         if (!isAccessory) {
                             logger.warn(
                                 "No exercises available after day-type filtering for primary exercise even after pool refresh, " +
-                                    "falling back to any available primary exercise"
+                                    "falling back to same body type primary exercise"
                             )
-                            val fallbackExercises = refreshedAvailableExercises.filter { !it.isAccessory }
+                            val fallbackExercises =
+                                refreshedAvailableExercises
+                                    .filter { !it.isAccessory }
+                                    .filter { ex ->
+                                        when {
+                                            dayType.contains("Upper") -> ex.isUpper
+                                            dayType.contains("Lower") -> !ex.isUpper
+                                            else -> true
+                                        }
+                                    }
                             if (fallbackExercises.isNotEmpty()) {
                                 dayTypeFilteredExercises = fallbackExercises
                                 logger.info("Using fallback primary exercise: {}", fallbackExercises.first().name)
@@ -275,8 +284,17 @@ class ExerciseSelectionService(
                     // For primary exercises, we must have at least one exercise available
                     // If pool refresh fails, fall back to any available primary exercise
                     if (!isAccessory) {
-                        logger.warn("Pool refresh failed for primary exercise, falling back to any available primary exercise")
-                        val fallbackExercises = availableExercises.filter { !it.isAccessory }
+                        logger.warn("Pool refresh failed for primary exercise, falling back to same body type primary exercise")
+                        val fallbackExercises =
+                            availableExercises
+                                .filter { !it.isAccessory }
+                                .filter { ex ->
+                                    when {
+                                        dayType.contains("Upper") -> ex.isUpper
+                                        dayType.contains("Lower") -> !ex.isUpper
+                                        else -> true
+                                    }
+                                }
                         if (fallbackExercises.isNotEmpty()) {
                             dayTypeFilteredExercises = fallbackExercises
                             logger.info("Using fallback primary exercise: {}", fallbackExercises.first().name)
@@ -655,15 +673,18 @@ class ExerciseSelectionService(
                 }
             }
 
-        // If no exercises are available for the specific day type, fall back to all exercises
-        // This prevents the algorithm from failing when the exercise pool is limited
         if (filteredExercises.isEmpty()) {
             logger.warn(
-                "No exercises available for day type '{}', falling back to all {} available exercises to prevent algorithm failure",
+                "No exercises available for day type '{}' (would need {} for this body type)",
                 dayType,
-                exercises.size
+                if (dayType.contains("Upper")) {
+                    "upper body"
+                } else if (dayType.contains("Lower")) {
+                    "lower body"
+                } else {
+                    "any"
+                }
             )
-            return exercises
         }
 
         return filteredExercises

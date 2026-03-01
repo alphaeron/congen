@@ -1,5 +1,6 @@
 package com.congen
 
+import com.congen.model.Exercise
 import com.congen.model.Program
 import com.congen.model.WorkoutStage
 import org.junit.jupiter.api.BeforeEach
@@ -671,7 +672,8 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
                     .responseBody!!
 
             // Validate stage structure for 2-day programs
-            validateTwoDayWorkoutStages(stagesResponse, workoutName, userToken)
+            val exerciseNameToIsUpper = getExerciseNameToIsUpperMap(userToken)
+            validateTwoDayWorkoutStages(stagesResponse, workoutName, userToken, exerciseNameToIsUpper)
         }
     }
 
@@ -719,8 +721,10 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
         // Validate 3-day template structure
         assert(workoutsResponse.size == 3) { "3-day program should have exactly 3 workouts" }
 
+        val exerciseNameToIsUpper = getExerciseNameToIsUpperMap(userToken)
+
         // Validate each workout has the correct structure
-        workoutsResponse.forEach { workout ->
+        workoutsResponse.forEachIndexed { dayIndexInWeek, workout ->
             val workoutId = (workout["id"] as Number).toLong()
             val workoutName = workout["name"] as String
 
@@ -735,8 +739,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
                     .returnResult()
                     .responseBody!!
 
-            // Validate stage structure for 3-day programs
-            validateThreeDayWorkoutStages(stagesResponse, workoutName, userToken)
+            validateThreeDayWorkoutStages(stagesResponse, workoutName, userToken, exerciseNameToIsUpper, dayIndexInWeek)
         }
     }
 
@@ -778,12 +781,12 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
         // Validate 4-day template structure
         assert(workoutsResponse.size == 4) { "4-day program should have exactly 4 workouts" }
 
-        // Validate each workout has the correct structure
-        workoutsResponse.forEach { workout ->
+        val exerciseNameToIsUpper = getExerciseNameToIsUpperMap(userToken)
+
+        workoutsResponse.forEachIndexed { dayIndexInWeek, workout ->
             val workoutId = (workout["id"] as Number).toLong()
             val workoutName = workout["name"] as String
 
-            // Fetch workout stages
             val stagesResponse =
                 webTestClient.get()
                     .uri("/api/v1/workout_stage/workout/$workoutId")
@@ -794,19 +797,33 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
                     .returnResult()
                     .responseBody!!
 
-            // Validate stage structure for 4-day programs
-            validateFourDayWorkoutStages(stagesResponse, workoutName, userToken)
+            validateFourDayWorkoutStages(stagesResponse, workoutName, userToken, exerciseNameToIsUpper, dayIndexInWeek)
         }
+    }
+
+    private fun getExerciseNameToIsUpperMap(token: String): Map<String, Boolean> {
+        val exercises =
+            webTestClient.get()
+                .uri("/api/v1/exercise/")
+                .header("Authorization", "Bearer $token")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBodyList(Exercise::class.java)
+                .returnResult()
+                .responseBody!!
+        return exercises.associate { it.name to it.isUpper }
     }
 
     /**
      * Validates workout stages for 2-day template workouts.
      * 2-day programs have combined ME+DE days with no secondary movements.
+     * Each Primary stage must have exactly one upper body and one lower body exercise.
      */
     private fun validateTwoDayWorkoutStages(
         stages: List<WorkoutStage>,
         workoutName: String,
-        token: String
+        token: String,
+        exerciseNameToIsUpper: Map<String, Boolean>
     ) {
         // 2-day programs should have:
         // 1. Primary stage (contains both ME and DE exercises)
@@ -854,7 +871,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
             }
         }
 
-        // Validate that Primary stage has exercises
+        // Validate that Primary stage has exactly one upper and one lower body exercise
         if (primaryStage != null) {
             val exercisesResponse =
                 webTestClient.get()
@@ -869,17 +886,34 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
             assert(exercisesResponse.isNotEmpty()) {
                 "Primary stage in 2-day workout '$workoutName' should have exercises"
             }
+            assert(exercisesResponse.size == 2) {
+                "Primary stage in 2-day workout '$workoutName' should have exactly 2 exercises (ME + DE), " +
+                    "got ${exercisesResponse.size}: ${exercisesResponse.map { it["exercise_name"] }}"
+            }
+            val primaryExerciseNames = exercisesResponse.map { it["exercise_name"] as String }
+            val isUpperFlags = primaryExerciseNames.mapNotNull { exerciseNameToIsUpper[it] }
+            assert(isUpperFlags.size == 2) {
+                "Could not resolve is_upper for all primary exercises in 2-day workout '$workoutName': $primaryExerciseNames"
+            }
+            val upperCount = isUpperFlags.count { it }
+            val lowerCount = isUpperFlags.size - upperCount
+            assert(upperCount == 1 && lowerCount == 1) {
+                "Primary stage in 2-day workout '$workoutName' must have one upper and one lower body exercise, " +
+                    "got upper=$upperCount lower=$lowerCount (exercises: $primaryExerciseNames)"
+            }
         }
     }
 
     /**
      * Validates workout stages for 3-day template workouts.
-     * 3-day programs have combined ME+DE days and full body DE days.
+     * 3-day programs have combined ME+DE days (day 0, 1: one upper + one lower in Primary) and full body DE (day 2: both in Primary).
      */
     private fun validateThreeDayWorkoutStages(
         stages: List<WorkoutStage>,
         workoutName: String,
-        token: String
+        token: String,
+        exerciseNameToIsUpper: Map<String, Boolean>,
+        dayIndexInWeek: Int
     ) {
         // 3-day programs should have:
         // For combined ME+DE days: Primary, Accessory, Conditioning
@@ -926,7 +960,6 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
             }
         }
 
-        // Validate that Primary stage has exercises
         if (primaryStage != null) {
             val exercisesResponse =
                 webTestClient.get()
@@ -940,6 +973,30 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
 
             assert(exercisesResponse.isNotEmpty()) {
                 "Primary stage in 3-day workout '$workoutName' should have exercises"
+            }
+            val primaryExerciseNames = exercisesResponse.map { it["exercise_name"] as String }
+            val isUpperFlags = primaryExerciseNames.mapNotNull { exerciseNameToIsUpper[it] }
+            assert(isUpperFlags.size == primaryExerciseNames.size) {
+                "Could not resolve is_upper for all primary exercises in 3-day workout '$workoutName': $primaryExerciseNames"
+            }
+            if (dayIndexInWeek in 0..1) {
+                assert(primaryExerciseNames.size == 2) {
+                    "Primary stage in 3-day combined workout '$workoutName' should have exactly 2 exercises, " +
+                        "got ${primaryExerciseNames.size}"
+                }
+                val upperCount = isUpperFlags.count { it }
+                val lowerCount = isUpperFlags.size - upperCount
+                assert(upperCount == 1 && lowerCount == 1) {
+                    "Primary stage in 3-day combined workout '$workoutName' must have one upper and one lower, " +
+                        "got upper=$upperCount lower=$lowerCount (exercises: $primaryExerciseNames)"
+                }
+            } else {
+                val upperCount = isUpperFlags.count { it }
+                val lowerCount = isUpperFlags.size - upperCount
+                assert(upperCount >= 1 && lowerCount >= 1) {
+                    "Primary stage in 3-day full body DE workout '$workoutName' must have at least one upper and " +
+                        "one lower, got upper=$upperCount lower=$lowerCount (exercises: $primaryExerciseNames)"
+                }
             }
         }
     }
@@ -1157,6 +1214,8 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
             "Expected $expectedTotalWorkouts workouts ($expectedWeeks weeks × $expectedDaysPerWeek days), but got ${workoutsResponse.size}"
         }
 
+        val exerciseNameToIsUpper = getExerciseNameToIsUpperMap(token)
+
         // Group workouts by week (assuming workouts are ordered by creation/position)
         val workoutsByWeek = workoutsResponse.chunked(expectedDaysPerWeek)
         assert(workoutsByWeek.size == expectedWeeks) {
@@ -1198,11 +1257,11 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
                     }
 
                 if (shouldValidateStages) {
-                    // Validate stage structure based on program type
+                    val dayIndexInWeek = weekWorkouts.indexOf(workout)
                     when (expectedDaysPerWeek) {
-                        2 -> validateTwoDayWorkoutStages(stagesResponse, workoutName, token)
-                        3 -> validateThreeDayWorkoutStages(stagesResponse, workoutName, token)
-                        4 -> validateFourDayWorkoutStages(stagesResponse, workoutName, token)
+                        2 -> validateTwoDayWorkoutStages(stagesResponse, workoutName, token, exerciseNameToIsUpper)
+                        3 -> validateThreeDayWorkoutStages(stagesResponse, workoutName, token, exerciseNameToIsUpper, dayIndexInWeek)
+                        4 -> validateFourDayWorkoutStages(stagesResponse, workoutName, token, exerciseNameToIsUpper, dayIndexInWeek)
                     }
                 }
 
@@ -1289,12 +1348,15 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
 
     /**
      * Validates workout stages for 4-day template workouts.
-     * 4-day programs have separate ME and DE days with secondary movements.
+     * 4-day programs have separate ME and DE days. Day 0=ME_Upper, 1=DE_Lower, 2=ME_Lower, 3=DE_Upper.
+     * Primary stage exercises must all match the expected body type for that day.
      */
     private fun validateFourDayWorkoutStages(
         stages: List<WorkoutStage>,
         workoutName: String,
-        token: String
+        token: String,
+        exerciseNameToIsUpper: Map<String, Boolean>,
+        dayIndexInWeek: Int
     ) {
         // 4-day programs should have:
         // For ME days: Primary, Secondary (optional), Accessory, Conditioning
@@ -1317,8 +1379,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
             }
         }
 
-        // May have Secondary stage (for ME_Upper and DE_Upper)
-        val hasSecondary = workoutName.contains("Upper")
+        val hasSecondary = (dayIndexInWeek == 0 || dayIndexInWeek == 3)
 
         // Validate stage order
         val primaryStage = stages.find { it.name.toString() == "Primary" }
@@ -1347,7 +1408,6 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
             }
         }
 
-        // Validate that Primary stage has exercises
         if (primaryStage != null) {
             val exercisesResponse =
                 webTestClient.get()
@@ -1361,6 +1421,19 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
 
             assert(exercisesResponse.isNotEmpty()) {
                 "Primary stage in 4-day workout '$workoutName' should have exercises"
+            }
+            val expectedUpper = (dayIndexInWeek == 0 || dayIndexInWeek == 3)
+            val primaryExerciseNames = exercisesResponse.map { it["exercise_name"] as String }
+            val isUpperFlags = primaryExerciseNames.mapNotNull { exerciseNameToIsUpper[it] }
+            assert(isUpperFlags.size == primaryExerciseNames.size) {
+                "Could not resolve is_upper for all primary exercises in 4-day workout '$workoutName': $primaryExerciseNames"
+            }
+            val allMatch =
+                isUpperFlags.all { it == expectedUpper }
+            assert(allMatch) {
+                val expectedBody = if (expectedUpper) "upper" else "lower"
+                "Primary stage in 4-day workout '$workoutName' (day $dayIndexInWeek, expected $expectedBody) " +
+                    "must have only $expectedBody body exercises, got: $primaryExerciseNames (is_upper: $isUpperFlags)"
             }
         }
 
