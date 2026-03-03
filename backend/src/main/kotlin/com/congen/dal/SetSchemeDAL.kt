@@ -287,7 +287,7 @@ class SetSchemeDAL(
             targetRepCount,
             performedRepCount,
             restSeconds,
-            band?.weightLbs,
+            band?.weightLbs?.toDouble(),
         )
     }
 
@@ -378,7 +378,7 @@ class SetSchemeDAL(
             targetRepCount,
             performedRepCount,
             restSeconds,
-            band?.weightLbs,
+            band?.weightLbs?.toDouble(),
         )
     }
 

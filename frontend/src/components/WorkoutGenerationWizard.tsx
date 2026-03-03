@@ -166,7 +166,7 @@ export const WorkoutGenerationWizard: React.FC<WorkoutGenerationWizardProps> = (
       }
     } catch {
       enqueueSnackbar('Failed to generate workouts', { variant: 'error' });
-      onClose(); // Close the dialog when generation fails
+      setCurrentStep(WizardStep.WORKOUT_GENERATION);
     } finally {
       setIsGenerating(false);
     }

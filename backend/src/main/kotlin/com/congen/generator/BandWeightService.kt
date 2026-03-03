@@ -6,7 +6,6 @@ import com.congen.util.UnitConverter
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
-import kotlin.math.abs
 
 /**
  * Service for computing band weights for Dynamic Effort exercises.
@@ -24,11 +23,13 @@ import kotlin.math.abs
  *
  * ## Weight Computation Logic
  *
- * 1. Calculate total target weight based on 1RM and intensity
- * 2. Determine band weight percentage based on week in cycle
- * 3. Select appropriate band(s) to achieve target band weight
- * 4. Subtract total band weight from target weight to get bar weight
- * 5. Round bar weight to achievable plate weights
+ * Bar weight percentage comes from [PrilepinGuidelinesService] (same intensity used for total).
+ * Caller passes that value as [barWeightPercentage].
+ *
+ * 1. Total target weight = 1RM × intensity (from Prilepin)
+ * 2. Bar weight = total × barWeightPercentage (same as intensity for band weeks)
+ * 3. Band weight = total × band weight percentage (25% weeks 1–3); select band pair to match
+ * 4. Round bar weight to achievable plate weights
  *
  * @author Congen Development Team
  * @since 1.0.0
@@ -43,12 +44,14 @@ class BandWeightService(
      * @param totalTargetWeight The total target weight (bar + bands) in the specified unit
      * @param weightUnit The unit of the total target weight
      * @param weekInCycle The week in the 4-week cycle (1-4)
+     * @param barWeightPercentage The bar weight as fraction of total (from Prilepin intensity for this week)
      * @return BandWeightResult containing band and bar weight information
      */
     fun computeBandAndBarWeights(
         totalTargetWeight: BigDecimal,
         weightUnit: WeightUnit,
-        weekInCycle: Int
+        weekInCycle: Int,
+        barWeightPercentage: Double
     ): BandWeightResult {
         val bandWeightPercentage = BAND_WEIGHT_PERCENTAGES[weekInCycle] ?: 0.0
 
@@ -68,60 +71,42 @@ class BandWeightService(
                 totalTargetWeight
             }
 
-        // Calculate target band weight
+        val barWeightLbs = totalWeightLbs * BigDecimal(barWeightPercentage)
         val targetBandWeightLbs = totalWeightLbs * BigDecimal(bandWeightPercentage)
+        val singleBandWeight = selectBands(targetBandWeightLbs).weightLbs
+        val totalBandWeightLbs = singleBandWeight.multiply(BigDecimal(BANDS_PER_EXERCISE))
 
-        // Select appropriate band(s)
-        val selectedBand = selectBands(targetBandWeightLbs)
-
-        // Calculate bar weight (total - band weight)
-        val actualBandWeightLbs = selectedBand?.weightLbs?.multiply(BigDecimal(BANDS_PER_EXERCISE)) ?: BigDecimal.ZERO
-        val barWeightLbs = totalWeightLbs - actualBandWeightLbs
-
-        // Ensure bar weight is never negative - if band weight exceeds total weight, use no bands
-        val finalBarWeightLbs =
-            if (barWeightLbs < BigDecimal.ZERO) {
-                logger.warn("Band weight {} exceeds total weight {} for DE exercise. Using no bands.", actualBandWeightLbs, totalWeightLbs)
-                totalWeightLbs
+        val barWeight =
+            if (weightUnit == WeightUnit.KG) {
+                unitConverter.toKg(barWeightLbs, WeightUnit.LBS)
             } else {
                 barWeightLbs
             }
 
-        // Convert bar weight back to original unit and round to achievable weights
-        val barWeight =
-            if (weightUnit == WeightUnit.KG) {
-                unitConverter.toKg(finalBarWeightLbs, WeightUnit.LBS)
-            } else {
-                finalBarWeightLbs
-            }
-
         return BandWeightResult(
-            band = if (barWeightLbs < BigDecimal.ZERO) null else selectedBand,
+            band = Band(totalBandWeightLbs),
             barWeight = barWeight,
         )
     }
 
     /**
-     * Selects the appropriate band to achieve the target band weight.
+     * Selects the band such that the pair (2 bands) has total resistance closest to the target band weight, rounding up.
+     * Always returns a band (smallest pair when target exceeds all pair totals).
      *
-     * @param targetBandWeightLbs The target band weight in pounds
-     * @return Selected Band or null if no suitable band found
+     * @param targetBandWeightLbs The target total band weight in pounds (25% of DE exercise weight)
+     * @return The band to use (2 of these); never null
      */
-    private fun selectBands(targetBandWeightLbs: BigDecimal): Band? {
-        // Normalize the target weight to remove trailing zeros for comparison
-        val normalizedTargetWeight = targetBandWeightLbs.stripTrailingZeros()
-
-        // Find the allowed weight closest to the target
+    private fun selectBands(targetBandWeightLbs: BigDecimal): Band {
         val allowedWeights = Band.allowedWeights
-
+        val pairTotals = allowedWeights.map { it to it.multiply(BigDecimal(BANDS_PER_EXERCISE)) }
+        val roundedUp =
+            pairTotals.filter { (_, pairTotal) -> pairTotal >= targetBandWeightLbs }
+                .minByOrNull { (_, pairTotal) -> pairTotal }
         val selectedBandWeight =
-            allowedWeights.minByOrNull { weight ->
-                abs(weight.toDouble() - normalizedTargetWeight.toDouble())
-            }
+            roundedUp?.first ?: pairTotals.minByOrNull { (_, pairTotal) -> pairTotal }?.first
+                ?: Band.allowedWeights.minOrNull()!!
 
-        val result = selectedBandWeight?.let { Band.fromWeight(it) }
-
-        return result
+        return Band.fromWeight(selectedBandWeight) ?: Band(Band.allowedWeights.minOrNull()!!)
     }
 
     /**

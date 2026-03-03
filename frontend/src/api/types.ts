@@ -268,7 +268,8 @@ export interface SetScheme {
   rest_seconds?: number;
   created_at: Date;
   updated_at: Date;
-  band_weight_lbs?: Record<string, unknown>;
+  /** Band weight in lbs when present (backend serializes Band as number via @JsonValue). Null when no band. */
+  band_weight_lbs?: number | null;
 } // end interface SetScheme
 
 /**

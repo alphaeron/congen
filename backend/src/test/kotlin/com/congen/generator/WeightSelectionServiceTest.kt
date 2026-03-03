@@ -125,7 +125,8 @@ class WeightSelectionServiceTest {
             bandWeightService.computeBandAndBarWeights(
                 eq(calculatedWeight),
                 eq(WeightUnit.LBS),
-                eq(1)
+                eq(1),
+                eq(intensity)
             )
         ).thenReturn(bandWeightResult)
 
@@ -232,7 +233,8 @@ class WeightSelectionServiceTest {
             bandWeightService.computeBandAndBarWeights(
                 eq(calculatedWeight),
                 eq(WeightUnit.KG),
-                eq(1)
+                eq(1),
+                eq(intensity)
             )
         ).thenReturn(bandWeightResult)
 
@@ -305,7 +307,8 @@ class WeightSelectionServiceTest {
             bandWeightService.computeBandAndBarWeights(
                 eq(calculatedWeight),
                 eq(WeightUnit.LBS),
-                eq(3)
+                eq(3),
+                eq(intensity)
             )
         ).thenReturn(bandWeightResult)
 

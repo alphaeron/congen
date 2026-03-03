@@ -128,17 +128,12 @@ class PrilepinGuidelinesService {
     /**
      * Gets reps per set and number of sets based on intensity within the given guidelines.
      *
-     * Reps calculation:
-     * - Higher intensity = lower reps within the range
-     * - Lower intensity = higher reps within the range
-     * - Linear interpolation between these points
+     * When guidelines specify a fixed scheme (single reps-per-set and single total-reps, e.g. from
+     * the dynamic effort guideline functions), that scheme is used directly and (repsPerSet,
+     * numSets) is derived from it. Otherwise intensity-based
+     * scaling and role-based set caps are applied.
      *
-     * Sets calculation:
-     * - Based on total reps divided by reps per set
-     * - Higher intensity = fewer total reps within the range
-     * - Maximum set limits: 5 sets for primary, 4 sets for secondary
-     *
-     * @param guidelines The Prilepin guidelines containing ranges and total reps
+     * @param guidelines The Prilepin guidelines (from [getUndulatingPeriodizationGuidelines])
      * @param intensity The actual intensity being used
      * @param movementRole The role of the movement ("primary", "secondary", "accessory")
      * @return Pair of (reps per set, number of sets)
@@ -148,7 +143,14 @@ class PrilepinGuidelinesService {
         intensity: Double,
         movementRole: String = "primary"
     ): Pair<Int, Int> {
-        // Calculate reps based on intensity: higher intensity = lower reps
+        val fixedRepsPerSet = guidelines.repsPerSetRange.first == guidelines.repsPerSetRange.last
+        val fixedTotalReps = guidelines.totalRepsRange.first == guidelines.totalRepsRange.last
+        if (fixedRepsPerSet && fixedTotalReps && guidelines.totalReps % guidelines.repsPerSetRange.first == 0) {
+            val repsPerSet = guidelines.repsPerSetRange.first
+            val numSets = guidelines.totalReps / repsPerSet
+            return Pair(repsPerSet, numSets)
+        }
+
         val rangeSize = guidelines.intensityRange.endInclusive - guidelines.intensityRange.start
         val intensityPosition = (intensity - guidelines.intensityRange.start) / rangeSize
 
@@ -168,7 +170,7 @@ class PrilepinGuidelinesService {
             when (movementRole) {
                 "primary" -> 5
                 "secondary" -> 4
-                "accessory" -> 6 // Accessories can have more sets
+                "accessory" -> 6
                 else -> 5
             }
 
@@ -189,34 +191,34 @@ class PrilepinGuidelinesService {
      * This function determines the appropriate Prilepin guidelines and intensity based on:
      * - Day type (ME_Upper, ME_Lower, DE_Upper, DE_Lower, etc.)
      * - Current week number (used to calculate week in cycle)
+     * - Program days per week (cycle length for periodization)
      * - Movement role (primary, secondary, accessory)
      *
-     * The function handles the 4-week undulating periodization cycle:
-     * - Week 1-2: Build-up phase
-     * - Week 3: Peak intensity phase
-     * - Week 4: Deload phase
+     * The cycle length is [programDaysPerWeek]; week in cycle is derived from current week.
+     * When [currentWeekNumber] is 0 or negative (e.g. before first generation), week 1 is used
+     * so ME/DE get their fixed undulating schemes (e.g. 9x3, 12x2) instead of generic guidelines.
      *
      * @param dayType The type of training day (e.g., "ME_Upper", "DE_Lower")
      * @param currentWeekNumber The current week number (used to calculate week in cycle)
+     * @param programDaysPerWeek Number of workout days per week (2, 3, or 4); defines cycle length
      * @param movementRole The role of the movement ("primary", "secondary", "accessory")
      * @return Pair of (PrilepinGuidelines, intensity)
      */
     fun getUndulatingPeriodizationGuidelines(
         dayType: String,
         currentWeekNumber: Int,
+        programDaysPerWeek: Int,
         movementRole: String = "primary"
     ): Pair<PrilepinGuidelines, Double> {
-        val weekInCycle = ((currentWeekNumber - 1) % 4) + 1
+        val effectiveWeek = if (currentWeekNumber <= 0) 1 else currentWeekNumber
+        val weekInCycle = ((effectiveWeek - 1) % programDaysPerWeek) + 1
 
         val result =
             when {
                 // Accessory movements always use accessory guidelines
                 movementRole == "accessory" -> getAccessoryGuidelines(weekInCycle)
 
-                // Secondary movements use lower intensity guidelines than primary
-                movementRole == "secondary" -> getSecondaryExerciseGuidelines(weekInCycle)
-
-                // Handle combined ME+DE days based on movement role
+                // DE context first: combined ME+DE days (primary=ME, secondary=DE) or standalone DE days (all DE)
                 dayType == "ME_Upper_DE_Lower" -> {
                     when (movementRole) {
                         "primary" -> getMaxEffortGuidelines(weekInCycle, isUpperBody = true)
@@ -233,19 +235,21 @@ class PrilepinGuidelinesService {
                     }
                 }
 
-                // Handle regular day types
-                dayType.contains("ME") -> {
-                    val isUpperBody = dayType.contains("Upper")
-                    getMaxEffortGuidelines(weekInCycle, isUpperBody)
-                }
-
-                dayType.contains("DE") -> {
+                dayType.startsWith("DE_") -> {
                     val isUpperBody = dayType.contains("Upper")
                     val isLowerBody = dayType.contains("Lower")
                     getDynamicEffortGuidelines(weekInCycle, isUpperBody, isLowerBody)
                 }
 
-                // Default to accessory guidelines
+                // Secondary on ME days only (e.g. 4-day ME_Upper)
+                movementRole == "secondary" -> getSecondaryExerciseGuidelines(weekInCycle)
+
+                // ME day types (primary)
+                dayType.contains("ME") -> {
+                    val isUpperBody = dayType.contains("Upper")
+                    getMaxEffortGuidelines(weekInCycle, isUpperBody)
+                }
+
                 else -> getAccessoryGuidelines(weekInCycle)
             }
 

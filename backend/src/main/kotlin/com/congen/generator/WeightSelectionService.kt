@@ -68,9 +68,8 @@ class WeightSelectionService(
         val oneRepMax = oneRepMaxes.find { it.exerciseName == exerciseName }?.oneRepMax
 
         return if (oneRepMax != null) {
-            // User has a 1RM for this exercise, use it directly
             val calculatedWeight = (oneRepMax * BigDecimal(intensity)).setScale(2, RoundingMode.HALF_UP)
-            processTargetWeight(exerciseName, calculatedWeight, preparedData, isDynamicEffort, currentWeekNumber)
+            processTargetWeight(exerciseName, calculatedWeight, preparedData, isDynamicEffort, currentWeekNumber, intensity)
         } else {
             // No 1RM found, use exercise matching to estimate weight
             estimateWeightFromSimilarExercises(exerciseName, intensity, oneRepMaxes, isDynamicEffort, currentWeekNumber, preparedData)
@@ -133,7 +132,7 @@ class WeightSelectionService(
                             match.similarityScore
                         )
                     val calculatedWeight = (estimatedWeight * BigDecimal(intensity)).setScale(2, RoundingMode.HALF_UP)
-                    processTargetWeight(exerciseName, calculatedWeight, preparedData, isDynamicEffort, currentWeekNumber)
+                    processTargetWeight(exerciseName, calculatedWeight, preparedData, isDynamicEffort, currentWeekNumber, intensity)
                 } else {
                     // No reference exercise 1RM available, use conservative bodyweight estimate
                     getConservativeBodyweightEstimate(exerciseName, intensity, isDynamicEffort, currentWeekNumber, preparedData)
@@ -144,22 +143,35 @@ class WeightSelectionService(
 
     /**
      * Processes the target weight with unit conversion and rounding.
+     * For dynamic effort, computes band and bar weights using [BandWeightService]; bar percentage comes from Prilepin intensity.
+     *
+     * @param exerciseName Name of the exercise
+     * @param calculatedWeight Target weight (e.g. 1RM × intensity) before rounding
+     * @param preparedData Prepared data for the workout generation
+     * @param isDynamicEffort Whether the exercise is dynamic effort (uses bands when applicable)
+     * @param currentWeekNumber Current week number in the program (used for week-in-cycle)
+     * @param barWeightPercentageForDe Intensity from Prilepin; used as bar fraction of total when DE with bands
      */
     private fun processTargetWeight(
         exerciseName: String,
         calculatedWeight: BigDecimal,
         preparedData: WorkoutGenerationPreparedData,
         isDynamicEffort: Boolean,
-        currentWeekNumber: Int
+        currentWeekNumber: Int,
+        barWeightPercentageForDe: Double
     ): Mono<TargetWeightResult> {
         val weightUnit = preparedData.weightUnitPreferences[exerciseName] ?: WeightUnit.KG
 
         return if (isDynamicEffort) {
+            val programDaysPerWeek = preparedData.programPreferences.programDaysPerWeek
+            val effectiveWeek = if (currentWeekNumber <= 0) 1 else currentWeekNumber
+            val weekInCycle = ((effectiveWeek - 1) % programDaysPerWeek) + 1
             val bandWeightResult =
                 bandWeightService.computeBandAndBarWeights(
                     totalTargetWeight = calculatedWeight,
                     weightUnit = weightUnit,
-                    weekInCycle = currentWeekNumber
+                    weekInCycle = weekInCycle,
+                    barWeightPercentage = barWeightPercentageForDe
                 )
             supportedEquipmentWeightRoundingService.roundWeightForExercise(
                 exerciseName,
@@ -207,7 +219,7 @@ class WeightSelectionService(
             }
 
         val calculatedWeight = (estimatedWeight * BigDecimal(intensity)).setScale(2, RoundingMode.HALF_UP)
-        return processTargetWeight(exerciseName, calculatedWeight, preparedData, isDynamicEffort, currentWeekNumber)
+        return processTargetWeight(exerciseName, calculatedWeight, preparedData, isDynamicEffort, currentWeekNumber, intensity)
     }
 
     /**
@@ -224,6 +236,6 @@ class WeightSelectionService(
         // In the future, this could be enhanced to use actual user bodyweight
         val estimatedWeight = exerciseMatchingService.estimateIsolationWeight(exercise, BigDecimal("70")) // Assume 70kg user
         val calculatedWeight = (estimatedWeight * BigDecimal(intensity)).setScale(2, RoundingMode.HALF_UP)
-        return processTargetWeight(exercise.name, calculatedWeight, preparedData, isDynamicEffort, currentWeekNumber)
+        return processTargetWeight(exercise.name, calculatedWeight, preparedData, isDynamicEffort, currentWeekNumber, intensity)
     }
 }

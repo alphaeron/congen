@@ -76,5 +76,15 @@ data class Band(
             } catch (e: NumberFormatException) {
                 null
             }
+
+        /**
+         * Creates a Band from a numeric weight (e.g. from DB or JSON number).
+         * Used when deserializing set_scheme.band_weight_lbs into SetScheme.band.
+         *
+         * @param weightLbs The band weight in pounds as number
+         * @return The corresponding Band, or null if not allowed
+         */
+        @JsonCreator
+        fun fromWeight(weightLbs: Number): Band? = fromWeight(BigDecimal(weightLbs.toString()))
     }
 }

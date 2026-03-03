@@ -43,11 +43,22 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
         // Create reference data for 3-day program
         IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId, token = userToken)
 
+        IntegrationTestHelpers.createTestUserOneRepMax(webTestClient, userId, "Banded Bench Press", oneRepMax = 200.0, token = userToken)
+        IntegrationTestHelpers.createTestUserOneRepMax(
+            webTestClient,
+            userId,
+            "Banded Safety Bar Squat",
+            oneRepMax = 350.0,
+            token = userToken
+        )
+
         // Add additional equipment.
         IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "pull-up bar", token = userToken)
         IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "power bar", token = userToken)
         IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "dumbbells", token = userToken)
         IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "adjustable bench", token = userToken)
+        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "bands", token = userToken)
+        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "safety squat bar", token = userToken)
 
         // Verify the program exists before generating workouts
         webTestClient.get()
@@ -76,6 +87,8 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
             .expectBody()
             .jsonPath("$").isArray()
             .jsonPath("$.length()").isEqualTo(3)
+
+        assertDeExerciseBandWeightsStoredAndReturned(programResponse.id, programResponse.currentWeekNumber, 3, userToken)
     }
 
     @Test
@@ -94,11 +107,22 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
         // Create reference data for 2-day program
         IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId, token = userToken)
 
+        IntegrationTestHelpers.createTestUserOneRepMax(webTestClient, userId, "Banded Bench Press", oneRepMax = 200.0, token = userToken)
+        IntegrationTestHelpers.createTestUserOneRepMax(
+            webTestClient,
+            userId,
+            "Banded Safety Bar Squat",
+            oneRepMax = 350.0,
+            token = userToken
+        )
+
         // Add additional equipment.
         IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "pull-up bar", token = userToken)
         IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "power bar", token = userToken)
         IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "dumbbells", token = userToken)
         IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "adjustable bench", token = userToken)
+        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "bands", token = userToken)
+        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "safety squat bar", token = userToken)
 
         // Verify the program exists before generating workouts
         webTestClient.get()
@@ -127,6 +151,8 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
             .expectBody()
             .jsonPath("$").isArray()
             .jsonPath("$.length()").isEqualTo(2)
+
+        assertDeExerciseBandWeightsStoredAndReturned(programResponse.id, programResponse.currentWeekNumber, 2, userToken)
     }
 
     @Test
@@ -145,11 +171,22 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
         // Create reference data for 4-day program
         IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId, token = userToken)
 
+        IntegrationTestHelpers.createTestUserOneRepMax(webTestClient, userId, "Banded Bench Press", oneRepMax = 200.0, token = userToken)
+        IntegrationTestHelpers.createTestUserOneRepMax(
+            webTestClient,
+            userId,
+            "Banded Safety Bar Squat",
+            oneRepMax = 350.0,
+            token = userToken
+        )
+
         // Add additional equipment.
         IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "pull-up bar", token = userToken)
         IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "power bar", token = userToken)
         IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "dumbbells", token = userToken)
         IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "adjustable bench", token = userToken)
+        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "bands", token = userToken)
+        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "safety squat bar", token = userToken)
 
         // Verify the program exists before generating workouts
         webTestClient.get()
@@ -178,6 +215,8 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
             .expectBody()
             .jsonPath("$").isArray()
             .jsonPath("$.length()").isEqualTo(4)
+
+        assertDeExerciseBandWeightsStoredAndReturned(programResponse.id, programResponse.currentWeekNumber, 4, userToken)
     }
 
     @Test
@@ -812,6 +851,98 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
                 .returnResult()
                 .responseBody!!
         return exercises.associate { it.name to it.isUpper }
+    }
+
+    /**
+     * Asserts that for the generated program, at least one DE exercise has set schemes with band_weight_lbs
+     * stored and returned by the API. For deload week (week 4), allows null band_weight_lbs.
+     * Requires bands and banded 1RMs in test setup so that at least one banded DE exercise is generated.
+     */
+    private fun assertDeExerciseBandWeightsStoredAndReturned(
+        programId: Long,
+        currentWeekNumber: Int,
+        daysPerWeek: Int,
+        token: String
+    ) {
+        val workoutsResponse =
+            webTestClient.get()
+                .uri("/api/v1/programmed_workout/program/$programId")
+                .header("Authorization", "Bearer $token")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBodyList(Map::class.java)
+                .returnResult()
+                .responseBody!!
+        val deWorkouts = workoutsResponse.filter { (it["name"] as? String)?.contains("DE") == true }
+        assert(deWorkouts.isNotEmpty()) { "No DE workout found for program $programId" }
+        val isDeloadWeek = currentWeekNumber == 4
+        var foundBandedDeAndValidated = false
+        for (deWorkout in deWorkouts) {
+            val deWorkoutId = (deWorkout["id"] as Number).toLong()
+            val stagesResponse =
+                webTestClient.get()
+                    .uri("/api/v1/workout_stage/workout/$deWorkoutId")
+                    .header("Authorization", "Bearer $token")
+                    .exchange()
+                    .expectStatus().isOk()
+                    .expectBodyList(WorkoutStage::class.java)
+                    .returnResult()
+                    .responseBody!!
+            val primaryStage = stagesResponse.find { it.name.toString() == "Primary" } ?: continue
+            val exercisesResponse =
+                webTestClient.get()
+                    .uri("/api/v1/programmed_exercise/stage/${primaryStage.id}")
+                    .header("Authorization", "Bearer $token")
+                    .exchange()
+                    .expectStatus().isOk()
+                    .expectBodyList(Map::class.java)
+                    .returnResult()
+                    .responseBody!!
+            if (exercisesResponse.isEmpty()) continue
+            val deExerciseIndex =
+                when (daysPerWeek) {
+                    2 -> 1
+                    4 -> 0
+                    else -> exercisesResponse.size - 1
+                }
+            if (deExerciseIndex >= exercisesResponse.size) continue
+            val exerciseName = exercisesResponse[deExerciseIndex]["exercise_name"] as String
+            if (!exerciseName.contains("Banded")) continue
+            val programmedExerciseId = (exercisesResponse[deExerciseIndex]["id"] as Number).toLong()
+            val setSchemesResponse =
+                webTestClient.get()
+                    .uri("/api/v1/set_scheme/exercise/$programmedExerciseId")
+                    .header("Authorization", "Bearer $token")
+                    .exchange()
+                    .expectStatus().isOk()
+                    .expectBodyList(Map::class.java)
+                    .returnResult()
+                    .responseBody!!
+            assert(setSchemesResponse.isNotEmpty()) { "DE exercise $exerciseName must have at least one set scheme" }
+            val firstSetSchemeId = (setSchemesResponse[0]["id"] as Number).toLong()
+            if (isDeloadWeek) {
+                webTestClient.get()
+                    .uri("/api/v1/set_scheme/$firstSetSchemeId")
+                    .header("Authorization", "Bearer $token")
+                    .exchange()
+                    .expectStatus().isOk()
+                    .expectBody()
+                    .jsonPath("$.band_weight_lbs").isEmpty()
+            } else {
+                webTestClient.get()
+                    .uri("/api/v1/set_scheme/$firstSetSchemeId")
+                    .header("Authorization", "Bearer $token")
+                    .exchange()
+                    .expectStatus().isOk()
+                    .expectBody()
+                    .jsonPath("$.band_weight_lbs").isNumber()
+            }
+            foundBandedDeAndValidated = true
+            break
+        }
+        assert(foundBandedDeAndValidated) {
+            "Expected at least one banded DE exercise with band_weight_lbs stored and returned (bands and banded 1RMs were added)"
+        }
     }
 
     /**

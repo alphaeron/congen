@@ -9,7 +9,11 @@ import { SetSchemeForm } from './SetSchemeForm';
 import { deleteProgrammedExercise } from '../api/programmedExercise';
 import { createSetScheme, deleteSetScheme, updateSetScheme } from '../api/setScheme';
 import type { ProgrammedExerciseWithSetSchemes, UserWeightUnitPreference } from '../api/types';
-import { formatWeightWithUnit, convertDisplayWeightToKg } from '../common/utils';
+import {
+  formatWeightWithUnit,
+  convertDisplayWeightToKg,
+  formatBandWeightWithUnit,
+} from '../common/utils';
 
 interface SetSchemeEditorProps {
   exercise: ProgrammedExerciseWithSetSchemes;
@@ -274,6 +278,11 @@ export const SetSchemeEditor: React.FC<SetSchemeEditorProps> = ({
                 showPerformedRepsPerSet={true}
                 showTempoFields={true}
                 showSetTypeFields={true}
+                bandWeightDisplay={
+                  firstSetScheme
+                    ? formatBandWeightWithUnit(firstSetScheme.band_weight_lbs) || undefined
+                    : undefined
+                }
               />
             </Box>
 

@@ -151,6 +151,7 @@ class FourDayWorkoutStageGenerationServiceTest {
             prilepinGuidelinesService.getUndulatingPeriodizationGuidelines(
                 dayType = eq(dayType),
                 currentWeekNumber = any(),
+                programDaysPerWeek = any(),
                 movementRole = any()
             )
         ).thenReturn(Pair(PrilepinGuidelines(0.8..0.9, 1..3, 15, 10..20, 60..120), 0.85))
@@ -301,6 +302,7 @@ class FourDayWorkoutStageGenerationServiceTest {
             prilepinGuidelinesService.getUndulatingPeriodizationGuidelines(
                 dayType = eq(dayType),
                 currentWeekNumber = any(),
+                programDaysPerWeek = any(),
                 movementRole = any()
             )
         ).thenReturn(Pair(PrilepinGuidelines(0.8..0.9, 1..3, 15, 10..20, 60..120), 0.75))
@@ -451,6 +453,7 @@ class FourDayWorkoutStageGenerationServiceTest {
             prilepinGuidelinesService.getUndulatingPeriodizationGuidelines(
                 dayType = eq(dayType),
                 currentWeekNumber = any(),
+                programDaysPerWeek = any(),
                 movementRole = any()
             )
         ).thenReturn(Pair(PrilepinGuidelines(0.8..0.9, 1..3, 15, 10..20, 60..120), 0.85))
@@ -626,6 +629,7 @@ class FourDayWorkoutStageGenerationServiceTest {
             prilepinGuidelinesService.getUndulatingPeriodizationGuidelines(
                 dayType = eq(dayType),
                 currentWeekNumber = any(),
+                programDaysPerWeek = any(),
                 movementRole = any()
             )
         ).thenReturn(Pair(PrilepinGuidelines(0.8..0.9, 1..3, 15, 10..20, 60..120), 0.75))

@@ -226,3 +226,16 @@ export function formatWeightWithUnit(
 
   return formattedNumber;
 }
+
+/**
+ * Formats band weight for display. Bands are always shown in lbs.
+ * Returns empty string when null, undefined, or <= 0 (backend sends number or null).
+ */
+export function formatBandWeightWithUnit(
+  bandWeightLbs: number | null | undefined,
+  includeUnit: boolean = true
+): string {
+  if (bandWeightLbs == null || typeof bandWeightLbs !== 'number' || bandWeightLbs <= 0) return '';
+  const rounded = Math.round(bandWeightLbs * 2) / 2;
+  return includeUnit ? `${rounded} lbs` : String(rounded);
+}

@@ -7,6 +7,7 @@ import com.congen.cache.annotation.CacheEvict
 import com.congen.cache.annotation.Cacheable
 import com.congen.client.PostgresClient
 import com.congen.exceptions.NoResultsFoundException
+import com.congen.model.Band
 import com.congen.model.Program
 import com.congen.model.ProgramPreferences
 import com.congen.model.ProgramWithWorkouts
@@ -217,6 +218,7 @@ class ProgramDAL(
                 ss.target_rep_count as set_scheme_target_rep_count,
                 ss.performed_rep_count as set_scheme_performed_rep_count,
                 ss.rest_seconds as set_scheme_rest_seconds,
+                ss.band_weight_lbs as set_scheme_band_weight_lbs,
                 ss.created_at as set_scheme_created_at,
                 ss.updated_at as set_scheme_updated_at
             FROM program p
@@ -386,8 +388,10 @@ class ProgramDAL(
                                     targetRepCount = (row["set_scheme_target_rep_count"] as? Number)?.toInt(),
                                     performedRepCount = (row["set_scheme_performed_rep_count"] as? Number)?.toInt(),
                                     restSeconds = (row["set_scheme_rest_seconds"] as? Number)?.toInt(),
-                                    // Set schemes don't have band data in this context
-                                    band = null,
+                                    band =
+                                        (row["set_scheme_band_weight_lbs"] as? Number)?.let {
+                                            Band(BigDecimal(it.toString()))
+                                        },
                                     createdAt = parseTimestamp(row["set_scheme_created_at"]),
                                     updatedAt = parseTimestamp(row["set_scheme_updated_at"])
                                 )

@@ -52,6 +52,7 @@ import {
   replaceUnderscoresWithSpaces,
   formatWeightWithUnit,
   convertDisplayWeightToKg,
+  formatBandWeightWithUnit,
 } from '../common/utils';
 import { useData } from '../contexts/DataContext';
 import { exportWorkoutToPDF } from '../utils/exportUtils';
@@ -424,6 +425,18 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
           const weightUnitPreference = weightUnitPreferences.find(
             pref => pref.exercise_name === exerciseData.exercise.exercise_name
           );
+          const preferredUnit = weightUnitPreference?.preferred_unit as 'KG' | 'LBS' | undefined;
+
+          const weightStr = weight ? formatWeightWithUnit(weight, preferredUnit) : undefined;
+          const bandLbs =
+            firstSetScheme != null && typeof firstSetScheme.band_weight_lbs === 'number'
+              ? firstSetScheme.band_weight_lbs
+              : undefined;
+          const bandStr = formatBandWeightWithUnit(bandLbs);
+          const weightWithBand =
+            weightStr && bandStr
+              ? `${weightStr} + ${bandStr} band`
+              : weightStr || (bandStr ? `${bandStr} band` : undefined);
 
           // Format tempo if available
           const tempo =
@@ -441,12 +454,7 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
             sets: totalSets,
             reps: reps || undefined,
             tempo: tempo !== '-' ? tempo : undefined,
-            weight: weight
-              ? formatWeightWithUnit(
-                  weight,
-                  weightUnitPreference?.preferred_unit as 'KG' | 'LBS' | undefined
-                )
-              : undefined,
+            weight: weightWithBand,
             rest: rest ? `${rest}s` : undefined,
             notes: '-',
             exerciseNotes: exerciseData.exercise.notes,

@@ -64,6 +64,7 @@ const PDF_STYLES = {
 const EXERCISE_DIFFICULTY_COLORS = {
   warmup: [240, 249, 255] as [number, number, number], // Light blue
   primary: [255, 237, 213] as [number, number, number], // Light orange
+  secondary: [254, 249, 231] as [number, number, number], // Light amber
   accessory: [240, 253, 244] as [number, number, number], // Light green
   conditioning: [254, 242, 242] as [number, number, number], // Light red
   default: [255, 255, 255] as [number, number, number], // White
@@ -76,6 +77,7 @@ const getExerciseStageType = (stageName: string): keyof typeof EXERCISE_DIFFICUL
   const name = stageName.toLowerCase();
   if (name.includes('warmup') || name.includes('warm')) return 'warmup';
   if (name.includes('primary') || name.includes('main')) return 'primary';
+  if (name.includes('secondary')) return 'secondary';
   if (name.includes('accessory') || name.includes('assistance')) return 'accessory';
   if (name.includes('conditioning') || name.includes('cardio')) return 'conditioning';
   return 'default';

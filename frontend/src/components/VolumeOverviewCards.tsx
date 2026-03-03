@@ -81,13 +81,14 @@ export const VolumeOverviewCards: React.FC<VolumeOverviewCardsProps> = ({
             exerciseWithSchemes.set_schemes.forEach(setScheme => {
               const weight = setScheme.performed_weight || setScheme.target_weight || 0;
               const reps = setScheme.performed_rep_count || setScheme.target_rep_count || 0;
-              const bandWeight = setScheme.band_weight_lbs
-                ? (setScheme.band_weight_lbs as { weight_lbs?: number })?.weight_lbs || 0
-                : 0;
+              const bandWeight =
+                typeof setScheme.band_weight_lbs === 'number' && setScheme.band_weight_lbs > 0
+                  ? setScheme.band_weight_lbs
+                  : 0;
 
               const exerciseName = exerciseWithSchemes.exercise.exercise_name;
               const convertedWeight = weight * KG_TO_LBS;
-              const totalWeight = convertedWeight + bandWeight; // bandWeight is already in lbs
+              const totalWeight = convertedWeight + bandWeight;
               const setVolume = totalWeight * reps;
 
               // Get exercise data and categorize volume using shared helper

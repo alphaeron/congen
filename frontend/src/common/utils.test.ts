@@ -5,6 +5,7 @@ import {
   formatWeightWithUnit,
   convertDisplayWeightToKg,
   KG_TO_LBS,
+  formatBandWeightWithUnit,
 } from './utils';
 
 describe('capitalizeFirstLetter', () => {
@@ -134,5 +135,23 @@ describe('convertDisplayWeightToKg', () => {
 describe('KG_TO_LBS', () => {
   it('is the standard conversion factor', () => {
     expect(KG_TO_LBS).toBe(2.20462);
+  });
+});
+
+describe('formatBandWeightWithUnit', () => {
+  it('returns empty string for null, undefined, zero, or non-positive', () => {
+    expect(formatBandWeightWithUnit(undefined)).toBe('');
+    expect(formatBandWeightWithUnit(null)).toBe('');
+    expect(formatBandWeightWithUnit(0)).toBe('');
+    expect(formatBandWeightWithUnit(-1)).toBe('');
+  });
+
+  it('always formats band weight in lbs', () => {
+    expect(formatBandWeightWithUnit(30)).toBe('30 lbs');
+    expect(formatBandWeightWithUnit(15)).toBe('15 lbs');
+  });
+
+  it('omits unit when includeUnit is false', () => {
+    expect(formatBandWeightWithUnit(30, false)).toBe('30');
   });
 });

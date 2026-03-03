@@ -106,9 +106,10 @@ export const LineChart: React.FC<LineChartProps> = ({
             exerciseWithSchemes.set_schemes.forEach(setScheme => {
               const weight = setScheme.performed_weight || setScheme.target_weight || 0;
               const reps = setScheme.performed_rep_count || setScheme.target_rep_count || 0;
-              const bandWeight = setScheme.band_weight_lbs
-                ? (setScheme.band_weight_lbs as { weight_lbs: number })?.weight_lbs || 0
-                : 0;
+              const bandWeight =
+                typeof setScheme.band_weight_lbs === 'number' && setScheme.band_weight_lbs > 0
+                  ? setScheme.band_weight_lbs
+                  : 0;
               const convertedWeight = weight * KG_TO_LBS;
               totalVolume += (convertedWeight + bandWeight) * reps;
             });

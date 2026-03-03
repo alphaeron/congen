@@ -26,7 +26,7 @@ class BandWeightServiceTest {
     }
 
     @Test
-    fun `should compute band weights for week1`() {
+    fun `should compute band weights for week1 with bar from guideline percentage`() {
         val totalWeight = BigDecimal(200)
         val weekInCycle = 1
         whenever(unitConversionService.fromKg(totalWeight, WeightUnit.LBS)).thenReturn(totalWeight)
@@ -36,11 +36,13 @@ class BandWeightServiceTest {
             bandWeightService.computeBandAndBarWeights(
                 totalWeight,
                 WeightUnit.LBS,
-                weekInCycle
+                weekInCycle,
+                barWeightPercentage = 0.5
             )
 
-        assertEquals(Band(BigDecimal("50")), result.band)
-        assertEquals(BigDecimal("100"), result.barWeight)
+        // 2 * the weight of an individual band
+        assertEquals(Band(BigDecimal("60")), result.band)
+        assertEquals(0, result.barWeight.compareTo(BigDecimal("100")))
     }
 
     @Test
@@ -52,7 +54,8 @@ class BandWeightServiceTest {
             bandWeightService.computeBandAndBarWeights(
                 totalWeight,
                 WeightUnit.LBS,
-                weekInCycle
+                weekInCycle,
+                barWeightPercentage = 1.0
             )
 
         assertNull(result.band)

@@ -289,6 +289,7 @@ abstract class WorkoutStageGenerationService(
             prilepinGuidelinesService.getUndulatingPeriodizationGuidelines(
                 dayType = dayType,
                 currentWeekNumber = preparedData.currentWeekNumber,
+                programDaysPerWeek = preparedData.programPreferences.programDaysPerWeek,
                 movementRole = "accessory"
             ).first
         val consistentRestSeconds = prilepinGuidelinesService.getRandomRestTime(guidelines.restSeconds)
@@ -838,6 +839,7 @@ abstract class WorkoutStageGenerationService(
             prilepinGuidelinesService.getUndulatingPeriodizationGuidelines(
                 dayType = dayType,
                 currentWeekNumber = currentWeekNumber,
+                programDaysPerWeek = preparedData.programPreferences.programDaysPerWeek,
                 movementRole = movementRole
             )
 
@@ -1001,19 +1003,19 @@ abstract class WorkoutStageGenerationService(
         consistentRestSeconds: Int,
         preparedData: WorkoutGenerationPreparedData
     ): Mono<List<SetSchemeParams>> {
-        val undulatingPeriodizationGuidelines =
+        val (guidelines, intensity) =
             prilepinGuidelinesService.getUndulatingPeriodizationGuidelines(
                 dayType = dayType,
                 currentWeekNumber = currentWeekNumber,
+                programDaysPerWeek = preparedData.programPreferences.programDaysPerWeek,
                 movementRole = "accessory"
             )
-        val intensity = undulatingPeriodizationGuidelines.second
-
-        // For accessories, use "good" rep numbers (6, 8, 10, 12, 15) instead of random ranges
-        val goodRepNumbers = listOf(6, 8, 10, 12, 15)
-        val repsPerSet = goodRepNumbers.random()
-        // For accessories, use a fixed 3-4 set range instead of calculating from total reps
-        val numSets = (3..4).random()
+        val (repsPerSet, numSets) =
+            prilepinGuidelinesService.getRepsAndSetsBasedOnIntensity(
+                guidelines = guidelines,
+                intensity = intensity,
+                movementRole = "accessory"
+            )
 
         val isDynamicEffort = dayType.startsWith("DE_")
         // For non-DE exercises, use standard weight calculation

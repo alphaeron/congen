@@ -32,6 +32,8 @@ export interface SetSchemeFormProps {
   showPerformedRepsPerSet?: boolean;
   showTempoFields?: boolean;
   showSetTypeFields?: boolean;
+  /** Read-only band weight display (always in lbs, e.g. "30 lbs") for DE/banded exercises */
+  bandWeightDisplay?: string;
 }
 
 export const SetSchemeForm: React.FC<SetSchemeFormProps> = ({
@@ -43,6 +45,7 @@ export const SetSchemeForm: React.FC<SetSchemeFormProps> = ({
   showPerformedRepsPerSet = false,
   showTempoFields = true,
   showSetTypeFields = true,
+  bandWeightDisplay,
 }) => {
   // Get user's weight unit preference for this exercise
   const weightUnitPreference = exerciseName
@@ -57,6 +60,12 @@ export const SetSchemeForm: React.FC<SetSchemeFormProps> = ({
       <GameText variant="subtitle2" gutterBottom>
         Set Scheme Details
       </GameText>
+
+      {bandWeightDisplay ? (
+        <GameText variant="body2" color="text.secondary">
+          Band: {bandWeightDisplay}
+        </GameText>
+      ) : null}
 
       <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
         {/* Total Sets */}
