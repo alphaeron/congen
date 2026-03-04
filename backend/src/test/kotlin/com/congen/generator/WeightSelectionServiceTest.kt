@@ -145,7 +145,7 @@ class WeightSelectionServiceTest {
                 intensity,
                 oneRepMaxes,
                 isDynamicEffort = true,
-                currentWeekNumber = 1,
+                currentWeekNumber = 0,
                 preparedData = updatedPreparedData
             )
 
@@ -253,7 +253,7 @@ class WeightSelectionServiceTest {
                 intensity,
                 oneRepMaxes,
                 isDynamicEffort = true,
-                currentWeekNumber = 1,
+                currentWeekNumber = 0,
                 preparedData = kgPreparedData
             )
 
@@ -327,7 +327,7 @@ class WeightSelectionServiceTest {
                 intensity,
                 oneRepMaxes,
                 isDynamicEffort = true,
-                currentWeekNumber = 3,
+                currentWeekNumber = 2,
                 preparedData = updatedPreparedData
             )
 

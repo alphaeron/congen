@@ -163,9 +163,7 @@ class WeightSelectionService(
         val weightUnit = preparedData.weightUnitPreferences[exerciseName] ?: WeightUnit.KG
 
         return if (isDynamicEffort) {
-            val programDaysPerWeek = preparedData.programPreferences.programDaysPerWeek
-            val effectiveWeek = if (currentWeekNumber <= 0) 1 else currentWeekNumber
-            val weekInCycle = ((effectiveWeek - 1) % programDaysPerWeek) + 1
+            val weekInCycle = (currentWeekNumber % 4) + 1
             val bandWeightResult =
                 bandWeightService.computeBandAndBarWeights(
                     totalTargetWeight = calculatedWeight,

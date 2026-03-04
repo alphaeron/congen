@@ -289,7 +289,6 @@ abstract class WorkoutStageGenerationService(
             prilepinGuidelinesService.getUndulatingPeriodizationGuidelines(
                 dayType = dayType,
                 currentWeekNumber = preparedData.currentWeekNumber,
-                programDaysPerWeek = preparedData.programPreferences.programDaysPerWeek,
                 movementRole = "accessory"
             ).first
         val consistentRestSeconds = prilepinGuidelinesService.getRandomRestTime(guidelines.restSeconds)
@@ -839,7 +838,6 @@ abstract class WorkoutStageGenerationService(
             prilepinGuidelinesService.getUndulatingPeriodizationGuidelines(
                 dayType = dayType,
                 currentWeekNumber = currentWeekNumber,
-                programDaysPerWeek = preparedData.programPreferences.programDaysPerWeek,
                 movementRole = movementRole
             )
 
@@ -1007,7 +1005,6 @@ abstract class WorkoutStageGenerationService(
             prilepinGuidelinesService.getUndulatingPeriodizationGuidelines(
                 dayType = dayType,
                 currentWeekNumber = currentWeekNumber,
-                programDaysPerWeek = preparedData.programPreferences.programDaysPerWeek,
                 movementRole = "accessory"
             )
         val (repsPerSet, numSets) =

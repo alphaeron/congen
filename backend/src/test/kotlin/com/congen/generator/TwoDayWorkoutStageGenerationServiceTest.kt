@@ -136,7 +136,7 @@ class TwoDayWorkoutStageGenerationServiceTest {
 
         // Mock Prilepin guidelines
         whenever(
-            prilepinGuidelinesService.getUndulatingPeriodizationGuidelines(any(), any(), any(), any())
+            prilepinGuidelinesService.getUndulatingPeriodizationGuidelines(any(), any(), any())
         ).thenReturn(
             Pair(
                 PrilepinGuidelines(
@@ -273,7 +273,7 @@ class TwoDayWorkoutStageGenerationServiceTest {
 
         // Mock Prilepin guidelines
         whenever(
-            prilepinGuidelinesService.getUndulatingPeriodizationGuidelines(any(), any(), any(), any())
+            prilepinGuidelinesService.getUndulatingPeriodizationGuidelines(any(), any(), any())
         ).thenReturn(
             Pair(
                 PrilepinGuidelines(

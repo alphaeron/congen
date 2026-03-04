@@ -194,24 +194,22 @@ class PrilepinGuidelinesService {
      * - Program days per week (cycle length for periodization)
      * - Movement role (primary, secondary, accessory)
      *
-     * The cycle length is [programDaysPerWeek]; week in cycle is derived from current week.
-     * When [currentWeekNumber] is 0 or negative (e.g. before first generation), week 1 is used
-     * so ME/DE get their fixed undulating schemes (e.g. 9x3, 12x2) instead of generic guidelines.
+     * Periodization uses a fixed 4-week cycle for all programs (2-, 3-, or 4-day). Week in cycle
+     * and cycle index use 4 so that week 1/2/3/4 progression and deload align across program types.
+     * [currentWeekNumber] is 0-based: 0 = week 1, 1 = week 2, 2 = week 3, 3 = week 4 (deload, no bands).
      *
      * @param dayType The type of training day (e.g., "ME_Upper", "DE_Lower")
      * @param currentWeekNumber The current week number (used to calculate week in cycle)
-     * @param programDaysPerWeek Number of workout days per week (2, 3, or 4); defines cycle length
      * @param movementRole The role of the movement ("primary", "secondary", "accessory")
      * @return Pair of (PrilepinGuidelines, intensity)
      */
     fun getUndulatingPeriodizationGuidelines(
         dayType: String,
         currentWeekNumber: Int,
-        programDaysPerWeek: Int,
         movementRole: String = "primary"
     ): Pair<PrilepinGuidelines, Double> {
-        val effectiveWeek = if (currentWeekNumber <= 0) 1 else currentWeekNumber
-        val weekInCycle = ((effectiveWeek - 1) % programDaysPerWeek) + 1
+        val weekInCycle = (currentWeekNumber % 4) + 1
+        val cycleIndex = currentWeekNumber / 4
 
         val result =
             when {
@@ -222,7 +220,7 @@ class PrilepinGuidelinesService {
                 dayType == "ME_Upper_DE_Lower" -> {
                     when (movementRole) {
                         "primary" -> getMaxEffortGuidelines(weekInCycle, isUpperBody = true)
-                        "secondary" -> getDynamicEffortGuidelines(weekInCycle, isUpperBody = false, isLowerBody = true)
+                        "secondary" -> getDynamicEffortGuidelines(weekInCycle, cycleIndex, isUpperBody = false, isLowerBody = true)
                         else -> getMaxEffortGuidelines(weekInCycle, isUpperBody = true)
                     }
                 }
@@ -230,7 +228,7 @@ class PrilepinGuidelinesService {
                 dayType == "ME_Lower_DE_Upper" -> {
                     when (movementRole) {
                         "primary" -> getMaxEffortGuidelines(weekInCycle, isUpperBody = false)
-                        "secondary" -> getDynamicEffortGuidelines(weekInCycle, isUpperBody = true, isLowerBody = false)
+                        "secondary" -> getDynamicEffortGuidelines(weekInCycle, cycleIndex, isUpperBody = true, isLowerBody = false)
                         else -> getMaxEffortGuidelines(weekInCycle, isUpperBody = false)
                     }
                 }
@@ -238,7 +236,7 @@ class PrilepinGuidelinesService {
                 dayType.startsWith("DE_") -> {
                     val isUpperBody = dayType.contains("Upper")
                     val isLowerBody = dayType.contains("Lower")
-                    getDynamicEffortGuidelines(weekInCycle, isUpperBody, isLowerBody)
+                    getDynamicEffortGuidelines(weekInCycle, cycleIndex, isUpperBody, isLowerBody)
                 }
 
                 // Secondary on ME days only (e.g. 4-day ME_Upper)
@@ -308,31 +306,35 @@ class PrilepinGuidelinesService {
      * - Week 2: 9 sets of 3 reps, 55% intensity + bands
      * - Week 3: 9 sets of 3 reps, 60% intensity + bands
      * - Week 4: 9 sets of 3 reps, 50% intensity, no bands (deload)
+     *
+     * Lower body uses [cycleIndex] so the same set scheme (12/10/8x2 or 5x5) is used for the entire 4-week cycle.
      */
     private fun getDynamicEffortGuidelines(
         weekInCycle: Int,
+        cycleIndex: Int,
         isUpperBody: Boolean,
         isLowerBody: Boolean
     ): Pair<PrilepinGuidelines, Double> {
         return when {
-            isLowerBody -> getLowerBodyDynamicEffortGuidelines(weekInCycle)
+            isLowerBody -> getLowerBodyDynamicEffortGuidelines(weekInCycle, cycleIndex)
             isUpperBody -> getUpperBodyDynamicEffortGuidelines(weekInCycle)
-            else -> {
-                // Default to lower body guidelines
-                getLowerBodyDynamicEffortGuidelines(weekInCycle)
-            }
+            else -> getLowerBodyDynamicEffortGuidelines(weekInCycle, cycleIndex)
         }
     }
 
     /**
      * Gets Lower Body Dynamic Effort guidelines.
+     * Uses [cycleIndex] to pick one track for the whole 4-week cycle: even cycles = 12/10/8x2, odd = 5x5.
      */
-    private fun getLowerBodyDynamicEffortGuidelines(weekInCycle: Int): Pair<PrilepinGuidelines, Double> {
+    private fun getLowerBodyDynamicEffortGuidelines(
+        weekInCycle: Int,
+        cycleIndex: Int
+    ): Pair<PrilepinGuidelines, Double> {
+        val useHighSets = (cycleIndex % 2 == 0)
         return when (weekInCycle) {
             1 -> {
                 // 12 sets of 2 reps or 5 sets of 5 reps, 75% intensity
-                val useHighSets = Random.nextBoolean()
-                val totalReps = if (useHighSets) 24 else 25 // 12*2 or 5*5
+                val totalReps = if (useHighSets) 24 else 25
                 val repsPerSet = if (useHighSets) 2 else 5
                 val guidelines =
                     PrilepinGuidelines(
@@ -346,8 +348,7 @@ class PrilepinGuidelinesService {
             }
             2 -> {
                 // 10 sets of 2 reps or 5 sets of 5 reps, 80% intensity
-                val useHighSets = Random.nextBoolean()
-                val totalReps = if (useHighSets) 20 else 25 // 10*2 or 5*5
+                val totalReps = if (useHighSets) 20 else 25
                 val repsPerSet = if (useHighSets) 2 else 5
                 val guidelines =
                     PrilepinGuidelines(
@@ -361,8 +362,7 @@ class PrilepinGuidelinesService {
             }
             3 -> {
                 // 8 sets of 2 reps or 5 sets of 5 reps, 85% intensity
-                val useHighSets = Random.nextBoolean()
-                val totalReps = if (useHighSets) 16 else 25 // 8*2 or 5*5
+                val totalReps = if (useHighSets) 16 else 25
                 val repsPerSet = if (useHighSets) 2 else 5
                 val guidelines =
                     PrilepinGuidelines(
@@ -376,8 +376,7 @@ class PrilepinGuidelinesService {
             }
             4 -> {
                 // 12 sets of 2 reps or 5 sets of 5 reps, 50% intensity (deload)
-                val useHighSets = Random.nextBoolean()
-                val totalReps = if (useHighSets) 24 else 25 // 12*2 or 5*5
+                val totalReps = if (useHighSets) 24 else 25
                 val repsPerSet = if (useHighSets) 2 else 5
                 val guidelines =
                     PrilepinGuidelines(
