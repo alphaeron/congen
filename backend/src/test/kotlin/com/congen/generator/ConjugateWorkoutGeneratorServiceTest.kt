@@ -12,6 +12,8 @@ import com.congen.dal.UserEquipmentDAL
 import com.congen.dal.UserExercisePreferenceDAL
 import com.congen.dal.UserWeakMuscleDAL
 import com.congen.dal.UserWeightUnitPreferenceDAL
+import com.congen.dal.WorkoutStageDAL
+import com.congen.dal.WorkoutStageTypeDAL
 import com.congen.model.Exercise
 import com.congen.model.ExerciseEquipment
 import com.congen.model.ExerciseMuscle
@@ -24,6 +26,8 @@ import com.congen.model.UserOneRepMax
 import com.congen.model.UserWeakMuscle
 import com.congen.model.UserWeightUnitPreference
 import com.congen.model.WeightUnit
+import com.congen.model.WorkoutStageType
+import com.congen.model.WorkoutStageTypeEnum
 import com.congen.service.ProgramService
 import com.congen.service.SetSchemeService
 import com.congen.service.UserOneRepMaxService
@@ -52,6 +56,8 @@ class ConjugateWorkoutGeneratorServiceTest {
     private lateinit var programService: ProgramService
     private lateinit var programmedWorkoutDAL: ProgrammedWorkoutDAL
     private lateinit var programmedExerciseDAL: ProgrammedExerciseDAL
+    private lateinit var workoutStageDAL: WorkoutStageDAL
+    private lateinit var workoutStageTypeDAL: WorkoutStageTypeDAL
     private lateinit var conjugateTemplates: ConjugateTemplates
     private lateinit var workoutStageGenerationOrchestrator: WorkoutStageGenerationOrchestrator
     private lateinit var userWeakMuscleDAL: UserWeakMuscleDAL
@@ -79,6 +85,11 @@ class ConjugateWorkoutGeneratorServiceTest {
         programService = mock()
         programmedWorkoutDAL = mock()
         programmedExerciseDAL = mock()
+        workoutStageDAL = mock()
+        workoutStageTypeDAL = mock()
+        whenever(programmedWorkoutDAL.selectProgrammedWorkoutsByProgramId(any(), anyOrNull())).thenReturn(Mono.just(emptyList()))
+        whenever(workoutStageTypeDAL.selectWorkoutStageTypeByEnum(WorkoutStageTypeEnum.PRIMARY))
+            .thenReturn(Mono.just(WorkoutStageType(2, WorkoutStageTypeEnum.PRIMARY, Instant.EPOCH)))
         conjugateTemplates = mock()
         workoutStageGenerationOrchestrator = mock()
         userWeakMuscleDAL = mock()
@@ -101,6 +112,8 @@ class ConjugateWorkoutGeneratorServiceTest {
                 programService = programService,
                 programmedWorkoutDAL = programmedWorkoutDAL,
                 programmedExerciseDAL = programmedExerciseDAL,
+                workoutStageDAL = workoutStageDAL,
+                workoutStageTypeDAL = workoutStageTypeDAL,
                 setSchemeDAL = setSchemeDAL,
                 conjugateTemplates = conjugateTemplates,
                 workoutStageGenerationOrchestrator = workoutStageGenerationOrchestrator,
@@ -155,7 +168,7 @@ class ConjugateWorkoutGeneratorServiceTest {
         // Mock the exercise pool factory
         val samplePreparedData = createSamplePreparedData()
         whenever(
-            exercisePoolFactory.createPoolFromPreparedData(any(), any(), any(), any(), any(), any(), any(), any(), any())
+            exercisePoolFactory.createPoolFromPreparedData(any(), any(), any(), any(), any(), any(), any(), any(), any(), any())
         ).thenReturn(samplePreparedData.userExercisePool)
 
         // Mock the DAL methods for atomic workout generation
@@ -206,7 +219,7 @@ class ConjugateWorkoutGeneratorServiceTest {
         // Mock the exercise pool factory
         val samplePreparedData = createSamplePreparedData()
         whenever(
-            exercisePoolFactory.createPoolFromPreparedData(any(), any(), any(), any(), any(), any(), any(), any(), any())
+            exercisePoolFactory.createPoolFromPreparedData(any(), any(), any(), any(), any(), any(), any(), any(), any(), any())
         ).thenReturn(samplePreparedData.userExercisePool)
 
         // Mock the DAL methods for atomic workout generation
@@ -391,7 +404,7 @@ class ConjugateWorkoutGeneratorServiceTest {
         // Mock the exercise pool factory
         val samplePreparedData = createSamplePreparedData()
         whenever(
-            exercisePoolFactory.createPoolFromPreparedData(any(), any(), any(), any(), any(), any(), any(), any(), any())
+            exercisePoolFactory.createPoolFromPreparedData(any(), any(), any(), any(), any(), any(), any(), any(), any(), any())
         ).thenReturn(samplePreparedData.userExercisePool)
 
         // Mock the DAL methods for atomic workout generation

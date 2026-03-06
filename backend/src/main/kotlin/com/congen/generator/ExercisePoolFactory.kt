@@ -43,6 +43,7 @@ class ExercisePoolFactory(
      * @param userId The user ID to create the pool for
      * @param excludedForWeek Exercise names already used in other workouts this week (no duplicates across workouts)
      * @param minAvailablePerCategory Minimum exercises to leave per category (2-day/3-day need 2x for ME+DE per workout)
+     * @param deCycleReuseExerciseNames DE primary exercise names to keep available for 4-week cycle reuse (excluded from sliding window)
      * @return The user's exercise pool
      */
     fun createPoolFromPreparedData(
@@ -54,7 +55,8 @@ class ExercisePoolFactory(
         exerciseMuscleMappings: Map<String, List<ExerciseMuscle>>,
         userId: String,
         excludedForWeek: Set<String> = emptySet(),
-        minAvailablePerCategory: Int = 1
+        minAvailablePerCategory: Int = 1,
+        deCycleReuseExerciseNames: Set<String> = emptySet()
     ): UserExercisePool {
         val slidingWindowExcluded =
             applySlidingWindowLogic(
@@ -63,7 +65,7 @@ class ExercisePoolFactory(
                 previouslyUsedExercises = previouslyUsedExercises,
                 minAvailablePerCategory = minAvailablePerCategory
             )
-        val excludedExercises = (slidingWindowExcluded + excludedForWeek).toSet()
+        val excludedExercises = (slidingWindowExcluded + excludedForWeek).toSet() - deCycleReuseExerciseNames
 
         logger.info(
             "Created exercise pool with sliding window logic: {} total exercises, {} excluded, {} available",

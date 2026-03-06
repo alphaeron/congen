@@ -1,7 +1,6 @@
 package com.congen.generator
 
 import com.congen.model.Exercise
-import com.congen.model.ExerciseEquipment
 import com.congen.model.ExerciseMuscle
 import com.congen.model.UserOneRepMax
 import com.congen.model.WorkoutStageTypeEnum
@@ -303,7 +302,7 @@ abstract class WorkoutStageGenerationService(
                     movementBalanceState = movementBalanceState,
                     exerciseWorkoutTypeMappings = preparedData.exerciseWorkoutTypeMappings,
                     exerciseMuscleMappings = preparedData.exerciseMuscleMappings,
-                    exerciseEquipmentMappings = preparedData.exerciseEquipmentMappings
+                    currentWeekNumber = preparedData.currentWeekNumber
                 ).flatMap { accessoryExercise ->
                     generateAccessorySchemeWithConsistentRest(
                         exercise = accessoryExercise,
@@ -383,7 +382,7 @@ abstract class WorkoutStageGenerationService(
             movementBalanceState = movementBalanceState,
             exerciseWorkoutTypeMappings = preparedData.exerciseWorkoutTypeMappings,
             exerciseMuscleMappings = preparedData.exerciseMuscleMappings,
-            exerciseEquipmentMappings = preparedData.exerciseEquipmentMappings
+            currentWeekNumber = preparedData.currentWeekNumber
         ).flatMap { conditioningExercise ->
             generateAmrapOrEmomScheme(
                 exercise = conditioningExercise,
@@ -465,7 +464,8 @@ abstract class WorkoutStageGenerationService(
             workoutType = workoutType,
             exerciseMuscleMappings = preparedData.exerciseMuscleMappings,
             exerciseEquipmentMappings = preparedData.exerciseEquipmentMappings,
-            exerciseWorkoutTypeMappings = preparedData.exerciseWorkoutTypeMappings
+            exerciseWorkoutTypeMappings = preparedData.exerciseWorkoutTypeMappings,
+            currentWeekNumber = preparedData.currentWeekNumber
         )
             .flatMap { warmupExercises ->
                 if (warmupExercises.isEmpty()) {
@@ -614,6 +614,7 @@ abstract class WorkoutStageGenerationService(
     /**
      * Selects a primary exercise using the UserExercisePool.
      * This method delegates to ExerciseSelectionService to ensure proper exercise selection and pool management.
+     * Equipment filtering is applied inside the pool (built with exerciseEquipmentMappings in the factory).
      *
      * Primary exercises are not currently filtered by weak muscles, but accessory exercises are.
      *
@@ -623,7 +624,8 @@ abstract class WorkoutStageGenerationService(
      * @param movementBalanceState Current movement balance state (optional)
      * @param exerciseWorkoutTypeMappings Pre-computed mappings of exercise names to their workout types
      * @param exerciseMuscleMappings Pre-computed mappings of exercise names to their muscle targets
-     * @param exerciseEquipmentMappings Pre-computed mappings of exercise names to their equipment requirements
+     * @param currentWeekNumber Current program week for cycle index; used with preferredDeExerciseName for DE. Callers must always pass this.
+     * @param preferredDeExerciseName DE exercise name from prepared data for 4-week cycle reuse; null means no preference
      * @return Mono containing the selected exercise or null if none available
      */
     protected fun selectPrimaryExercise(
@@ -633,7 +635,8 @@ abstract class WorkoutStageGenerationService(
         movementBalanceState: MovementBalanceService.MovementBalanceState? = null,
         exerciseWorkoutTypeMappings: Map<String, List<String>>,
         exerciseMuscleMappings: Map<String, List<ExerciseMuscle>>,
-        exerciseEquipmentMappings: Map<String, List<ExerciseEquipment>>
+        currentWeekNumber: Int,
+        preferredDeExerciseName: String? = null
     ): Mono<Exercise> {
         return exerciseSelectionService.selectExercise(
             userExercisePool = userExercisePool,
@@ -643,7 +646,9 @@ abstract class WorkoutStageGenerationService(
             dayType = dayType,
             movementBalanceState = movementBalanceState,
             exerciseWorkoutTypeMappings = exerciseWorkoutTypeMappings,
-            exerciseMuscleMappings = exerciseMuscleMappings
+            exerciseMuscleMappings = exerciseMuscleMappings,
+            currentWeekNumber = currentWeekNumber,
+            preferredDeExerciseName = preferredDeExerciseName
         )
     }
 
@@ -695,7 +700,7 @@ abstract class WorkoutStageGenerationService(
      * @param movementBalanceState Current movement balance state (optional)
      * @param exerciseWorkoutTypeMappings Pre-computed mappings of exercise names to their workout types
      * @param exerciseMuscleMappings Pre-computed mappings of exercise names to their muscle targets
-     * @param exerciseEquipmentMappings Pre-computed mappings of exercise names to their equipment requirements
+     * @param currentWeekNumber Current program week (1-based). Callers must always pass this.
      * @return Mono containing the selected exercise or null if none available
      */
     protected fun selectAccessoryExercise(
@@ -706,7 +711,7 @@ abstract class WorkoutStageGenerationService(
         movementBalanceState: MovementBalanceService.MovementBalanceState? = null,
         exerciseWorkoutTypeMappings: Map<String, List<String>>,
         exerciseMuscleMappings: Map<String, List<ExerciseMuscle>>,
-        exerciseEquipmentMappings: Map<String, List<ExerciseEquipment>>
+        currentWeekNumber: Int
     ): Mono<Exercise> {
         // Filter weak muscles based on day type to ensure we only target appropriate muscles
         val dayTypeAwareWeakMuscles =
@@ -722,6 +727,7 @@ abstract class WorkoutStageGenerationService(
             movementBalanceState = movementBalanceState,
             exerciseWorkoutTypeMappings = exerciseWorkoutTypeMappings,
             exerciseMuscleMappings = exerciseMuscleMappings,
+            currentWeekNumber = currentWeekNumber
         ).onErrorResume { error ->
             if (error.message?.contains("No exercises found for target muscles") == true ||
                 error.message?.contains("No suitable exercise found") == true
@@ -752,7 +758,7 @@ abstract class WorkoutStageGenerationService(
      * @param movementBalanceState Current movement balance state (optional)
      * @param exerciseWorkoutTypeMappings Pre-computed mappings of exercise names to their workout types
      * @param exerciseMuscleMappings Pre-computed mappings of exercise names to their muscle targets
-     * @param exerciseEquipmentMappings Pre-computed mappings of exercise names to their equipment requirements
+     * @param currentWeekNumber Current program week (1-based). Callers must always pass this.
      * @return Mono containing the selected exercise or null if none available
      */
     protected fun selectConditioningExercise(
@@ -763,7 +769,7 @@ abstract class WorkoutStageGenerationService(
         movementBalanceState: MovementBalanceService.MovementBalanceState? = null,
         exerciseWorkoutTypeMappings: Map<String, List<String>>,
         exerciseMuscleMappings: Map<String, List<ExerciseMuscle>>,
-        exerciseEquipmentMappings: Map<String, List<ExerciseEquipment>>
+        currentWeekNumber: Int
     ): Mono<Exercise> {
         // Filter weak muscles based on day type to ensure we only target appropriate muscles
         val dayTypeAwareWeakMuscles =
@@ -779,6 +785,7 @@ abstract class WorkoutStageGenerationService(
             movementBalanceState = movementBalanceState,
             exerciseWorkoutTypeMappings = exerciseWorkoutTypeMappings,
             exerciseMuscleMappings = exerciseMuscleMappings,
+            currentWeekNumber = currentWeekNumber
         ).onErrorResume { error ->
             logger.error("Failed to select conditioning exercise for dayType: {}. Error: {}", dayType, error.message)
             // Return empty to indicate no conditioning exercise available

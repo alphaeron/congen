@@ -115,7 +115,8 @@ class ThreeDayWorkoutStageGenerationService(
                 movementBalanceState = movementBalanceState,
                 exerciseWorkoutTypeMappings = preparedData.exerciseWorkoutTypeMappings,
                 exerciseMuscleMappings = preparedData.exerciseMuscleMappings,
-                exerciseEquipmentMappings = preparedData.exerciseEquipmentMappings
+                preferredDeExerciseName = preparedData.dePrimaryExerciseByDayType[primaryMovementType],
+                currentWeekNumber = preparedData.currentWeekNumber
             )
 
         // Select secondary DE exercise (this is a primary movement, not an accessory)
@@ -128,7 +129,8 @@ class ThreeDayWorkoutStageGenerationService(
                     movementBalanceState = movementBalanceState,
                     exerciseWorkoutTypeMappings = preparedData.exerciseWorkoutTypeMappings,
                     exerciseMuscleMappings = preparedData.exerciseMuscleMappings,
-                    exerciseEquipmentMappings = preparedData.exerciseEquipmentMappings
+                    preferredDeExerciseName = preparedData.dePrimaryExerciseByDayType[secondaryMovementType],
+                    currentWeekNumber = preparedData.currentWeekNumber
                 )
             } else {
                 Mono.error(IllegalStateException("Secondary movement type is null for dayType: $dayType"))
@@ -258,7 +260,6 @@ class ThreeDayWorkoutStageGenerationService(
         // Initialize movement balance state for this workout
         var movementBalanceState = createInitialMovementBalanceState()
 
-        // Select upper body DE exercise
         val upperDEExerciseMono =
             selectPrimaryExercise(
                 userExercisePool = preparedData.userExercisePool,
@@ -267,10 +268,10 @@ class ThreeDayWorkoutStageGenerationService(
                 movementBalanceState = movementBalanceState,
                 exerciseWorkoutTypeMappings = preparedData.exerciseWorkoutTypeMappings,
                 exerciseMuscleMappings = preparedData.exerciseMuscleMappings,
-                exerciseEquipmentMappings = preparedData.exerciseEquipmentMappings
+                preferredDeExerciseName = preparedData.dePrimaryExerciseByDayType["DE_Full_Body_Upper"],
+                currentWeekNumber = preparedData.currentWeekNumber
             )
 
-        // Select lower body DE exercise
         val lowerDEExerciseMono =
             selectPrimaryExercise(
                 userExercisePool = preparedData.userExercisePool,
@@ -279,98 +280,89 @@ class ThreeDayWorkoutStageGenerationService(
                 movementBalanceState = movementBalanceState,
                 exerciseWorkoutTypeMappings = preparedData.exerciseWorkoutTypeMappings,
                 exerciseMuscleMappings = preparedData.exerciseMuscleMappings,
-                exerciseEquipmentMappings = preparedData.exerciseEquipmentMappings
+                preferredDeExerciseName = preparedData.dePrimaryExerciseByDayType["DE_Full_Body_Lower"],
+                currentWeekNumber = preparedData.currentWeekNumber
             )
 
-        // Generate set schemes for both exercises
-        val upperDESetSchemesMono =
-            upperDEExerciseMono.flatMap { upperDEExercise ->
-                generateSetSchemes(
-                    exercise = upperDEExercise,
-                    movementRole = "primary",
-                    dayType = "DE_Upper",
-                    oneRepMaxes = preparedData.oneRepMaxes,
-                    currentWeekNumber = preparedData.currentWeekNumber,
-                    preparedData = preparedData
-                )
-            }.onErrorResume { error ->
-                logger.error("Failed to generate set schemes for upper DE exercise. Error: {}", error.message)
-                Mono.just(emptyList())
-            }
-
-        val lowerDESetSchemesMono =
+        return upperDEExerciseMono.flatMap { upperDEExercise ->
             lowerDEExerciseMono.flatMap { lowerDEExercise ->
-                generateSetSchemes(
-                    exercise = lowerDEExercise,
-                    movementRole = "secondary",
-                    dayType = "DE_Lower",
-                    oneRepMaxes = preparedData.oneRepMaxes,
-                    currentWeekNumber = preparedData.currentWeekNumber,
-                    preparedData = preparedData
-                )
-            }.onErrorResume { error ->
-                logger.error("Failed to generate set schemes for lower DE exercise. Error: {}", error.message)
-                Mono.just(emptyList())
+                val upperDESetSchemesMono =
+                    generateSetSchemes(
+                        exercise = upperDEExercise,
+                        movementRole = "primary",
+                        dayType = "DE_Upper",
+                        oneRepMaxes = preparedData.oneRepMaxes,
+                        currentWeekNumber = preparedData.currentWeekNumber,
+                        preparedData = preparedData
+                    ).onErrorResume { error ->
+                        logger.error("Failed to generate set schemes for upper DE exercise. Error: {}", error.message)
+                        Mono.just(emptyList())
+                    }
+                val lowerDESetSchemesMono =
+                    generateSetSchemes(
+                        exercise = lowerDEExercise,
+                        movementRole = "secondary",
+                        dayType = "DE_Lower",
+                        oneRepMaxes = preparedData.oneRepMaxes,
+                        currentWeekNumber = preparedData.currentWeekNumber,
+                        preparedData = preparedData
+                    ).onErrorResume { error ->
+                        logger.error("Failed to generate set schemes for lower DE exercise. Error: {}", error.message)
+                        Mono.just(emptyList())
+                    }
+                Mono.zip(upperDESetSchemesMono, lowerDESetSchemesMono)
+                    .flatMap { tuple ->
+                        val upperDESetSchemes = tuple.t1
+                        val lowerDESetSchemes = tuple.t2
+                        val numAccessoryExercises =
+                            calculateNumAccessoryExercises(
+                                sessionTimeMinutes = preparedData.programPreferences.sessionTimeLengthInMinutes,
+                                primarySetSchemes = upperDESetSchemes,
+                                secondarySetSchemes = lowerDESetSchemes,
+                                dayType = "DE_Full_Body"
+                            )
+
+                        val primaryStageMono =
+                            createCombinedPrimaryStage(
+                                primaryExercise = upperDEExercise,
+                                secondaryExercise = lowerDEExercise,
+                                primarySetSchemes = upperDESetSchemes,
+                                secondarySetSchemes = lowerDESetSchemes
+                            )
+
+                        val warmupStageMono =
+                            createWarmupStage(
+                                preparedData = preparedData,
+                                dayType = "DE_Full_Body",
+                                primaryExercise = upperDEExercise,
+                                secondaryExercise = lowerDEExercise,
+                                isFourDayTemplate = false
+                            )
+
+                        val accessoryStageMono =
+                            createAccessoryStage(
+                                preparedData = preparedData,
+                                dayType = "DE_Full_Body",
+                                numAccessoryExercises = numAccessoryExercises,
+                                movementBalanceState = movementBalanceState
+                            )
+
+                        val conditioningStageMono =
+                            createConditioningStage(
+                                preparedData = preparedData,
+                                dayType = "DE_Full_Body",
+                                movementBalanceState = movementBalanceState
+                            )
+
+                        Flux.merge(
+                            primaryStageMono,
+                            warmupStageMono,
+                            accessoryStageMono,
+                            conditioningStageMono
+                        ).collectList()
+                    }
             }
-
-        // Create workout stages with both DE exercises in the same primary stage
-        return Mono.zip(upperDEExerciseMono, lowerDEExerciseMono, upperDESetSchemesMono, lowerDESetSchemesMono)
-            .flatMap { tuple ->
-                val upperDEExercise = tuple.t1
-                val lowerDEExercise = tuple.t2
-                val upperDESetSchemes = tuple.t3
-                val lowerDESetSchemes = tuple.t4
-
-                // Calculate number of accessory exercises based on program preferences
-                val numAccessoryExercises =
-                    calculateNumAccessoryExercises(
-                        sessionTimeMinutes = preparedData.programPreferences.sessionTimeLengthInMinutes,
-                        primarySetSchemes = upperDESetSchemes,
-                        secondarySetSchemes = lowerDESetSchemes,
-                        dayType = "DE_Full_Body"
-                    )
-
-                // Create all workout stages
-                val primaryStageMono =
-                    createCombinedPrimaryStage(
-                        primaryExercise = upperDEExercise,
-                        secondaryExercise = lowerDEExercise,
-                        primarySetSchemes = upperDESetSchemes,
-                        secondarySetSchemes = lowerDESetSchemes
-                    )
-
-                val warmupStageMono =
-                    createWarmupStage(
-                        preparedData = preparedData,
-                        dayType = "DE_Full_Body",
-                        primaryExercise = upperDEExercise,
-                        secondaryExercise = lowerDEExercise,
-                        isFourDayTemplate = false
-                    )
-
-                val accessoryStageMono =
-                    createAccessoryStage(
-                        preparedData = preparedData,
-                        dayType = "DE_Full_Body",
-                        numAccessoryExercises = numAccessoryExercises,
-                        movementBalanceState = movementBalanceState
-                    )
-
-                val conditioningStageMono =
-                    createConditioningStage(
-                        preparedData = preparedData,
-                        dayType = "DE_Full_Body",
-                        movementBalanceState = movementBalanceState
-                    )
-
-                // Combine all stages - collect non-empty stages
-                Flux.merge(
-                    primaryStageMono,
-                    warmupStageMono,
-                    accessoryStageMono,
-                    conditioningStageMono
-                ).collectList()
-            }
+        }
             .switchIfEmpty(
                 // If any exercise selection fails, create a minimal workout with just warmup and accessory stages
                 Mono.just(

@@ -11,6 +11,7 @@ import com.congen.model.WeightUnit
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
+import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
@@ -92,6 +93,8 @@ class ThreeDayWorkoutStageGenerationServiceTest {
                 isWarmup = eq(false),
                 exerciseWorkoutTypeMappings = any(),
                 exerciseMuscleMappings = any(),
+                currentWeekNumber = any(),
+                preferredDeExerciseName = anyOrNull()
             )
         ).thenReturn(Mono.just(primaryExercise))
 
@@ -107,6 +110,8 @@ class ThreeDayWorkoutStageGenerationServiceTest {
                 isWarmup = eq(false),
                 exerciseWorkoutTypeMappings = any(),
                 exerciseMuscleMappings = any(),
+                currentWeekNumber = any(),
+                preferredDeExerciseName = anyOrNull()
             )
         ).thenReturn(Mono.just(secondaryExercise))
 
@@ -178,7 +183,8 @@ class ThreeDayWorkoutStageGenerationServiceTest {
                 workoutType = any(),
                 exerciseMuscleMappings = any(),
                 exerciseEquipmentMappings = any(),
-                exerciseWorkoutTypeMappings = any()
+                exerciseWorkoutTypeMappings = any(),
+                currentWeekNumber = any()
             )
         ).thenReturn(Mono.just(emptyList()))
 
@@ -229,6 +235,8 @@ class ThreeDayWorkoutStageGenerationServiceTest {
                 isWarmup = eq(false),
                 exerciseWorkoutTypeMappings = any(),
                 exerciseMuscleMappings = any(),
+                currentWeekNumber = any(),
+                preferredDeExerciseName = anyOrNull()
             )
         ).thenReturn(Mono.just(primaryExercise))
 
@@ -244,6 +252,8 @@ class ThreeDayWorkoutStageGenerationServiceTest {
                 isWarmup = eq(false),
                 exerciseWorkoutTypeMappings = any(),
                 exerciseMuscleMappings = any(),
+                currentWeekNumber = any(),
+                preferredDeExerciseName = anyOrNull()
             )
         ).thenReturn(Mono.just(secondaryExercise))
 
@@ -315,7 +325,8 @@ class ThreeDayWorkoutStageGenerationServiceTest {
                 workoutType = any(),
                 exerciseMuscleMappings = any(),
                 exerciseEquipmentMappings = any(),
-                exerciseWorkoutTypeMappings = any()
+                exerciseWorkoutTypeMappings = any(),
+                currentWeekNumber = any()
             )
         ).thenReturn(Mono.just(emptyList()))
 
@@ -366,6 +377,8 @@ class ThreeDayWorkoutStageGenerationServiceTest {
                 isWarmup = eq(false),
                 exerciseWorkoutTypeMappings = any(),
                 exerciseMuscleMappings = any(),
+                currentWeekNumber = any(),
+                preferredDeExerciseName = anyOrNull()
             )
         ).thenReturn(Mono.just(primaryExercise))
 
@@ -381,6 +394,8 @@ class ThreeDayWorkoutStageGenerationServiceTest {
                 isWarmup = eq(false),
                 exerciseWorkoutTypeMappings = any(),
                 exerciseMuscleMappings = any(),
+                currentWeekNumber = any(),
+                preferredDeExerciseName = anyOrNull()
             )
         ).thenReturn(Mono.just(conditioningExercise))
 
@@ -452,7 +467,8 @@ class ThreeDayWorkoutStageGenerationServiceTest {
                 workoutType = any(),
                 exerciseMuscleMappings = any(),
                 exerciseEquipmentMappings = any(),
-                exerciseWorkoutTypeMappings = any()
+                exerciseWorkoutTypeMappings = any(),
+                currentWeekNumber = any()
             )
         ).thenReturn(Mono.just(emptyList()))
 

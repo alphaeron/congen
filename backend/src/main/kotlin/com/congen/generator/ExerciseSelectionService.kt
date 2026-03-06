@@ -50,6 +50,8 @@ class ExerciseSelectionService(
      * @param isWarmup Whether this is for a warmup exercise (optional, defaults to false)
      * @param exerciseWorkoutTypeMappings Pre-computed mappings of exercise names to their workout types
      * @param exerciseMuscleMappings Pre-computed mappings of exercise names to their muscle targets
+     * @param currentWeekNumber Current program week (1-based); used with preferredDeExerciseName for 4-week DE cycle. Callers must always pass this.
+     * @param preferredDeExerciseName DE exercise name to reuse when not at cycle start; null means no preference
      * @return Mono containing selected exercise or null if none available
      */
     fun selectExercise(
@@ -61,8 +63,27 @@ class ExerciseSelectionService(
         movementBalanceState: MovementBalanceService.MovementBalanceState? = null,
         isWarmup: Boolean = false,
         exerciseWorkoutTypeMappings: Map<String, List<String>>,
-        exerciseMuscleMappings: Map<String, List<ExerciseMuscle>>
+        exerciseMuscleMappings: Map<String, List<ExerciseMuscle>>,
+        currentWeekNumber: Int,
+        preferredDeExerciseName: String? = null
     ): Mono<Exercise> {
+        if (
+            workoutType == "dynamic_effort" &&
+            !isAccessory &&
+            preferredDeExerciseName != null
+        ) {
+            val cycleIndex = currentWeekNumber % 4
+            if (cycleIndex != 0) {
+                val available = userExercisePool.getAvailablePrimaryExercises()
+                val preferred = available.find { it.name == preferredDeExerciseName }
+                if (preferred != null && filterExercisesByDayType(listOf(preferred), dayType).isNotEmpty()) {
+                    if (cycleIndex == 3) {
+                        userExercisePool.markExerciseAsUsed(preferred.name)
+                    }
+                    return Mono.just(preferred)
+                }
+            }
+        }
         return selectRotatingExerciseInternal(
             userExercisePool = userExercisePool,
             targetMuscles = targetMuscles,
@@ -976,6 +997,7 @@ class ExerciseSelectionService(
      * @param exerciseMuscleMappings Pre-computed mappings of exercise names to their muscle targets
      * @param exerciseEquipmentMappings Pre-computed mappings of exercise names to their equipment requirements
      * @param exerciseWorkoutTypeMappings Pre-computed mappings of exercise names to their workout types
+     * @param currentWeekNumber Current program week (1-based). Callers must always pass this.
      * @return Mono containing list of selected warmup exercises
      */
     fun selectWarmupExercises(
@@ -987,7 +1009,8 @@ class ExerciseSelectionService(
         workoutType: String,
         exerciseMuscleMappings: Map<String, List<ExerciseMuscle>>,
         exerciseEquipmentMappings: Map<String, List<ExerciseEquipment>>,
-        exerciseWorkoutTypeMappings: Map<String, List<String>>
+        exerciseWorkoutTypeMappings: Map<String, List<String>>,
+        currentWeekNumber: Int
     ): Mono<List<Exercise>> {
         return if (isFourDayTemplate) {
             // 4-day template: 2 muscle-focused + 1 movement pattern exercise
@@ -998,7 +1021,8 @@ class ExerciseSelectionService(
                 workoutType = workoutType,
                 exerciseMuscleMappings = exerciseMuscleMappings,
                 exerciseEquipmentMappings = exerciseEquipmentMappings,
-                exerciseWorkoutTypeMappings = exerciseWorkoutTypeMappings
+                exerciseWorkoutTypeMappings = exerciseWorkoutTypeMappings,
+                currentWeekNumber = currentWeekNumber
             )
         } else {
             // 2 and 3 day templates: 3 exercises for common muscles
@@ -1009,7 +1033,8 @@ class ExerciseSelectionService(
                 dayType = dayType,
                 workoutType = workoutType,
                 exerciseMuscleMappings = exerciseMuscleMappings,
-                exerciseWorkoutTypeMappings = exerciseWorkoutTypeMappings
+                exerciseWorkoutTypeMappings = exerciseWorkoutTypeMappings,
+                currentWeekNumber = currentWeekNumber
             )
         }
     }
@@ -1024,6 +1049,7 @@ class ExerciseSelectionService(
      * @param exerciseMuscleMappings Pre-computed mappings of exercise names to their muscle targets
      * @param exerciseEquipmentMappings Pre-computed mappings of exercise names to their equipment requirements
      * @param exerciseWorkoutTypeMappings Pre-computed mappings of exercise names to their workout types
+     * @param currentWeekNumber Current program week (0-based)
      * @return Mono containing list of selected warmup exercises
      */
     private fun selectFourDayWarmupExercises(
@@ -1033,7 +1059,8 @@ class ExerciseSelectionService(
         workoutType: String,
         exerciseMuscleMappings: Map<String, List<ExerciseMuscle>>,
         exerciseEquipmentMappings: Map<String, List<ExerciseEquipment>>,
-        exerciseWorkoutTypeMappings: Map<String, List<String>>
+        exerciseWorkoutTypeMappings: Map<String, List<String>>,
+        currentWeekNumber: Int
     ): Mono<List<Exercise>> {
         return if (primaryExercise != null) {
             // Get muscles for the primary exercise from prepared data
@@ -1052,7 +1079,8 @@ class ExerciseSelectionService(
                     dayType = dayType,
                     workoutType = workoutType,
                     exerciseWorkoutTypeMappings = exerciseWorkoutTypeMappings,
-                    exerciseMuscleMappings = exerciseMuscleMappings
+                    exerciseMuscleMappings = exerciseMuscleMappings,
+                    currentWeekNumber = currentWeekNumber
                 )
 
             // Select 1 movement pattern exercise
@@ -1064,7 +1092,8 @@ class ExerciseSelectionService(
                     workoutType = workoutType,
                     exerciseEquipmentMappings = exerciseEquipmentMappings,
                     exerciseWorkoutTypeMappings = exerciseWorkoutTypeMappings,
-                    exerciseMuscleMappings = exerciseMuscleMappings
+                    exerciseMuscleMappings = exerciseMuscleMappings,
+                    currentWeekNumber = currentWeekNumber
                 )
 
             muscleFocusedMono.flatMap { muscleExercises ->
@@ -1085,7 +1114,8 @@ class ExerciseSelectionService(
                 dayType = dayType,
                 workoutType = workoutType,
                 exerciseWorkoutTypeMappings = exerciseWorkoutTypeMappings,
-                exerciseMuscleMappings = exerciseMuscleMappings
+                exerciseMuscleMappings = exerciseMuscleMappings,
+                currentWeekNumber = currentWeekNumber
             )
         }
     }
@@ -1100,6 +1130,7 @@ class ExerciseSelectionService(
      * @param workoutType The workout type (e.g., "maximal_effort", "dynamic_effort")
      * @param exerciseMuscleMappings Pre-computed mappings of exercise names to their muscle targets
      * @param exerciseWorkoutTypeMappings Pre-computed mappings of exercise names to their workout types
+     * @param currentWeekNumber Current program week (0-based)
      * @return Mono containing list of selected warmup exercises
      */
     private fun selectTwoThreeDayWarmupExercises(
@@ -1109,7 +1140,8 @@ class ExerciseSelectionService(
         dayType: String,
         workoutType: String,
         exerciseMuscleMappings: Map<String, List<ExerciseMuscle>>,
-        exerciseWorkoutTypeMappings: Map<String, List<String>>
+        exerciseWorkoutTypeMappings: Map<String, List<String>>,
+        currentWeekNumber: Int
     ): Mono<List<Exercise>> {
         // For 2 and 3 day templates, use muscles from the actual primary exercises selected
         val primaryMuscles =
@@ -1137,7 +1169,8 @@ class ExerciseSelectionService(
             dayType = dayType,
             workoutType = workoutType,
             exerciseWorkoutTypeMappings = exerciseWorkoutTypeMappings,
-            exerciseMuscleMappings = exerciseMuscleMappings
+            exerciseMuscleMappings = exerciseMuscleMappings,
+            currentWeekNumber = currentWeekNumber
         )
     }
 
@@ -1151,6 +1184,7 @@ class ExerciseSelectionService(
      * @param workoutType The workout type (e.g., "maximal_effort", "dynamic_effort")
      * @param exerciseWorkoutTypeMappings Pre-computed mappings of exercise names to their workout types
      * @param exerciseMuscleMappings Pre-computed mappings of exercise names to their muscle targets
+     * @param currentWeekNumber Current program week (1-based). Callers must always pass this.
      * @return Mono containing list of selected warmup exercises
      */
     private fun selectMuscleFocusedWarmupExercises(
@@ -1160,7 +1194,8 @@ class ExerciseSelectionService(
         dayType: String,
         workoutType: String,
         exerciseWorkoutTypeMappings: Map<String, List<String>>,
-        exerciseMuscleMappings: Map<String, List<ExerciseMuscle>>
+        exerciseMuscleMappings: Map<String, List<ExerciseMuscle>>,
+        currentWeekNumber: Int
     ): Mono<List<Exercise>> {
         if (count <= 0) {
             return Mono.just(emptyList())
@@ -1173,7 +1208,8 @@ class ExerciseSelectionService(
             dayType = dayType,
             workoutType = workoutType,
             exerciseWorkoutTypeMappings = exerciseWorkoutTypeMappings,
-            exerciseMuscleMappings = exerciseMuscleMappings
+            exerciseMuscleMappings = exerciseMuscleMappings,
+            currentWeekNumber = currentWeekNumber
         ).onErrorResume { error ->
             if (error.message?.contains("No exercises available after workout-type filtering") == true) {
                 logger.info("Pool refresh needed for warmup exercises, refreshing and retrying...")
@@ -1187,7 +1223,8 @@ class ExerciseSelectionService(
                         dayType = dayType,
                         workoutType = workoutType,
                         exerciseWorkoutTypeMappings = exerciseWorkoutTypeMappings,
-                        exerciseMuscleMappings = exerciseMuscleMappings
+                        exerciseMuscleMappings = exerciseMuscleMappings,
+                        currentWeekNumber = currentWeekNumber
                     )
                 } else {
                     logger.error("Pool refresh failed for warmup exercises, returning empty list")
@@ -1214,7 +1251,8 @@ class ExerciseSelectionService(
         dayType: String,
         workoutType: String,
         exerciseWorkoutTypeMappings: Map<String, List<String>>,
-        exerciseMuscleMappings: Map<String, List<ExerciseMuscle>>
+        exerciseMuscleMappings: Map<String, List<ExerciseMuscle>>,
+        currentWeekNumber: Int
     ): Mono<List<Exercise>> {
         // Use Flux.range to select multiple exercises sequentially
         return Flux.range(1, count)
@@ -1230,7 +1268,8 @@ class ExerciseSelectionService(
                     movementBalanceState = null,
                     isWarmup = true,
                     exerciseWorkoutTypeMappings = exerciseWorkoutTypeMappings,
-                    exerciseMuscleMappings = exerciseMuscleMappings
+                    exerciseMuscleMappings = exerciseMuscleMappings,
+                    currentWeekNumber = currentWeekNumber
                 )
             }
             .collectList()
@@ -1247,7 +1286,8 @@ class ExerciseSelectionService(
         workoutType: String,
         exerciseEquipmentMappings: Map<String, List<ExerciseEquipment>>,
         exerciseWorkoutTypeMappings: Map<String, List<String>>,
-        exerciseMuscleMappings: Map<String, List<ExerciseMuscle>>
+        exerciseMuscleMappings: Map<String, List<ExerciseMuscle>>,
+        currentWeekNumber: Int
     ): Mono<Exercise> {
         return selectMovementPatternWarmupExerciseImpl(
             userExercisePool = userExercisePool,
@@ -1256,7 +1296,8 @@ class ExerciseSelectionService(
             workoutType = workoutType,
             exerciseEquipmentMappings = exerciseEquipmentMappings,
             exerciseWorkoutTypeMappings = exerciseWorkoutTypeMappings,
-            exerciseMuscleMappings = exerciseMuscleMappings
+            exerciseMuscleMappings = exerciseMuscleMappings,
+            currentWeekNumber = currentWeekNumber
         ).onErrorResume { error ->
             if (error.message?.contains("No exercises available after workout-type filtering") == true) {
                 logger.info("Pool refresh needed for movement pattern warmup exercise, refreshing and retrying...")
@@ -1270,7 +1311,8 @@ class ExerciseSelectionService(
                         workoutType = workoutType,
                         exerciseEquipmentMappings = exerciseEquipmentMappings,
                         exerciseWorkoutTypeMappings = exerciseWorkoutTypeMappings,
-                        exerciseMuscleMappings = exerciseMuscleMappings
+                        exerciseMuscleMappings = exerciseMuscleMappings,
+                        currentWeekNumber = currentWeekNumber
                     )
                 } else {
                     logger.error("Pool refresh failed for movement pattern warmup exercise, returning empty")
@@ -1295,7 +1337,8 @@ class ExerciseSelectionService(
         workoutType: String,
         exerciseEquipmentMappings: Map<String, List<ExerciseEquipment>>,
         exerciseWorkoutTypeMappings: Map<String, List<String>>,
-        exerciseMuscleMappings: Map<String, List<ExerciseMuscle>>
+        exerciseMuscleMappings: Map<String, List<ExerciseMuscle>>,
+        currentWeekNumber: Int
     ): Mono<Exercise> {
         // First try to find an accessory exercise with the same movement type
         return selectExercise(
@@ -1308,7 +1351,8 @@ class ExerciseSelectionService(
             movementBalanceState = null,
             isWarmup = true,
             exerciseWorkoutTypeMappings = exerciseWorkoutTypeMappings,
-            exerciseMuscleMappings = exerciseMuscleMappings
+            exerciseMuscleMappings = exerciseMuscleMappings,
+            currentWeekNumber = currentWeekNumber
         ).filter { selectedExercise ->
             selectedExercise.movementType == primaryExercise.movementType
         }.switchIfEmpty(
@@ -1323,7 +1367,8 @@ class ExerciseSelectionService(
                 movementBalanceState = null,
                 isWarmup = true,
                 exerciseWorkoutTypeMappings = exerciseWorkoutTypeMappings,
-                exerciseMuscleMappings = exerciseMuscleMappings
+                exerciseMuscleMappings = exerciseMuscleMappings,
+                currentWeekNumber = currentWeekNumber
             ).flatMap { selectedExercise ->
                 // For movement pattern matching, allow primary exercises that:
                 // 1. Have the same movement type
@@ -1374,6 +1419,7 @@ class ExerciseSelectionService(
      * @param workoutType The workout type (e.g., "maximal_effort", "dynamic_effort")
      * @param exerciseWorkoutTypeMappings Pre-computed mappings of exercise names to their workout types
      * @param exerciseMuscleMappings Pre-computed mappings of exercise names to their muscle targets
+     * @param currentWeekNumber Current program week (0-based)
      * @return Mono containing list of selected warmup exercises
      */
     private fun selectGeneralWarmupExercises(
@@ -1382,7 +1428,8 @@ class ExerciseSelectionService(
         dayType: String,
         workoutType: String,
         exerciseWorkoutTypeMappings: Map<String, List<String>>,
-        exerciseMuscleMappings: Map<String, List<ExerciseMuscle>>
+        exerciseMuscleMappings: Map<String, List<ExerciseMuscle>>,
+        currentWeekNumber: Int
     ): Mono<List<Exercise>> {
         if (count <= 0) {
             return Mono.just(emptyList())
@@ -1400,7 +1447,8 @@ class ExerciseSelectionService(
                     movementBalanceState = null,
                     isWarmup = true,
                     exerciseWorkoutTypeMappings = exerciseWorkoutTypeMappings,
-                    exerciseMuscleMappings = exerciseMuscleMappings
+                    exerciseMuscleMappings = exerciseMuscleMappings,
+                    currentWeekNumber = currentWeekNumber
                 )
             }
             .collectList()

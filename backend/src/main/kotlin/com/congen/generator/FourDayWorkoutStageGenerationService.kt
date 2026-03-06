@@ -87,7 +87,8 @@ class FourDayWorkoutStageGenerationService(
                 movementBalanceState = movementBalanceState,
                 exerciseWorkoutTypeMappings = preparedData.exerciseWorkoutTypeMappings,
                 exerciseMuscleMappings = preparedData.exerciseMuscleMappings,
-                exerciseEquipmentMappings = preparedData.exerciseEquipmentMappings
+                preferredDeExerciseName = preparedData.dePrimaryExerciseByDayType[dayType],
+                currentWeekNumber = preparedData.currentWeekNumber
             ).cache()
 
         val primarySetSchemesMono =

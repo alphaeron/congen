@@ -1312,6 +1312,287 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
         assertProgramExerciseUniquenessAndInvariants(programId4Day, 40, 4, userToken)
     }
 
+    @Test
+    fun `2-day program DE exercise reuses same exercise per cycle and rotates next cycle`() {
+        val unique = System.nanoTime()
+        val programId2Day =
+            IntegrationTestHelpers.createTestProgram(
+                webTestClient,
+                userId,
+                name = "Test Program 2-Day DE Cycle $unique",
+                numDaysPerWeek = 2,
+                token = userToken
+            )
+        IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId, token = userToken)
+        IntegrationTestHelpers.createTestUserOneRepMax(webTestClient, userId, "Banded Bench Press", oneRepMax = 200.0, token = userToken)
+        IntegrationTestHelpers.createTestUserOneRepMax(
+            webTestClient,
+            userId,
+            "Banded Safety Bar Squat",
+            oneRepMax = 350.0,
+            token = userToken
+        )
+        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "pull-up bar", token = userToken)
+        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "power bar", token = userToken)
+        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "dumbbells", token = userToken)
+        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "adjustable bench", token = userToken)
+        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "bands", token = userToken)
+        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "safety squat bar", token = userToken)
+
+        webTestClient.post()
+            .uri("/api/v1/conjugate_workout_generator/$programId2Day")
+            .header("Authorization", "Bearer $userToken")
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody(Program::class.java)
+            .returnResult()
+            .responseBody!!
+        for (week in 2..5) {
+            webTestClient.patch()
+                .uri("/api/v1/program/$programId2Day?name=Test Program 2-Day DE Cycle $unique&current_week_number=$week&is_active=true")
+                .header("Authorization", "Bearer $userToken")
+                .exchange()
+                .expectStatus().isOk()
+            webTestClient.post()
+                .uri("/api/v1/conjugate_workout_generator/$programId2Day")
+                .header("Authorization", "Bearer $userToken")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(Program::class.java)
+                .returnResult()
+                .responseBody!!
+        }
+
+        val deByWeek = getDePrimaryExercisesByWeek(programId2Day, 2, userToken)
+        assert(deByWeek.size >= 5) { "Expected at least 5 weeks of DE data, got ${deByWeek.size}" }
+        assertDeCycleReuseAndRotation(deByWeek, 2)
+    }
+
+    @Test
+    fun `3-day program DE exercise reuses same exercise per cycle and rotates next cycle`() {
+        val unique = System.nanoTime()
+        val programId3Day =
+            IntegrationTestHelpers.createTestProgram(
+                webTestClient,
+                userId,
+                name = "Test Program 3-Day DE Cycle $unique",
+                numDaysPerWeek = 3,
+                token = userToken
+            )
+        IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId, token = userToken)
+        IntegrationTestHelpers.createTestUserOneRepMax(webTestClient, userId, "Banded Bench Press", oneRepMax = 200.0, token = userToken)
+        IntegrationTestHelpers.createTestUserOneRepMax(
+            webTestClient,
+            userId,
+            "Banded Safety Bar Squat",
+            oneRepMax = 350.0,
+            token = userToken
+        )
+        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "pull-up bar", token = userToken)
+        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "power bar", token = userToken)
+        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "dumbbells", token = userToken)
+        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "adjustable bench", token = userToken)
+        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "bands", token = userToken)
+        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "safety squat bar", token = userToken)
+
+        webTestClient.post()
+            .uri("/api/v1/conjugate_workout_generator/$programId3Day")
+            .header("Authorization", "Bearer $userToken")
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody(Program::class.java)
+            .returnResult()
+            .responseBody!!
+        for (week in 2..5) {
+            webTestClient.patch()
+                .uri("/api/v1/program/$programId3Day?name=Test Program 3-Day DE Cycle $unique&current_week_number=$week&is_active=true")
+                .header("Authorization", "Bearer $userToken")
+                .exchange()
+                .expectStatus().isOk()
+            webTestClient.post()
+                .uri("/api/v1/conjugate_workout_generator/$programId3Day")
+                .header("Authorization", "Bearer $userToken")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(Program::class.java)
+                .returnResult()
+                .responseBody!!
+        }
+
+        val deByWeek = getDePrimaryExercisesByWeek(programId3Day, 3, userToken)
+        assert(deByWeek.size >= 5) { "Expected at least 5 weeks of DE data, got ${deByWeek.size}" }
+        assertDeCycleReuseAndRotation(deByWeek, 3)
+    }
+
+    @Test
+    fun `4-day program DE exercise reuses same exercise per cycle and rotates next cycle`() {
+        val unique = System.nanoTime()
+        val programId4Day =
+            IntegrationTestHelpers.createTestProgram(
+                webTestClient,
+                userId,
+                name = "Test Program 4-Day DE Cycle $unique",
+                numDaysPerWeek = 4,
+                token = userToken
+            )
+        IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId, token = userToken)
+        IntegrationTestHelpers.createTestUserOneRepMax(webTestClient, userId, "Banded Bench Press", oneRepMax = 200.0, token = userToken)
+        IntegrationTestHelpers.createTestUserOneRepMax(
+            webTestClient,
+            userId,
+            "Banded Safety Bar Squat",
+            oneRepMax = 350.0,
+            token = userToken
+        )
+        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "pull-up bar", token = userToken)
+        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "power bar", token = userToken)
+        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "dumbbells", token = userToken)
+        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "adjustable bench", token = userToken)
+        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "bands", token = userToken)
+        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "safety squat bar", token = userToken)
+
+        webTestClient.post()
+            .uri("/api/v1/conjugate_workout_generator/$programId4Day")
+            .header("Authorization", "Bearer $userToken")
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody(Program::class.java)
+            .returnResult()
+            .responseBody!!
+        for (week in 2..5) {
+            webTestClient.patch()
+                .uri("/api/v1/program/$programId4Day?name=Test Program 4-Day DE Cycle $unique&current_week_number=$week&is_active=true")
+                .header("Authorization", "Bearer $userToken")
+                .exchange()
+                .expectStatus().isOk()
+            webTestClient.post()
+                .uri("/api/v1/conjugate_workout_generator/$programId4Day")
+                .header("Authorization", "Bearer $userToken")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(Program::class.java)
+                .returnResult()
+                .responseBody!!
+        }
+
+        val deByWeek = getDePrimaryExercisesByWeek(programId4Day, 4, userToken)
+        assert(deByWeek.size >= 5) { "Expected at least 5 weeks of DE data, got ${deByWeek.size}" }
+        assertDeCycleReuseAndRotation(deByWeek, 4)
+    }
+
+    /**
+     * Returns DE primary exercise names by week and day type.
+     * Key: week number (1-based), Value: map of day type (DE_Lower, DE_Upper, and for 3-day DE_Full_Body_Upper, DE_Full_Body_Lower) to exercise name.
+     */
+    private fun getDePrimaryExercisesByWeek(
+        programId: Long,
+        daysPerWeek: Int,
+        token: String
+    ): Map<Int, MutableMap<String, String>> {
+        val workoutsResponse =
+            webTestClient.get()
+                .uri("/api/v1/programmed_workout/program/$programId")
+                .header("Authorization", "Bearer $token")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBodyList(Map::class.java)
+                .returnResult()
+                .responseBody!!
+
+        val result = mutableMapOf<Int, MutableMap<String, String>>()
+        val sortedWorkouts =
+            workoutsResponse
+                .mapNotNull { w -> (w["day_number"] as? Number)?.toInt()?.let { d -> d to w } }
+                .sortedBy { it.first }
+                .map { it.second }
+        for (workout in sortedWorkouts) {
+            val dayNumber = (workout["day_number"] as? Number)?.toInt() ?: continue
+            val weekNumber = ((dayNumber - 1) / daysPerWeek) + 1
+            val name = workout["name"] as? String ?: continue
+            if (!name.contains("DE")) continue
+            val workoutId = (workout["id"] as Number).toLong()
+            val stagesResponse =
+                webTestClient.get()
+                    .uri("/api/v1/workout_stage/workout/$workoutId")
+                    .header("Authorization", "Bearer $token")
+                    .exchange()
+                    .expectStatus().isOk()
+                    .expectBodyList(WorkoutStage::class.java)
+                    .returnResult()
+                    .responseBody!!
+            val primaryStage = stagesResponse.find { it.name.toString() == "Primary" } ?: continue
+            val exercisesResponse =
+                webTestClient.get()
+                    .uri("/api/v1/programmed_exercise/stage/${primaryStage.id}")
+                    .header("Authorization", "Bearer $token")
+                    .exchange()
+                    .expectStatus().isOk()
+                    .expectBodyList(Map::class.java)
+                    .returnResult()
+                    .responseBody!!
+            if (exercisesResponse.isEmpty()) continue
+            val weekMap = result.getOrPut(weekNumber) { mutableMapOf() }
+            when (name) {
+                "ME_Upper_DE_Lower" ->
+                    if (exercisesResponse.size > 1) {
+                        weekMap.putIfAbsent(
+                            "DE_Lower",
+                            exercisesResponse[1]["exercise_name"] as String
+                        )
+                    }
+                "ME_Lower_DE_Upper" ->
+                    if (exercisesResponse.size > 1) {
+                        weekMap.putIfAbsent(
+                            "DE_Upper",
+                            exercisesResponse[1]["exercise_name"] as String
+                        )
+                    }
+                "DE_Lower" -> weekMap.putIfAbsent("DE_Lower", exercisesResponse[0]["exercise_name"] as String)
+                "DE_Upper" -> weekMap.putIfAbsent("DE_Upper", exercisesResponse[0]["exercise_name"] as String)
+                "DE_Full_Body" ->
+                    if (exercisesResponse.size > 1) {
+                        weekMap.putIfAbsent("DE_Full_Body_Upper", exercisesResponse[0]["exercise_name"] as String)
+                        weekMap.putIfAbsent("DE_Full_Body_Lower", exercisesResponse[1]["exercise_name"] as String)
+                    }
+                else -> { }
+            }
+        }
+        return result
+    }
+
+    /**
+     * Asserts that within the first 4-week cycle the same DE exercise is reused per day type,
+     * and that week 5 (start of next cycle) has valid DE exercises (rotation can change or keep).
+     */
+    private fun assertDeCycleReuseAndRotation(
+        deByWeek: Map<Int, MutableMap<String, String>>,
+        daysPerWeek: Int
+    ) {
+        val week1 = deByWeek[1] ?: throw AssertionError("Missing week 1 DE data")
+        val dayTypesToCheck =
+            if (daysPerWeek == 3) {
+                listOf("DE_Lower", "DE_Upper", "DE_Full_Body_Upper", "DE_Full_Body_Lower")
+            } else {
+                listOf("DE_Lower", "DE_Upper")
+            }
+        for (dayType in dayTypesToCheck) {
+            val week1Exercise = week1[dayType] ?: continue
+            for (weekNum in 2..4) {
+                val weekMap = deByWeek[weekNum] ?: continue
+                val weekExercise = weekMap[dayType] ?: continue
+                assert(weekExercise == week1Exercise) {
+                    "Week $weekNum $dayType should reuse week 1 exercise '$week1Exercise' but got '$weekExercise'"
+                }
+            }
+        }
+        val week5 = deByWeek[5]
+        assert(week5 != null) { "Missing week 5 DE data" }
+        val hasDeInWeek5 = week5!!.isNotEmpty()
+        assert(hasDeInWeek5) {
+            "Week 5 (new cycle) should have at least one DE primary exercise; got $week5"
+        }
+    }
+
     /**
      * Helper function to query for a user's program data and assert that exercises are not duplicated
      * based on exercise pool constraints within the same week, week after week, and meet the

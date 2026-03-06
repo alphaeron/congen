@@ -84,7 +84,8 @@ class TwoDayWorkoutStageGenerationService(
                 movementBalanceState = movementBalanceState,
                 exerciseWorkoutTypeMappings = preparedData.exerciseWorkoutTypeMappings,
                 exerciseMuscleMappings = preparedData.exerciseMuscleMappings,
-                exerciseEquipmentMappings = preparedData.exerciseEquipmentMappings
+                preferredDeExerciseName = preparedData.dePrimaryExerciseByDayType[primaryMovementType],
+                currentWeekNumber = preparedData.currentWeekNumber
             )
 
         // Select secondary DE exercise (this is a primary movement, not an accessory)
@@ -97,7 +98,8 @@ class TwoDayWorkoutStageGenerationService(
                     movementBalanceState = movementBalanceState,
                     exerciseWorkoutTypeMappings = preparedData.exerciseWorkoutTypeMappings,
                     exerciseMuscleMappings = preparedData.exerciseMuscleMappings,
-                    exerciseEquipmentMappings = preparedData.exerciseEquipmentMappings
+                    preferredDeExerciseName = preparedData.dePrimaryExerciseByDayType[secondaryMovementType],
+                    currentWeekNumber = preparedData.currentWeekNumber
                 )
             } else {
                 Mono.error(IllegalStateException("Secondary movement type is null for dayType: $dayType"))

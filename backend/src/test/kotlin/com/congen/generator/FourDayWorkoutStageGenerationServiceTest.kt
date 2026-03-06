@@ -11,6 +11,7 @@ import com.congen.model.WorkoutStageTypeEnum
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
+import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
@@ -79,6 +80,8 @@ class FourDayWorkoutStageGenerationServiceTest {
                 isWarmup = eq(false),
                 exerciseWorkoutTypeMappings = any(),
                 exerciseMuscleMappings = any(),
+                currentWeekNumber = any(),
+                preferredDeExerciseName = anyOrNull()
             )
         ).thenReturn(Mono.just(primaryExercise))
 
@@ -107,6 +110,8 @@ class FourDayWorkoutStageGenerationServiceTest {
                 isWarmup = eq(false),
                 exerciseWorkoutTypeMappings = any(),
                 exerciseMuscleMappings = any(),
+                currentWeekNumber = any(),
+                preferredDeExerciseName = anyOrNull()
             )
         ).thenReturn(Mono.just(secondaryExercise))
 
@@ -217,7 +222,8 @@ class FourDayWorkoutStageGenerationServiceTest {
                 workoutType = eq("maximal_effort"),
                 exerciseMuscleMappings = any(),
                 exerciseEquipmentMappings = any(),
-                exerciseWorkoutTypeMappings = any()
+                exerciseWorkoutTypeMappings = any(),
+                currentWeekNumber = any()
             )
         ).thenReturn(Mono.just(listOf(primaryExercise)))
 
@@ -254,6 +260,8 @@ class FourDayWorkoutStageGenerationServiceTest {
                 isWarmup = eq(false),
                 exerciseWorkoutTypeMappings = any(),
                 exerciseMuscleMappings = any(),
+                currentWeekNumber = any(),
+                preferredDeExerciseName = anyOrNull()
             )
         ).thenReturn(Mono.just(primaryExercise))
 
@@ -269,6 +277,8 @@ class FourDayWorkoutStageGenerationServiceTest {
                 isWarmup = eq(false),
                 exerciseWorkoutTypeMappings = any(),
                 exerciseMuscleMappings = any(),
+                currentWeekNumber = any(),
+                preferredDeExerciseName = anyOrNull()
             )
         ).thenReturn(Mono.just(secondaryExercise))
 
@@ -367,7 +377,8 @@ class FourDayWorkoutStageGenerationServiceTest {
                 workoutType = eq("dynamic_effort"),
                 exerciseMuscleMappings = any(),
                 exerciseEquipmentMappings = any(),
-                exerciseWorkoutTypeMappings = any()
+                exerciseWorkoutTypeMappings = any(),
+                currentWeekNumber = any()
             )
         ).thenReturn(Mono.just(listOf(primaryExercise)))
 
@@ -404,10 +415,11 @@ class FourDayWorkoutStageGenerationServiceTest {
                 isWarmup = eq(false),
                 exerciseWorkoutTypeMappings = any(),
                 exerciseMuscleMappings = any(),
+                currentWeekNumber = any(),
+                preferredDeExerciseName = anyOrNull()
             )
         ).thenReturn(Mono.just(primaryExercise))
 
-        // Mock accessory exercise selection
         whenever(
             exerciseSelectionService.selectExercise(
                 userExercisePool = any(),
@@ -419,6 +431,8 @@ class FourDayWorkoutStageGenerationServiceTest {
                 isWarmup = eq(false),
                 exerciseWorkoutTypeMappings = any(),
                 exerciseMuscleMappings = any(),
+                currentWeekNumber = any(),
+                preferredDeExerciseName = anyOrNull()
             )
         ).thenReturn(Mono.just(secondaryExercise))
 
@@ -517,7 +531,8 @@ class FourDayWorkoutStageGenerationServiceTest {
                 workoutType = eq("maximal_effort"),
                 exerciseMuscleMappings = any(),
                 exerciseEquipmentMappings = any(),
-                exerciseWorkoutTypeMappings = any()
+                exerciseWorkoutTypeMappings = any(),
+                currentWeekNumber = any()
             )
         ).thenReturn(Mono.just(listOf(primaryExercise)))
 
@@ -554,10 +569,11 @@ class FourDayWorkoutStageGenerationServiceTest {
                 isWarmup = eq(false),
                 exerciseWorkoutTypeMappings = any(),
                 exerciseMuscleMappings = any(),
+                currentWeekNumber = any(),
+                preferredDeExerciseName = anyOrNull()
             )
         ).thenReturn(Mono.just(primaryExercise))
 
-        // Mock secondary exercise selection
         whenever(
             exerciseSelectionService.selectSimilarSecondaryExercise(
                 primaryExercise = eq(primaryExercise),
@@ -582,6 +598,8 @@ class FourDayWorkoutStageGenerationServiceTest {
                 isWarmup = eq(false),
                 exerciseWorkoutTypeMappings = any(),
                 exerciseMuscleMappings = any(),
+                currentWeekNumber = any(),
+                preferredDeExerciseName = anyOrNull()
             )
         ).thenReturn(Mono.just(secondaryExercise))
 
@@ -692,7 +710,8 @@ class FourDayWorkoutStageGenerationServiceTest {
                 workoutType = eq("dynamic_effort"),
                 exerciseMuscleMappings = any(),
                 exerciseEquipmentMappings = any(),
-                exerciseWorkoutTypeMappings = any()
+                exerciseWorkoutTypeMappings = any(),
+                currentWeekNumber = any()
             )
         ).thenReturn(Mono.just(listOf(primaryExercise)))
 
@@ -726,6 +745,8 @@ class FourDayWorkoutStageGenerationServiceTest {
                 isWarmup = eq(false),
                 exerciseWorkoutTypeMappings = any(),
                 exerciseMuscleMappings = any(),
+                currentWeekNumber = any(),
+                preferredDeExerciseName = anyOrNull()
             )
         ).thenReturn(Mono.empty())
 

@@ -12,9 +12,14 @@ import com.congen.dal.UserEquipmentDAL
 import com.congen.dal.UserExercisePreferenceDAL
 import com.congen.dal.UserWeakMuscleDAL
 import com.congen.dal.UserWeightUnitPreferenceDAL
+import com.congen.dal.WorkoutStageDAL
+import com.congen.dal.WorkoutStageTypeDAL
 import com.congen.model.Program
+import com.congen.model.ProgrammedWorkout
 import com.congen.model.SetScheme
 import com.congen.model.WeightUnit
+import com.congen.model.WorkoutStageType
+import com.congen.model.WorkoutStageTypeEnum
 import com.congen.service.ProgramService
 import com.congen.service.SetSchemeService
 import com.congen.service.UserOneRepMaxService
@@ -55,6 +60,8 @@ import reactor.core.publisher.Mono
  * @param programService Service for program operations
  * @param programmedWorkoutDAL Data access layer for programmed workout operations
  * @param programmedExerciseDAL Data access layer for programmed exercise operations
+ * @param workoutStageDAL Data access layer for workout stage operations
+ * @param workoutStageTypeDAL Data access layer for workout stage type operations
  * @param setSchemeDAL Data access layer for set scheme operations
  * @param conjugateTemplates Service for managing workout templates
  * @param workoutStageGenerationOrchestrator Service for orchestrating workout stage generation
@@ -80,6 +87,8 @@ class ConjugateWorkoutGeneratorService(
     private val programService: ProgramService,
     private val programmedWorkoutDAL: ProgrammedWorkoutDAL,
     private val programmedExerciseDAL: ProgrammedExerciseDAL,
+    private val workoutStageDAL: WorkoutStageDAL,
+    private val workoutStageTypeDAL: WorkoutStageTypeDAL,
     private val setSchemeDAL: SetSchemeDAL,
     private val conjugateTemplates: ConjugateTemplates,
     private val workoutStageGenerationOrchestrator: WorkoutStageGenerationOrchestrator,
@@ -117,23 +126,30 @@ class ConjugateWorkoutGeneratorService(
         return programService.selectProgramById(programId)
             .flatMap { program ->
                 Mono.zip(
-                    userOneRepMaxService.selectUserOneRepMaxByUser(program.userId),
-                    programPreferencesDAL.selectProgramPreferences(program.id),
-                    userWeakMuscleDAL.selectUserWeakMusclesByUser(program.userId),
-                    userWeightUnitPreferenceDAL.selectUserWeightUnitPreferencesByUser(program.userId),
-                    exerciseDAL.selectExercises(),
-                    exerciseEquipmentDAL.selectAllExerciseEquipment(),
-                    exerciseMuscleDAL.selectAllExerciseMuscle(),
-                    exerciseWorkoutTypeDAL.selectAllExerciseWorkoutTypes()
+                    Mono.zip(
+                        userOneRepMaxService.selectUserOneRepMaxByUser(program.userId),
+                        programPreferencesDAL.selectProgramPreferences(program.id),
+                        userWeakMuscleDAL.selectUserWeakMusclesByUser(program.userId),
+                        userWeightUnitPreferenceDAL.selectUserWeightUnitPreferencesByUser(program.userId),
+                        exerciseDAL.selectExercises(),
+                        exerciseEquipmentDAL.selectAllExerciseEquipment(),
+                        exerciseMuscleDAL.selectAllExerciseMuscle(),
+                        exerciseWorkoutTypeDAL.selectAllExerciseWorkoutTypes()
+                    ),
+                    programmedWorkoutDAL.selectProgrammedWorkoutsByProgramId(program.id),
+                    workoutStageTypeDAL.selectWorkoutStageTypeByEnum(WorkoutStageTypeEnum.PRIMARY)
                 ).flatMap { tuple ->
-                    val oneRepMaxes = tuple.t1
-                    val programPreferences = tuple.t2
-                    val userWeakMuscles = tuple.t3
-                    val weightUnitPreferences = tuple.t4
-                    val allExercises = tuple.t5
-                    val allExerciseEquipment = tuple.t6
-                    val allExerciseMuscles = tuple.t7
-                    val allExerciseWorkoutTypes = tuple.t8
+                    val first = tuple.t1
+                    val oneRepMaxes = first.t1
+                    val programPreferences = first.t2
+                    val userWeakMuscles = first.t3
+                    val weightUnitPreferences = first.t4
+                    val allExercises = first.t5
+                    val allExerciseEquipment = first.t6
+                    val allExerciseMuscles = first.t7
+                    val allExerciseWorkoutTypes = first.t8
+                    val programmedWorkouts = tuple.t2
+                    val primaryStageType = tuple.t3
 
                     Mono.zip(
                         programmedExerciseDAL.selectProgrammedExercisesByUserId(program.userId),
@@ -165,85 +181,172 @@ class ConjugateWorkoutGeneratorService(
                         val previouslyProgrammedExerciseNames = previouslyProgrammedExercises.map { it.exerciseName }
                         val usedThisWeek = mutableSetOf<String>()
 
-                        Flux.fromIterable(template)
-                            .index()
-                            .concatMap { workoutTuple ->
-                                val dayIndex = workoutTuple.t1
-                                val dayTemplate = workoutTuple.t2
-                                val dayNumber = program.currentWeekNumber * template.size + dayIndex.toInt() + 1
+                        buildDePrimaryExerciseByDayType(
+                            programmedWorkouts = programmedWorkouts,
+                            primaryStageType = primaryStageType,
+                            currentWeekNumber = program.currentWeekNumber,
+                            templateSize = template.size
+                        ).flatMap { dePrimaryExerciseByDayType ->
+                            Flux.fromIterable(template)
+                                .index()
+                                .concatMap { workoutTuple ->
+                                    val dayIndex = workoutTuple.t1
+                                    val dayTemplate = workoutTuple.t2
+                                    val dayNumber = program.currentWeekNumber * template.size + dayIndex.toInt() + 1
 
-                                logger.debug("Generating workout for day {} of program {}", dayNumber, program.id)
+                                    logger.debug("Generating workout for day {} of program {}", dayNumber, program.id)
 
-                                val minAvailablePerCategory =
-                                    when (programPreferences.programDaysPerWeek) {
-                                        2 -> 4
-                                        3 -> 6
-                                        else -> programPreferences.programDaysPerWeek
+                                    val minAvailablePerCategory =
+                                        when (programPreferences.programDaysPerWeek) {
+                                            2 -> 4
+                                            3 -> 6
+                                            else -> programPreferences.programDaysPerWeek
+                                        }
+                                    val deCycleReuseNames = dePrimaryExerciseByDayType.values.toSet()
+                                    val isThreeDayFullBodyDe =
+                                        programPreferences.programDaysPerWeek == 3 && dayTemplate.type == "DE_Full_Body"
+                                    val excludedForWeek =
+                                        if (isThreeDayFullBodyDe) usedThisWeek else (usedThisWeek - deCycleReuseNames)
+                                    val deCycleReuseForPool =
+                                        if (isThreeDayFullBodyDe) {
+                                            setOfNotNull(
+                                                dePrimaryExerciseByDayType["DE_Full_Body_Upper"],
+                                                dePrimaryExerciseByDayType["DE_Full_Body_Lower"]
+                                            )
+                                        } else {
+                                            deCycleReuseNames
+                                        }
+                                    val userExercisePool =
+                                        exercisePoolFactory.createPoolFromPreparedData(
+                                            allExercises = allExercises,
+                                            userEquipment = userEquipment,
+                                            userExercisePreferences = userExercisePreferences,
+                                            previouslyUsedExercises = previouslyProgrammedExercises,
+                                            exerciseEquipmentMappings = exerciseEquipmentMappings,
+                                            exerciseMuscleMappings = exerciseMuscleMappings,
+                                            userId = program.userId,
+                                            excludedForWeek = excludedForWeek,
+                                            minAvailablePerCategory = minAvailablePerCategory,
+                                            deCycleReuseExerciseNames = deCycleReuseForPool
+                                        )
+
+                                    val preparedData =
+                                        WorkoutGenerationPreparedData(
+                                            userExercisePool = userExercisePool,
+                                            oneRepMaxes = oneRepMaxes,
+                                            programPreferences = programPreferences,
+                                            weakMuscles = weakMuscles,
+                                            currentWeekNumber = program.currentWeekNumber,
+                                            userId = program.userId,
+                                            weightUnitPreferences = weightUnitMap,
+                                            exerciseMuscleMappings = exerciseMuscleMappings,
+                                            exerciseWorkoutTypeMappings = exerciseWorkoutTypeMappings,
+                                            exerciseEquipmentMappings = exerciseEquipmentMappings,
+                                            previouslyProgrammedExercises = previouslyProgrammedExerciseNames,
+                                            allExercises = allExercises,
+                                            userEquipment = userEquipment,
+                                            userExercisePreferences = userExercisePreferences,
+                                            dePrimaryExerciseByDayType = dePrimaryExerciseByDayType
+                                        )
+
+                                    workoutStageGenerationOrchestrator.generateWorkoutStages(
+                                        programId = program.id,
+                                        dayNumber = dayNumber,
+                                        dayType = dayTemplate.type,
+                                        preparedData = preparedData
+                                    ).flatMap { result ->
+                                        usedThisWeek.addAll(userExercisePool.getUsedExerciseNames())
+                                        Mono.just(result)
                                     }
-                                val userExercisePool =
-                                    exercisePoolFactory.createPoolFromPreparedData(
-                                        allExercises = allExercises,
-                                        userEquipment = userEquipment,
-                                        userExercisePreferences = userExercisePreferences,
-                                        previouslyUsedExercises = previouslyProgrammedExercises,
-                                        exerciseEquipmentMappings = exerciseEquipmentMappings,
-                                        exerciseMuscleMappings = exerciseMuscleMappings,
-                                        userId = program.userId,
-                                        excludedForWeek = usedThisWeek,
-                                        minAvailablePerCategory = minAvailablePerCategory
-                                    )
-
-                                val preparedData =
-                                    WorkoutGenerationPreparedData(
-                                        userExercisePool = userExercisePool,
-                                        oneRepMaxes = oneRepMaxes,
-                                        programPreferences = programPreferences,
-                                        weakMuscles = weakMuscles,
-                                        currentWeekNumber = program.currentWeekNumber,
-                                        userId = program.userId,
-                                        weightUnitPreferences = weightUnitMap,
-                                        exerciseMuscleMappings = exerciseMuscleMappings,
-                                        exerciseWorkoutTypeMappings = exerciseWorkoutTypeMappings,
-                                        exerciseEquipmentMappings = exerciseEquipmentMappings,
-                                        previouslyProgrammedExercises = previouslyProgrammedExerciseNames,
-                                        allExercises = allExercises,
-                                        userEquipment = userEquipment,
-                                        userExercisePreferences = userExercisePreferences
-                                    )
-
-                                workoutStageGenerationOrchestrator.generateWorkoutStages(
-                                    programId = program.id,
-                                    dayNumber = dayNumber,
-                                    dayType = dayTemplate.type,
-                                    preparedData = preparedData
-                                ).flatMap { result ->
-                                    usedThisWeek.addAll(userExercisePool.getUsedExerciseNames())
-                                    Mono.just(result)
                                 }
-                            }
-                            .collectList()
-                            .flatMap { workoutResults ->
-                                // Stage 3: Atomic Writing - Write all generated data atomically
-                                logger.info("Writing {} workouts atomically for program {}", workoutResults.size, program.id)
-                                Flux.fromIterable(workoutResults)
-                                    .concatMap { workoutResult ->
-                                        atomicWorkoutWriter.writeWorkoutAtomically(workoutResult)
-                                    }
-                                    .then()
-                            }
-                            .then(
-                                programService.updateProgram(
-                                    program.id,
-                                    program.name,
-                                    program.currentWeekNumber + 1,
-                                    program.isActive
+                                .collectList()
+                                .flatMap { workoutResults ->
+                                    // Stage 3: Atomic Writing - Write all generated data atomically
+                                    logger.info("Writing {} workouts atomically for program {}", workoutResults.size, program.id)
+                                    Flux.fromIterable(workoutResults)
+                                        .concatMap { workoutResult ->
+                                            atomicWorkoutWriter.writeWorkoutAtomically(workoutResult)
+                                        }
+                                        .then()
+                                }
+                                .then(
+                                    programService.updateProgram(
+                                        program.id,
+                                        program.name,
+                                        program.currentWeekNumber + 1,
+                                        program.isActive
+                                    )
                                 )
-                            )
-                            .doOnError { error ->
-                                logger.error("Error generating workouts for week: {}", error.message)
-                            }
+                                .doOnError { error ->
+                                    logger.error("Error generating workouts for week: {}", error.message)
+                                }
+                        }
                     }
                 }
+            }
+    }
+
+    /**
+     * Builds a map of DE day-type keys (e.g. "DE_Lower", "DE_Upper") to primary exercise names
+     * from programmed workouts in the current 4-week cycle start week.
+     *
+     * @param programmedWorkouts all programmed workouts for the program (caller loads via DAL)
+     * @param primaryStageType the PRIMARY workout stage type (caller loads via DAL)
+     * @param currentWeekNumber current program week (0-based; new programs start at 0)
+     * @param templateSize number of days per week in the template
+     * @return Mono of map from day-type key to exercise name; empty if cycle boundary or no in-range workouts
+     */
+    private fun buildDePrimaryExerciseByDayType(
+        programmedWorkouts: List<ProgrammedWorkout>,
+        primaryStageType: WorkoutStageType,
+        currentWeekNumber: Int,
+        templateSize: Int
+    ): Mono<Map<String, String>> {
+        val weeksPerCycle = 4
+        val weekInCycle = currentWeekNumber % weeksPerCycle
+        if (weekInCycle == 0) {
+            return Mono.just(emptyMap())
+        }
+        val completedCycles = currentWeekNumber / weeksPerCycle
+        val weeksInCompletedCycles = completedCycles * weeksPerCycle
+        val daysInCompletedCycles = weeksInCompletedCycles * templateSize
+        val firstDay = daysInCompletedCycles + 1
+        val lastDay = firstDay + templateSize - 1
+        val inRange = programmedWorkouts.filter { it.dayNumber in firstDay..lastDay }.sortedBy { it.dayNumber }
+        if (inRange.isEmpty()) {
+            return Mono.just(emptyMap())
+        }
+        return Flux.fromIterable(inRange)
+            .concatMap { workout ->
+                workoutStageDAL.selectWorkoutStagesByProgrammedWorkoutId(workout.id)
+                    .flatMap stages@{ stages ->
+                        val primaryStage = stages.find { it.stageTypeId == primaryStageType.id }
+                        if (primaryStage == null) {
+                            return@stages Mono.just(emptyList<Pair<String, String>>())
+                        }
+                        programmedExerciseDAL.selectProgrammedExercisesByWorkoutStageId(primaryStage.id)
+                            .map { exercises ->
+                                val sorted = exercises.sortedBy { it.position }
+                                when (workout.name) {
+                                    "ME_Upper_DE_Lower" -> listOf("DE_Lower" to sorted.getOrNull(1)?.exerciseName)
+                                    "ME_Lower_DE_Upper" -> listOf("DE_Upper" to sorted.getOrNull(1)?.exerciseName)
+                                    "DE_Lower" -> listOf("DE_Lower" to sorted.firstOrNull()?.exerciseName)
+                                    "DE_Upper" -> listOf("DE_Upper" to sorted.firstOrNull()?.exerciseName)
+                                    "DE_Full_Body" ->
+                                        listOf(
+                                            "DE_Full_Body_Upper" to sorted.getOrNull(0)?.exerciseName,
+                                            "DE_Full_Body_Lower" to sorted.getOrNull(1)?.exerciseName
+                                        )
+                                    else -> emptyList()
+                                }.filter { it.second != null }.map { it.first to it.second!! }
+                            }
+                    }
+            }
+            .collectList()
+            .map { listOfPairs ->
+                val result = mutableMapOf<String, String>()
+                listOfPairs.flatten().forEach { (key, value) -> result.putIfAbsent(key, value) }
+                result
             }
     }
 

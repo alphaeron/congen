@@ -151,7 +151,9 @@ data class WorkoutGenerationPreparedData(
     /** The user's available equipment. */
     val userEquipment: List<UserEquipment>,
     /** The user's exercise preferences and settings. */
-    val userExercisePreferences: List<UserExercisePreference>
+    val userExercisePreferences: List<UserExercisePreference>,
+    /** DE primary exercise name per day-type key (e.g. "DE_Lower", "DE_Upper") from the current 4-week cycle start. */
+    val dePrimaryExerciseByDayType: Map<String, String> = emptyMap()
 )
 
 /**
