@@ -292,11 +292,22 @@ abstract class WorkoutStageGenerationService(
             ).first
         val consistentRestSeconds = prilepinGuidelinesService.getRandomRestTime(guidelines.restSeconds)
 
+        val dayTypeAwareWeakMuscles =
+            ConjugateConstants.getWeakMusclesForDayType(dayType)
+                .filter { muscle -> preparedData.weakMuscles.contains(muscle) }
+
         return Flux.range(1, numAccessoryExercises)
-            .concatMap {
+            .concatMap { slotIndex ->
+                val targetMusclesForSlot =
+                    if (dayTypeAwareWeakMuscles.isEmpty()) {
+                        preparedData.weakMuscles
+                    } else {
+                        val muscleIndex = (slotIndex - 1) % dayTypeAwareWeakMuscles.size
+                        listOf(dayTypeAwareWeakMuscles[muscleIndex])
+                    }
                 selectAccessoryExercise(
                     userExercisePool = preparedData.userExercisePool,
-                    weakMuscles = preparedData.weakMuscles,
+                    weakMuscles = targetMusclesForSlot,
                     workoutType = workoutType,
                     dayType = dayType,
                     movementBalanceState = movementBalanceState,
@@ -316,7 +327,7 @@ abstract class WorkoutStageGenerationService(
 
                         ProgrammedExerciseData(
                             exerciseName = accessoryExercise.name,
-                            position = it,
+                            position = slotIndex,
                             notes = null,
                             setSchemes = setSchemeData
                         )
