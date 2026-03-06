@@ -81,7 +81,8 @@ class FourDayWorkoutStageGenerationServiceTest {
                 exerciseWorkoutTypeMappings = any(),
                 exerciseMuscleMappings = any(),
                 currentWeekNumber = any(),
-                preferredDeExerciseName = anyOrNull()
+                preferredDeExerciseName = anyOrNull(),
+                allowBandedExercises = anyOrNull()
             )
         ).thenReturn(Mono.just(primaryExercise))
 
@@ -111,7 +112,8 @@ class FourDayWorkoutStageGenerationServiceTest {
                 exerciseWorkoutTypeMappings = any(),
                 exerciseMuscleMappings = any(),
                 currentWeekNumber = any(),
-                preferredDeExerciseName = anyOrNull()
+                preferredDeExerciseName = anyOrNull(),
+                allowBandedExercises = anyOrNull()
             )
         ).thenReturn(Mono.just(secondaryExercise))
 
@@ -261,7 +263,8 @@ class FourDayWorkoutStageGenerationServiceTest {
                 exerciseWorkoutTypeMappings = any(),
                 exerciseMuscleMappings = any(),
                 currentWeekNumber = any(),
-                preferredDeExerciseName = anyOrNull()
+                preferredDeExerciseName = anyOrNull(),
+                allowBandedExercises = anyOrNull()
             )
         ).thenReturn(Mono.just(primaryExercise))
 
@@ -278,7 +281,8 @@ class FourDayWorkoutStageGenerationServiceTest {
                 exerciseWorkoutTypeMappings = any(),
                 exerciseMuscleMappings = any(),
                 currentWeekNumber = any(),
-                preferredDeExerciseName = anyOrNull()
+                preferredDeExerciseName = anyOrNull(),
+                allowBandedExercises = anyOrNull()
             )
         ).thenReturn(Mono.just(secondaryExercise))
 
@@ -416,7 +420,8 @@ class FourDayWorkoutStageGenerationServiceTest {
                 exerciseWorkoutTypeMappings = any(),
                 exerciseMuscleMappings = any(),
                 currentWeekNumber = any(),
-                preferredDeExerciseName = anyOrNull()
+                preferredDeExerciseName = anyOrNull(),
+                allowBandedExercises = anyOrNull()
             )
         ).thenReturn(Mono.just(primaryExercise))
 
@@ -432,7 +437,8 @@ class FourDayWorkoutStageGenerationServiceTest {
                 exerciseWorkoutTypeMappings = any(),
                 exerciseMuscleMappings = any(),
                 currentWeekNumber = any(),
-                preferredDeExerciseName = anyOrNull()
+                preferredDeExerciseName = anyOrNull(),
+                allowBandedExercises = anyOrNull()
             )
         ).thenReturn(Mono.just(secondaryExercise))
 
@@ -570,7 +576,8 @@ class FourDayWorkoutStageGenerationServiceTest {
                 exerciseWorkoutTypeMappings = any(),
                 exerciseMuscleMappings = any(),
                 currentWeekNumber = any(),
-                preferredDeExerciseName = anyOrNull()
+                preferredDeExerciseName = anyOrNull(),
+                allowBandedExercises = anyOrNull()
             )
         ).thenReturn(Mono.just(primaryExercise))
 
@@ -599,7 +606,8 @@ class FourDayWorkoutStageGenerationServiceTest {
                 exerciseWorkoutTypeMappings = any(),
                 exerciseMuscleMappings = any(),
                 currentWeekNumber = any(),
-                preferredDeExerciseName = anyOrNull()
+                preferredDeExerciseName = anyOrNull(),
+                allowBandedExercises = anyOrNull()
             )
         ).thenReturn(Mono.just(secondaryExercise))
 
@@ -746,7 +754,8 @@ class FourDayWorkoutStageGenerationServiceTest {
                 exerciseWorkoutTypeMappings = any(),
                 exerciseMuscleMappings = any(),
                 currentWeekNumber = any(),
-                preferredDeExerciseName = anyOrNull()
+                preferredDeExerciseName = anyOrNull(),
+                allowBandedExercises = anyOrNull()
             )
         ).thenReturn(Mono.empty())
 

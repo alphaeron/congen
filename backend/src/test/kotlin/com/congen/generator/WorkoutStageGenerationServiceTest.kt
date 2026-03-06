@@ -88,7 +88,8 @@ class WorkoutStageGenerationServiceTest {
                 exerciseWorkoutTypeMappings = any(),
                 exerciseMuscleMappings = any(),
                 currentWeekNumber = any(),
-                preferredDeExerciseName = anyOrNull()
+                preferredDeExerciseName = anyOrNull(),
+                allowBandedExercises = anyOrNull()
             )
         ).thenReturn(Mono.just(primaryExercise))
 
@@ -104,7 +105,8 @@ class WorkoutStageGenerationServiceTest {
                 exerciseWorkoutTypeMappings = any(),
                 exerciseMuscleMappings = any(),
                 currentWeekNumber = any(),
-                preferredDeExerciseName = anyOrNull()
+                preferredDeExerciseName = anyOrNull(),
+                allowBandedExercises = anyOrNull()
             )
         ).thenReturn(Mono.just(secondaryExercise))
 
@@ -225,7 +227,8 @@ class WorkoutStageGenerationServiceTest {
                 exerciseWorkoutTypeMappings = any(),
                 exerciseMuscleMappings = any(),
                 currentWeekNumber = any(),
-                preferredDeExerciseName = anyOrNull()
+                preferredDeExerciseName = anyOrNull(),
+                allowBandedExercises = anyOrNull()
             )
         ).thenReturn(Mono.empty())
 

@@ -52,6 +52,7 @@ class ExerciseSelectionService(
      * @param exerciseMuscleMappings Pre-computed mappings of exercise names to their muscle targets
      * @param currentWeekNumber Current program week (1-based); used with preferredDeExerciseName for 4-week DE cycle. Callers must always pass this.
      * @param preferredDeExerciseName DE exercise name to reuse when not at cycle start; null means no preference
+     * @param allowBandedExercises When set (e.g. for mixed-day accessory slots), overrides derivation from dayType for banded exercise filtering; null means derive from dayType
      * @return Mono containing selected exercise or null if none available
      */
     fun selectExercise(
@@ -65,7 +66,8 @@ class ExerciseSelectionService(
         exerciseWorkoutTypeMappings: Map<String, List<String>>,
         exerciseMuscleMappings: Map<String, List<ExerciseMuscle>>,
         currentWeekNumber: Int,
-        preferredDeExerciseName: String? = null
+        preferredDeExerciseName: String? = null,
+        allowBandedExercises: Boolean? = null
     ): Mono<Exercise> {
         if (
             workoutType == "dynamic_effort" &&
@@ -93,7 +95,8 @@ class ExerciseSelectionService(
             movementBalanceState = movementBalanceState,
             isWarmup = isWarmup,
             exerciseWorkoutTypeMappings = exerciseWorkoutTypeMappings,
-            exerciseMuscleMappings = exerciseMuscleMappings
+            exerciseMuscleMappings = exerciseMuscleMappings,
+            allowBandedExercises = allowBandedExercises
         ).flatMap { selectedExercise ->
             if (selectedExercise != null) {
                 // Mark the exercise as used and removed from the pool
@@ -137,6 +140,7 @@ class ExerciseSelectionService(
      * @param isWarmup Whether this is for a warmup exercise (optional, defaults to false)
      * @param exerciseWorkoutTypeMappings Pre-computed mappings of exercise names to their workout types
      * @param exerciseMuscleMappings Pre-computed mappings of exercise names to their muscle targets
+     * @param allowBandedExercises When set, overrides derivation from dayType for banded exercise filtering; null means derive from dayType
      * @return Mono containing selected exercise or null if none available
      */
     private fun selectRotatingExerciseInternal(
@@ -148,7 +152,8 @@ class ExerciseSelectionService(
         movementBalanceState: MovementBalanceService.MovementBalanceState? = null,
         isWarmup: Boolean = false,
         exerciseWorkoutTypeMappings: Map<String, List<String>>,
-        exerciseMuscleMappings: Map<String, List<ExerciseMuscle>>
+        exerciseMuscleMappings: Map<String, List<ExerciseMuscle>>,
+        allowBandedExercises: Boolean? = null
     ): Mono<Exercise?> {
         return selectRotatingExerciseInternalImpl(
             userExercisePool = userExercisePool,
@@ -160,7 +165,8 @@ class ExerciseSelectionService(
             isWarmup = isWarmup,
             exerciseWorkoutTypeMappings = exerciseWorkoutTypeMappings,
             exerciseMuscleMappings = exerciseMuscleMappings,
-            isSecondary = false
+            isSecondary = false,
+            allowBandedExercises = allowBandedExercises
         ).onErrorResume { error ->
             if (error is ExerciseSelectionException) {
                 logger.info("Pool refresh needed, refreshing and retrying exercise selection...")
@@ -177,7 +183,8 @@ class ExerciseSelectionService(
                         isWarmup = isWarmup,
                         exerciseWorkoutTypeMappings = exerciseWorkoutTypeMappings,
                         exerciseMuscleMappings = exerciseMuscleMappings,
-                        isSecondary = false
+                        isSecondary = false,
+                        allowBandedExercises = allowBandedExercises
                     )
                 } else {
                     logger.warn("Pool refresh failed, skipping exercise selection to continue workout generation")
@@ -199,7 +206,8 @@ class ExerciseSelectionService(
         isWarmup: Boolean = false,
         exerciseWorkoutTypeMappings: Map<String, List<String>>,
         exerciseMuscleMappings: Map<String, List<ExerciseMuscle>>,
-        isSecondary: Boolean = false
+        isSecondary: Boolean = false,
+        allowBandedExercises: Boolean? = null
     ): Mono<Exercise?> {
         return Mono.defer {
             // Get fresh available exercises from the pool each time this method is called
@@ -397,11 +405,12 @@ class ExerciseSelectionService(
                     }
                 }
                 .flatMap { workoutTypeFilteredExercises ->
-                    // Apply banded exercise restrictions
+                    val allowBanded =
+                        allowBandedExercises ?: dayType.contains("DE", ignoreCase = true)
                     val bandedFilteredExercises =
                         applyBandedExerciseRestrictions(
                             workoutTypeFilteredExercises,
-                            dayType = dayType,
+                            allowBandedExercises = allowBanded,
                             isSecondary = isSecondary,
                             isAccessory = isAccessory
                         )
@@ -888,21 +897,21 @@ class ExerciseSelectionService(
      * 2. Banded exercises should only be used for primary movements, never secondary or accessory
      *
      * @param exercises List of exercises to filter
-     * @param dayType The day type (e.g., "ME_Upper", "DE_Lower")
+     * @param allowBandedExercises When true, banded exercises are allowed; when false, they are filtered out
      * @param isSecondary Whether this is for a secondary movement
      * @param isAccessory Whether this is for an accessory movement
      * @return Filtered list of exercises
      */
     private fun applyBandedExerciseRestrictions(
         exercises: List<Exercise>,
-        dayType: String,
+        allowBandedExercises: Boolean,
         isSecondary: Boolean,
         isAccessory: Boolean
     ): List<Exercise> {
         var filteredExercises = exercises
 
-        // Rule 1: Banded exercises only on DE days (applies to all exercise types)
-        filteredExercises = filterBandedExercisesForDayType(filteredExercises, dayType)
+        val bandedDayType = if (allowBandedExercises) "DE_Upper" else "ME_Upper"
+        filteredExercises = filterBandedExercisesForDayType(filteredExercises, bandedDayType)
 
         // Rule 2: Banded exercises only for primary movements (not secondary or accessory)
         if (isSecondary || isAccessory) {

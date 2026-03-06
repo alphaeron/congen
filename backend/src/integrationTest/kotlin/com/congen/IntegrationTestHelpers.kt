@@ -404,17 +404,26 @@ object IntegrationTestHelpers {
         keycloakId: String,
         token: String? = null
     ) {
-        // Create user equipment (bench and power bar)
         createTestUserEquipment(webTestClient, keycloakId, TEST_EQUIPMENT_NAME, token = token)
         createTestUserEquipment(webTestClient, keycloakId, TEST_EQUIPMENT_NAME_2, token = token)
+        createTestUserEquipment(webTestClient, keycloakId, "pull-up bar", token = token)
+        createTestUserEquipment(webTestClient, keycloakId, "bands", token = token)
+        createTestUserEquipment(webTestClient, keycloakId, "dumbbells", token = token)
+        createTestUserEquipment(webTestClient, keycloakId, "adjustable bench", token = token)
+        createTestUserEquipment(webTestClient, keycloakId, "safety squat bar", token = token)
+        createTestUserEquipment(webTestClient, keycloakId, "ab wheel", token = token)
+        createTestUserEquipment(webTestClient, keycloakId, "trx", token = token)
+        createTestUserEquipment(webTestClient, keycloakId, "med ball", token = token)
+        createTestUserEquipment(webTestClient, keycloakId, "box", token = token)
+        createTestUserEquipment(webTestClient, keycloakId, "kettlebell", token = token)
 
-        // Create user exercise preferences
         createTestUserExercisePreference(webTestClient, keycloakId, "Deadlift", token = token)
         createTestUserExercisePreference(webTestClient, keycloakId, TEST_EXERCISE_NAME_2, token = token)
 
-        // Create user one rep maxes
         createTestUserOneRepMax(webTestClient, keycloakId, "Deadlift", token = token)
         createTestUserOneRepMax(webTestClient, keycloakId, TEST_EXERCISE_NAME_2, token = token)
+        createTestUserOneRepMax(webTestClient, keycloakId, "Banded Bench Press", oneRepMax = 200.0, token = token)
+        createTestUserOneRepMax(webTestClient, keycloakId, "Banded Safety Bar Squat", oneRepMax = 350.0, token = token)
     }
 
     /**

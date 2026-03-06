@@ -198,8 +198,8 @@ class ConjugateWorkoutGeneratorService(
 
                                     val minAvailablePerCategory =
                                         when (programPreferences.programDaysPerWeek) {
-                                            2 -> 4
-                                            3 -> 6
+                                            2 -> 8
+                                            3 -> 8
                                             else -> programPreferences.programDaysPerWeek
                                         }
                                     val deCycleReuseNames = dePrimaryExerciseByDayType.values.toSet()

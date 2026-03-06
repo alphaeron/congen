@@ -1033,6 +1033,30 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
                     "got upper=$upperCount lower=$lowerCount (exercises: $primaryExerciseNames)"
             }
         }
+
+        if (accessoryStage != null && (workoutName == "ME_Upper_DE_Lower" || workoutName == "ME_Lower_DE_Upper")) {
+            val accessoryExercisesResponse =
+                webTestClient.get()
+                    .uri("/api/v1/programmed_exercise/stage/${accessoryStage.id}")
+                    .header("Authorization", "Bearer $token")
+                    .exchange()
+                    .expectStatus().isOk()
+                    .expectBodyList(Map::class.java)
+                    .returnResult()
+                    .responseBody!!
+            if (accessoryExercisesResponse.size >= 2) {
+                val accessoryExerciseNames = accessoryExercisesResponse.map { it["exercise_name"] as String }
+                val accessoryIsUpperFlags = accessoryExerciseNames.mapNotNull { exerciseNameToIsUpper[it] }
+                if (accessoryIsUpperFlags.size == accessoryExerciseNames.size) {
+                    val accessoryUpperCount = accessoryIsUpperFlags.count { it }
+                    val accessoryLowerCount = accessoryIsUpperFlags.size - accessoryUpperCount
+                    assert(accessoryUpperCount >= 1 && accessoryLowerCount >= 1) {
+                        "Accessory stage in 2-day mixed workout '$workoutName' must have even upper/lower split, " +
+                            "got upper=$accessoryUpperCount lower=$accessoryLowerCount (exercises: $accessoryExerciseNames)"
+                    }
+                }
+            }
+        }
     }
 
     /**
@@ -1127,6 +1151,31 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
                 assert(upperCount >= 1 && lowerCount >= 1) {
                     "Primary stage in 3-day full body DE workout '$workoutName' must have at least one upper and " +
                         "one lower, got upper=$upperCount lower=$lowerCount (exercises: $primaryExerciseNames)"
+                }
+            }
+        }
+
+        val isMixedDay = workoutName == "ME_Upper_DE_Lower" || workoutName == "ME_Lower_DE_Upper"
+        if (accessoryStage != null && dayIndexInWeek in 0..1 && isMixedDay) {
+            val accessoryExercisesResponse =
+                webTestClient.get()
+                    .uri("/api/v1/programmed_exercise/stage/${accessoryStage.id}")
+                    .header("Authorization", "Bearer $token")
+                    .exchange()
+                    .expectStatus().isOk()
+                    .expectBodyList(Map::class.java)
+                    .returnResult()
+                    .responseBody!!
+            if (accessoryExercisesResponse.size >= 2) {
+                val accessoryExerciseNames = accessoryExercisesResponse.map { it["exercise_name"] as String }
+                val accessoryIsUpperFlags = accessoryExerciseNames.mapNotNull { exerciseNameToIsUpper[it] }
+                if (accessoryIsUpperFlags.size == accessoryExerciseNames.size) {
+                    val accessoryUpperCount = accessoryIsUpperFlags.count { it }
+                    val accessoryLowerCount = accessoryIsUpperFlags.size - accessoryUpperCount
+                    assert(accessoryUpperCount >= 1 && accessoryLowerCount >= 1) {
+                        "Accessory stage in 3-day mixed workout '$workoutName' must have even upper/lower split, " +
+                            "got upper=$accessoryUpperCount lower=$accessoryLowerCount (exercises: $accessoryExerciseNames)"
+                    }
                 }
             }
         }

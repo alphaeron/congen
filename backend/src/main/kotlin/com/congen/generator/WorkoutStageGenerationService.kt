@@ -292,18 +292,56 @@ abstract class WorkoutStageGenerationService(
             ).first
         val consistentRestSeconds = prilepinGuidelinesService.getRandomRestTime(guidelines.restSeconds)
 
+        val isMixedDay = dayType in listOf("ME_Upper_DE_Lower", "ME_Lower_DE_Upper")
+        val (upperSlotDayType, lowerSlotDayType) =
+            when (dayType) {
+                "ME_Upper_DE_Lower" -> Pair("ME_Upper", "DE_Lower")
+                "ME_Lower_DE_Upper" -> Pair("DE_Upper", "ME_Lower")
+                else -> Pair("ME_Upper", "DE_Lower")
+            }
+        val upperWeakMuscles =
+            ConjugateConstants.getWeakMusclesForDayType(upperSlotDayType)
+                .filter { muscle -> preparedData.weakMuscles.contains(muscle) }
+        val lowerWeakMuscles =
+            ConjugateConstants.getWeakMusclesForDayType(lowerSlotDayType)
+                .filter { muscle -> preparedData.weakMuscles.contains(muscle) }
         val dayTypeAwareWeakMuscles =
             ConjugateConstants.getWeakMusclesForDayType(dayType)
                 .filter { muscle -> preparedData.weakMuscles.contains(muscle) }
 
         return Flux.range(1, numAccessoryExercises)
             .concatMap { slotIndex ->
-                val targetMusclesForSlot =
-                    if (dayTypeAwareWeakMuscles.isEmpty()) {
-                        preparedData.weakMuscles
+                val (targetMusclesForSlot, effectiveDayTypeForFiltering) =
+                    if (isMixedDay) {
+                        val isUpperSlot = (slotIndex % 2) == 1
+                        if (isUpperSlot) {
+                            val muscles =
+                                if (upperWeakMuscles.isEmpty()) {
+                                    preparedData.weakMuscles
+                                } else {
+                                    val muscleIndex = ((slotIndex - 1) / 2) % upperWeakMuscles.size
+                                    listOf(upperWeakMuscles[muscleIndex])
+                                }
+                            Pair(muscles, upperSlotDayType)
+                        } else {
+                            val muscles =
+                                if (lowerWeakMuscles.isEmpty()) {
+                                    preparedData.weakMuscles
+                                } else {
+                                    val muscleIndex = ((slotIndex - 1) / 2) % lowerWeakMuscles.size
+                                    listOf(lowerWeakMuscles[muscleIndex])
+                                }
+                            Pair(muscles, lowerSlotDayType)
+                        }
                     } else {
-                        val muscleIndex = (slotIndex - 1) % dayTypeAwareWeakMuscles.size
-                        listOf(dayTypeAwareWeakMuscles[muscleIndex])
+                        val muscles =
+                            if (dayTypeAwareWeakMuscles.isEmpty()) {
+                                preparedData.weakMuscles
+                            } else {
+                                val muscleIndex = (slotIndex - 1) % dayTypeAwareWeakMuscles.size
+                                listOf(dayTypeAwareWeakMuscles[muscleIndex])
+                            }
+                        Pair(muscles, null)
                     }
                 selectAccessoryExercise(
                     userExercisePool = preparedData.userExercisePool,
@@ -313,7 +351,8 @@ abstract class WorkoutStageGenerationService(
                     movementBalanceState = movementBalanceState,
                     exerciseWorkoutTypeMappings = preparedData.exerciseWorkoutTypeMappings,
                     exerciseMuscleMappings = preparedData.exerciseMuscleMappings,
-                    currentWeekNumber = preparedData.currentWeekNumber
+                    currentWeekNumber = preparedData.currentWeekNumber,
+                    effectiveDayTypeForFiltering = effectiveDayTypeForFiltering
                 ).flatMap { accessoryExercise ->
                     generateAccessorySchemeWithConsistentRest(
                         exercise = accessoryExercise,
@@ -712,6 +751,7 @@ abstract class WorkoutStageGenerationService(
      * @param exerciseWorkoutTypeMappings Pre-computed mappings of exercise names to their workout types
      * @param exerciseMuscleMappings Pre-computed mappings of exercise names to their muscle targets
      * @param currentWeekNumber Current program week (1-based). Callers must always pass this.
+     * @param effectiveDayTypeForFiltering When set (e.g. for mixed days), used for body-type filtering instead of dayType
      * @return Mono containing the selected exercise or null if none available
      */
     protected fun selectAccessoryExercise(
@@ -722,23 +762,29 @@ abstract class WorkoutStageGenerationService(
         movementBalanceState: MovementBalanceService.MovementBalanceState? = null,
         exerciseWorkoutTypeMappings: Map<String, List<String>>,
         exerciseMuscleMappings: Map<String, List<ExerciseMuscle>>,
-        currentWeekNumber: Int
+        currentWeekNumber: Int,
+        effectiveDayTypeForFiltering: String? = null
     ): Mono<Exercise> {
-        // Filter weak muscles based on day type to ensure we only target appropriate muscles
+        val dayTypeForFiltering = effectiveDayTypeForFiltering ?: dayType
         val dayTypeAwareWeakMuscles =
-            ConjugateConstants.getWeakMusclesForDayType(dayType)
+            ConjugateConstants.getWeakMusclesForDayType(dayTypeForFiltering)
                 .filter { muscle -> weakMuscles.contains(muscle) }
+        val musclesForSelection =
+            if (dayTypeAwareWeakMuscles.isEmpty()) weakMuscles else dayTypeAwareWeakMuscles
 
+        val allowBandedExercises =
+            if (effectiveDayTypeForFiltering != null) dayType.contains("DE", ignoreCase = true) else null
         return exerciseSelectionService.selectExercise(
             userExercisePool = userExercisePool,
-            targetMuscles = dayTypeAwareWeakMuscles,
+            targetMuscles = musclesForSelection,
             isAccessory = true,
             workoutType = workoutType,
-            dayType = dayType,
+            dayType = dayTypeForFiltering,
             movementBalanceState = movementBalanceState,
             exerciseWorkoutTypeMappings = exerciseWorkoutTypeMappings,
             exerciseMuscleMappings = exerciseMuscleMappings,
-            currentWeekNumber = currentWeekNumber
+            currentWeekNumber = currentWeekNumber,
+            allowBandedExercises = allowBandedExercises
         ).onErrorResume { error ->
             if (error.message?.contains("No exercises found for target muscles") == true ||
                 error.message?.contains("No suitable exercise found") == true
@@ -746,8 +792,8 @@ abstract class WorkoutStageGenerationService(
                 logger.warn(
                     "No exercises found for target muscles: {} in dayType: {} for accessory exercise. " +
                         "Skipping this accessory exercise and continuing workout generation.",
-                    dayTypeAwareWeakMuscles,
-                    dayType
+                    musclesForSelection,
+                    dayTypeForFiltering
                 )
                 // Return empty Mono to skip this exercise, allowing workout generation to continue
                 Mono.empty()
