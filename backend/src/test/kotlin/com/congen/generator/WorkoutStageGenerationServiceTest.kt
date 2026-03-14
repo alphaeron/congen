@@ -155,6 +155,10 @@ class WorkoutStageGenerationServiceTest {
         ).thenReturn(Pair(3, 3))
 
         whenever(
+            prilepinGuidelinesService.getAccessoryRepsAndSets(any(), any(), any())
+        ).thenReturn(Pair(8, 3))
+
+        whenever(
             prilepinGuidelinesService.getRestTimeBasedOnIntensity(any(), any(), any(), any())
         ).thenReturn(120)
 

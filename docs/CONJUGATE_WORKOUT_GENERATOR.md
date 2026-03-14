@@ -379,9 +379,12 @@ For a 200 lb bench press in Week 1:
 > **Note**: For detailed information about 1RM calculation, exercise matching algorithms, and reference exercise detection, see [Weight Estimation Algorithms](docs/WEIGHT_ESTIMATION_ALGORITHMS.md).
 
 ### Accessory Movements
-- **Week 1**: 55-65% intensity
-- **Week 2-3**: 70-80% intensity
-- **Week 4**: 55-65% intensity (deload week)
+- **Week 1**: 55-65% intensity, 3 sets
+- **Week 2**: 70-80% intensity, 3 sets
+- **Week 3**: 70-80% intensity, 4 sets
+- **Week 4**: 55-65% intensity (deload week), 3 sets
+
+All accessory exercises in a workout use the same number of sets based on the week in the 4-week cycle, following undulating periodization (3, 3, 4, 3 sets for weeks 1-4). Reps per set vary based on intensity within the 6-15 range.
 
 This periodization approach ensures progressive overload while incorporating planned deload weeks to prevent overtraining and promote recovery.
 

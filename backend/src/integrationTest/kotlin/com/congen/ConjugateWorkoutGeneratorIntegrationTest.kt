@@ -1257,11 +1257,13 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
         // Create reference data for 3-day program
         IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId, token = userToken)
 
-        // Add additional equipment
+        // Add additional equipment for exercise variety over 30 weeks
         IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "pull-up bar", token = userToken)
         IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "power bar", token = userToken)
         IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "dumbbells", token = userToken)
         IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "adjustable bench", token = userToken)
+        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "trap bar", token = userToken)
+        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "reverse hyper", token = userToken)
 
         // Generate conjugate program
         val programResponse =
@@ -1317,11 +1319,13 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
         // Create reference data for 4-day program
         IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId, token = userToken)
 
-        // Add additional equipment
+        // Add additional equipment for exercise variety over 40 weeks
         IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "pull-up bar", token = userToken)
         IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "power bar", token = userToken)
         IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "dumbbells", token = userToken)
         IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "adjustable bench", token = userToken)
+        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "trap bar", token = userToken)
+        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "reverse hyper", token = userToken)
 
         // Generate conjugate program
         val programResponse =
@@ -1359,6 +1363,53 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
 
         // Validate exercise uniqueness and generation invariants for all 40 weeks
         assertProgramExerciseUniquenessAndInvariants(programId4Day, 40, 4, userToken)
+    }
+
+    @Test
+    fun `should generate accessory exercises with undulating periodization sets 3 3 4 3 for weeks 1-4`() {
+        val unique = System.nanoTime()
+        val programId4Day =
+            IntegrationTestHelpers.createTestProgram(
+                webTestClient,
+                userId,
+                name = "Test Program Accessory Sets $unique",
+                numDaysPerWeek = 4,
+                token = userToken
+            )
+
+        IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId, token = userToken)
+        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "pull-up bar", token = userToken)
+        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "power bar", token = userToken)
+        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "dumbbells", token = userToken)
+        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "adjustable bench", token = userToken)
+
+        webTestClient.post()
+            .uri("/api/v1/conjugate_workout_generator/$programId4Day")
+            .header("Authorization", "Bearer $userToken")
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody(Program::class.java)
+            .returnResult()
+            .responseBody!!
+
+        for (week in 2..4) {
+            webTestClient.patch()
+                .uri("/api/v1/program/$programId4Day?name=Test Program Accessory Sets $unique&current_week_number=$week&is_active=true")
+                .header("Authorization", "Bearer $userToken")
+                .exchange()
+                .expectStatus().isOk()
+
+            webTestClient.post()
+                .uri("/api/v1/conjugate_workout_generator/$programId4Day")
+                .header("Authorization", "Bearer $userToken")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(Program::class.java)
+                .returnResult()
+                .responseBody!!
+        }
+
+        assertAccessorySetsUndulatingPeriodization(programId4Day, 4, userToken)
     }
 
     @Test
@@ -1530,6 +1581,108 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
     }
 
     /**
+     * Asserts that accessory exercises follow undulating periodization with sets 3, 3, 4, 3 for weeks 1-4.
+     * All accessory exercises within the same workout must have the same number of sets.
+     */
+    private fun assertAccessorySetsUndulatingPeriodization(
+        programId: Long,
+        daysPerWeek: Int,
+        token: String
+    ) {
+        val expectedSetsByWeek = listOf(3, 3, 4, 3)
+
+        val workoutsResponse =
+            webTestClient.get()
+                .uri("/api/v1/programmed_workout/program/$programId")
+                .header("Authorization", "Bearer $token")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBodyList(Map::class.java)
+                .returnResult()
+                .responseBody!!
+
+        val sortedWorkouts =
+            workoutsResponse
+                .mapNotNull { w -> (w["day_number"] as? Number)?.toInt()?.let { d -> d to w } }
+                .sortedBy { it.first }
+                .map { it.second }
+
+        val accessorySetCountsByWeek = mutableMapOf<Int, MutableList<Int>>()
+
+        for (workout in sortedWorkouts) {
+            val dayNumber = (workout["day_number"] as? Number)?.toInt() ?: continue
+            val weekNumber = ((dayNumber - 1) / daysPerWeek) + 1
+            if (weekNumber > 4) continue
+
+            val workoutId = (workout["id"] as Number).toLong()
+            val stagesResponse =
+                webTestClient.get()
+                    .uri("/api/v1/workout_stage/workout/$workoutId")
+                    .header("Authorization", "Bearer $token")
+                    .exchange()
+                    .expectStatus().isOk()
+                    .expectBodyList(WorkoutStage::class.java)
+                    .returnResult()
+                    .responseBody!!
+
+            val accessoryStage = stagesResponse.find { it.name.toString() == "Accessory" } ?: continue
+
+            val exercisesResponse =
+                webTestClient.get()
+                    .uri("/api/v1/programmed_exercise/stage/${accessoryStage.id}")
+                    .header("Authorization", "Bearer $token")
+                    .exchange()
+                    .expectStatus().isOk()
+                    .expectBodyList(Map::class.java)
+                    .returnResult()
+                    .responseBody!!
+
+            if (exercisesResponse.isEmpty()) continue
+
+            val setCountsForWorkout = mutableListOf<Int>()
+            for (exercise in exercisesResponse) {
+                val programmedExerciseId = (exercise["id"] as Number).toLong()
+                val setSchemesResponse =
+                    webTestClient.get()
+                        .uri("/api/v1/set_scheme/exercise/$programmedExerciseId")
+                        .header("Authorization", "Bearer $token")
+                        .exchange()
+                        .expectStatus().isOk()
+                        .expectBodyList(Map::class.java)
+                        .returnResult()
+                        .responseBody!!
+                setCountsForWorkout.add(setSchemesResponse.size)
+            }
+
+            val uniqueSetCounts = setCountsForWorkout.toSet()
+            assert(uniqueSetCounts.size == 1) {
+                "All accessory exercises in workout day $dayNumber must have same number of sets, " +
+                    "got: $setCountsForWorkout"
+            }
+
+            val setCount = setCountsForWorkout.first()
+            accessorySetCountsByWeek.getOrPut(weekNumber) { mutableListOf() }.add(setCount)
+        }
+
+        assert(accessorySetCountsByWeek.isNotEmpty()) {
+            "Expected at least one workout with Accessory stage to validate undulating periodization"
+        }
+
+        for (weekNumber in 1..4) {
+            val setCounts = accessorySetCountsByWeek[weekNumber] ?: continue
+            val uniqueCounts = setCounts.toSet()
+            assert(uniqueCounts.size == 1) {
+                "Week $weekNumber accessory exercises must all have same set count, got: $setCounts"
+            }
+            val actualSets = setCounts.first()
+            val expectedSets = expectedSetsByWeek[weekNumber - 1]
+            assert(actualSets == expectedSets) {
+                "Week $weekNumber accessory exercises should have $expectedSets sets (undulating 3,3,4,3), got $actualSets"
+            }
+        }
+    }
+
+    /**
      * Returns DE primary exercise names by week and day type.
      * Key: week number (1-based), Value: map of day type (DE_Lower, DE_Upper, and for 3-day DE_Full_Body_Upper, DE_Full_Body_Lower) to exercise name.
      */
@@ -1677,8 +1830,12 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
 
         val exerciseNameToIsUpper = getExerciseNameToIsUpperMap(token)
 
-        // Group workouts by week (assuming workouts are ordered by creation/position)
-        val workoutsByWeek = workoutsResponse.chunked(expectedDaysPerWeek)
+        val sortedWorkouts =
+            workoutsResponse
+                .mapNotNull { w -> (w["day_number"] as? Number)?.toInt()?.let { d -> d to w } }
+                .sortedBy { it.first }
+                .map { it.second }
+        val workoutsByWeek = sortedWorkouts.chunked(expectedDaysPerWeek)
         assert(workoutsByWeek.size == expectedWeeks) {
             "Expected $expectedWeeks weeks of workouts, but got ${workoutsByWeek.size}"
         }
@@ -1769,17 +1926,16 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
         }
 
         // Assert exercise rotation across weeks (sliding window logic)
-        // The algorithm should ensure exercises are rotated and not repeated too frequently
+        // The algorithm should ensure exercises are rotated and not repeated too frequently.
+        // Allow 100% overlap when pool is exhausted (small totalUnique) - with 40 weeks
+        // and limited exercises per category, some consecutive weeks may reuse when unavoidable.
         for (i in 1 until exercisesByWeek.size) {
             val currentWeekExercises = exercisesByWeek[i]
             val previousWeekExercises = exercisesByWeek[i - 1]
 
-            // Check that there's some variation between consecutive weeks
-            // (not all exercises should be the same, allowing for some overlap)
             val overlap = currentWeekExercises.intersect(previousWeekExercises)
             val totalUnique = currentWeekExercises.union(previousWeekExercises).size
 
-            // Allow some overlap but ensure there's variation
             val overlapRatio = overlap.size.toDouble() / totalUnique.toDouble()
             assert(overlapRatio < 1.0) {
                 "Week ${i + 1} should have some exercise variation from week $i. " +

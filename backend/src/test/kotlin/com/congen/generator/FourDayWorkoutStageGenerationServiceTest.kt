@@ -171,6 +171,10 @@ class FourDayWorkoutStageGenerationServiceTest {
         ).thenReturn(Pair(3, 5))
 
         whenever(
+            prilepinGuidelinesService.getAccessoryRepsAndSets(any(), any(), any())
+        ).thenReturn(Pair(8, 3))
+
+        whenever(
             prilepinGuidelinesService.getRestTimeBasedOnIntensity(
                 restRange = any(),
                 intensity = any(),
@@ -328,6 +332,10 @@ class FourDayWorkoutStageGenerationServiceTest {
         ).thenReturn(Pair(2, 8))
 
         whenever(
+            prilepinGuidelinesService.getAccessoryRepsAndSets(any(), any(), any())
+        ).thenReturn(Pair(8, 3))
+
+        whenever(
             prilepinGuidelinesService.getRestTimeBasedOnIntensity(
                 restRange = any(),
                 intensity = any(),
@@ -482,6 +490,10 @@ class FourDayWorkoutStageGenerationServiceTest {
                 movementRole = any()
             )
         ).thenReturn(Pair(3, 5))
+
+        whenever(
+            prilepinGuidelinesService.getAccessoryRepsAndSets(any(), any(), any())
+        ).thenReturn(Pair(8, 3))
 
         whenever(
             prilepinGuidelinesService.getRestTimeBasedOnIntensity(
@@ -663,6 +675,10 @@ class FourDayWorkoutStageGenerationServiceTest {
                 movementRole = any()
             )
         ).thenReturn(Pair(2, 8))
+
+        whenever(
+            prilepinGuidelinesService.getAccessoryRepsAndSets(any(), any(), any())
+        ).thenReturn(Pair(8, 3))
 
         whenever(
             prilepinGuidelinesService.getRestTimeBasedOnIntensity(

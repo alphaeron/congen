@@ -155,6 +155,86 @@ class PrilepinGuidelinesServiceTest {
     }
 
     @Test
+    fun `getAccessoryRepsAndSets should return 3 sets for week 1`() {
+        val guidelines =
+            PrilepinGuidelines(
+                intensityRange = 0.55..0.65,
+                repsPerSetRange = 6..15,
+                totalReps = 30,
+                totalRepsRange = 18..60,
+                restSeconds = 60..90
+            )
+        val (repsPerSet, numSets) =
+            service.getAccessoryRepsAndSets(
+                guidelines = guidelines,
+                intensity = 0.6,
+                weekInCycle = 1
+            )
+        assertTrue(repsPerSet in 6..15)
+        assertEquals(3, numSets)
+    }
+
+    @Test
+    fun `getAccessoryRepsAndSets should return 3 sets for week 2`() {
+        val guidelines =
+            PrilepinGuidelines(
+                intensityRange = 0.7..0.8,
+                repsPerSetRange = 6..15,
+                totalReps = 24,
+                totalRepsRange = 18..60,
+                restSeconds = 90..120
+            )
+        val (repsPerSet, numSets) =
+            service.getAccessoryRepsAndSets(
+                guidelines = guidelines,
+                intensity = 0.75,
+                weekInCycle = 2
+            )
+        assertTrue(repsPerSet in 6..15)
+        assertEquals(3, numSets)
+    }
+
+    @Test
+    fun `getAccessoryRepsAndSets should return 4 sets for week 3`() {
+        val guidelines =
+            PrilepinGuidelines(
+                intensityRange = 0.7..0.8,
+                repsPerSetRange = 6..15,
+                totalReps = 24,
+                totalRepsRange = 18..60,
+                restSeconds = 90..120
+            )
+        val (repsPerSet, numSets) =
+            service.getAccessoryRepsAndSets(
+                guidelines = guidelines,
+                intensity = 0.75,
+                weekInCycle = 3
+            )
+        assertTrue(repsPerSet in 6..15)
+        assertEquals(4, numSets)
+    }
+
+    @Test
+    fun `getAccessoryRepsAndSets should return 3 sets for week 4 deload`() {
+        val guidelines =
+            PrilepinGuidelines(
+                intensityRange = 0.55..0.65,
+                repsPerSetRange = 6..15,
+                totalReps = 30,
+                totalRepsRange = 18..60,
+                restSeconds = 60..90
+            )
+        val (repsPerSet, numSets) =
+            service.getAccessoryRepsAndSets(
+                guidelines = guidelines,
+                intensity = 0.6,
+                weekInCycle = 4
+            )
+        assertTrue(repsPerSet in 6..15)
+        assertEquals(3, numSets)
+    }
+
+    @Test
     fun `getRepsAndSetsBasedOnIntensity should use fixed DE guidelines directly without set cap`() {
         val deLowerGuidelines =
             PrilepinGuidelines(

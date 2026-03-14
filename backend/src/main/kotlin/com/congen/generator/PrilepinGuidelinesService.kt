@@ -13,6 +13,8 @@ import kotlin.random.Random
 @Service
 class PrilepinGuidelinesService {
     companion object {
+        private val ACCESSORY_SETS_BY_WEEK = listOf(3, 3, 4, 3)
+
         // Updated Prilepin's Chart guidelines for different intensity ranges
         private val PRILEPIN_GUIDELINES =
             mapOf(
@@ -182,6 +184,38 @@ class PrilepinGuidelinesService {
             return Pair(adjustedRepsPerSet.coerceIn(minReps, maxReps), numSets)
         }
 
+        return Pair(repsPerSet, numSets)
+    }
+
+    /**
+     * Gets reps per set and number of sets for accessory exercises with undulating periodization.
+     *
+     * All accessory exercises in a workout use the same number of sets based on week in cycle:
+     * - Week 1: 3 sets
+     * - Week 2: 3 sets
+     * - Week 3: 4 sets
+     * - Week 4: 3 sets (deload)
+     *
+     * Reps per set vary based on intensity within the accessory guidelines (6-15 reps).
+     *
+     * @param guidelines The accessory guidelines from [getUndulatingPeriodizationGuidelines]
+     * @param intensity The actual intensity being used
+     * @param weekInCycle The week in the 4-week cycle (1-4)
+     * @return Pair of (reps per set, number of sets)
+     */
+    fun getAccessoryRepsAndSets(
+        guidelines: PrilepinGuidelines,
+        intensity: Double,
+        weekInCycle: Int
+    ): Pair<Int, Int> {
+        val (repsPerSet, _) =
+            getRepsAndSetsBasedOnIntensity(
+                guidelines = guidelines,
+                intensity = intensity,
+                movementRole = "accessory"
+            )
+        val weekIndex = (weekInCycle - 1) % ACCESSORY_SETS_BY_WEEK.size
+        val numSets = ACCESSORY_SETS_BY_WEEK[weekIndex]
         return Pair(repsPerSet, numSets)
     }
 

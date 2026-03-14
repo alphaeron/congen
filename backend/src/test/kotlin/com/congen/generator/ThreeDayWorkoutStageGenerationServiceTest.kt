@@ -162,6 +162,10 @@ class ThreeDayWorkoutStageGenerationServiceTest {
         ).thenReturn(Pair(3, 3))
 
         whenever(
+            prilepinGuidelinesService.getAccessoryRepsAndSets(any(), any(), any())
+        ).thenReturn(Pair(8, 3))
+
+        whenever(
             prilepinGuidelinesService.getRestTimeBasedOnIntensity(any(), any(), any(), any())
         ).thenReturn(120)
 
@@ -306,6 +310,10 @@ class ThreeDayWorkoutStageGenerationServiceTest {
         ).thenReturn(Pair(3, 3))
 
         whenever(
+            prilepinGuidelinesService.getAccessoryRepsAndSets(any(), any(), any())
+        ).thenReturn(Pair(8, 3))
+
+        whenever(
             prilepinGuidelinesService.getRestTimeBasedOnIntensity(any(), any(), any(), any())
         ).thenReturn(120)
 
@@ -448,6 +456,10 @@ class ThreeDayWorkoutStageGenerationServiceTest {
         whenever(
             prilepinGuidelinesService.getRepsAndSetsBasedOnIntensity(any(), any(), any())
         ).thenReturn(Pair(5, 5))
+
+        whenever(
+            prilepinGuidelinesService.getAccessoryRepsAndSets(any(), any(), any())
+        ).thenReturn(Pair(8, 3))
 
         whenever(
             prilepinGuidelinesService.getRestTimeBasedOnIntensity(any(), any(), any(), any())

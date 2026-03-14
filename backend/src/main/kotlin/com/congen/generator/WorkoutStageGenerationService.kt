@@ -1071,11 +1071,12 @@ abstract class WorkoutStageGenerationService(
                 currentWeekNumber = currentWeekNumber,
                 movementRole = "accessory"
             )
+        val weekInCycle = (currentWeekNumber % 4) + 1
         val (repsPerSet, numSets) =
-            prilepinGuidelinesService.getRepsAndSetsBasedOnIntensity(
+            prilepinGuidelinesService.getAccessoryRepsAndSets(
                 guidelines = guidelines,
                 intensity = intensity,
-                movementRole = "accessory"
+                weekInCycle = weekInCycle
             )
 
         val isDynamicEffort = dayType.startsWith("DE_")

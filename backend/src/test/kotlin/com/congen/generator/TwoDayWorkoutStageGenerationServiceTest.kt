@@ -162,6 +162,10 @@ class TwoDayWorkoutStageGenerationServiceTest {
         ).thenReturn(Pair(3, 3))
 
         whenever(
+            prilepinGuidelinesService.getAccessoryRepsAndSets(any(), any(), any())
+        ).thenReturn(Pair(8, 3))
+
+        whenever(
             prilepinGuidelinesService.getRestTimeBasedOnIntensity(any(), any(), any(), any())
         ).thenReturn(120)
 
@@ -304,6 +308,10 @@ class TwoDayWorkoutStageGenerationServiceTest {
         whenever(
             prilepinGuidelinesService.getRepsAndSetsBasedOnIntensity(any(), any(), any())
         ).thenReturn(Pair(3, 3))
+
+        whenever(
+            prilepinGuidelinesService.getAccessoryRepsAndSets(any(), any(), any())
+        ).thenReturn(Pair(8, 3))
 
         whenever(
             prilepinGuidelinesService.getRestTimeBasedOnIntensity(any(), any(), any(), any())
