@@ -172,25 +172,6 @@ INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES
 INSERT INTO exercise_equipment (exercise_name, equipment_name)
 VALUES ('One‑Arm Dumbbell Row', 'dumbbells');
 
--- Kroc Row (Heavy One‑Arm Row)
-INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory)
-VALUES (
-  'Kroc Row',
-  'Heavy, high-rep single-arm row using dumbbell or barbell.',
-  'horizontal_pull',
-  true,
-  true,
-  true
-);
-INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES
-  ('Kroc Row', 'lats'),
-  ('Kroc Row', 'rhomboids'),
-  ('Kroc Row', 'traps'),
-  ('Kroc Row', 'rear deltoid'),
-  ('Kroc Row', 'biceps');
-INSERT INTO exercise_equipment (exercise_name, equipment_name)
-VALUES ('Kroc Row', 'dumbbells');
-
 -- Meadows Row
 INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory)
 VALUES (
@@ -204,9 +185,7 @@ VALUES (
 INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES
   ('Meadows Row', 'lats'),
   ('Meadows Row', 'rhomboids'),
-  ('Meadows Row', 'traps'),
   ('Meadows Row', 'rear deltoid'),
-  ('Meadows Row', 'biceps');
 INSERT INTO exercise_equipment (exercise_name, equipment_name)
 VALUES ('Meadows Row', 'landmine');
 
@@ -512,10 +491,6 @@ INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) V
 -- One-Arm Dumbbell Row can be used for dynamic effort
 INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('One‑Arm Dumbbell Row', 'horizontal_pull', 'dynamic_effort');
 INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('One‑Arm Dumbbell Row', 'horizontal_pull', 'maximal_effort');
-
--- Kroc Row can be used for both dynamic and maximal effort
-INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Kroc Row', 'horizontal_pull', 'dynamic_effort');
-INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Kroc Row', 'horizontal_pull', 'maximal_effort');
 
 -- Meadows Row can be used for dynamic effort
 INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Meadows Row', 'horizontal_pull', 'dynamic_effort');
