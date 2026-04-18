@@ -983,6 +983,31 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
             "2-day workout '$workoutName' should NOT have Secondary stage"
         }
 
+        val warmupStage = stages.find { it.name.toString() == "Warmup" }
+        if (warmupStage != null) {
+            val warmupExercisesResponse =
+                webTestClient.get()
+                    .uri("/api/v1/programmed_exercise/stage/${warmupStage.id}")
+                    .header("Authorization", "Bearer $token")
+                    .exchange()
+                    .expectStatus().isOk()
+                    .expectBodyList(Map::class.java)
+                    .returnResult()
+                    .responseBody!!
+            if (warmupExercisesResponse.isNotEmpty()) {
+                val warmupExerciseNames = warmupExercisesResponse.map { it["exercise_name"] as String }
+                val warmupIsUpperFlags = warmupExerciseNames.mapNotNull { exerciseNameToIsUpper[it] }
+                if (warmupIsUpperFlags.size == warmupExerciseNames.size) {
+                    val warmupUpperCount = warmupIsUpperFlags.count { it }
+                    val warmupLowerCount = warmupIsUpperFlags.size - warmupUpperCount
+                    assert(warmupUpperCount >= 1 && warmupLowerCount >= 1) {
+                        "Warmup stage in 2-day workout '$workoutName' must have at least one upper and one lower body exercise, " +
+                            "got upper=$warmupUpperCount lower=$warmupLowerCount (exercises: $warmupExerciseNames)"
+                    }
+                }
+            }
+        }
+
         // Validate stage order
         val primaryStage = stages.find { it.name.toString() == "Primary" }
         val accessoryStage = stages.find { it.name.toString() == "Accessory" }
@@ -1096,6 +1121,31 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
             "3-day workout '$workoutName' should NOT have Secondary stage"
         }
 
+        val warmupStage = stages.find { it.name.toString() == "Warmup" }
+        if (warmupStage != null) {
+            val warmupExercisesResponse =
+                webTestClient.get()
+                    .uri("/api/v1/programmed_exercise/stage/${warmupStage.id}")
+                    .header("Authorization", "Bearer $token")
+                    .exchange()
+                    .expectStatus().isOk()
+                    .expectBodyList(Map::class.java)
+                    .returnResult()
+                    .responseBody!!
+            if (warmupExercisesResponse.isNotEmpty()) {
+                val warmupExerciseNames = warmupExercisesResponse.map { it["exercise_name"] as String }
+                val warmupIsUpperFlags = warmupExerciseNames.mapNotNull { exerciseNameToIsUpper[it] }
+                if (warmupIsUpperFlags.size == warmupExerciseNames.size) {
+                    val warmupUpperCount = warmupIsUpperFlags.count { it }
+                    val warmupLowerCount = warmupIsUpperFlags.size - warmupUpperCount
+                    assert(warmupUpperCount >= 1 && warmupLowerCount >= 1) {
+                        "Warmup stage in 3-day workout '$workoutName' must have at least one upper and one lower body exercise, " +
+                            "got upper=$warmupUpperCount lower=$warmupLowerCount (exercises: $warmupExerciseNames)"
+                    }
+                }
+            }
+        }
+
         // Validate stage order
         val primaryStage = stages.find { it.name.toString() == "Primary" }
         val accessoryStage = stages.find { it.name.toString() == "Accessory" }
@@ -1197,11 +1247,21 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
         // Create reference data for 2-day program
         IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId, token = userToken)
 
-        // Add additional equipment
+        IntegrationTestHelpers.createTestUserOneRepMax(webTestClient, userId, "Banded Bench Press", oneRepMax = 200.0, token = userToken)
+        IntegrationTestHelpers.createTestUserOneRepMax(
+            webTestClient,
+            userId,
+            "Banded Safety Bar Squat",
+            oneRepMax = 350.0,
+            token = userToken
+        )
+
         IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "pull-up bar", token = userToken)
         IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "power bar", token = userToken)
         IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "dumbbells", token = userToken)
         IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "adjustable bench", token = userToken)
+        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "bands", token = userToken)
+        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "safety squat bar", token = userToken)
 
         // Generate conjugate program
         val programResponse =
@@ -1257,11 +1317,21 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
         // Create reference data for 3-day program
         IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId, token = userToken)
 
-        // Add additional equipment for exercise variety over 30 weeks
+        IntegrationTestHelpers.createTestUserOneRepMax(webTestClient, userId, "Banded Bench Press", oneRepMax = 200.0, token = userToken)
+        IntegrationTestHelpers.createTestUserOneRepMax(
+            webTestClient,
+            userId,
+            "Banded Safety Bar Squat",
+            oneRepMax = 350.0,
+            token = userToken
+        )
+
         IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "pull-up bar", token = userToken)
         IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "power bar", token = userToken)
         IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "dumbbells", token = userToken)
         IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "adjustable bench", token = userToken)
+        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "bands", token = userToken)
+        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "safety squat bar", token = userToken)
         IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "trap bar", token = userToken)
         IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "reverse hyper", token = userToken)
 

@@ -214,8 +214,8 @@ class FourDayWorkoutStageGenerationService(
                             movementBalanceState = movementBalanceState
                         )
 
-                    // Combine all stages - collect non-empty stages
-                    Flux.merge(
+                    // Combine all stages sequentially so warmup gets first pick of pool before accessory
+                    Flux.concat(
                         primaryStageMono,
                         secondaryStageMono,
                         warmupStageMono,

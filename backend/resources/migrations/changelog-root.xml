@@ -18,4 +18,9 @@
       path="data/"
       relativeToChangelogFile="true"
   />
+  <includeAll
+      errorIfMissingOrEmpty="false"
+      path="data/exercises/"
+      relativeToChangelogFile="true"
+  />
 </databaseChangeLog>

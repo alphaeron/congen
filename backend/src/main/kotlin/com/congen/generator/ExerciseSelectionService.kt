@@ -25,6 +25,33 @@ class ExerciseSelectionService(
     }
 
     /**
+     * Resolves which single accessory pool to use from a single-region day type (e.g. ME_Upper, DE_Lower).
+     * Combined workout labels such as ME_Upper_DE_Lower contain both "Upper" and "Lower" substrings;
+     * callers must pass the slot-specific type from alternating accessory logic (or another unambiguous
+     * single-region ME or DE day type), never the combined day string.
+     */
+    private fun accessoryPoolForDayType(
+        userExercisePool: UserExercisePool,
+        dayType: String
+    ): List<Exercise> {
+        val hasUpper = dayType.contains("Upper", ignoreCase = true)
+        val hasLower = dayType.contains("Lower", ignoreCase = true)
+        return when {
+            hasUpper && hasLower ->
+                throw IllegalStateException(
+                    "Accessory pool requires a single-region day type (e.g. ME_Upper or DE_Lower); " +
+                        "combined day types cannot select one pool. Got: $dayType"
+                )
+            hasUpper -> userExercisePool.getAvailableAccessoryUpperExercises()
+            hasLower -> userExercisePool.getAvailableAccessoryLowerExercises()
+            else ->
+                throw IllegalStateException(
+                    "Accessory pool requires a day type that includes Upper or Lower (e.g. DE_Upper, ME_Lower); got: $dayType"
+                )
+        }
+    }
+
+    /**
      * Determines weak muscles based on user's 1RM data and exercise history.
      *
      * @param dayType The type of day to determine appropriate weak muscles for
@@ -196,6 +223,10 @@ class ExerciseSelectionService(
         }
     }
 
+    /**
+     * Chooses the accessory exercise source list by body region using a single-region [dayType]
+     * (e.g. ME_Upper, DE_Lower). Combined day strings must not be passed; callers use per-slot effective types.
+     */
     private fun selectRotatingExerciseInternalImpl(
         userExercisePool: UserExercisePool,
         targetMuscles: List<String>,
@@ -210,24 +241,22 @@ class ExerciseSelectionService(
         allowBandedExercises: Boolean? = null
     ): Mono<Exercise?> {
         return Mono.defer {
-            // Get fresh available exercises from the pool each time this method is called
             val availableExercises =
                 if (isAccessory) {
-                    userExercisePool.getAvailableAccessoryExercises()
+                    accessoryPoolForDayType(userExercisePool, dayType)
                 } else {
                     userExercisePool.getAvailablePrimaryExercises()
                 }
 
             if (availableExercises.isEmpty()) {
-                logger.error("No available exercises found for isAccessory: {}", isAccessory)
+                logger.error("No available exercises found for isAccessory: {}, dayType: {}", isAccessory, dayType)
                 return@defer Mono.error(
                     ExerciseSelectionException(
-                        "No available exercises found for isAccessory: $isAccessory"
+                        "No available exercises found for isAccessory: $isAccessory, dayType: $dayType"
                     )
                 )
             }
 
-            // Apply day-type filtering first
             var dayTypeFilteredExercises = filterExercisesByDayType(availableExercises, dayType)
             logger.info(
                 "Day-type filtering for dayType '{}': {} available exercises -> {} filtered exercises",
@@ -243,21 +272,17 @@ class ExerciseSelectionService(
                     isAccessory
                 )
 
-                // Let the pool handle the refresh logic
                 val poolRefreshed = userExercisePool.refreshPool()
                 if (poolRefreshed) {
                     logger.info("Pool refreshed successfully, retrying exercise selection...")
-                    // Retry with refreshed pool
                     val refreshedAvailableExercises =
                         if (isAccessory) {
-                            userExercisePool.getAvailableAccessoryExercises()
+                            accessoryPoolForDayType(userExercisePool, dayType)
                         } else {
                             userExercisePool.getAvailablePrimaryExercises()
                         }
                     val refreshedDayTypeFilteredExercises = filterExercisesByDayType(refreshedAvailableExercises, dayType)
                     if (refreshedDayTypeFilteredExercises.isEmpty()) {
-                        // For primary exercises, we must have at least one exercise available
-                        // If day-type filtering fails even after pool refresh, fall back to any available primary exercise
                         if (!isAccessory) {
                             logger.warn(
                                 "No exercises available after day-type filtering for primary exercise even after pool refresh, " +
@@ -354,9 +379,9 @@ class ExerciseSelectionService(
                 }
             }
 
-            // Filter out plyometric exercises only for warmup selection
+            // Filter out plyometric exercises for warmup selection, except allow for lower body warmups
             val exercisesAfterPlyometricFiltering =
-                if (isWarmup) {
+                if (isWarmup && !dayType.contains("Lower")) {
                     val nonPlyometricExercises = dayTypeFilteredExercises.filter { it.movementType != MovementType.PLYOMETRIC }
                     if (nonPlyometricExercises.isEmpty()) {
                         logger.error(
@@ -994,8 +1019,12 @@ class ExerciseSelectionService(
      * - Select 2 exercises that focus on the main muscles that the primary workout for the day requires
      * - Select 1 exercise whose movement pattern is close to the primary exercise, but requires less
      *
-     * For 2 and 3 day templates:
-     * - Select 3 exercises that focus on the common muscles used for the ME and DE exercises that day
+     * For 2 and 3 day templates (combined days with both upper and lower primary exercises):
+     * - Select 1 upper body warmup targeting the upper exercise's primary muscles
+     * - Select 1 lower body warmup targeting the lower exercise's primary muscles
+     * - Select 1 general warmup exercise
+     *
+     * For other 2/3 day configurations: select 3 exercises focusing on common muscles.
      *
      * @param userExercisePool The user's exercise pool
      * @param primaryExercise The primary exercise for the day (if available)
@@ -1132,6 +1161,12 @@ class ExerciseSelectionService(
     /**
      * Selects warmup exercises for 2 and 3 day templates.
      *
+     * For combined days (ME_Upper_DE_Lower, ME_Lower_DE_Upper, DE_Full_Body) with both upper and lower
+     * primary exercises: selects 1 upper body warmup targeting the upper exercise's muscles, 1 lower body
+     * warmup targeting the lower exercise's muscles, and 1 general warmup.
+     *
+     * For other 2/3 day configurations: selects 3 exercises focusing on common muscles.
+     *
      * @param userExercisePool The user's exercise pool
      * @param primaryExercise The primary exercise for the day (if available)
      * @param secondaryExercise The secondary exercise for the day (if available)
@@ -1152,35 +1187,133 @@ class ExerciseSelectionService(
         exerciseWorkoutTypeMappings: Map<String, List<String>>,
         currentWeekNumber: Int
     ): Mono<List<Exercise>> {
-        // For 2 and 3 day templates, use muscles from the actual primary exercises selected
-        val primaryMuscles =
-            if (primaryExercise != null) {
-                val primaryExerciseMuscles = exerciseMuscleMappings[primaryExercise.name] ?: emptyList()
-                primaryExerciseMuscles.map { it.muscleName.lowercase() }
-            } else {
-                emptyList<String>()
+        return when {
+            dayType in listOf("ME_Upper_DE_Lower", "ME_Lower_DE_Upper", "DE_Full_Body") &&
+                primaryExercise != null &&
+                secondaryExercise != null &&
+                primaryExercise.isUpper != secondaryExercise.isUpper ->
+                selectCombinedDayWarmupExercises(
+                    userExercisePool = userExercisePool,
+                    primaryExercise = primaryExercise,
+                    secondaryExercise = secondaryExercise,
+                    workoutType = workoutType,
+                    exerciseMuscleMappings = exerciseMuscleMappings,
+                    exerciseWorkoutTypeMappings = exerciseWorkoutTypeMappings,
+                    currentWeekNumber = currentWeekNumber
+                )
+            else -> {
+                val primaryMuscles =
+                    if (primaryExercise != null) {
+                        val primaryExerciseMuscles = exerciseMuscleMappings[primaryExercise.name] ?: emptyList()
+                        primaryExerciseMuscles.map { it.muscleName.lowercase() }
+                    } else {
+                        emptyList<String>()
+                    }
+
+                val secondaryMuscles =
+                    if (secondaryExercise != null) {
+                        val secondaryExerciseMuscles = exerciseMuscleMappings[secondaryExercise.name] ?: emptyList()
+                        secondaryExerciseMuscles.map { it.muscleName.lowercase() }
+                    } else {
+                        emptyList<String>()
+                    }
+
+                val allMuscles = (primaryMuscles + secondaryMuscles).toSet().toList()
+
+                selectMuscleFocusedWarmupExercises(
+                    userExercisePool = userExercisePool,
+                    targetMuscles = allMuscles,
+                    count = 3,
+                    dayType = dayType,
+                    workoutType = workoutType,
+                    exerciseWorkoutTypeMappings = exerciseWorkoutTypeMappings,
+                    exerciseMuscleMappings = exerciseMuscleMappings,
+                    currentWeekNumber = currentWeekNumber
+                )
             }
+        }
+    }
 
-        val secondaryMuscles =
-            if (secondaryExercise != null) {
-                val secondaryExerciseMuscles = exerciseMuscleMappings[secondaryExercise.name] ?: emptyList()
-                secondaryExerciseMuscles.map { it.muscleName.lowercase() }
-            } else {
-                emptyList<String>()
+    /**
+     * Selects warmup exercises for combined days with both upper and lower body primary exercises.
+     * Returns 1 upper body warmup, 1 lower body warmup, and 1 general warmup.
+     *
+     * @param userExercisePool The user's exercise pool
+     * @param primaryExercise The primary exercise for the day
+     * @param secondaryExercise The secondary exercise for the day
+     * @param workoutType The workout type
+     * @param exerciseMuscleMappings Pre-computed mappings of exercise names to their muscle targets
+     * @param exerciseWorkoutTypeMappings Pre-computed mappings of exercise names to their workout types
+     * @param currentWeekNumber Current program week (1-based)
+     * @return Mono containing list of 3 warmup exercises: upper-targeted, lower-targeted, general
+     */
+    private fun selectCombinedDayWarmupExercises(
+        userExercisePool: UserExercisePool,
+        primaryExercise: Exercise,
+        secondaryExercise: Exercise,
+        workoutType: String,
+        exerciseMuscleMappings: Map<String, List<ExerciseMuscle>>,
+        exerciseWorkoutTypeMappings: Map<String, List<String>>,
+        currentWeekNumber: Int
+    ): Mono<List<Exercise>> {
+        val upperExercise = if (primaryExercise.isUpper) primaryExercise else secondaryExercise
+        val lowerExercise = if (primaryExercise.isUpper) secondaryExercise else primaryExercise
+
+        val upperMuscles =
+            (exerciseMuscleMappings[upperExercise.name] ?: emptyList()).map { it.muscleName.lowercase() }
+        val lowerMuscles =
+            (exerciseMuscleMappings[lowerExercise.name] ?: emptyList()).map { it.muscleName.lowercase() }
+
+        val upperWarmupMono =
+            selectMuscleFocusedWarmupExercises(
+                userExercisePool = userExercisePool,
+                targetMuscles = upperMuscles,
+                count = 1,
+                dayType = "ME_Upper",
+                workoutType = workoutType,
+                exerciseWorkoutTypeMappings = exerciseWorkoutTypeMappings,
+                exerciseMuscleMappings = exerciseMuscleMappings,
+                currentWeekNumber = currentWeekNumber
+            )
+
+        val lowerWarmupMono =
+            selectMuscleFocusedWarmupExercises(
+                userExercisePool = userExercisePool,
+                targetMuscles = lowerMuscles,
+                count = 1,
+                dayType = "ME_Lower",
+                workoutType = workoutType,
+                exerciseWorkoutTypeMappings = exerciseWorkoutTypeMappings,
+                exerciseMuscleMappings = exerciseMuscleMappings,
+                currentWeekNumber = currentWeekNumber
+            )
+
+        val generalWarmupMono =
+            selectGeneralWarmupExercises(
+                userExercisePool = userExercisePool,
+                count = 1,
+                dayType = "DE_Upper",
+                workoutType = workoutType,
+                exerciseWorkoutTypeMappings = exerciseWorkoutTypeMappings,
+                exerciseMuscleMappings = exerciseMuscleMappings,
+                currentWeekNumber = currentWeekNumber
+            )
+
+        return upperWarmupMono
+            .flatMap { upperList ->
+                lowerWarmupMono.flatMap { lowerList ->
+                    generalWarmupMono.map { generalList ->
+                        upperList + lowerList + generalList
+                    }
+                }
             }
-
-        val allMuscles = (primaryMuscles + secondaryMuscles).toSet().toList()
-
-        return selectMuscleFocusedWarmupExercises(
-            userExercisePool = userExercisePool,
-            targetMuscles = allMuscles,
-            count = 3,
-            dayType = dayType,
-            workoutType = workoutType,
-            exerciseWorkoutTypeMappings = exerciseWorkoutTypeMappings,
-            exerciseMuscleMappings = exerciseMuscleMappings,
-            currentWeekNumber = currentWeekNumber
-        )
+            .onErrorResume { error ->
+                logger.error(
+                    "Failed to select combined day warmup exercises. Error: {}",
+                    error.message
+                )
+                Mono.just(emptyList())
+            }
     }
 
     /**

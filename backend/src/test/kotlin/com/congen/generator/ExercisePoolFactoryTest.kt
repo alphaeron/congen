@@ -167,7 +167,9 @@ class ExercisePoolFactoryTest {
 
         assertThat(result.getAvailableExerciseCount()).isEqualTo(5)
         assertThat(result.getAvailablePrimaryExercises().size).isEqualTo(4)
-        assertThat(result.getAvailableAccessoryExercises().size).isEqualTo(1)
+        assertThat(
+            result.getAvailableAccessoryUpperExercises().size + result.getAvailableAccessoryLowerExercises().size
+        ).isEqualTo(1)
     }
 
     @Test

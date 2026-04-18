@@ -158,29 +158,65 @@ class UserExercisePool(
     }
 
     /**
-     * Gets accessory exercises that are currently available.
-     * Automatically refreshes the pool if it's running low on exercises.
+     * Gets upper body accessory exercises that are currently available.
+     * Automatically refreshes the pool if upper body accessories are exhausted.
      *
-     * @return List of available accessory exercises
+     * @return List of available upper body accessory exercises
      */
-    fun getAvailableAccessoryExercises(): List<Exercise> {
-        val accessoryExercises = availableExercises.values.filter { it.isAccessory }
+    fun getAvailableAccessoryUpperExercises(): List<Exercise> {
+        val accessoryUpperExercises = availableExercises.values.filter { it.isAccessory && it.isUpper }
 
-        // Auto-refresh if we're running low on accessory exercises
-        if (accessoryExercises.size <= 5 && usedExerciseNames.isNotEmpty()) {
-            logger.info("Auto-refreshing pool: only {} accessory exercises available, attempting refresh...", accessoryExercises.size)
+        if (accessoryUpperExercises.isEmpty() && usedExerciseNames.isNotEmpty()) {
+            logger.info("Auto-refreshing pool: 0 upper body accessory exercises available, attempting refresh...")
             refreshPool()
-            val refreshedAccessoryExercises = availableExercises.values.filter { it.isAccessory }
+            val refreshedAccessoryUpperExercises = availableExercises.values.filter { it.isAccessory && it.isUpper }
             logger.info(
-                "Available accessory exercises after auto-refresh ({}): {}",
-                refreshedAccessoryExercises.size,
-                refreshedAccessoryExercises.map { it.name }.sorted()
+                "Available upper body accessory exercises after auto-refresh ({}): {}",
+                refreshedAccessoryUpperExercises.size,
+                refreshedAccessoryUpperExercises.map { it.name }.sorted()
             )
-            return refreshedAccessoryExercises
+            return refreshedAccessoryUpperExercises
         }
 
-        logger.info("Available accessory exercises ({}): {}", accessoryExercises.size, accessoryExercises.map { it.name }.sorted())
-        return accessoryExercises
+        logger.info(
+            "Available upper body accessory exercises ({}): {}",
+            accessoryUpperExercises.size,
+            accessoryUpperExercises.map {
+                it.name
+            }.sorted()
+        )
+        return accessoryUpperExercises
+    }
+
+    /**
+     * Gets lower body accessory exercises that are currently available.
+     * Automatically refreshes the pool if lower body accessories are exhausted.
+     *
+     * @return List of available lower body accessory exercises
+     */
+    fun getAvailableAccessoryLowerExercises(): List<Exercise> {
+        val accessoryLowerExercises = availableExercises.values.filter { it.isAccessory && !it.isUpper }
+
+        if (accessoryLowerExercises.isEmpty() && usedExerciseNames.isNotEmpty()) {
+            logger.info("Auto-refreshing pool: 0 lower body accessory exercises available, attempting refresh...")
+            refreshPool()
+            val refreshedAccessoryLowerExercises = availableExercises.values.filter { it.isAccessory && !it.isUpper }
+            logger.info(
+                "Available lower body accessory exercises after auto-refresh ({}): {}",
+                refreshedAccessoryLowerExercises.size,
+                refreshedAccessoryLowerExercises.map { it.name }.sorted()
+            )
+            return refreshedAccessoryLowerExercises
+        }
+
+        logger.info(
+            "Available lower body accessory exercises ({}): {}",
+            accessoryLowerExercises.size,
+            accessoryLowerExercises.map {
+                it.name
+            }.sorted()
+        )
+        return accessoryLowerExercises
     }
 
     /**
@@ -267,12 +303,11 @@ class UserExercisePool(
                 val userEquipmentNames = userEquipment.map { it.equipmentName.lowercase() }.toSet()
                 val exerciseEquipmentNames = exerciseEquipment.map { it.equipmentName.lowercase() }.toSet()
 
-                // If user has no equipment preferences, allow all exercises (fallback behavior)
                 val hasRequiredEquipment =
-                    if (userEquipmentNames.isEmpty()) {
-                        true // Allow all exercises when user has no equipment preferences
-                    } else {
-                        userEquipmentNames.any { userEq -> exerciseEquipmentNames.contains(userEq) }
+                    when {
+                        exerciseEquipmentNames.isEmpty() -> true
+                        userEquipmentNames.isEmpty() -> true
+                        else -> userEquipmentNames.any { userEq -> exerciseEquipmentNames.contains(userEq) }
                     }
 
                 // Apply dumbbell restriction for primary upper body exercises

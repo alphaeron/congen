@@ -186,6 +186,79 @@ class ExerciseSelectionServiceTest {
     }
 
     @Test
+    fun `selectWarmupExercises for combined day should include upper lower and general warmup exercises`() {
+        val primaryExercise = createSampleExercise("Bench Press", MovementType.HORIZONTAL_PUSH).copy(isUpper = true)
+        val secondaryExercise = createSampleExercise("Squat", MovementType.SQUAT).copy(isUpper = false)
+        val upperWarmup = createSampleExercise("Push-ups", MovementType.HORIZONTAL_PUSH).copy(isAccessory = true, isUpper = true)
+        val lowerWarmup = createSampleExercise("Bodyweight Squat", MovementType.SQUAT).copy(isAccessory = true, isUpper = false)
+        val generalWarmup = createSampleExercise("Arm Circles", MovementType.ISOLATION).copy(isAccessory = true, isUpper = true)
+
+        val exerciseEquipmentMappings =
+            createSampleExerciseEquipmentMappings() +
+                mapOf(
+                    "Push-ups" to listOf(ExerciseEquipment("Push-ups", "bodyweight")),
+                    "Bodyweight Squat" to listOf(ExerciseEquipment("Bodyweight Squat", "bodyweight")),
+                    "Arm Circles" to listOf(ExerciseEquipment("Arm Circles", "bodyweight"))
+                )
+
+        val exerciseMuscleMappings =
+            createSampleExerciseMuscleMappings() +
+                mapOf(
+                    "Push-ups" to listOf(ExerciseMuscle("Push-ups", "chest"), ExerciseMuscle("Push-ups", "triceps")),
+                    "Bodyweight Squat" to
+                        listOf(
+                            ExerciseMuscle("Bodyweight Squat", "quadriceps"),
+                            ExerciseMuscle("Bodyweight Squat", "glutes")
+                        ),
+                    "Arm Circles" to listOf(ExerciseMuscle("Arm Circles", "deltoids"))
+                )
+
+        val userEquipment = createSampleUserEquipment() + listOf(UserEquipment(USER_ID, "bodyweight", now))
+
+        val realUserExercisePool =
+            UserExercisePool(
+                allExercises = listOf(upperWarmup, lowerWarmup, generalWarmup),
+                preferences = emptyList(),
+                userEquipment = userEquipment,
+                exerciseEquipmentMappings = exerciseEquipmentMappings,
+                exerciseMuscleMappings = exerciseMuscleMappings,
+                previouslyUsedExercises = emptyList(),
+                userId = USER_ID
+            )
+
+        val exerciseWorkoutTypeMappings =
+            mapOf(
+                "Bench Press" to listOf("maximal_effort"),
+                "Squat" to listOf("dynamic_effort"),
+                "Push-ups" to listOf("maximal_effort", "dynamic_effort"),
+                "Bodyweight Squat" to listOf("maximal_effort", "dynamic_effort"),
+                "Arm Circles" to listOf("maximal_effort", "dynamic_effort")
+            )
+
+        val result =
+            exerciseSelectionService.selectWarmupExercises(
+                userExercisePool = realUserExercisePool,
+                primaryExercise = primaryExercise,
+                secondaryExercise = secondaryExercise,
+                isFourDayTemplate = false,
+                dayType = "ME_Upper_DE_Lower",
+                workoutType = "maximal_effort",
+                exerciseMuscleMappings = exerciseMuscleMappings,
+                exerciseEquipmentMappings = exerciseEquipmentMappings,
+                exerciseWorkoutTypeMappings = exerciseWorkoutTypeMappings,
+                currentWeekNumber = 1
+            )
+
+        StepVerifier.create(result)
+            .expectNextMatches { list ->
+                list.size == 3 &&
+                    list.any { it.isUpper } &&
+                    list.any { !it.isUpper }
+            }
+            .verifyComplete()
+    }
+
+    @Test
     fun `filterBandedExercisesForSecondary should exclude banded exercises for secondary movements`() {
         val bandedExercise = createSampleExercise("Banded Bench Press", MovementType.HORIZONTAL_PUSH)
         val regularExercise = createSampleExercise("Bench Press", MovementType.HORIZONTAL_PUSH)

@@ -2,6 +2,9 @@
 .DS_Store
 .vscode
 
+__pycache__
+*.pyc
+
 .gradle
 build/
 !gradle/wrapper/gradle-wrapper.jar

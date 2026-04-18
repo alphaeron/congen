@@ -56,7 +56,10 @@ class UserExercisePoolTest {
         assertEquals(3, userExercisePool.getAvailableExerciseCount())
         assertEquals(3, userExercisePool.getAvailableExercises().size)
         assertEquals(3, userExercisePool.getAvailablePrimaryExercises().size)
-        assertEquals(0, userExercisePool.getAvailableAccessoryExercises().size)
+        assertEquals(
+            0,
+            userExercisePool.getAvailableAccessoryUpperExercises().size + userExercisePool.getAvailableAccessoryLowerExercises().size
+        )
     }
 
     @Test
@@ -260,7 +263,10 @@ class UserExercisePoolTest {
         assertEquals(0, userExercisePool.getAvailableExerciseCount())
         assertTrue(userExercisePool.getAvailableExercises().isEmpty())
         assertTrue(userExercisePool.getAvailablePrimaryExercises().isEmpty())
-        assertTrue(userExercisePool.getAvailableAccessoryExercises().isEmpty())
+        assertTrue(
+            userExercisePool.getAvailableAccessoryUpperExercises().isEmpty() &&
+                userExercisePool.getAvailableAccessoryLowerExercises().isEmpty()
+        )
     }
 
     @Test
@@ -291,7 +297,48 @@ class UserExercisePoolTest {
 
         assertEquals(5, userExercisePool.getAvailableExerciseCount())
         assertEquals(4, userExercisePool.getAvailablePrimaryExercises().size)
-        assertEquals(1, userExercisePool.getAvailableAccessoryExercises().size)
+        assertEquals(
+            1,
+            userExercisePool.getAvailableAccessoryUpperExercises().size + userExercisePool.getAvailableAccessoryLowerExercises().size
+        )
+        assertEquals(1, userExercisePool.getAvailableAccessoryUpperExercises().size)
+        assertEquals(0, userExercisePool.getAvailableAccessoryLowerExercises().size)
+    }
+
+    @Test
+    fun `should return split accessory pools by upper and lower body`() {
+        val exercises =
+            listOf(
+                Exercise("Bench Press", "Sample", MovementType.HORIZONTAL_PUSH, false, true, false),
+                Exercise("Chin-Up", "Sample", MovementType.VERTICAL_PULL, false, true, true),
+                Exercise("Ab Wheel", "Sample", MovementType.CORE, false, true, true),
+                Exercise("Sit Ups", "Sample", MovementType.CORE, false, false, true),
+                Exercise("GHR", "Sample", MovementType.CORE, false, false, true)
+            )
+        val userEquipment = createSampleUserEquipment()
+        val preferences = emptyList<UserExercisePreference>()
+        val exerciseEquipmentMappings = createSampleExerciseEquipmentMappings()
+        val exerciseMuscleMappings = createSampleExerciseMuscleMappings()
+
+        userExercisePool =
+            UserExercisePool(
+                allExercises = exercises,
+                preferences = preferences,
+                userEquipment = userEquipment,
+                exerciseEquipmentMappings = exerciseEquipmentMappings,
+                exerciseMuscleMappings = exerciseMuscleMappings,
+                previouslyUsedExercises = emptyList(),
+                userId = USER_ID
+            )
+
+        assertEquals(2, userExercisePool.getAvailableAccessoryUpperExercises().size)
+        assertEquals(2, userExercisePool.getAvailableAccessoryLowerExercises().size)
+        assertEquals(
+            4,
+            userExercisePool.getAvailableAccessoryUpperExercises().size + userExercisePool.getAvailableAccessoryLowerExercises().size
+        )
+        assertTrue(userExercisePool.getAvailableAccessoryUpperExercises().all { it.isUpper })
+        assertTrue(userExercisePool.getAvailableAccessoryLowerExercises().all { !it.isUpper })
     }
 
     private fun createSampleExercises(): List<Exercise> {
