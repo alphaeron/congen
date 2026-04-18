@@ -223,9 +223,7 @@ VALUES (
 INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES
   ('Face Pulls', 'rear deltoid'),
   ('Face Pulls', 'rotator cuff'),
-  ('Face Pulls', 'traps'),
   ('Face Pulls', 'rhomboids'),
-  ('Face Pulls', 'serratus anterior');
 INSERT INTO exercise_equipment (exercise_name, equipment_name)
 VALUES ('Face Pulls', 'bands');
 

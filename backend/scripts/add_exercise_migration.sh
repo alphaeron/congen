@@ -245,7 +245,7 @@ main() {
 
   local muscles_line equipment_line
   muscles_line=$(prompt_line "Target muscles (comma-separated muscle_name values; must exist in muscle table)")
-  equipment_line=$(prompt_line "Equipment for this exercise (comma-separated equipment_name values; must exist unless added above)")
+  equipment_line=$(prompt_line "Equipment (comma-separated names; leave empty for bodyweight — must exist unless added above)")
 
   local muscles=()
   local m
@@ -260,10 +260,6 @@ main() {
 
   if [ "${#muscles[@]}" -eq 0 ]; then
     echo "At least one muscle is required." >&2
-    exit 2
-  fi
-  if [ "${#equipment_names[@]}" -eq 0 ]; then
-    echo "At least one equipment row is required." >&2
     exit 2
   fi
 
@@ -328,17 +324,19 @@ main() {
     fi
   done
 
-  sql+="INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES"$'\n'
-  mi=0
-  for m in "${equipment_names[@]}"; do
-    mi=$((mi + 1))
-    meq=$(sql_quote "$m")
-    if [ "$mi" -lt "${#equipment_names[@]}" ]; then
-      sql+="  (${en_q}, ${meq}),"$'\n'
-    else
-      sql+="  (${en_q}, ${meq});"$'\n'
-    fi
-  done
+  if [ "${#equipment_names[@]}" -gt 0 ]; then
+    sql+="INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES"$'\n'
+    mi=0
+    for m in "${equipment_names[@]}"; do
+      mi=$((mi + 1))
+      meq=$(sql_quote "$m")
+      if [ "$mi" -lt "${#equipment_names[@]}" ]; then
+        sql+="  (${en_q}, ${meq}),"$'\n'
+      else
+        sql+="  (${en_q}, ${meq});"$'\n'
+      fi
+    done
+  fi
 
   if [ "$add_ewt" = "true" ] && { [ "$inc_de" = "true" ] || [ "$inc_me" = "true" ]; }; then
     sql+="INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES"$'\n'
