@@ -17,6 +17,18 @@
       errorIfMissingOrEmpty="false"
       path="data/"
       relativeToChangelogFile="true"
+      minDepth="1"
+      maxDepth="1"
+  />
+  <includeAll
+      errorIfMissingOrEmpty="false"
+      path="data/equipment/"
+      relativeToChangelogFile="true"
+  />
+  <includeAll
+      errorIfMissingOrEmpty="false"
+      path="data/muscle/"
+      relativeToChangelogFile="true"
   />
   <includeAll
       errorIfMissingOrEmpty="false"
