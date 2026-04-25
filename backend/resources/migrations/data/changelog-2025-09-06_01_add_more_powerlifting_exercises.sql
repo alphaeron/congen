@@ -460,7 +460,6 @@ VALUES (
 INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES
   ('Dumbbell Pullover', 'pec major'),
   ('Dumbbell Pullover', 'lats'),
-  ('Dumbbell Pullover', 'anterior deltoid'),
   ('Dumbbell Pullover', 'serratus anterior');
 INSERT INTO exercise_equipment (exercise_name, equipment_name)
 VALUES ('Dumbbell Pullover', 'dumbbells');

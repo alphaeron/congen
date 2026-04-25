@@ -2,7 +2,7 @@
 #
 # Interactive generator for Liquibase data migrations that add a single exercise.
 #
-# Creates: resources/migrations/data/changelog-YYYY-MM-DD_NN_<sanitized_exercise_name>.sql
+# Creates: resources/migrations/data/exercises/changelog-YYYY-MM-DD_NN_<sanitized_exercise_name>.sql
 # NN increments per calendar day when multiple migrations share the same date.
 #
 # Usage: add_exercise_migration.sh [--date YYYY-MM-DD] [--dry-run]
@@ -11,7 +11,7 @@
 set -u
 
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
-DATA_DIR="${SCRIPT_DIR}/../resources/migrations/data"
+DATA_DIR="${SCRIPT_DIR}/../resources/migrations/data/exercises"
 
 MOVEMENT_TYPES=(
   horizontal_push
