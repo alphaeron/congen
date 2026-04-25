@@ -244,10 +244,7 @@ INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('Inverted
 INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES ('Upright Row', 'Start with the bar in an overhand grip in front of you. Lift the bar up along your body to your shoulders keeping the elbows up and back. Lower the bar to the starting position.', 'vertical_pull', true, true, true);
 INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Upright Row', 'lateral deltoid');
 INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Upright Row', 'traps');
-INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Upright Row', 'teres minor');
-INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Upright Row', 'rotator cuff');
 INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Upright Row', 'biceps');
-INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Upright Row', 'serratus anterior');
 INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('Upright Row', 'power bar');
 INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES ('Bent-Over Row', 'Hinge your hips and lean forward, grabbing the bar in front of you. Pull the bar straight up to your solar plexus. Lower the bar to the ground in a controlled fashion and repeat.', 'vertical_pull', true, true, false);
 INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Bent-Over Row', 'rear deltoid');
