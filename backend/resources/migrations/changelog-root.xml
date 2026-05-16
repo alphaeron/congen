@@ -13,12 +13,13 @@
       path="schema/"
       relativeToChangelogFile="true"
   />
-  <includeAll
-      errorIfMissingOrEmpty="false"
-      path="data/"
+  <include
+      file="data/changelog-2025-01-27_01_workout_stage_type_data.sql"
       relativeToChangelogFile="true"
-      minDepth="1"
-      maxDepth="1"
+  />
+  <include
+      file="data/changelog-2025-09-21_01_performance_tracking_test_protocols.sql"
+      relativeToChangelogFile="true"
   />
   <includeAll
       errorIfMissingOrEmpty="false"

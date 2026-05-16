@@ -417,7 +417,19 @@ abstract class WorkoutStageGenerationService(
         dayType: String,
         movementBalanceState: MovementBalanceService.MovementBalanceState? = null
     ): Mono<WorkoutStageData> {
-        val workoutType = if (dayType.startsWith("DE_")) "dynamic_effort" else "maximal_effort"
+        /*
+         * Conditioning is DE work. Use contains("DE") so combined templates (e.g. ME_Upper_DE_Lower)
+         * get dynamic_effort; startsWith("DE_") would wrongly assign maximal_effort to those days.
+         * Accessory conditioning skips workout-type pool filtering; combined days still need
+         * conditioningEffectiveDayTypeForFiltering (same single-region DE types as accessory slots)
+         * so pool and body-region filtering do not see both Upper and Lower in one dayType string.
+         */
+        val workoutType =
+            if (dayType.contains("DE", ignoreCase = true)) {
+                "dynamic_effort"
+            } else {
+                "maximal_effort"
+            }
         if (!hasConditioning(dayType)) {
             logger.info("No conditioning required for dayType: {}", dayType)
             return Mono.just(
@@ -431,7 +443,17 @@ abstract class WorkoutStageGenerationService(
         }
 
         val conditioningEffectiveDayTypeForFiltering =
-            if (dayType == "DE_Full_Body") "DE_Upper" else null
+            when (dayType) {
+                "DE_Full_Body" ->
+                    if (preparedData.currentWeekNumber % 2 == 1) {
+                        "DE_Upper"
+                    } else {
+                        "DE_Lower"
+                    }
+                "ME_Upper_DE_Lower" -> "DE_Lower"
+                "ME_Lower_DE_Upper" -> "DE_Upper"
+                else -> null
+            }
 
         return selectConditioningExercise(
             userExercisePool = preparedData.userExercisePool,

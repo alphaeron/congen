@@ -1069,7 +1069,6 @@ class ExerciseSelectionService(
                 primaryExercise = primaryExercise,
                 secondaryExercise = secondaryExercise,
                 dayType = dayType,
-                workoutType = workoutType,
                 exerciseMuscleMappings = exerciseMuscleMappings,
                 exerciseWorkoutTypeMappings = exerciseWorkoutTypeMappings,
                 currentWeekNumber = currentWeekNumber
@@ -1115,7 +1114,6 @@ class ExerciseSelectionService(
                     targetMuscles = adjustedTargetMuscles,
                     count = 2,
                     dayType = dayType,
-                    workoutType = workoutType,
                     exerciseWorkoutTypeMappings = exerciseWorkoutTypeMappings,
                     exerciseMuscleMappings = exerciseMuscleMappings,
                     currentWeekNumber = currentWeekNumber
@@ -1150,7 +1148,6 @@ class ExerciseSelectionService(
                 userExercisePool = userExercisePool,
                 count = 3,
                 dayType = dayType,
-                workoutType = workoutType,
                 exerciseWorkoutTypeMappings = exerciseWorkoutTypeMappings,
                 exerciseMuscleMappings = exerciseMuscleMappings,
                 currentWeekNumber = currentWeekNumber
@@ -1171,7 +1168,6 @@ class ExerciseSelectionService(
      * @param primaryExercise The primary exercise for the day (if available)
      * @param secondaryExercise The secondary exercise for the day (if available)
      * @param dayType The type of workout day
-     * @param workoutType The workout type (e.g., "maximal_effort", "dynamic_effort")
      * @param exerciseMuscleMappings Pre-computed mappings of exercise names to their muscle targets
      * @param exerciseWorkoutTypeMappings Pre-computed mappings of exercise names to their workout types
      * @param currentWeekNumber Current program week (0-based)
@@ -1182,7 +1178,6 @@ class ExerciseSelectionService(
         primaryExercise: Exercise?,
         secondaryExercise: Exercise?,
         dayType: String,
-        workoutType: String,
         exerciseMuscleMappings: Map<String, List<ExerciseMuscle>>,
         exerciseWorkoutTypeMappings: Map<String, List<String>>,
         currentWeekNumber: Int
@@ -1196,7 +1191,7 @@ class ExerciseSelectionService(
                     userExercisePool = userExercisePool,
                     primaryExercise = primaryExercise,
                     secondaryExercise = secondaryExercise,
-                    workoutType = workoutType,
+                    combinedDayType = dayType,
                     exerciseMuscleMappings = exerciseMuscleMappings,
                     exerciseWorkoutTypeMappings = exerciseWorkoutTypeMappings,
                     currentWeekNumber = currentWeekNumber
@@ -1225,7 +1220,6 @@ class ExerciseSelectionService(
                     targetMuscles = allMuscles,
                     count = 3,
                     dayType = dayType,
-                    workoutType = workoutType,
                     exerciseWorkoutTypeMappings = exerciseWorkoutTypeMappings,
                     exerciseMuscleMappings = exerciseMuscleMappings,
                     currentWeekNumber = currentWeekNumber
@@ -1241,7 +1235,7 @@ class ExerciseSelectionService(
      * @param userExercisePool The user's exercise pool
      * @param primaryExercise The primary exercise for the day
      * @param secondaryExercise The secondary exercise for the day
-     * @param workoutType The workout type
+     * @param combinedDayType Combined template (e.g. ME_Upper_DE_Lower)
      * @param exerciseMuscleMappings Pre-computed mappings of exercise names to their muscle targets
      * @param exerciseWorkoutTypeMappings Pre-computed mappings of exercise names to their workout types
      * @param currentWeekNumber Current program week (1-based)
@@ -1251,7 +1245,7 @@ class ExerciseSelectionService(
         userExercisePool: UserExercisePool,
         primaryExercise: Exercise,
         secondaryExercise: Exercise,
-        workoutType: String,
+        combinedDayType: String,
         exerciseMuscleMappings: Map<String, List<ExerciseMuscle>>,
         exerciseWorkoutTypeMappings: Map<String, List<String>>,
         currentWeekNumber: Int
@@ -1264,39 +1258,42 @@ class ExerciseSelectionService(
         val lowerMuscles =
             (exerciseMuscleMappings[lowerExercise.name] ?: emptyList()).map { it.muscleName.lowercase() }
 
+        val slots = combinedDayWarmupSlotDayTypes(combinedDayType, currentWeekNumber)
+
         val upperWarmupMono =
-            selectMuscleFocusedWarmupExercises(
-                userExercisePool = userExercisePool,
-                targetMuscles = upperMuscles,
-                count = 1,
-                dayType = "ME_Upper",
-                workoutType = workoutType,
-                exerciseWorkoutTypeMappings = exerciseWorkoutTypeMappings,
-                exerciseMuscleMappings = exerciseMuscleMappings,
-                currentWeekNumber = currentWeekNumber
+            warmupSlotAsList(
+                selectWarmupSlotExercise(
+                    userExercisePool = userExercisePool,
+                    targetMuscles = upperMuscles,
+                    dayType = slots.upperSlotDayType,
+                    exerciseWorkoutTypeMappings = exerciseWorkoutTypeMappings,
+                    exerciseMuscleMappings = exerciseMuscleMappings,
+                    currentWeekNumber = currentWeekNumber
+                )
             )
 
         val lowerWarmupMono =
-            selectMuscleFocusedWarmupExercises(
-                userExercisePool = userExercisePool,
-                targetMuscles = lowerMuscles,
-                count = 1,
-                dayType = "ME_Lower",
-                workoutType = workoutType,
-                exerciseWorkoutTypeMappings = exerciseWorkoutTypeMappings,
-                exerciseMuscleMappings = exerciseMuscleMappings,
-                currentWeekNumber = currentWeekNumber
+            warmupSlotAsList(
+                selectWarmupSlotExercise(
+                    userExercisePool = userExercisePool,
+                    targetMuscles = lowerMuscles,
+                    dayType = slots.lowerSlotDayType,
+                    exerciseWorkoutTypeMappings = exerciseWorkoutTypeMappings,
+                    exerciseMuscleMappings = exerciseMuscleMappings,
+                    currentWeekNumber = currentWeekNumber
+                )
             )
 
         val generalWarmupMono =
-            selectGeneralWarmupExercises(
-                userExercisePool = userExercisePool,
-                count = 1,
-                dayType = "DE_Upper",
-                workoutType = workoutType,
-                exerciseWorkoutTypeMappings = exerciseWorkoutTypeMappings,
-                exerciseMuscleMappings = exerciseMuscleMappings,
-                currentWeekNumber = currentWeekNumber
+            warmupSlotAsList(
+                selectWarmupSlotExercise(
+                    userExercisePool = userExercisePool,
+                    targetMuscles = emptyList(),
+                    dayType = slots.generalSlotDayType,
+                    exerciseWorkoutTypeMappings = exerciseWorkoutTypeMappings,
+                    exerciseMuscleMappings = exerciseMuscleMappings,
+                    currentWeekNumber = currentWeekNumber
+                )
             )
 
         return upperWarmupMono
@@ -1309,11 +1306,112 @@ class ExerciseSelectionService(
             }
             .onErrorResume { error ->
                 logger.error(
-                    "Failed to select combined day warmup exercises. Error: {}",
+                    "Failed to select combined day warmup exercises for {}. Error: {}",
+                    combinedDayType,
                     error.message
                 )
                 Mono.just(emptyList())
             }
+    }
+
+    private data class CombinedDayWarmupSlots(
+        val upperSlotDayType: String,
+        val lowerSlotDayType: String,
+        val generalSlotDayType: String
+    )
+
+    private fun combinedDayWarmupSlotDayTypes(
+        combinedDayType: String,
+        currentWeekNumber: Int
+    ): CombinedDayWarmupSlots {
+        return when (combinedDayType) {
+            "ME_Upper_DE_Lower" ->
+                CombinedDayWarmupSlots(
+                    upperSlotDayType = "ME_Upper",
+                    lowerSlotDayType = "DE_Lower",
+                    generalSlotDayType = "DE_Upper"
+                )
+            "ME_Lower_DE_Upper" ->
+                CombinedDayWarmupSlots(
+                    upperSlotDayType = "DE_Upper",
+                    lowerSlotDayType = "ME_Lower",
+                    generalSlotDayType = "DE_Lower"
+                )
+            "DE_Full_Body" -> {
+                val generalSlotDayType =
+                    if (currentWeekNumber % 2 == 1) {
+                        "DE_Upper"
+                    } else {
+                        "DE_Lower"
+                    }
+                CombinedDayWarmupSlots(
+                    upperSlotDayType = "DE_Upper",
+                    lowerSlotDayType = "DE_Lower",
+                    generalSlotDayType = generalSlotDayType
+                )
+            }
+            else ->
+                throw IllegalArgumentException(
+                    "Unsupported combined day type for warmup slots: $combinedDayType"
+                )
+        }
+    }
+
+    private fun workoutTypeForWarmupSlot(slotDayType: String): String {
+        return if (slotDayType.startsWith("DE_")) {
+            "dynamic_effort"
+        } else {
+            "maximal_effort"
+        }
+    }
+
+    private fun selectWarmupSlotExercise(
+        userExercisePool: UserExercisePool,
+        targetMuscles: List<String>,
+        dayType: String,
+        exerciseWorkoutTypeMappings: Map<String, List<String>>,
+        exerciseMuscleMappings: Map<String, List<ExerciseMuscle>>,
+        currentWeekNumber: Int
+    ): Mono<Exercise> {
+        val workoutType = workoutTypeForWarmupSlot(dayType)
+        val allowBanded = dayType.contains("DE", ignoreCase = true)
+
+        fun attempt(muscles: List<String>): Mono<Exercise> {
+            return selectExercise(
+                userExercisePool = userExercisePool,
+                targetMuscles = muscles,
+                isAccessory = true,
+                workoutType = workoutType,
+                dayType = dayType,
+                movementBalanceState = null,
+                isWarmup = true,
+                exerciseWorkoutTypeMappings = exerciseWorkoutTypeMappings,
+                exerciseMuscleMappings = exerciseMuscleMappings,
+                currentWeekNumber = currentWeekNumber,
+                allowBandedExercises = allowBanded
+            )
+        }
+
+        return attempt(targetMuscles)
+            .onErrorResume { firstError ->
+                if (targetMuscles.isEmpty()) {
+                    Mono.error(firstError)
+                } else {
+                    attempt(emptyList())
+                }
+            }
+            .onErrorResume { secondError ->
+                val poolRefreshed = userExercisePool.refreshPool()
+                if (poolRefreshed) {
+                    attempt(emptyList())
+                } else {
+                    Mono.error(secondError)
+                }
+            }
+    }
+
+    private fun warmupSlotAsList(exerciseMono: Mono<Exercise>): Mono<List<Exercise>> {
+        return exerciseMono.map { listOf(it) }.defaultIfEmpty(emptyList())
     }
 
     /**
@@ -1322,8 +1420,7 @@ class ExerciseSelectionService(
      * @param userExercisePool The user's exercise pool
      * @param targetMuscles Target muscles to focus on
      * @param count Number of exercises to select
-     * @param dayType The day type (e.g., "ME_Upper", "DE_Lower")
-     * @param workoutType The workout type (e.g., "maximal_effort", "dynamic_effort")
+     * @param dayType The day type (e.g., "ME_Upper", "DE_Lower"); workout type is derived from this in selectWarmupSlotExercise
      * @param exerciseWorkoutTypeMappings Pre-computed mappings of exercise names to their workout types
      * @param exerciseMuscleMappings Pre-computed mappings of exercise names to their muscle targets
      * @param currentWeekNumber Current program week (1-based). Callers must always pass this.
@@ -1334,7 +1431,6 @@ class ExerciseSelectionService(
         targetMuscles: List<String>,
         count: Int,
         dayType: String,
-        workoutType: String,
         exerciseWorkoutTypeMappings: Map<String, List<String>>,
         exerciseMuscleMappings: Map<String, List<ExerciseMuscle>>,
         currentWeekNumber: Int
@@ -1348,7 +1444,6 @@ class ExerciseSelectionService(
             targetMuscles = targetMuscles,
             count = count,
             dayType = dayType,
-            workoutType = workoutType,
             exerciseWorkoutTypeMappings = exerciseWorkoutTypeMappings,
             exerciseMuscleMappings = exerciseMuscleMappings,
             currentWeekNumber = currentWeekNumber
@@ -1363,7 +1458,6 @@ class ExerciseSelectionService(
                         targetMuscles = targetMuscles,
                         count = count,
                         dayType = dayType,
-                        workoutType = workoutType,
                         exerciseWorkoutTypeMappings = exerciseWorkoutTypeMappings,
                         exerciseMuscleMappings = exerciseMuscleMappings,
                         currentWeekNumber = currentWeekNumber
@@ -1391,7 +1485,6 @@ class ExerciseSelectionService(
         targetMuscles: List<String>,
         count: Int,
         dayType: String,
-        workoutType: String,
         exerciseWorkoutTypeMappings: Map<String, List<String>>,
         exerciseMuscleMappings: Map<String, List<ExerciseMuscle>>,
         currentWeekNumber: Int
@@ -1399,16 +1492,10 @@ class ExerciseSelectionService(
         // Use Flux.range to select multiple exercises sequentially
         return Flux.range(1, count)
             .concatMap {
-                selectExercise(
+                selectWarmupSlotExercise(
                     userExercisePool = userExercisePool,
                     targetMuscles = targetMuscles,
-                    // Warmup exercises are accessory
-                    isAccessory = true,
-                    // Use correct workoutType derived from dayType
-                    workoutType = workoutType,
                     dayType = dayType,
-                    movementBalanceState = null,
-                    isWarmup = true,
                     exerciseWorkoutTypeMappings = exerciseWorkoutTypeMappings,
                     exerciseMuscleMappings = exerciseMuscleMappings,
                     currentWeekNumber = currentWeekNumber
@@ -1557,8 +1644,7 @@ class ExerciseSelectionService(
      *
      * @param userExercisePool The user's exercise pool
      * @param count Number of exercises to select
-     * @param dayType The day type (e.g., "ME_Upper", "DE_Lower")
-     * @param workoutType The workout type (e.g., "maximal_effort", "dynamic_effort")
+     * @param dayType The day type (e.g., "ME_Upper", "DE_Lower"); workout type is derived from this in selectWarmupSlotExercise
      * @param exerciseWorkoutTypeMappings Pre-computed mappings of exercise names to their workout types
      * @param exerciseMuscleMappings Pre-computed mappings of exercise names to their muscle targets
      * @param currentWeekNumber Current program week (0-based)
@@ -1568,7 +1654,6 @@ class ExerciseSelectionService(
         userExercisePool: UserExercisePool,
         count: Int,
         dayType: String,
-        workoutType: String,
         exerciseWorkoutTypeMappings: Map<String, List<String>>,
         exerciseMuscleMappings: Map<String, List<ExerciseMuscle>>,
         currentWeekNumber: Int
@@ -1580,14 +1665,10 @@ class ExerciseSelectionService(
         // Use Flux.range to select multiple exercises sequentially
         return Flux.range(1, count)
             .concatMap {
-                selectExercise(
+                selectWarmupSlotExercise(
                     userExercisePool = userExercisePool,
                     targetMuscles = emptyList(),
-                    isAccessory = true,
-                    workoutType = workoutType,
                     dayType = dayType,
-                    movementBalanceState = null,
-                    isWarmup = true,
                     exerciseWorkoutTypeMappings = exerciseWorkoutTypeMappings,
                     exerciseMuscleMappings = exerciseMuscleMappings,
                     currentWeekNumber = currentWeekNumber
