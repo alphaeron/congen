@@ -4,9 +4,6 @@
 --comment: Add exercise Triangle Bar Low Row
 --rollback SELECT 1
 
-INSERT INTO equipment (name, description) VALUES ('Triangle Bar Handle', 'Triangle-shaped handle for cable tower.')
-ON CONFLICT (name) DO NOTHING;
-
 INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory)
 VALUES (
   'Triangle Bar Low Row',
@@ -25,4 +22,3 @@ INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES
 INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES
   ('Triangle Bar Low Row', 'horizontal_pull', 'dynamic_effort'),
   ('Triangle Bar Low Row', 'horizontal_pull', 'maximal_effort');
-

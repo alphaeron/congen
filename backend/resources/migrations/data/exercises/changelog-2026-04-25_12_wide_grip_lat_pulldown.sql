@@ -4,9 +4,6 @@
 --comment: Add exercise Wide Grip Lat Pulldown
 --rollback SELECT 1
 
-INSERT INTO equipment (name, description) VALUES ('Lat Pulldown', 'A lat pulldown machine or configuration/attachment.')
-ON CONFLICT (name) DO NOTHING;
-
 INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory)
 VALUES (
   'Wide Grip Lat Pulldown',
@@ -23,4 +20,3 @@ INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES
 INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES
   ('Wide Grip Lat Pulldown', 'vertical_pull', 'dynamic_effort'),
   ('Wide Grip Lat Pulldown', 'vertical_pull', 'maximal_effort');
-

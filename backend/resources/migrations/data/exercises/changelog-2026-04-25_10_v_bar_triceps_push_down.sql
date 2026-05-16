@@ -4,9 +4,6 @@
 --comment: Add exercise V-Bar Triceps Push-Down
 --rollback SELECT 1
 
-INSERT INTO equipment (name, description) VALUES ('V-Bar Handle', 'V-Bar handle for cable tower.')
-ON CONFLICT (name) DO NOTHING;
-
 INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory)
 VALUES (
   'V-Bar Triceps Push-Down',
@@ -23,4 +20,3 @@ INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES
 INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES
   ('V-Bar Triceps Push-Down', 'isolation', 'dynamic_effort'),
   ('V-Bar Triceps Push-Down', 'isolation', 'maximal_effort');
-

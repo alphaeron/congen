@@ -4,9 +4,6 @@
 --comment: Add exercise BodyBlade Internal/External Oscillation
 --rollback SELECT 1
 
-INSERT INTO equipment (name, description) VALUES ('bodyblade', 'A BodyBlade is a lightweight, handheld rehabilitation and fitness tool that uses inertia and vibration to challenge muscle endurance and stability.')
-ON CONFLICT (name) DO NOTHING;
-
 INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory)
 VALUES (
   'BodyBlade Internal/External Oscillation',
@@ -23,4 +20,3 @@ INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES
 INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES
   ('BodyBlade Internal/External Oscillation', 'isolation', 'dynamic_effort'),
   ('BodyBlade Internal/External Oscillation', 'isolation', 'maximal_effort');
-
