@@ -57,31 +57,7 @@ class UserExercisePool(
     fun getUserId(): String = userId
 
     init {
-        // Initialize available exercises with all exercises that match user preferences
-        // Equipment filtering will be done reactively during exercise selection
-        val preferenceFilteredExercises =
-            allExercises.filter { exercise ->
-                val preference = preferences.find { pref -> pref.exerciseName == exercise.name }
-                val shouldIncludeByPreference =
-                    when {
-                        // If user has a preference to avoid this exercise, exclude it
-                        preference?.shouldAvoid == true -> false
-                        // If user has a preference for this exercise (shouldAvoid = false), include it
-                        preference?.shouldAvoid == false -> true
-                        // If no preference exists, include the exercise (default behavior)
-                        else -> true
-                    }
-
-                // Apply sliding window exclusions that were calculated in ExercisePoolFactory
-                val isExcludedBySlidingWindow = excludedExercises.contains(exercise.name)
-
-                // For primary upper body exercises, exclude dumbbell exercises
-                val isPrimaryUpperBody = !exercise.isAccessory && exercise.isUpper
-                val isDumbbellExercise = exercise.name.lowercase().contains("dumbbell")
-                val shouldExcludeDumbbell = isPrimaryUpperBody && isDumbbellExercise
-
-                shouldIncludeByPreference && !isExcludedBySlidingWindow && !shouldExcludeDumbbell
-            }
+        val preferenceFilteredExercises = allExercises.filter { exerciseMatchesPoolPreferences(it) }
 
         preferenceFilteredExercises.forEach { exercise ->
             availableExercises[exercise.name] = exercise
@@ -141,8 +117,8 @@ class UserExercisePool(
         val primaryExercises = availableExercises.values.filter { !it.isAccessory }
 
         // Auto-refresh if we're running low on primary exercises
-        if (primaryExercises.size == 0 && usedExerciseNames.isNotEmpty()) {
-            logger.info("Auto-refreshing pool: only {} primary exercises available, attempting refresh...", primaryExercises.size)
+        if (primaryExercises.isEmpty()) {
+            logger.info("Auto-refreshing pool: no primary exercises available, attempting refresh...")
             refreshPool()
             val refreshedPrimaryExercises = availableExercises.values.filter { !it.isAccessory }
             logger.info(
@@ -166,8 +142,8 @@ class UserExercisePool(
     fun getAvailableAccessoryUpperExercises(): List<Exercise> {
         val accessoryUpperExercises = availableExercises.values.filter { it.isAccessory && it.isUpper }
 
-        if (accessoryUpperExercises.isEmpty() && usedExerciseNames.isNotEmpty()) {
-            logger.info("Auto-refreshing pool: 0 upper body accessory exercises available, attempting refresh...")
+        if (accessoryUpperExercises.isEmpty()) {
+            logger.info("Auto-refreshing pool: no upper body accessory exercises available, attempting refresh...")
             refreshPool()
             val refreshedAccessoryUpperExercises = availableExercises.values.filter { it.isAccessory && it.isUpper }
             logger.info(
@@ -197,8 +173,8 @@ class UserExercisePool(
     fun getAvailableAccessoryLowerExercises(): List<Exercise> {
         val accessoryLowerExercises = availableExercises.values.filter { it.isAccessory && !it.isUpper }
 
-        if (accessoryLowerExercises.isEmpty() && usedExerciseNames.isNotEmpty()) {
-            logger.info("Auto-refreshing pool: 0 lower body accessory exercises available, attempting refresh...")
+        if (accessoryLowerExercises.isEmpty()) {
+            logger.info("Auto-refreshing pool: no lower body accessory exercises available, attempting refresh...")
             refreshPool()
             val refreshedAccessoryLowerExercises = availableExercises.values.filter { it.isAccessory && !it.isUpper }
             logger.info(
@@ -220,37 +196,20 @@ class UserExercisePool(
     }
 
     /**
-     * Refreshes the exercise pool by adding back all exercises except those used in the current week.
-     * This is called when the pool is depleted for a specific day type or category.
+     * Refreshes the exercise pool when selection has depleted available exercises.
      *
-     * @return true if the pool was refreshed, false if no exercises were available to refresh
+     * Applies, in order: same-week reuse for non-sliding-window exercises; sliding-window
+     * accessories for mixed-day slots; conditioning accessories for reuse across DE days in the week.
+     *
+     * @return true if at least one exercise was made available again
      */
     fun refreshPool(): Boolean {
         val currentUsedCount = usedExerciseNames.size
+        val exercisesToRefresh = LinkedHashSet<Exercise>()
 
-        val exercisesToRefresh =
-            allExercises.filter { exercise ->
-                val preference = preferences.find { pref -> pref.exerciseName == exercise.name }
-                val shouldInclude =
-                    when {
-                        preference?.shouldAvoid == true -> false
-                        preference?.shouldAvoid == false -> true
-                        else -> true
-                    }
-
-                val isPrimaryUpperBody = !exercise.isAccessory && exercise.isUpper
-                val isDumbbellExercise = exercise.name.lowercase().contains("dumbbell")
-                val shouldExcludeDumbbell = isPrimaryUpperBody && isDumbbellExercise
-
-                val isExcludedBySlidingWindow = excludedExercises.contains(exercise.name)
-                val isUsedThisWorkout = usedExerciseNames.contains(exercise.name)
-
-                shouldInclude &&
-                    !isExcludedBySlidingWindow &&
-                    !shouldExcludeDumbbell &&
-                    !isUsedThisWorkout &&
-                    !availableExercises.containsKey(exercise.name)
-            }
+        exercisesToRefresh.addAll(findStandardRefreshCandidates())
+        exercisesToRefresh.addAll(findSlidingWindowExcludedAccessoryRefreshCandidates())
+        exercisesToRefresh.addAll(findConditioningAccessoryRefreshCandidates())
 
         exercisesToRefresh.forEach { exercise ->
             availableExercises[exercise.name] = exercise
@@ -390,6 +349,73 @@ class UserExercisePool(
      * @return List of all exercises
      */
     fun getAllExercises(): List<Exercise> = allExercises
+
+    private fun findStandardRefreshCandidates(): List<Exercise> {
+        return allExercises.filter { exercise ->
+            if (!exerciseMatchesRefreshPreferences(exercise)) {
+                return@filter false
+            }
+            if (excludedExercises.contains(exercise.name)) {
+                return@filter false
+            }
+            if (usedExerciseNames.contains(exercise.name)) {
+                return@filter false
+            }
+            !availableExercises.containsKey(exercise.name)
+        }
+    }
+
+    private fun findSlidingWindowExcludedAccessoryRefreshCandidates(): List<Exercise> {
+        return allExercises.filter { exercise ->
+            if (!exercise.isAccessory) {
+                return@filter false
+            }
+            if (!excludedExercises.contains(exercise.name)) {
+                return@filter false
+            }
+            if (!exerciseMatchesRefreshPreferences(exercise)) {
+                return@filter false
+            }
+            !availableExercises.containsKey(exercise.name)
+        }
+    }
+
+    private fun findConditioningAccessoryRefreshCandidates(): List<Exercise> {
+        return allExercises.filter { exercise ->
+            if (!exercise.isAccessory) {
+                return@filter false
+            }
+            val exerciseEquipment = exerciseEquipmentMappings[exercise.name] ?: emptyList()
+            if (!ConjugateConstants.exerciseUsesConditioningEquipment(exerciseEquipment)) {
+                return@filter false
+            }
+            if (!exerciseMatchesRefreshPreferences(exercise)) {
+                return@filter false
+            }
+            !availableExercises.containsKey(exercise.name)
+        }
+    }
+
+    private fun exerciseMatchesRefreshPreferences(exercise: Exercise): Boolean {
+        val preference = preferences.find { pref -> pref.exerciseName == exercise.name }
+        val shouldIncludeByPreference =
+            when {
+                preference?.shouldAvoid == true -> false
+                preference?.shouldAvoid == false -> true
+                else -> true
+            }
+
+        val isPrimaryUpperBody = !exercise.isAccessory && exercise.isUpper
+        val isDumbbellExercise = exercise.name.lowercase().contains("dumbbell")
+        val shouldExcludeDumbbell = isPrimaryUpperBody && isDumbbellExercise
+
+        return shouldIncludeByPreference && !shouldExcludeDumbbell
+    }
+
+    private fun exerciseMatchesPoolPreferences(exercise: Exercise): Boolean {
+        val isExcludedBySlidingWindow = excludedExercises.contains(exercise.name)
+        return exerciseMatchesRefreshPreferences(exercise) && !isExcludedBySlidingWindow
+    }
 
     /**
      * Gets the user's equipment.

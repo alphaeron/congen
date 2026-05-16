@@ -80,6 +80,243 @@ class ExerciseSelectionServiceTest {
     }
 
     @Test
+    fun `selectExercise with isConditioning should only select conditioning equipment exercises`() {
+        val sledExercise =
+            createSampleExercise("Sled Push", MovementType.PLYOMETRIC).copy(
+                isAccessory = true,
+                isUpper = false
+            )
+        val barbellExercise =
+            createSampleExercise("Romanian Deadlift", MovementType.HINGE).copy(
+                isAccessory = true,
+                isUpper = false
+            )
+        val exerciseEquipmentMappings =
+            mapOf(
+                "Sled Push" to listOf(ExerciseEquipment("Sled Push", "sled")),
+                "Romanian Deadlift" to listOf(ExerciseEquipment("Romanian Deadlift", "power bar"))
+            )
+        val realUserExercisePool =
+            UserExercisePool(
+                allExercises = listOf(sledExercise, barbellExercise),
+                preferences = emptyList(),
+                userEquipment = listOf(UserEquipment(USER_ID, "sled", now)),
+                exerciseEquipmentMappings = exerciseEquipmentMappings,
+                exerciseMuscleMappings = createSampleExerciseMuscleMappings(),
+                previouslyUsedExercises = emptyList(),
+                userId = USER_ID
+            )
+
+        val result =
+            exerciseSelectionService.selectExercise(
+                userExercisePool = realUserExercisePool,
+                targetMuscles = emptyList(),
+                isAccessory = true,
+                workoutType = "dynamic_effort",
+                dayType = "DE_Lower",
+                exerciseWorkoutTypeMappings = emptyMap(),
+                exerciseMuscleMappings = createSampleExerciseMuscleMappings(),
+                currentWeekNumber = 1,
+                isConditioning = true,
+                exerciseEquipmentMappings = exerciseEquipmentMappings
+            )
+
+        StepVerifier.create(result)
+            .expectNext(sledExercise)
+            .verifyComplete()
+    }
+
+    @Test
+    fun `selectExercise with isConditioning on DE_Upper should only select upper body conditioning exercises`() {
+        val sledExercise =
+            createSampleExercise("Sled Push", MovementType.PLYOMETRIC).copy(
+                isAccessory = true,
+                isUpper = false
+            )
+        val battleRopeExercise =
+            createSampleExercise("Battle Ropes", MovementType.ISOLATION).copy(
+                isAccessory = true,
+                isUpper = true
+            )
+        val exerciseEquipmentMappings =
+            mapOf(
+                "Sled Push" to listOf(ExerciseEquipment("Sled Push", "sled")),
+                "Battle Ropes" to listOf(ExerciseEquipment("Battle Ropes", "battle rope"))
+            )
+        val realUserExercisePool =
+            UserExercisePool(
+                allExercises = listOf(sledExercise, battleRopeExercise),
+                preferences = emptyList(),
+                userEquipment =
+                    listOf(
+                        UserEquipment(USER_ID, "sled", now),
+                        UserEquipment(USER_ID, "battle rope", now)
+                    ),
+                exerciseEquipmentMappings = exerciseEquipmentMappings,
+                exerciseMuscleMappings = createSampleExerciseMuscleMappings(),
+                previouslyUsedExercises = emptyList(),
+                userId = USER_ID
+            )
+
+        val result =
+            exerciseSelectionService.selectExercise(
+                userExercisePool = realUserExercisePool,
+                targetMuscles = emptyList(),
+                isAccessory = true,
+                workoutType = "dynamic_effort",
+                dayType = "DE_Upper",
+                exerciseWorkoutTypeMappings = emptyMap(),
+                exerciseMuscleMappings = createSampleExerciseMuscleMappings(),
+                currentWeekNumber = 1,
+                isConditioning = true,
+                exerciseEquipmentMappings = exerciseEquipmentMappings
+            )
+
+        StepVerifier.create(result)
+            .expectNext(battleRopeExercise)
+            .verifyComplete()
+    }
+
+    @Test
+    fun `selectExercise with isConditioning on DE_Lower should only select lower body conditioning exercises`() {
+        val sledExercise =
+            createSampleExercise("Sled Push", MovementType.PLYOMETRIC).copy(
+                isAccessory = true,
+                isUpper = false
+            )
+        val battleRopeExercise =
+            createSampleExercise("Battle Ropes", MovementType.ISOLATION).copy(
+                isAccessory = true,
+                isUpper = true
+            )
+        val exerciseEquipmentMappings =
+            mapOf(
+                "Sled Push" to listOf(ExerciseEquipment("Sled Push", "sled")),
+                "Battle Ropes" to listOf(ExerciseEquipment("Battle Ropes", "battle rope"))
+            )
+        val realUserExercisePool =
+            UserExercisePool(
+                allExercises = listOf(sledExercise, battleRopeExercise),
+                preferences = emptyList(),
+                userEquipment =
+                    listOf(
+                        UserEquipment(USER_ID, "sled", now),
+                        UserEquipment(USER_ID, "battle rope", now)
+                    ),
+                exerciseEquipmentMappings = exerciseEquipmentMappings,
+                exerciseMuscleMappings = createSampleExerciseMuscleMappings(),
+                previouslyUsedExercises = emptyList(),
+                userId = USER_ID
+            )
+
+        val result =
+            exerciseSelectionService.selectExercise(
+                userExercisePool = realUserExercisePool,
+                targetMuscles = emptyList(),
+                isAccessory = true,
+                workoutType = "dynamic_effort",
+                dayType = "DE_Lower",
+                exerciseWorkoutTypeMappings = emptyMap(),
+                exerciseMuscleMappings = createSampleExerciseMuscleMappings(),
+                currentWeekNumber = 1,
+                isConditioning = true,
+                exerciseEquipmentMappings = exerciseEquipmentMappings
+            )
+
+        StepVerifier.create(result)
+            .expectNext(sledExercise)
+            .verifyComplete()
+    }
+
+    @Test
+    fun `selectExercise without isConditioning should exclude conditioning equipment exercises`() {
+        val sledExercise =
+            createSampleExercise("Sled Push", MovementType.PLYOMETRIC).copy(
+                isAccessory = true,
+                isUpper = false
+            )
+        val barbellExercise =
+            createSampleExercise("Romanian Deadlift", MovementType.HINGE).copy(
+                isAccessory = true,
+                isUpper = false
+            )
+        val exerciseEquipmentMappings =
+            mapOf(
+                "Sled Push" to listOf(ExerciseEquipment("Sled Push", "sled")),
+                "Romanian Deadlift" to listOf(ExerciseEquipment("Romanian Deadlift", "power bar"))
+            )
+        val realUserExercisePool =
+            UserExercisePool(
+                allExercises = listOf(sledExercise, barbellExercise),
+                preferences = emptyList(),
+                userEquipment = listOf(UserEquipment(USER_ID, "sled", now), UserEquipment(USER_ID, "power bar", now)),
+                exerciseEquipmentMappings = exerciseEquipmentMappings,
+                exerciseMuscleMappings = createSampleExerciseMuscleMappings(),
+                previouslyUsedExercises = emptyList(),
+                userId = USER_ID
+            )
+
+        val result =
+            exerciseSelectionService.selectExercise(
+                userExercisePool = realUserExercisePool,
+                targetMuscles = emptyList(),
+                isAccessory = true,
+                workoutType = "dynamic_effort",
+                dayType = "DE_Lower",
+                exerciseWorkoutTypeMappings = emptyMap(),
+                exerciseMuscleMappings = createSampleExerciseMuscleMappings(),
+                currentWeekNumber = 1,
+                exerciseEquipmentMappings = exerciseEquipmentMappings
+            )
+
+        StepVerifier.create(result)
+            .expectNext(barbellExercise)
+            .verifyComplete()
+    }
+
+    @Test
+    fun `selectExercise for warmup should remove exercise from pool`() {
+        val accessoryExercise =
+            createSampleExercise("GHR", MovementType.CORE).copy(
+                isAccessory = true,
+                isUpper = false
+            )
+        val exerciseEquipmentMappings =
+            mapOf("GHR" to listOf(ExerciseEquipment("GHR", "ghr machine")))
+        val realUserExercisePool =
+            UserExercisePool(
+                allExercises = listOf(accessoryExercise),
+                preferences = emptyList(),
+                userEquipment = listOf(UserEquipment(USER_ID, "ghr machine", now)),
+                exerciseEquipmentMappings = exerciseEquipmentMappings,
+                exerciseMuscleMappings = createSampleExerciseMuscleMappings(),
+                previouslyUsedExercises = emptyList(),
+                userId = USER_ID
+            )
+
+        val result =
+            exerciseSelectionService.selectExercise(
+                userExercisePool = realUserExercisePool,
+                targetMuscles = listOf("hamstrings"),
+                isAccessory = true,
+                workoutType = "maximal_effort",
+                dayType = "ME_Lower",
+                isWarmup = true,
+                exerciseWorkoutTypeMappings = emptyMap(),
+                exerciseMuscleMappings = createSampleExerciseMuscleMappings(),
+                currentWeekNumber = 1,
+                exerciseEquipmentMappings = exerciseEquipmentMappings
+            )
+
+        StepVerifier.create(result)
+            .expectNext(accessoryExercise)
+            .verifyComplete()
+
+        assert(realUserExercisePool.getAvailableAccessoryLowerExercises().none { it.name == "GHR" })
+        assert(realUserExercisePool.getUsedExerciseNames().contains("GHR"))
+    }
+
+    @Test
     fun `selectExercise should return empty when no exercises available`() {
         val targetMuscles = listOf("chest", "triceps")
         val workoutType = "maximal_effort"
@@ -191,14 +428,15 @@ class ExerciseSelectionServiceTest {
         val secondaryExercise = createSampleExercise("Squat", MovementType.SQUAT).copy(isUpper = false)
         val upperWarmup = createSampleExercise("Push-ups", MovementType.HORIZONTAL_PUSH).copy(isAccessory = true, isUpper = true)
         val lowerWarmup = createSampleExercise("Bodyweight Squat", MovementType.SQUAT).copy(isAccessory = true, isUpper = false)
-        val generalWarmup = createSampleExercise("Arm Circles", MovementType.ISOLATION).copy(isAccessory = true, isUpper = true)
+        val generalMeLowerWarmup =
+            createSampleExercise("Walking Lunge", MovementType.LUNGE).copy(isAccessory = true, isUpper = false)
 
         val exerciseEquipmentMappings =
             createSampleExerciseEquipmentMappings() +
                 mapOf(
                     "Push-ups" to listOf(ExerciseEquipment("Push-ups", "bodyweight")),
                     "Bodyweight Squat" to listOf(ExerciseEquipment("Bodyweight Squat", "bodyweight")),
-                    "Arm Circles" to listOf(ExerciseEquipment("Arm Circles", "bodyweight"))
+                    "Walking Lunge" to listOf(ExerciseEquipment("Walking Lunge", "bodyweight"))
                 )
 
         val exerciseMuscleMappings =
@@ -210,14 +448,18 @@ class ExerciseSelectionServiceTest {
                             ExerciseMuscle("Bodyweight Squat", "quadriceps"),
                             ExerciseMuscle("Bodyweight Squat", "glutes")
                         ),
-                    "Arm Circles" to listOf(ExerciseMuscle("Arm Circles", "deltoids"))
+                    "Walking Lunge" to
+                        listOf(
+                            ExerciseMuscle("Walking Lunge", "quadriceps"),
+                            ExerciseMuscle("Walking Lunge", "glutes")
+                        )
                 )
 
         val userEquipment = createSampleUserEquipment() + listOf(UserEquipment(USER_ID, "bodyweight", now))
 
         val realUserExercisePool =
             UserExercisePool(
-                allExercises = listOf(upperWarmup, lowerWarmup, generalWarmup),
+                allExercises = listOf(upperWarmup, lowerWarmup, generalMeLowerWarmup),
                 preferences = emptyList(),
                 userEquipment = userEquipment,
                 exerciseEquipmentMappings = exerciseEquipmentMappings,
@@ -232,7 +474,7 @@ class ExerciseSelectionServiceTest {
                 "Squat" to listOf("dynamic_effort"),
                 "Push-ups" to listOf("maximal_effort", "dynamic_effort"),
                 "Bodyweight Squat" to listOf("maximal_effort", "dynamic_effort"),
-                "Arm Circles" to listOf("maximal_effort", "dynamic_effort")
+                "Walking Lunge" to listOf("maximal_effort", "dynamic_effort")
             )
 
         val result =

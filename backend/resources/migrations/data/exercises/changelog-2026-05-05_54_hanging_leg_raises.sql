@@ -5,7 +5,7 @@
 --rollback SELECT 1
 
 INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES
-('Hanging Leg Raises', 'Hang from a pull-up bar and raise your legs up to parallel or higher, focusing on core strength and control.', 'core', false, true, true);
+('Hanging Leg Raises', 'Hang from a pull-up bar and raise your legs up to parallel or higher, focusing on core strength and control.', 'core', false, false, true);
 
 INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Hanging Leg Raises', 'rectus abdominis');
 

@@ -1,6 +1,8 @@
 package com.congen
 
+import com.congen.generator.ConjugateConstants
 import com.congen.model.Exercise
+import com.congen.model.ExerciseEquipment
 import com.congen.model.Program
 import com.congen.model.WorkoutStage
 import org.junit.jupiter.api.BeforeEach
@@ -42,6 +44,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
 
         // Create reference data for 3-day program
         IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId, token = userToken)
+        createConditioningUserEquipment(userToken)
 
         IntegrationTestHelpers.createTestUserOneRepMax(webTestClient, userId, "Banded Bench Press", oneRepMax = 200.0, token = userToken)
         IntegrationTestHelpers.createTestUserOneRepMax(
@@ -89,6 +92,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
             .jsonPath("$.length()").isEqualTo(3)
 
         assertDeExerciseBandWeightsStoredAndReturned(programResponse.id, programResponse.currentWeekNumber, 3, userToken)
+        assertConditioningConstraintsForProgram(programResponse.id, userToken)
     }
 
     @Test
@@ -106,6 +110,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
 
         // Create reference data for 2-day program
         IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId, token = userToken)
+        createConditioningUserEquipment(userToken)
 
         IntegrationTestHelpers.createTestUserOneRepMax(webTestClient, userId, "Banded Bench Press", oneRepMax = 200.0, token = userToken)
         IntegrationTestHelpers.createTestUserOneRepMax(
@@ -153,6 +158,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
             .jsonPath("$.length()").isEqualTo(2)
 
         assertDeExerciseBandWeightsStoredAndReturned(programResponse.id, programResponse.currentWeekNumber, 2, userToken)
+        assertConditioningConstraintsForProgram(programResponse.id, userToken)
     }
 
     @Test
@@ -170,6 +176,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
 
         // Create reference data for 4-day program
         IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId, token = userToken)
+        createConditioningUserEquipment(userToken)
 
         IntegrationTestHelpers.createTestUserOneRepMax(webTestClient, userId, "Banded Bench Press", oneRepMax = 200.0, token = userToken)
         IntegrationTestHelpers.createTestUserOneRepMax(
@@ -217,6 +224,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
             .jsonPath("$.length()").isEqualTo(4)
 
         assertDeExerciseBandWeightsStoredAndReturned(programResponse.id, programResponse.currentWeekNumber, 4, userToken)
+        assertConditioningConstraintsForProgram(programResponse.id, userToken)
     }
 
     @Test
@@ -664,12 +672,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
             )
 
         IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId, token = userToken)
-
-        // Add additional equipment.
-        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "pull-up bar", token = userToken)
-        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "power bar", token = userToken)
-        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "dumbbells", token = userToken)
-        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "adjustable bench", token = userToken)
+        createConditioningUserEquipment(userToken)
 
         val programResponse =
             webTestClient.post()
@@ -694,12 +697,13 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
         // Validate 2-day template structure
         assert(workoutsResponse.size == 2) { "2-day program should have exactly 2 workouts" }
 
-        // Validate each workout has the correct structure
+        val exerciseNameToIsUpper = getExerciseNameToIsUpperMap(userToken)
+        val exerciseNameToEquipment = getExerciseNameToEquipmentNames(userToken)
+
         workoutsResponse.forEach { workout ->
             val workoutId = (workout["id"] as Number).toLong()
             val workoutName = workout["name"] as String
 
-            // Fetch workout stages
             val stagesResponse =
                 webTestClient.get()
                     .uri("/api/v1/workout_stage/workout/$workoutId")
@@ -710,9 +714,13 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
                     .returnResult()
                     .responseBody!!
 
-            // Validate stage structure for 2-day programs
-            val exerciseNameToIsUpper = getExerciseNameToIsUpperMap(userToken)
-            validateTwoDayWorkoutStages(stagesResponse, workoutName, userToken, exerciseNameToIsUpper)
+            validateTwoDayWorkoutStages(
+                stagesResponse,
+                workoutName,
+                userToken,
+                exerciseNameToIsUpper,
+                exerciseNameToEquipment
+            )
         }
     }
 
@@ -730,12 +738,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
             )
 
         IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId, token = userToken)
-
-        // Add additional equipment.
-        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "pull-up bar", token = userToken)
-        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "power bar", token = userToken)
-        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "dumbbells", token = userToken)
-        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "adjustable bench", token = userToken)
+        createConditioningUserEquipment(userToken)
 
         val programResponse =
             webTestClient.post()
@@ -761,13 +764,12 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
         assert(workoutsResponse.size == 3) { "3-day program should have exactly 3 workouts" }
 
         val exerciseNameToIsUpper = getExerciseNameToIsUpperMap(userToken)
+        val exerciseNameToEquipment = getExerciseNameToEquipmentNames(userToken)
 
-        // Validate each workout has the correct structure
         workoutsResponse.forEachIndexed { dayIndexInWeek, workout ->
             val workoutId = (workout["id"] as Number).toLong()
             val workoutName = workout["name"] as String
 
-            // Fetch workout stages
             val stagesResponse =
                 webTestClient.get()
                     .uri("/api/v1/workout_stage/workout/$workoutId")
@@ -778,7 +780,14 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
                     .returnResult()
                     .responseBody!!
 
-            validateThreeDayWorkoutStages(stagesResponse, workoutName, userToken, exerciseNameToIsUpper, dayIndexInWeek)
+            validateThreeDayWorkoutStages(
+                stagesResponse,
+                workoutName,
+                userToken,
+                exerciseNameToIsUpper,
+                exerciseNameToEquipment,
+                dayIndexInWeek
+            )
         }
     }
 
@@ -796,6 +805,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
             )
 
         IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId, token = userToken)
+        createConditioningUserEquipment(userToken)
 
         val programResponse =
             webTestClient.post()
@@ -821,6 +831,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
         assert(workoutsResponse.size == 4) { "4-day program should have exactly 4 workouts" }
 
         val exerciseNameToIsUpper = getExerciseNameToIsUpperMap(userToken)
+        val exerciseNameToEquipment = getExerciseNameToEquipmentNames(userToken)
 
         workoutsResponse.forEachIndexed { dayIndexInWeek, workout ->
             val workoutId = (workout["id"] as Number).toLong()
@@ -836,7 +847,180 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
                     .returnResult()
                     .responseBody!!
 
-            validateFourDayWorkoutStages(stagesResponse, workoutName, userToken, exerciseNameToIsUpper, dayIndexInWeek)
+            validateFourDayWorkoutStages(
+                stagesResponse,
+                workoutName,
+                userToken,
+                exerciseNameToIsUpper,
+                exerciseNameToEquipment,
+                dayIndexInWeek
+            )
+        }
+    }
+
+    private fun createConditioningUserEquipment(token: String) {
+        IntegrationTestHelpers.createConditioningUserEquipment(webTestClient, userId, token)
+    }
+
+    private fun getExerciseNameToEquipmentNames(token: String): Map<String, List<String>> {
+        val exerciseEquipmentRows =
+            webTestClient.get()
+                .uri("/api/v1/exercise_equipment/")
+                .header("Authorization", "Bearer $token")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBodyList(Map::class.java)
+                .returnResult()
+                .responseBody!!
+        return exerciseEquipmentRows
+            .mapNotNull { row ->
+                val exerciseName = row["exercise_name"] as? String
+                val equipmentName = row["equipment_name"] as? String
+                if (exerciseName != null && equipmentName != null) {
+                    exerciseName to equipmentName
+                } else {
+                    null
+                }
+            }
+            .groupBy({ it.first }, { it.second })
+    }
+
+    private fun exerciseUsesConditioningEquipment(equipmentNames: List<String>): Boolean {
+        val exerciseEquipment =
+            equipmentNames.map { equipmentName ->
+                ExerciseEquipment(exerciseName = "", equipmentName = equipmentName)
+            }
+        return ConjugateConstants.exerciseUsesConditioningEquipment(exerciseEquipment)
+    }
+
+    private fun fetchProgrammedExercisesForStage(
+        stageId: Long,
+        token: String
+    ): List<Map<*, *>> {
+        return webTestClient.get()
+            .uri("/api/v1/programmed_exercise/stage/$stageId")
+            .header("Authorization", "Bearer $token")
+            .exchange()
+            .expectStatus().isOk()
+            .expectBodyList(Map::class.java)
+            .returnResult()
+            .responseBody!!
+    }
+
+    private fun fetchSetSchemesForProgrammedExercise(
+        programmedExerciseId: Long,
+        token: String
+    ): List<Map<*, *>> {
+        return webTestClient.get()
+            .uri("/api/v1/set_scheme/exercise/$programmedExerciseId")
+            .header("Authorization", "Bearer $token")
+            .exchange()
+            .expectStatus().isOk()
+            .expectBodyList(Map::class.java)
+            .returnResult()
+            .responseBody!!
+    }
+
+    private fun assertSetSchemeAmrapEmomConstraints(
+        isConditioningStage: Boolean,
+        setSchemes: List<Map<*, *>>,
+        context: String
+    ) {
+        setSchemes.forEach { scheme ->
+            val isAmrap = scheme["is_amrap"] as Boolean
+            val isEmom = scheme["is_emom"] as Boolean
+            if (isConditioningStage) {
+                assert(isAmrap xor isEmom) {
+                    "$context: conditioning set scheme must be AMRAP or EMOM (exactly one), " +
+                        "got is_amrap=$isAmrap is_emom=$isEmom"
+                }
+            } else {
+                assert(!isAmrap && !isEmom) {
+                    "$context: non-conditioning set scheme must not use AMRAP or EMOM, " +
+                        "got is_amrap=$isAmrap is_emom=$isEmom"
+                }
+            }
+        }
+    }
+
+    private fun validateWorkoutConditioningAndSetSchemeConstraints(
+        stages: List<WorkoutStage>,
+        workoutName: String,
+        token: String,
+        exerciseNameToEquipment: Map<String, List<String>>
+    ) {
+        stages.forEach { stage ->
+            val stageName = stage.name.toString()
+            val isConditioningStage = stageName == "Conditioning"
+            val programmedExercises = fetchProgrammedExercisesForStage(stage.id, token)
+
+            programmedExercises.forEach { programmedExercise ->
+                val exerciseName = programmedExercise["exercise_name"] as String
+                val programmedExerciseId = (programmedExercise["id"] as Number).toLong()
+                val setSchemes = fetchSetSchemesForProgrammedExercise(programmedExerciseId, token)
+                val context = "workout '$workoutName' stage '$stageName' exercise '$exerciseName'"
+
+                if (isConditioningStage) {
+                    val equipmentNames = exerciseNameToEquipment[exerciseName] ?: emptyList()
+                    assert(exerciseUsesConditioningEquipment(equipmentNames)) {
+                        "$context: conditioning exercise must use conditioning equipment " +
+                            "(sandbag, sled, kettlebell, battle rope, box, hurdle, rope, tire, med ball), " +
+                            "got equipment: $equipmentNames"
+                    }
+                }
+
+                assertSetSchemeAmrapEmomConstraints(isConditioningStage, setSchemes, context)
+            }
+        }
+
+        if (workoutName.contains("DE", ignoreCase = true)) {
+            val conditioningStage = stages.find { it.name.toString() == "Conditioning" }
+            assert(conditioningStage != null) {
+                "DE workout '$workoutName' must have a Conditioning stage"
+            }
+            if (conditioningStage != null) {
+                val conditioningExercises = fetchProgrammedExercisesForStage(conditioningStage.id, token)
+                assert(conditioningExercises.isNotEmpty()) {
+                    "DE workout '$workoutName' conditioning stage must include at least one exercise"
+                }
+            }
+        }
+    }
+
+    private fun assertConditioningConstraintsForProgram(
+        programId: Long,
+        token: String
+    ) {
+        val exerciseNameToEquipment = getExerciseNameToEquipmentNames(token)
+        val workoutsResponse =
+            webTestClient.get()
+                .uri("/api/v1/programmed_workout/program/$programId")
+                .header("Authorization", "Bearer $token")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBodyList(Map::class.java)
+                .returnResult()
+                .responseBody!!
+
+        workoutsResponse.forEach { workout ->
+            val workoutId = (workout["id"] as Number).toLong()
+            val workoutName = workout["name"] as String
+            val stagesResponse =
+                webTestClient.get()
+                    .uri("/api/v1/workout_stage/workout/$workoutId")
+                    .header("Authorization", "Bearer $token")
+                    .exchange()
+                    .expectStatus().isOk()
+                    .expectBodyList(WorkoutStage::class.java)
+                    .returnResult()
+                    .responseBody!!
+
+            validateWorkoutConditioningAndSetSchemeConstraints(
+                stages = stagesResponse,
+                workoutName = workoutName,
+                token = token,
+                exerciseNameToEquipment = exerciseNameToEquipment
+            )
         }
     }
 
@@ -954,7 +1138,8 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
         stages: List<WorkoutStage>,
         workoutName: String,
         token: String,
-        exerciseNameToIsUpper: Map<String, Boolean>
+        exerciseNameToIsUpper: Map<String, Boolean>,
+        exerciseNameToEquipment: Map<String, List<String>>
     ) {
         // 2-day programs should have:
         // 1. Primary stage (contains both ME and DE exercises)
@@ -1082,6 +1267,13 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
                 }
             }
         }
+
+        validateWorkoutConditioningAndSetSchemeConstraints(
+            stages = stages,
+            workoutName = workoutName,
+            token = token,
+            exerciseNameToEquipment = exerciseNameToEquipment
+        )
     }
 
     /**
@@ -1093,6 +1285,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
         workoutName: String,
         token: String,
         exerciseNameToIsUpper: Map<String, Boolean>,
+        exerciseNameToEquipment: Map<String, List<String>>,
         dayIndexInWeek: Int
     ) {
         // 3-day programs should have:
@@ -1229,6 +1422,13 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
                 }
             }
         }
+
+        validateWorkoutConditioningAndSetSchemeConstraints(
+            stages = stages,
+            workoutName = workoutName,
+            token = token,
+            exerciseNameToEquipment = exerciseNameToEquipment
+        )
     }
 
     @Test
@@ -1246,6 +1446,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
 
         // Create reference data for 2-day program
         IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId, token = userToken)
+        createConditioningUserEquipment(userToken)
 
         IntegrationTestHelpers.createTestUserOneRepMax(webTestClient, userId, "Banded Bench Press", oneRepMax = 200.0, token = userToken)
         IntegrationTestHelpers.createTestUserOneRepMax(
@@ -1316,6 +1517,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
 
         // Create reference data for 3-day program
         IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId, token = userToken)
+        createConditioningUserEquipment(userToken)
 
         IntegrationTestHelpers.createTestUserOneRepMax(webTestClient, userId, "Banded Bench Press", oneRepMax = 200.0, token = userToken)
         IntegrationTestHelpers.createTestUserOneRepMax(
@@ -1388,14 +1590,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
 
         // Create reference data for 4-day program
         IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId, token = userToken)
-
-        // Add additional equipment for exercise variety over 40 weeks
-        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "pull-up bar", token = userToken)
-        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "power bar", token = userToken)
-        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "dumbbells", token = userToken)
-        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "adjustable bench", token = userToken)
-        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "trap bar", token = userToken)
-        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "reverse hyper", token = userToken)
+        createConditioningUserEquipment(userToken)
 
         // Generate conjugate program
         val programResponse =
@@ -1881,6 +2076,8 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
         expectedDaysPerWeek: Int,
         token: String
     ) {
+        rateLimitFilter.resetRateLimitState()
+
         // Get all programmed workouts for the program
         val workoutsResponse =
             webTestClient.get()
@@ -1899,6 +2096,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
         }
 
         val exerciseNameToIsUpper = getExerciseNameToIsUpperMap(token)
+        val exerciseNameToEquipment = getExerciseNameToEquipmentNames(token)
 
         val sortedWorkouts =
             workoutsResponse
@@ -1947,18 +2145,49 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
                 if (shouldValidateStages) {
                     val dayIndexInWeek = weekWorkouts.indexOf(workout)
                     when (expectedDaysPerWeek) {
-                        2 -> validateTwoDayWorkoutStages(stagesResponse, workoutName, token, exerciseNameToIsUpper)
-                        3 -> validateThreeDayWorkoutStages(stagesResponse, workoutName, token, exerciseNameToIsUpper, dayIndexInWeek)
-                        4 -> validateFourDayWorkoutStages(stagesResponse, workoutName, token, exerciseNameToIsUpper, dayIndexInWeek)
+                        2 ->
+                            validateTwoDayWorkoutStages(
+                                stagesResponse,
+                                workoutName,
+                                token,
+                                exerciseNameToIsUpper,
+                                exerciseNameToEquipment
+                            )
+                        3 ->
+                            validateThreeDayWorkoutStages(
+                                stagesResponse,
+                                workoutName,
+                                token,
+                                exerciseNameToIsUpper,
+                                exerciseNameToEquipment,
+                                dayIndexInWeek
+                            )
+                        4 -> {
+                            val validateConditioningAndSetSchemes =
+                                !(expectedDaysPerWeek == 4 && expectedWeeks > 20) || dayIndexInWeek == 0
+                            validateFourDayWorkoutStages(
+                                stagesResponse,
+                                workoutName,
+                                token,
+                                exerciseNameToIsUpper,
+                                exerciseNameToEquipment,
+                                dayIndexInWeek,
+                                validateConditioningAndSetSchemes
+                            )
+                        }
                     }
                 }
 
                 // Get all exercises for this workout (sample fewer stages for 4-day programs)
                 val stagesToValidate =
                     when {
-                        expectedDaysPerWeek == 4 && expectedWeeks > 20 -> stagesResponse.take(2) // Only validate first 2 stages
-                        expectedDaysPerWeek == 3 && expectedWeeks > 15 -> stagesResponse.take(3) // Only validate first 3 stages
-                        else -> stagesResponse // Validate all stages for smaller programs
+                        expectedDaysPerWeek == 4 && expectedWeeks > 20 ->
+                            stagesResponse.filter { stage ->
+                                val stageName = stage.name.toString()
+                                stageName == "Primary" || stageName == "Accessory"
+                            }.ifEmpty { stagesResponse.take(2) }
+                        expectedDaysPerWeek == 3 && expectedWeeks > 15 -> stagesResponse.take(3)
+                        else -> stagesResponse
                     }
 
                 stagesToValidate.forEach { stage ->
@@ -2043,7 +2272,9 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
         workoutName: String,
         token: String,
         exerciseNameToIsUpper: Map<String, Boolean>,
-        dayIndexInWeek: Int
+        exerciseNameToEquipment: Map<String, List<String>>,
+        dayIndexInWeek: Int,
+        validateConditioningAndSetSchemes: Boolean = true
     ) {
         // 4-day programs should have:
         // For ME days: Primary, Secondary (optional), Accessory, Conditioning
@@ -2139,6 +2370,15 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
             assert(exercisesResponse.isNotEmpty()) {
                 "Secondary stage in 4-day workout '$workoutName' should have exercises"
             }
+        }
+
+        if (validateConditioningAndSetSchemes) {
+            validateWorkoutConditioningAndSetSchemeConstraints(
+                stages = stages,
+                workoutName = workoutName,
+                token = token,
+                exerciseNameToEquipment = exerciseNameToEquipment
+            )
         }
     }
 }

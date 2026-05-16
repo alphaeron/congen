@@ -1,6 +1,7 @@
 package com.congen.generator
 
 import com.congen.model.Exercise
+import com.congen.model.ExerciseEquipment
 import com.congen.model.ExerciseMuscle
 import com.congen.model.UserOneRepMax
 import com.congen.model.WorkoutStageTypeEnum
@@ -323,7 +324,7 @@ abstract class WorkoutStageGenerationService(
                         if (isUpperSlot) {
                             val muscles =
                                 if (upperWeakMuscles.isEmpty()) {
-                                    preparedData.weakMuscles
+                                    ConjugateConstants.getWeakMusclesForDayType(upperSlotDayType)
                                 } else {
                                     val muscleIndex = ((slotIndex - 1) / 2) % upperWeakMuscles.size
                                     listOf(upperWeakMuscles[muscleIndex])
@@ -332,7 +333,7 @@ abstract class WorkoutStageGenerationService(
                         } else {
                             val muscles =
                                 if (lowerWeakMuscles.isEmpty()) {
-                                    preparedData.weakMuscles
+                                    ConjugateConstants.getWeakMusclesForDayType(lowerSlotDayType)
                                 } else {
                                     val muscleIndex = ((slotIndex - 1) / 2) % lowerWeakMuscles.size
                                     listOf(lowerWeakMuscles[muscleIndex])
@@ -357,6 +358,7 @@ abstract class WorkoutStageGenerationService(
                     movementBalanceState = movementBalanceState,
                     exerciseWorkoutTypeMappings = preparedData.exerciseWorkoutTypeMappings,
                     exerciseMuscleMappings = preparedData.exerciseMuscleMappings,
+                    exerciseEquipmentMappings = preparedData.exerciseEquipmentMappings,
                     currentWeekNumber = preparedData.currentWeekNumber,
                     effectiveDayTypeForFiltering = effectiveDayTypeForFiltering
                 ).flatMap { accessoryExercise ->
@@ -463,6 +465,7 @@ abstract class WorkoutStageGenerationService(
             movementBalanceState = movementBalanceState,
             exerciseWorkoutTypeMappings = preparedData.exerciseWorkoutTypeMappings,
             exerciseMuscleMappings = preparedData.exerciseMuscleMappings,
+            exerciseEquipmentMappings = preparedData.exerciseEquipmentMappings,
             currentWeekNumber = preparedData.currentWeekNumber,
             effectiveDayTypeForFiltering = conditioningEffectiveDayTypeForFiltering
         ).flatMap { conditioningExercise ->
@@ -471,14 +474,12 @@ abstract class WorkoutStageGenerationService(
                 oneRepMaxes = preparedData.oneRepMaxes,
                 preparedData = preparedData
             ).map { conditioningScheme ->
-                val setSchemeData = conditioningScheme
-
                 val exerciseData =
                     ProgrammedExerciseData(
                         exerciseName = conditioningExercise.name,
                         position = 1,
                         notes = null,
-                        setSchemes = setSchemeData
+                        setSchemes = conditioningScheme
                     )
 
                 WorkoutStageData(
@@ -564,7 +565,7 @@ abstract class WorkoutStageGenerationService(
 
                 Flux.fromIterable(warmupExercises)
                     .concatMap { warmupExercise ->
-                        // Generate simple warmup set schemes (light weight, higher reps)
+                        val position = warmupExercises.indexOf(warmupExercise) + 1
                         generateWarmupSetSchemes(
                             exercise = warmupExercise,
                             dayType = dayType,
@@ -572,13 +573,11 @@ abstract class WorkoutStageGenerationService(
                             currentWeekNumber = preparedData.currentWeekNumber,
                             preparedData = preparedData
                         ).map { warmupScheme ->
-                            val setSchemeData = warmupScheme
-
                             ProgrammedExerciseData(
                                 exerciseName = warmupExercise.name,
-                                position = warmupExercises.indexOf(warmupExercise) + 1,
+                                position = position,
                                 notes = null,
-                                setSchemes = setSchemeData
+                                setSchemes = warmupScheme
                             )
                         }
                     }
@@ -606,18 +605,6 @@ abstract class WorkoutStageGenerationService(
             }
     }
 
-    /**
-     * Generates warmup set schemes for exercises.
-     *
-     * Warmup exercises typically use light weight and higher reps to prepare the muscles.
-     *
-     * @param exercise The exercise to generate schemes for
-     * @param dayType The type of workout day
-     * @param oneRepMaxes User's one rep max values
-     * @param currentWeekNumber Current week number
-     * @param preparedData The prepared data containing all required information
-     * @return Mono containing list of set scheme parameters
-     */
     protected fun generateWarmupSetSchemes(
         exercise: Exercise,
         dayType: String,
@@ -772,19 +759,22 @@ abstract class WorkoutStageGenerationService(
     }
 
     /**
-     * Selects an accessory exercise using the UserExercisePool.
-     * This method delegates to ExerciseSelectionService to ensure proper exercise selection and pool management.
+     * Selects an accessory exercise for a workout stage.
+     *
+     * Resolves day-type-aware weak muscles, then delegates to [ExerciseSelectionService.selectExercise]
+     * for pool consumption and centralized fallback (relaxed muscle targeting, pool refresh).
      *
      * @param userExercisePool The user's exercise pool
-     * @param weakMuscles Target weak muscles
+     * @param weakMuscles Target weak muscles for the user
      * @param workoutType The workout type (e.g., "maximal_effort", "dynamic_effort")
      * @param dayType The day type (e.g., "ME_Upper", "DE_Lower")
      * @param movementBalanceState Current movement balance state (optional)
      * @param exerciseWorkoutTypeMappings Pre-computed mappings of exercise names to their workout types
      * @param exerciseMuscleMappings Pre-computed mappings of exercise names to their muscle targets
-     * @param currentWeekNumber Current program week (1-based). Callers must always pass this.
-     * @param effectiveDayTypeForFiltering When set (e.g. for mixed days), used for body-type filtering instead of dayType
-     * @return Mono containing the selected exercise or null if none available
+     * @param exerciseEquipmentMappings Pre-computed mappings of exercise names to their required equipment
+     * @param currentWeekNumber Current program week (1-based)
+     * @param effectiveDayTypeForFiltering When set (e.g. ME_Upper for ME_Upper_DE_Lower upper slots), used for pool and body-region filtering
+     * @return Mono containing the selected accessory exercise; errors if selection fails after all fallbacks
      */
     protected fun selectAccessoryExercise(
         userExercisePool: UserExercisePool,
@@ -794,6 +784,7 @@ abstract class WorkoutStageGenerationService(
         movementBalanceState: MovementBalanceService.MovementBalanceState? = null,
         exerciseWorkoutTypeMappings: Map<String, List<String>>,
         exerciseMuscleMappings: Map<String, List<ExerciseMuscle>>,
+        exerciseEquipmentMappings: Map<String, List<ExerciseEquipment>>,
         currentWeekNumber: Int,
         effectiveDayTypeForFiltering: String? = null
     ): Mono<Exercise> {
@@ -806,6 +797,7 @@ abstract class WorkoutStageGenerationService(
 
         val allowBandedExercises =
             if (effectiveDayTypeForFiltering != null) dayType.contains("DE", ignoreCase = true) else null
+
         return exerciseSelectionService.selectExercise(
             userExercisePool = userExercisePool,
             targetMuscles = musclesForSelection,
@@ -816,40 +808,28 @@ abstract class WorkoutStageGenerationService(
             exerciseWorkoutTypeMappings = exerciseWorkoutTypeMappings,
             exerciseMuscleMappings = exerciseMuscleMappings,
             currentWeekNumber = currentWeekNumber,
-            allowBandedExercises = allowBandedExercises
-        ).onErrorResume { error ->
-            if (error.message?.contains("No exercises found for target muscles") == true ||
-                error.message?.contains("No suitable exercise found") == true
-            ) {
-                logger.warn(
-                    "No exercises found for target muscles: {} in dayType: {} for accessory exercise. " +
-                        "Skipping this accessory exercise and continuing workout generation.",
-                    musclesForSelection,
-                    dayTypeForFiltering
-                )
-                // Return empty Mono to skip this exercise, allowing workout generation to continue
-                Mono.empty()
-            } else {
-                // Re-throw other errors as they indicate different issues
-                Mono.error(error)
-            }
-        }
+            allowBandedExercises = allowBandedExercises,
+            exerciseEquipmentMappings = exerciseEquipmentMappings
+        )
     }
 
     /**
-     * Selects a conditioning exercise using the UserExercisePool.
-     * This method delegates to ExerciseSelectionService to ensure proper exercise selection and pool management.
+     * Selects a conditioning exercise for a workout stage.
+     *
+     * Resolves day-type-aware weak muscles, then delegates to [ExerciseSelectionService.selectExercise]
+     * with conditioning equipment filtering and centralized pool fallback (relaxed muscle targeting, pool refresh).
      *
      * @param userExercisePool The user's exercise pool
-     * @param weakMuscles Target weak muscles
-     * @param workoutType The workout type (e.g., "maximal_effort", "dynamic_effort")
-     * @param dayType The day type (e.g., "ME_Upper", "DE_Lower")
+     * @param weakMuscles Target weak muscles for the user
+     * @param workoutType The workout type (e.g., "dynamic_effort" on DE days)
+     * @param dayType The day type (e.g., "ME_Upper_DE_Lower")
      * @param movementBalanceState Current movement balance state (optional)
      * @param exerciseWorkoutTypeMappings Pre-computed mappings of exercise names to their workout types
      * @param exerciseMuscleMappings Pre-computed mappings of exercise names to their muscle targets
-     * @param currentWeekNumber Current program week (1-based). Callers must always pass this.
-     * @param effectiveDayTypeForFiltering When set (e.g. DE_Upper for DE_Full_Body), used for accessory pool and muscle filtering
-     * @return Mono containing the selected exercise or null if none available
+     * @param exerciseEquipmentMappings Pre-computed mappings of exercise names to their required equipment
+     * @param currentWeekNumber Current program week (1-based)
+     * @param effectiveDayTypeForFiltering When set (e.g. DE_Upper for DE_Full_Body), used for pool and body-region filtering
+     * @return Mono containing the selected conditioning exercise; errors if selection fails after all fallbacks
      */
     protected fun selectConditioningExercise(
         userExercisePool: UserExercisePool,
@@ -859,6 +839,7 @@ abstract class WorkoutStageGenerationService(
         movementBalanceState: MovementBalanceService.MovementBalanceState? = null,
         exerciseWorkoutTypeMappings: Map<String, List<String>>,
         exerciseMuscleMappings: Map<String, List<ExerciseMuscle>>,
+        exerciseEquipmentMappings: Map<String, List<ExerciseEquipment>>,
         currentWeekNumber: Int,
         effectiveDayTypeForFiltering: String? = null
     ): Mono<Exercise> {
@@ -866,13 +847,19 @@ abstract class WorkoutStageGenerationService(
         val dayTypeAwareWeakMuscles =
             ConjugateConstants.getWeakMusclesForDayType(dayTypeForFiltering)
                 .filter { muscle -> weakMuscles.contains(muscle) }
+        val musclesForSelection =
+            when {
+                dayTypeAwareWeakMuscles.isNotEmpty() -> dayTypeAwareWeakMuscles
+                weakMuscles.isNotEmpty() -> weakMuscles
+                else -> emptyList()
+            }
 
         val allowBandedExercises =
             if (effectiveDayTypeForFiltering != null) dayType.contains("DE", ignoreCase = true) else null
 
         return exerciseSelectionService.selectExercise(
             userExercisePool = userExercisePool,
-            targetMuscles = dayTypeAwareWeakMuscles,
+            targetMuscles = musclesForSelection,
             isAccessory = true,
             workoutType = workoutType,
             dayType = dayTypeForFiltering,
@@ -880,16 +867,10 @@ abstract class WorkoutStageGenerationService(
             exerciseWorkoutTypeMappings = exerciseWorkoutTypeMappings,
             exerciseMuscleMappings = exerciseMuscleMappings,
             currentWeekNumber = currentWeekNumber,
-            allowBandedExercises = allowBandedExercises
-        ).onErrorResume { error ->
-            logger.error(
-                "Failed to select conditioning exercise for dayType: {}. Error: {}",
-                dayTypeForFiltering,
-                error.message
-            )
-            // Return empty to indicate no conditioning exercise available
-            Mono.empty()
-        }
+            allowBandedExercises = allowBandedExercises,
+            isConditioning = true,
+            exerciseEquipmentMappings = exerciseEquipmentMappings
+        )
     }
 
     /**
@@ -1034,7 +1015,8 @@ abstract class WorkoutStageGenerationService(
     }
 
     /**
-     * Generates AMRAP or EMOM set schemes for conditioning exercises.
+     * Generates AMRAP or EMOM set schemes for the conditioning stage only.
+     * Each conditioning workout uses exactly one of AMRAP or EMOM (never both, never neither).
      *
      * @param exercise The exercise to generate schemes for
      * @param oneRepMaxes User's one rep max values
@@ -1062,9 +1044,8 @@ abstract class WorkoutStageGenerationService(
             preparedData = preparedData
         )
             .map { result ->
-                val isAmrap = Random.nextBoolean() // 50% chance of AMRAP
-                // 50% chance of EMOM if not AMRAP
-                val isEmom = !isAmrap && Random.nextBoolean()
+                val isAmrap = Random.nextBoolean()
+                val isEmom = !isAmrap
 
                 (1..numSets).map { setNumber ->
                     SetSchemeParams(

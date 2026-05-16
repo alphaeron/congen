@@ -341,6 +341,69 @@ class UserExercisePoolTest {
         assertTrue(userExercisePool.getAvailableAccessoryLowerExercises().all { !it.isUpper })
     }
 
+    @Test
+    fun `refreshPool should restore used conditioning accessories`() {
+        val sledExercise =
+            Exercise("Sled Push", "Sample", MovementType.PLYOMETRIC, false, false, true)
+        val benchAccessory =
+            Exercise("DB Row", "Sample", MovementType.HORIZONTAL_PULL, false, true, true)
+        val exercises = listOf(sledExercise, benchAccessory)
+        val exerciseEquipmentMappings =
+            mapOf(
+                "Sled Push" to listOf(ExerciseEquipment("Sled Push", "sled")),
+                "DB Row" to listOf(ExerciseEquipment("DB Row", "dumbbells"))
+            )
+
+        userExercisePool =
+            UserExercisePool(
+                allExercises = exercises,
+                preferences = emptyList(),
+                userEquipment = listOf(UserEquipment(USER_ID, "sled", now)),
+                exerciseEquipmentMappings = exerciseEquipmentMappings,
+                exerciseMuscleMappings = emptyMap(),
+                previouslyUsedExercises = emptyList(),
+                userId = USER_ID
+            )
+
+        userExercisePool.markExerciseAsUsed("Sled Push")
+        assertEquals(1, userExercisePool.getAvailableExerciseCount())
+
+        val refreshed = userExercisePool.refreshPool()
+
+        assertTrue(refreshed)
+        assertEquals(2, userExercisePool.getAvailableExerciseCount())
+        assertTrue(userExercisePool.getAvailableExercises().any { it.name == "Sled Push" })
+    }
+
+    @Test
+    fun `refreshPool should restore sliding window held accessories`() {
+        val upperAccessory =
+            Exercise("Chin-Up", "Sample", MovementType.VERTICAL_PULL, false, true, true)
+        val lowerAccessory =
+            Exercise("Sit Ups", "Sample", MovementType.CORE, false, false, true)
+        val exercises = listOf(upperAccessory, lowerAccessory)
+
+        userExercisePool =
+            UserExercisePool(
+                allExercises = exercises,
+                preferences = emptyList(),
+                userEquipment = createSampleUserEquipment(),
+                exerciseEquipmentMappings = createSampleExerciseEquipmentMappings(),
+                exerciseMuscleMappings = createSampleExerciseMuscleMappings(),
+                previouslyUsedExercises = emptyList(),
+                userId = USER_ID,
+                excludedExercises = setOf("Sit Ups")
+            )
+
+        assertEquals(1, userExercisePool.getAvailableExerciseCount())
+
+        val refreshed = userExercisePool.refreshPool()
+
+        assertTrue(refreshed)
+        assertEquals(2, userExercisePool.getAvailableExerciseCount())
+        assertTrue(userExercisePool.getAvailableExercises().any { it.name == "Sit Ups" })
+    }
+
     private fun createSampleExercises(): List<Exercise> {
         return listOf(
             Exercise("Bench Press", "Sample exercise description", MovementType.HORIZONTAL_PUSH, false, true, false),

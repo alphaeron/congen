@@ -301,11 +301,12 @@ object IntegrationTestHelpers {
         equipmentName: String = TEST_EQUIPMENT_NAME,
         token: String? = null
     ) {
+        val encodedEquipmentName = URLEncoder.encode(equipmentName, Charsets.UTF_8)
         val request =
             webTestClient.post()
                 .uri(
                     "/api/v1/user_equipment/?user_id=$keycloakId" +
-                        "&equipment_name=$equipmentName"
+                        "&equipment_name=$encodedEquipmentName"
                 )
 
         // Add authorization header if token is provided
@@ -384,6 +385,92 @@ object IntegrationTestHelpers {
     }
 
     /**
+     * Equipment names defined in exercise/equipment migrations. Used so conjugate generator
+     * integration tests can match exercise equipment requirements instead of relying on the
+     * equipment filter fallback path.
+     */
+    val CONJUGATE_GENERATOR_USER_EQUIPMENT_NAMES: List<String> =
+        listOf(
+            TEST_EQUIPMENT_NAME,
+            TEST_EQUIPMENT_NAME_2,
+            "pull-up bar",
+            "bands",
+            "dumbbells",
+            "adjustable bench",
+            "safety squat bar",
+            "ab wheel",
+            "trx",
+            "med ball",
+            "box",
+            "kettlebell",
+            "trap bar",
+            "reverse hyper",
+            "ghr",
+            "landmine",
+            "Lat Pulldown",
+            "power rack",
+            "dip bars",
+            "axle",
+            "airex pad",
+            "valslides",
+            "sliders",
+            "physioball",
+            "iron neck",
+            "weight plate",
+            "Straight Bar Handle",
+            "Curl Bar Handle",
+            "V-Bar Handle",
+            "U-Bar Handle",
+            "Triangle Bar Handle",
+            "Rope Handle",
+            "bodyblade",
+            "sled",
+            "sandbag",
+            "battle rope",
+            "hurdle",
+            "rope",
+            "tire"
+        )
+
+    /**
+     * Creates user equipment covering the full conjugate exercise catalog.
+     */
+    fun createFullUserEquipmentForConjugateTests(
+        webTestClient: WebTestClient,
+        keycloakId: String,
+        token: String? = null
+    ) {
+        CONJUGATE_GENERATOR_USER_EQUIPMENT_NAMES.forEach { equipmentName ->
+            createTestUserEquipment(webTestClient, keycloakId, equipmentName, token = token)
+        }
+    }
+
+    /**
+     * Creates user equipment required for conditioning stage exercise selection.
+     */
+    fun createConditioningUserEquipment(
+        webTestClient: WebTestClient,
+        keycloakId: String,
+        token: String? = null
+    ) {
+        val conditioningEquipment =
+            listOf(
+                "sled",
+                "sandbag",
+                "battle rope",
+                "hurdle",
+                "rope",
+                "tire",
+                "med ball",
+                "box",
+                "kettlebell"
+            )
+        conditioningEquipment.forEach { equipmentName ->
+            createTestUserEquipment(webTestClient, keycloakId, equipmentName, token = token)
+        }
+    }
+
+    /**
      * Creates minimal reference data for a user (just program preferences and one piece of equipment).
      * This is much faster than creating all reference data.
      */
@@ -404,18 +491,7 @@ object IntegrationTestHelpers {
         keycloakId: String,
         token: String? = null
     ) {
-        createTestUserEquipment(webTestClient, keycloakId, TEST_EQUIPMENT_NAME, token = token)
-        createTestUserEquipment(webTestClient, keycloakId, TEST_EQUIPMENT_NAME_2, token = token)
-        createTestUserEquipment(webTestClient, keycloakId, "pull-up bar", token = token)
-        createTestUserEquipment(webTestClient, keycloakId, "bands", token = token)
-        createTestUserEquipment(webTestClient, keycloakId, "dumbbells", token = token)
-        createTestUserEquipment(webTestClient, keycloakId, "adjustable bench", token = token)
-        createTestUserEquipment(webTestClient, keycloakId, "safety squat bar", token = token)
-        createTestUserEquipment(webTestClient, keycloakId, "ab wheel", token = token)
-        createTestUserEquipment(webTestClient, keycloakId, "trx", token = token)
-        createTestUserEquipment(webTestClient, keycloakId, "med ball", token = token)
-        createTestUserEquipment(webTestClient, keycloakId, "box", token = token)
-        createTestUserEquipment(webTestClient, keycloakId, "kettlebell", token = token)
+        createFullUserEquipmentForConjugateTests(webTestClient, keycloakId, token = token)
 
         createTestUserExercisePreference(webTestClient, keycloakId, "Deadlift", token = token)
         createTestUserExercisePreference(webTestClient, keycloakId, TEST_EXERCISE_NAME_2, token = token)

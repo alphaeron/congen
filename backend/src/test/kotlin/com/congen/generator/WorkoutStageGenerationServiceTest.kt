@@ -8,6 +8,8 @@ import com.congen.model.ProgramPreferences
 import com.congen.model.UserEquipment
 import com.congen.model.UserOneRepMax
 import com.congen.model.WeightUnit
+import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
@@ -89,7 +91,9 @@ class WorkoutStageGenerationServiceTest {
                 exerciseMuscleMappings = any(),
                 currentWeekNumber = any(),
                 preferredDeExerciseName = anyOrNull(),
-                allowBandedExercises = anyOrNull()
+                allowBandedExercises = anyOrNull(),
+                isConditioning = any(),
+                exerciseEquipmentMappings = any()
             )
         ).thenReturn(Mono.just(primaryExercise))
 
@@ -106,7 +110,9 @@ class WorkoutStageGenerationServiceTest {
                 exerciseMuscleMappings = any(),
                 currentWeekNumber = any(),
                 preferredDeExerciseName = anyOrNull(),
-                allowBandedExercises = anyOrNull()
+                allowBandedExercises = anyOrNull(),
+                isConditioning = any(),
+                exerciseEquipmentMappings = any()
             )
         ).thenReturn(Mono.just(secondaryExercise))
 
@@ -201,6 +207,44 @@ class WorkoutStageGenerationServiceTest {
     }
 
     @Test
+    fun `generateAmrapOrEmomScheme should set exactly one of AMRAP or EMOM on every set`() {
+        val exercise = createSampleExercise("Sled Push", MovementType.PLYOMETRIC)
+        val preparedData = createSamplePreparedData()
+
+        whenever(
+            weightSelectionService.getTargetWeight(
+                exerciseName = any(),
+                intensity = any(),
+                oneRepMaxes = any(),
+                isDynamicEffort = eq(false),
+                currentWeekNumber = any(),
+                preparedData = any()
+            )
+        ).thenReturn(Mono.just(WeightSelectionService.TargetWeightResult(BigDecimal("100"), null)))
+
+        whenever(
+            prilepinGuidelinesService.getRandomRestTime(any())
+        ).thenReturn(75)
+
+        val result =
+            baseService.exposeGenerateAmrapOrEmomScheme(
+                exercise = exercise,
+                oneRepMaxes = preparedData.oneRepMaxes,
+                preparedData = preparedData
+            )
+
+        StepVerifier.create(result)
+            .assertNext { schemes ->
+                assertTrue(schemes.isNotEmpty())
+                schemes.forEach { scheme ->
+                    assertTrue(scheme.isAmrap xor scheme.isEmom)
+                    assertFalse(scheme.isAmrap && scheme.isEmom)
+                }
+            }
+            .verifyComplete()
+    }
+
+    @Test
     fun `generateWorkoutStages should handle empty exercise selection gracefully`() {
         val preparedData = createSamplePreparedData()
 
@@ -232,7 +276,9 @@ class WorkoutStageGenerationServiceTest {
                 exerciseMuscleMappings = any(),
                 currentWeekNumber = any(),
                 preferredDeExerciseName = anyOrNull(),
-                allowBandedExercises = anyOrNull()
+                allowBandedExercises = anyOrNull(),
+                isConditioning = any(),
+                exerciseEquipmentMappings = any()
             )
         ).thenReturn(Mono.empty())
 
@@ -392,5 +438,16 @@ class WorkoutStageGenerationServiceTest {
         ): Mono<List<WorkoutStageData>> {
             return Mono.just(emptyList())
         }
+
+        fun exposeGenerateAmrapOrEmomScheme(
+            exercise: Exercise,
+            oneRepMaxes: List<UserOneRepMax>,
+            preparedData: WorkoutGenerationPreparedData,
+        ): Mono<List<SetSchemeParams>> =
+            generateAmrapOrEmomScheme(
+                exercise = exercise,
+                oneRepMaxes = oneRepMaxes,
+                preparedData = preparedData
+            )
     }
 }

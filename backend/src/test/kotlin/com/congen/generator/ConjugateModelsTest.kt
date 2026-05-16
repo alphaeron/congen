@@ -3,6 +3,7 @@ package com.congen.generator
 import com.congen.mockDayTemplate
 import com.congen.mockPrilepinGuidelines
 import com.congen.mockSetSchemeParams
+import com.congen.model.ExerciseEquipment
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import kotlin.test.assertEquals
@@ -158,6 +159,23 @@ class ConjugateModelsTest {
         assertEquals(8, ConjugateConstants.TimeAllocation.SECONDARY_MOVEMENT_TIME_IN_MINUTES)
         assertEquals(10, ConjugateConstants.TimeAllocation.CONDITIONING_TIME_IN_MINUTES)
         assertEquals(5, ConjugateConstants.TimeAllocation.SINGLE_ACCESSORY_EXERCISE_TIME_IN_MINUTES)
+    }
+
+    @Test
+    fun `exerciseUsesConditioningEquipment should return true for conditioning equipment`() {
+        val equipment = listOf(ExerciseEquipment("Sled Push", "sled"))
+        assertTrue(ConjugateConstants.exerciseUsesConditioningEquipment(equipment))
+    }
+
+    @Test
+    fun `exerciseUsesConditioningEquipment should return false for non-conditioning equipment`() {
+        val equipment = listOf(ExerciseEquipment("Bench Press", "power bar"))
+        assertFalse(ConjugateConstants.exerciseUsesConditioningEquipment(equipment))
+    }
+
+    @Test
+    fun `exerciseUsesConditioningEquipment should return false when equipment list is empty`() {
+        assertFalse(ConjugateConstants.exerciseUsesConditioningEquipment(emptyList()))
     }
 
     @Test

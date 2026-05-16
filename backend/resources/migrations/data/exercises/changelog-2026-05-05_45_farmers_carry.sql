@@ -10,7 +10,7 @@ VALUES (
   'Walk while holding heavy weights in each hand, improving grip and stability.',
   'core',
   false,
-  true,
+  false,
   true
 );
 

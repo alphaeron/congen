@@ -10,7 +10,7 @@ VALUES (
   'Pick up a heavy implement in each hand and walk quickly while maintaining posture and grip.',
   'carry',
   false,
-  true,
+  false,
   true
 );
 

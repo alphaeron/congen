@@ -118,6 +118,38 @@ object ConjugateConstants {
 
     /** Maximum number of muscles allowed for warmup exercises */
     const val MAX_MUSCLES_FOR_WARMUP = 3
+
+    /**
+     * Equipment types that identify conditioning exercises (sandbag, sled, kettlebell, etc.).
+     */
+    val CONDITIONING_EQUIPMENT_NAMES =
+        setOf(
+            "sandbag",
+            "sled",
+            "kettlebell",
+            "battle rope",
+            "box",
+            "hurdle",
+            "rope",
+            "tire",
+            "med ball"
+        )
+
+    /**
+     * Returns whether an exercise uses at least one piece of conditioning equipment.
+     *
+     * @param exerciseEquipment Equipment required for the exercise
+     * @return true if the exercise uses conditioning equipment
+     */
+    fun exerciseUsesConditioningEquipment(exerciseEquipment: List<ExerciseEquipment>): Boolean {
+        if (exerciseEquipment.isEmpty()) {
+            return false
+        }
+        val conditioningNamesLower = CONDITIONING_EQUIPMENT_NAMES.map { it.lowercase() }.toSet()
+        return exerciseEquipment.any { equipment ->
+            conditioningNamesLower.contains(equipment.equipmentName.lowercase())
+        }
+    }
 }
 
 /**
