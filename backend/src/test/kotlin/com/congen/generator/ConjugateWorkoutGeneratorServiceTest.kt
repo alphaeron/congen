@@ -509,7 +509,7 @@ class ConjugateWorkoutGeneratorServiceTest {
                 ),
             oneRepMaxes = sampleOneRepMaxes,
             programPreferences = sampleProgramPreferences,
-            weakMuscles = sampleUserWeakMuscles.map { it.muscleName },
+            weakMuscles = sampleUserWeakMuscles,
             currentWeekNumber = 1,
             userId = USER_ID,
             weightUnitPreferences = mapOf("Bench Press" to WeightUnit.LBS),

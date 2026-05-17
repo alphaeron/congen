@@ -8,6 +8,7 @@ import com.congen.model.ProgramPreferences
 import com.congen.model.UserEquipment
 import com.congen.model.UserExercisePreference
 import com.congen.model.UserOneRepMax
+import com.congen.model.UserWeakMuscle
 import com.congen.model.WeightUnit
 import com.congen.model.WorkoutStageTypeEnum
 import java.math.BigDecimal
@@ -162,8 +163,8 @@ data class WorkoutGenerationPreparedData(
     val oneRepMaxes: List<UserOneRepMax>,
     /** The program preferences including days per week and other settings. */
     val programPreferences: ProgramPreferences,
-    /** List of muscles that need extra attention in the workout. */
-    val weakMuscles: List<String>,
+    /** User-configured weak muscles; empty when the user has not specified any. */
+    val weakMuscles: List<UserWeakMuscle>,
     /** The current week number in the training program. */
     val currentWeekNumber: Int,
     /** The ID of the user for whom the workout is being generated. */

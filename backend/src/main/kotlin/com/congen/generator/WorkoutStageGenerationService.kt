@@ -306,15 +306,9 @@ abstract class WorkoutStageGenerationService(
                 "DE_Full_Body" -> Pair("DE_Upper", "DE_Lower")
                 else -> Pair("ME_Upper", "DE_Lower")
             }
-        val upperWeakMuscles =
-            ConjugateConstants.getWeakMusclesForDayType(upperSlotDayType)
-                .filter { muscle -> preparedData.weakMuscles.contains(muscle) }
-        val lowerWeakMuscles =
-            ConjugateConstants.getWeakMusclesForDayType(lowerSlotDayType)
-                .filter { muscle -> preparedData.weakMuscles.contains(muscle) }
-        val dayTypeAwareWeakMuscles =
-            ConjugateConstants.getWeakMusclesForDayType(dayType)
-                .filter { muscle -> preparedData.weakMuscles.contains(muscle) }
+        val upperWeakMuscles = resolveWeakMusclesForSelection(preparedData, upperSlotDayType)
+        val lowerWeakMuscles = resolveWeakMusclesForSelection(preparedData, lowerSlotDayType)
+        val dayTypeAwareWeakMuscles = resolveWeakMusclesForSelection(preparedData, dayType)
 
         return Flux.range(1, numAccessoryExercises)
             .concatMap { slotIndex ->
@@ -324,7 +318,7 @@ abstract class WorkoutStageGenerationService(
                         if (isUpperSlot) {
                             val muscles =
                                 if (upperWeakMuscles.isEmpty()) {
-                                    ConjugateConstants.getWeakMusclesForDayType(upperSlotDayType)
+                                    weakMusclesFallbackForSlot(preparedData, upperSlotDayType)
                                 } else {
                                     val muscleIndex = ((slotIndex - 1) / 2) % upperWeakMuscles.size
                                     listOf(upperWeakMuscles[muscleIndex])
@@ -333,7 +327,7 @@ abstract class WorkoutStageGenerationService(
                         } else {
                             val muscles =
                                 if (lowerWeakMuscles.isEmpty()) {
-                                    ConjugateConstants.getWeakMusclesForDayType(lowerSlotDayType)
+                                    weakMusclesFallbackForSlot(preparedData, lowerSlotDayType)
                                 } else {
                                     val muscleIndex = ((slotIndex - 1) / 2) % lowerWeakMuscles.size
                                     listOf(lowerWeakMuscles[muscleIndex])
@@ -343,7 +337,7 @@ abstract class WorkoutStageGenerationService(
                     } else {
                         val muscles =
                             if (dayTypeAwareWeakMuscles.isEmpty()) {
-                                preparedData.weakMuscles
+                                weakMusclesFallbackForSlot(preparedData, dayType)
                             } else {
                                 val muscleIndex = (slotIndex - 1) % dayTypeAwareWeakMuscles.size
                                 listOf(dayTypeAwareWeakMuscles[muscleIndex])
@@ -352,7 +346,8 @@ abstract class WorkoutStageGenerationService(
                     }
                 selectAccessoryExercise(
                     userExercisePool = preparedData.userExercisePool,
-                    weakMuscles = targetMusclesForSlot,
+                    targetMuscleNames = targetMusclesForSlot,
+                    preparedData = preparedData,
                     workoutType = workoutType,
                     dayType = dayType,
                     movementBalanceState = movementBalanceState,
@@ -457,9 +452,14 @@ abstract class WorkoutStageGenerationService(
                 else -> null
             }
 
+        val conditioningDayTypeForWeakMuscles = conditioningEffectiveDayTypeForFiltering ?: dayType
+        val conditioningTargetMuscleNames =
+            resolveWeakMusclesForSelection(preparedData, conditioningDayTypeForWeakMuscles)
+
         return selectConditioningExercise(
             userExercisePool = preparedData.userExercisePool,
-            weakMuscles = preparedData.weakMuscles,
+            targetMuscleNames = conditioningTargetMuscleNames,
+            preparedData = preparedData,
             workoutType = workoutType,
             dayType = dayType,
             movementBalanceState = movementBalanceState,
@@ -759,13 +759,136 @@ abstract class WorkoutStageGenerationService(
     }
 
     /**
+     * Resolves weak muscles for exercise selection on a given day type from [preparedData].
+     *
+     * When [WorkoutGenerationPreparedData.weakMuscles] is non-empty, returns muscle names from the
+     * user's configuration that match the day-type region (or region-filtered names when no overlap
+     * with defaults exists). When empty, returns hardcoded defaults.
+     *
+     * @param preparedData Prepared workout generation data including weak muscles
+     * @param dayType The day type used for regional filtering (e.g. "ME_Upper", "DE_Lower")
+     * @return Muscles to target for accessory or conditioning selection
+     */
+    protected fun resolveWeakMusclesForSelection(
+        preparedData: WorkoutGenerationPreparedData,
+        dayType: String
+    ): List<String> {
+        if (preparedData.weakMuscles.isEmpty()) {
+            return ConjugateConstants.getWeakMusclesForDayType(dayType)
+        }
+        val userMuscleNames = preparedData.weakMuscles.map { it.muscleName }
+        val dayTypeDefaults = ConjugateConstants.getWeakMusclesForDayType(dayType)
+        val overlapping =
+            userMuscleNames.filter { userMuscle ->
+                dayTypeDefaults.any { defaultMuscle -> defaultMuscle.equals(userMuscle, ignoreCase = true) }
+            }
+        if (overlapping.isNotEmpty()) {
+            return overlapping
+        }
+        return filterUserWeakMusclesByBodyRegion(userMuscleNames, dayType)
+    }
+
+    /**
+     * Maps user-configured weak muscles to upper or lower body for combined day types.
+     *
+     * @param userWeakMuscles User-configured weak muscles
+     * @param dayType Day type containing "Upper" or "Lower" for regional filtering
+     * @return User muscles appropriate for that body region
+     */
+    private fun filterUserWeakMusclesByBodyRegion(
+        userWeakMuscles: List<String>,
+        dayType: String
+    ): List<String> {
+        return when {
+            dayType.contains("Upper", ignoreCase = true) -> {
+                val upperMatches =
+                    userWeakMuscles.filter { userMuscle ->
+                        ConjugateConstants.DEFAULT_UPPER_BODY_WEAK_MUSCLES.any { default ->
+                            default.equals(userMuscle, ignoreCase = true)
+                        }
+                    }
+                if (upperMatches.isNotEmpty()) {
+                    upperMatches
+                } else {
+                    userWeakMuscles.filter { userMuscle ->
+                        ConjugateConstants.DEFAULT_LOWER_BODY_WEAK_MUSCLES.none { default ->
+                            default.equals(userMuscle, ignoreCase = true)
+                        }
+                    }
+                }
+            }
+            dayType.contains("Lower", ignoreCase = true) -> {
+                val lowerMatches =
+                    userWeakMuscles.filter { userMuscle ->
+                        ConjugateConstants.DEFAULT_LOWER_BODY_WEAK_MUSCLES.any { default ->
+                            default.equals(userMuscle, ignoreCase = true)
+                        }
+                    }
+                if (lowerMatches.isNotEmpty()) {
+                    lowerMatches
+                } else {
+                    userWeakMuscles.filter { userMuscle ->
+                        ConjugateConstants.DEFAULT_UPPER_BODY_WEAK_MUSCLES.none { default ->
+                            default.equals(userMuscle, ignoreCase = true)
+                        }
+                    }
+                }
+            }
+            else -> userWeakMuscles
+        }
+    }
+
+    /**
+     * Returns muscles to target when regional resolution yields no matches for a slot.
+     *
+     * @param preparedData Prepared workout generation data including user weak muscles
+     * @param slotDayType Day type for the accessory slot
+     * @return User weak muscle names when configured, otherwise hardcoded defaults for the slot day type
+     */
+    private fun weakMusclesFallbackForSlot(
+        preparedData: WorkoutGenerationPreparedData,
+        slotDayType: String
+    ): List<String> {
+        return if (preparedData.weakMuscles.isNotEmpty()) {
+            preparedData.weakMuscles.map { it.muscleName }
+        } else {
+            ConjugateConstants.getWeakMusclesForDayType(slotDayType)
+        }
+    }
+
+    /**
+     * Resolves muscles passed to [ExerciseSelectionService.selectExercise] for weak-muscle targeting.
+     *
+     * @param targetMuscleNames Muscles already scoped to the current slot
+     * @param preparedData Prepared workout generation data including user weak muscles
+     * @param dayTypeForFiltering Day type used for default muscle resolution when user has none configured
+     * @return Muscles to pass as selection targets
+     */
+    private fun musclesForWeakMuscleSelection(
+        targetMuscleNames: List<String>,
+        preparedData: WorkoutGenerationPreparedData,
+        dayTypeForFiltering: String
+    ): List<String> {
+        if (preparedData.weakMuscles.isNotEmpty()) {
+            return targetMuscleNames
+        }
+        val dayTypeAwareWeakMuscles =
+            ConjugateConstants.getWeakMusclesForDayType(dayTypeForFiltering)
+                .filter { muscle ->
+                    targetMuscleNames.any { weakMuscle -> weakMuscle.equals(muscle, ignoreCase = true) }
+                }
+        return if (dayTypeAwareWeakMuscles.isEmpty()) targetMuscleNames else dayTypeAwareWeakMuscles
+    }
+
+    /**
      * Selects an accessory exercise for a workout stage.
      *
      * Resolves day-type-aware weak muscles, then delegates to [ExerciseSelectionService.selectExercise]
      * for pool consumption and centralized fallback (relaxed muscle targeting, pool refresh).
      *
      * @param userExercisePool The user's exercise pool
-     * @param weakMuscles Target weak muscles for the user
+     * @param targetMuscleNames Target weak muscle names for the current slot
+     * @param preparedData Prepared workout generation data including user weak muscles
      * @param workoutType The workout type (e.g., "maximal_effort", "dynamic_effort")
      * @param dayType The day type (e.g., "ME_Upper", "DE_Lower")
      * @param movementBalanceState Current movement balance state (optional)
@@ -778,7 +901,8 @@ abstract class WorkoutStageGenerationService(
      */
     protected fun selectAccessoryExercise(
         userExercisePool: UserExercisePool,
-        weakMuscles: List<String>,
+        targetMuscleNames: List<String>,
+        preparedData: WorkoutGenerationPreparedData,
         workoutType: String,
         dayType: String,
         movementBalanceState: MovementBalanceService.MovementBalanceState? = null,
@@ -789,11 +913,12 @@ abstract class WorkoutStageGenerationService(
         effectiveDayTypeForFiltering: String? = null
     ): Mono<Exercise> {
         val dayTypeForFiltering = effectiveDayTypeForFiltering ?: dayType
-        val dayTypeAwareWeakMuscles =
-            ConjugateConstants.getWeakMusclesForDayType(dayTypeForFiltering)
-                .filter { muscle -> weakMuscles.contains(muscle) }
         val musclesForSelection =
-            if (dayTypeAwareWeakMuscles.isEmpty()) weakMuscles else dayTypeAwareWeakMuscles
+            musclesForWeakMuscleSelection(
+                targetMuscleNames = targetMuscleNames,
+                preparedData = preparedData,
+                dayTypeForFiltering = dayTypeForFiltering
+            )
 
         val allowBandedExercises =
             if (effectiveDayTypeForFiltering != null) dayType.contains("DE", ignoreCase = true) else null
@@ -820,7 +945,8 @@ abstract class WorkoutStageGenerationService(
      * with conditioning equipment filtering and centralized pool fallback (relaxed muscle targeting, pool refresh).
      *
      * @param userExercisePool The user's exercise pool
-     * @param weakMuscles Target weak muscles for the user
+     * @param targetMuscleNames Target weak muscle names for conditioning selection
+     * @param preparedData Prepared workout generation data including user weak muscles
      * @param workoutType The workout type (e.g., "dynamic_effort" on DE days)
      * @param dayType The day type (e.g., "ME_Upper_DE_Lower")
      * @param movementBalanceState Current movement balance state (optional)
@@ -833,7 +959,8 @@ abstract class WorkoutStageGenerationService(
      */
     protected fun selectConditioningExercise(
         userExercisePool: UserExercisePool,
-        weakMuscles: List<String>,
+        targetMuscleNames: List<String>,
+        preparedData: WorkoutGenerationPreparedData,
         workoutType: String,
         dayType: String,
         movementBalanceState: MovementBalanceService.MovementBalanceState? = null,
@@ -844,15 +971,12 @@ abstract class WorkoutStageGenerationService(
         effectiveDayTypeForFiltering: String? = null
     ): Mono<Exercise> {
         val dayTypeForFiltering = effectiveDayTypeForFiltering ?: dayType
-        val dayTypeAwareWeakMuscles =
-            ConjugateConstants.getWeakMusclesForDayType(dayTypeForFiltering)
-                .filter { muscle -> weakMuscles.contains(muscle) }
         val musclesForSelection =
-            when {
-                dayTypeAwareWeakMuscles.isNotEmpty() -> dayTypeAwareWeakMuscles
-                weakMuscles.isNotEmpty() -> weakMuscles
-                else -> emptyList()
-            }
+            musclesForWeakMuscleSelection(
+                targetMuscleNames = targetMuscleNames,
+                preparedData = preparedData,
+                dayTypeForFiltering = dayTypeForFiltering
+            )
 
         val allowBandedExercises =
             if (effectiveDayTypeForFiltering != null) dayType.contains("DE", ignoreCase = true) else null

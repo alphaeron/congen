@@ -160,12 +160,6 @@ class ConjugateWorkoutGeneratorService(
                         val userEquipment = secondTuple.t2
                         val userExercisePreferences = secondTuple.t3
 
-                        val weakMuscles =
-                            if (userWeakMuscles.isNotEmpty()) {
-                                userWeakMuscles.map { it.muscleName }
-                            } else {
-                                ConjugateConstants.DEFAULT_WEAK_MUSCLES
-                            }
                         val template = conjugateTemplates.selectTemplate(programPreferences.programDaysPerWeek)
 
                         // Convert weight unit preferences to a map for easy lookup
@@ -235,7 +229,7 @@ class ConjugateWorkoutGeneratorService(
                                             userExercisePool = userExercisePool,
                                             oneRepMaxes = oneRepMaxes,
                                             programPreferences = programPreferences,
-                                            weakMuscles = weakMuscles,
+                                            weakMuscles = userWeakMuscles,
                                             currentWeekNumber = program.currentWeekNumber,
                                             userId = program.userId,
                                             weightUnitPreferences = weightUnitMap,

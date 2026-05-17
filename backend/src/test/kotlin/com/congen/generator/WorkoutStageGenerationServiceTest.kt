@@ -7,6 +7,7 @@ import com.congen.model.MovementType
 import com.congen.model.ProgramPreferences
 import com.congen.model.UserEquipment
 import com.congen.model.UserOneRepMax
+import com.congen.model.UserWeakMuscle
 import com.congen.model.WeightUnit
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -21,6 +22,7 @@ import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
 import java.math.BigDecimal
 import java.time.Instant
+import kotlin.test.assertEquals
 
 /**
  * Unit tests for WorkoutStageGenerationService.
@@ -310,6 +312,45 @@ class WorkoutStageGenerationServiceTest {
             .verifyComplete()
     }
 
+    @Test
+    fun `resolveWeakMusclesForSelection should return defaults when user has not specified muscles`() {
+        val preparedData = createSamplePreparedData(weakMuscles = emptyList())
+        val result = baseService.exposeResolveWeakMusclesForSelection(preparedData, "ME_Upper")
+        assertEquals(ConjugateConstants.DEFAULT_UPPER_BODY_WEAK_MUSCLES, result)
+    }
+
+    @Test
+    fun `resolveWeakMusclesForSelection should return user muscles when specified`() {
+        val userMuscles = listOf(userWeakMuscle("chest"), userWeakMuscle("biceps"))
+        val preparedData = createSamplePreparedData(weakMuscles = userMuscles)
+        val result = baseService.exposeResolveWeakMusclesForSelection(preparedData, "ME_Upper")
+        assertEquals(listOf("chest", "biceps"), result)
+    }
+
+    @Test
+    fun `resolveWeakMusclesForSelection should intersect user muscles with day type defaults when overlapping`() {
+        val preparedData =
+            createSamplePreparedData(
+                weakMuscles = listOf(userWeakMuscle("lats"), userWeakMuscle("chest"))
+            )
+        val result = baseService.exposeResolveWeakMusclesForSelection(preparedData, "ME_Upper")
+        assertEquals(listOf("lats"), result)
+    }
+
+    @Test
+    fun `resolveWeakMusclesForSelection should filter user lower muscles for lower day types`() {
+        val preparedData =
+            createSamplePreparedData(
+                weakMuscles = listOf(userWeakMuscle("hamstrings"), userWeakMuscle("chest"))
+            )
+        val result = baseService.exposeResolveWeakMusclesForSelection(preparedData, "DE_Lower")
+        assertEquals(listOf("hamstrings"), result)
+    }
+
+    private fun userWeakMuscle(muscleName: String): UserWeakMuscle {
+        return UserWeakMuscle(userId = USER_ID, muscleName = muscleName, createdAt = now)
+    }
+
     private fun createSampleExercise(
         name: String,
         movementType: MovementType
@@ -324,7 +365,7 @@ class WorkoutStageGenerationServiceTest {
         )
     }
 
-    private fun createSamplePreparedData(): WorkoutGenerationPreparedData {
+    private fun createSamplePreparedData(weakMuscles: List<UserWeakMuscle> = emptyList()): WorkoutGenerationPreparedData {
         return WorkoutGenerationPreparedData(
             userExercisePool =
                 UserExercisePool(
@@ -350,7 +391,7 @@ class WorkoutStageGenerationServiceTest {
                     createdAt = now,
                     updatedAt = now
                 ),
-            weakMuscles = listOf("chest"),
+            weakMuscles = weakMuscles,
             currentWeekNumber = 1,
             userId = USER_ID,
             weightUnitPreferences = mapOf("Bench Press" to WeightUnit.LBS),
@@ -449,5 +490,10 @@ class WorkoutStageGenerationServiceTest {
                 oneRepMaxes = oneRepMaxes,
                 preparedData = preparedData
             )
+
+        fun exposeResolveWeakMusclesForSelection(
+            preparedData: WorkoutGenerationPreparedData,
+            dayType: String
+        ): List<String> = resolveWeakMusclesForSelection(preparedData, dayType)
     }
 }

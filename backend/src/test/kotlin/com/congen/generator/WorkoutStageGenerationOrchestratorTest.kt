@@ -142,7 +142,7 @@ class WorkoutStageGenerationOrchestratorTest {
                     createdAt = now,
                     updatedAt = now
                 ),
-            weakMuscles = listOf("chest"),
+            weakMuscles = emptyList(),
             currentWeekNumber = 1,
             userId = USER_ID,
             weightUnitPreferences = mapOf("Bench Press" to WeightUnit.LBS),
