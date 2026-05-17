@@ -327,9 +327,15 @@ deploy_database_migrations() {
     
     # Generate postgres mount patch for local-persist environment
     generate_postgres_mount_patch
+
+    print_status "Generating migrations ConfigMap from Liquibase files..."
+    if ! ./gradlew :backend:createMigrationsConfigMap -q; then
+        print_error "Failed to generate migrations ConfigMap"
+        exit 1
+    fi
     
     print_status "Deploying database migrations to Kubernetes..."
-    if kubectl apply -k "k8s/overlays/${ENVIRONMENT}/stage-5"; then
+    if kubectl apply -k "k8s/overlays/${ENVIRONMENT}/stage-5" --server-side --force-conflicts --field-manager=congen-deploy; then
         print_success "Database migrations deployed"
     else
         print_error "Failed to deploy database migrations"

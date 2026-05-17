@@ -79,39 +79,49 @@ spec:
         - bash
         - -xc
         - |
-          # Function to run migrations
-          run_migrations() {
-            echo "Starting migration process..."
+          copy_data_migration_file() {
+            local file="$1"
+            local filename
+            local rest
+            local dest
+            filename=$(basename "$file")
+            rest="${filename#data_}"
+            if [ "${rest#changelog-}" != "$rest" ]; then
+              dest="/tmp/liquibase/data/$rest"
+            elif [ "${rest#equipment_}" != "$rest" ]; then
+              dest="/tmp/liquibase/data/equipment/${rest#equipment_}"
+            elif [ "${rest#muscle_}" != "$rest" ]; then
+              dest="/tmp/liquibase/data/muscle/${rest#muscle_}"
+            elif [ "${rest#exercises_}" != "$rest" ]; then
+              dest="/tmp/liquibase/data/exercises/${rest#exercises_}"
+            else
+              dest="/tmp/liquibase/data/$rest"
+            fi
+            mkdir -p "$(dirname "$dest")"
+            cp "$file" "$dest"
+          }
 
-            # Create writable directory structure in /tmp
-            mkdir -p /tmp/liquibase/schema /tmp/liquibase/data
-
-            # Copy files from ConfigMap to writable location
-            echo "Copying Liquibase configuration files..."
+          copy_migrations_to_tmp() {
+            mkdir -p /tmp/liquibase/schema /tmp/liquibase/data/equipment /tmp/liquibase/data/muscle /tmp/liquibase/data/exercises
             cp /liquibase/changelog/liquibase.properties /tmp/liquibase/
             cp /liquibase/changelog/changelog-root.xml /tmp/liquibase/
-            echo "Configuration files copied successfully"
-
-            # Copy schema files (remove schema_ prefix)
-            echo "Copying schema files..."
             for file in /liquibase/changelog/schema_*.sql; do
               if [ -f "$file" ]; then
                 filename=$(basename "$file")
                 cp "$file" "/tmp/liquibase/schema/${filename#schema_}"
-                echo "Copied schema file: ${filename#schema_}"
               fi
             done
-
-            # Copy data files (remove data_ prefix)
-            echo "Copying data files..."
             for file in /liquibase/changelog/data_*.sql; do
               if [ -f "$file" ]; then
-                filename=$(basename "$file")
-                cp "$file" "/tmp/liquibase/data/${filename#data_}"
-                echo "Copied data file: ${filename#data_}"
+                copy_data_migration_file "$file"
               fi
             done
+          }
 
+          run_migrations() {
+            echo "Starting migration process..."
+            echo "Copying Liquibase files from ConfigMap..."
+            copy_migrations_to_tmp
             echo "All files copied. Listing directory structure:"
             find /tmp/liquibase -type f -name "*.sql" | sort
 
@@ -137,29 +147,7 @@ spec:
           # Function to check if migrations are needed
           check_migrations() {
             echo "Checking if migrations are needed..."
-
-            # Create writable directory structure in /tmp
-            mkdir -p /tmp/liquibase/schema /tmp/liquibase/data
-
-            # Copy files from ConfigMap to writable location
-            cp /liquibase/changelog/liquibase.properties /tmp/liquibase/
-            cp /liquibase/changelog/changelog-root.xml /tmp/liquibase/
-
-            # Copy schema files (remove schema_ prefix)
-            for file in /liquibase/changelog/schema_*.sql; do
-              if [ -f "$file" ]; then
-                filename=$(basename "$file")
-                cp "$file" "/tmp/liquibase/schema/${filename#schema_}"
-              fi
-            done
-
-            # Copy data files (remove data_ prefix)
-            for file in /liquibase/changelog/data_*.sql; do
-              if [ -f "$file" ]; then
-                filename=$(basename "$file")
-                cp "$file" "/tmp/liquibase/data/${filename#data_}"
-              fi
-            done
+            copy_migrations_to_tmp
 
             # Construct JDBC URL from secret values
             export DB="jdbc:postgresql://${PGHOST}:${PGPORT}/${PGDATABASE}"
