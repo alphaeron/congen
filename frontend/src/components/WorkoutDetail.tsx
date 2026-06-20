@@ -1,4 +1,4 @@
-import { ExpandMore as ExpandMoreIcon, ExpandLess as ExpandLessIcon } from '@mui/icons-material';
+import { ExpandMore as ExpandMoreIcon, ExpandLess as ExpandLessIcon, Pending } from '@mui/icons-material';
 import {
   Box,
   Alert,
@@ -11,6 +11,7 @@ import {
   DialogContent,
   DialogActions,
   Autocomplete,
+  Tooltip,
 } from '@mui/material';
 import { useForm } from '@tanstack/react-form';
 import {
@@ -56,7 +57,12 @@ import {
 } from '../common/utils';
 import { useData } from '../contexts/DataContext';
 import { exportWorkoutToPDF } from '../utils/exportUtils';
-import { calculateWorkoutProgress, buildWeekProgressSummaries, getCurrentWeekFromProgress } from '../utils/progressUtils';
+import {
+  calculateWorkoutProgress,
+  buildWeekProgressSummaries,
+  getCurrentWeekFromProgress,
+  exerciseIsAwaitingTracking,
+} from '../utils/progressUtils';
 
 interface WorkoutDetailProps {
   workoutId: number;
@@ -85,6 +91,7 @@ interface TableRow {
   exerciseId?: number;
   setSchemes?: Record<string, unknown>[];
   exerciseData?: ProgrammedExerciseWithSetSchemes;
+  isAwaitingTracking?: boolean;
 }
 
 const columnHelper = createColumnHelper<TableRow>();
@@ -464,6 +471,7 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
             exerciseId: exerciseData.exercise.id,
             setSchemes: setSchemes,
             exerciseData: exerciseData,
+            isAwaitingTracking: exerciseIsAwaitingTracking(exerciseData),
           });
         });
       }
@@ -481,25 +489,39 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
         cell: ({ row }) => {
           if (row.original.type === 'exercise') {
             return (
-              <Box display="flex" alignItems="center" gap={1} minHeight={40}>
+              <Box display="flex" alignItems="center" gap={1} minHeight={40} width="100%">
                 <SetSchemeEditor
                   exercise={row.original.exerciseData}
                   onExerciseUpdate={async () => {
-                    // Refresh data from server to get the updated exercise
                     await refreshData();
                   }}
                   isMostRecentWeek={isMostRecentWeek}
                   weightUnitPreferences={weightUnitPreferences}
                 />
-                <ExerciseName
-                  exerciseName={row.original.exerciseName || ''}
-                  variant="body2"
-                  sx={{
-                    wordWrap: 'break-word',
-                    whiteSpace: 'normal',
-                    lineHeight: 1.4,
-                  }}
-                />
+                <Box display="flex" alignItems="center" gap={0.5} flex={1} minWidth={0}>
+                  <ExerciseName
+                    exerciseName={row.original.exerciseName || ''}
+                    variant="body2"
+                    sx={{
+                      flex: 1,
+                      wordWrap: 'break-word',
+                      whiteSpace: 'normal',
+                      lineHeight: 1.4,
+                    }}
+                  />
+                  {row.original.isAwaitingTracking && (
+                    <Tooltip title="Awaiting tracking">
+                      <Pending
+                        sx={{
+                          fontSize: 18,
+                          color: 'warning.main',
+                          flexShrink: 0,
+                        }}
+                        aria-label="Awaiting tracking"
+                      />
+                    </Tooltip>
+                  )}
+                </Box>
               </Box>
             );
           }

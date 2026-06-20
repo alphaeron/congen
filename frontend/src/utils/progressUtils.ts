@@ -96,6 +96,50 @@ export const exerciseHasPerformedData = (exercise: ProgrammedExerciseWithSetSche
   return exercise.set_schemes.some(setScheme => hasPerformedData(setScheme));
 };
 
+export interface ExerciseAwaitingTracking {
+  exercise: ProgrammedExerciseWithSetSchemes;
+  stageName: string;
+}
+
+/**
+ * Check if an exercise is awaiting tracking (has set schemes but no performed data)
+ */
+export const exerciseIsAwaitingTracking = (
+  exercise: ProgrammedExerciseWithSetSchemes
+): boolean => {
+  return exercise.set_schemes.length > 0 && !exerciseHasPerformedData(exercise);
+};
+
+/**
+ * Collect exercises from a workout that have no performed reps or weight recorded
+ */
+export const getExercisesAwaitingTrackingFromWorkout = (
+  workout: ProgrammedWorkoutWithStages
+): ExerciseAwaitingTracking[] => {
+  const awaiting: ExerciseAwaitingTracking[] = [];
+
+  if (!workout.stages?.length) {
+    return awaiting;
+  }
+
+  workout.stages.forEach(stage => {
+    if (!stage.exercises?.length) {
+      return;
+    }
+
+    stage.exercises.forEach(exercise => {
+      if (exerciseIsAwaitingTracking(exercise)) {
+        awaiting.push({
+          exercise,
+          stageName: stage.stage.name,
+        });
+      }
+    });
+  });
+
+  return awaiting;
+};
+
 /**
  * Check if an exercise is fully completed (all set schemes have performed data)
  */

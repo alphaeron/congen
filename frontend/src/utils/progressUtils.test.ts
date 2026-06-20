@@ -1,6 +1,8 @@
 import {
   hasPerformedData,
   exerciseHasPerformedData,
+  exerciseIsAwaitingTracking,
+  getExercisesAwaitingTrackingFromWorkout,
   exerciseIsCompleted,
   calculateWorkoutProgress,
   calculateWeekProgress,
@@ -151,6 +153,131 @@ describe('progressUtils', () => {
       };
 
       expect(exerciseHasPerformedData(exercise)).toBe(false);
+    });
+  });
+
+  describe('exerciseIsAwaitingTracking', () => {
+    it('should return true when exercise has set schemes but no performed data', () => {
+      const exercise: ProgrammedExerciseWithSetSchemes = {
+        id: 1,
+        exercise: createExercise(1, 'Bench Press'),
+        set_schemes: [
+          {
+            id: 1,
+            target_weight: 100,
+            target_rep_count: 10,
+            performed_weight: undefined,
+            performed_rep_count: undefined,
+          } as SetScheme,
+        ],
+      };
+
+      expect(exerciseIsAwaitingTracking(exercise)).toBe(true);
+    });
+
+    it('should return false when exercise has performed data', () => {
+      const exercise: ProgrammedExerciseWithSetSchemes = {
+        id: 1,
+        exercise: createExercise(1, 'Bench Press'),
+        set_schemes: [
+          {
+            id: 1,
+            target_weight: 100,
+            target_rep_count: 10,
+            performed_weight: 105,
+            performed_rep_count: undefined,
+          } as SetScheme,
+        ],
+      };
+
+      expect(exerciseIsAwaitingTracking(exercise)).toBe(false);
+    });
+
+    it('should return false when exercise has no set schemes', () => {
+      const exercise: ProgrammedExerciseWithSetSchemes = {
+        id: 1,
+        exercise: createExercise(1, 'Bench Press'),
+        set_schemes: [],
+      };
+
+      expect(exerciseIsAwaitingTracking(exercise)).toBe(false);
+    });
+  });
+
+  describe('getExercisesAwaitingTrackingFromWorkout', () => {
+    it('should return exercises with no performed data grouped by stage', () => {
+      const workout: ProgrammedWorkoutWithStages = {
+        workout: { id: 1, name: 'Test Workout' },
+        stages: [
+          {
+            id: 1,
+            stage: { id: 1, name: 'Primary', stage_type_id: 1 },
+            exercises: [
+              {
+                id: 1,
+                exercise: createExercise(1, 'Bench Press'),
+                set_schemes: [
+                  {
+                    id: 1,
+                    target_weight: 100,
+                    target_rep_count: 10,
+                    performed_weight: undefined,
+                    performed_rep_count: undefined,
+                  } as SetScheme,
+                ],
+              },
+              {
+                id: 2,
+                exercise: createExercise(2, 'Squat'),
+                set_schemes: [
+                  {
+                    id: 2,
+                    target_weight: 200,
+                    target_rep_count: 5,
+                    performed_weight: 205,
+                    performed_rep_count: 5,
+                  } as SetScheme,
+                ],
+              },
+            ],
+          } as WorkoutStageWithExercises,
+        ],
+      };
+
+      const awaiting = getExercisesAwaitingTrackingFromWorkout(workout);
+
+      expect(awaiting).toHaveLength(1);
+      expect(awaiting[0].exercise.exercise.exercise_name).toBe('Bench Press');
+      expect(awaiting[0].stageName).toBe('Primary');
+    });
+
+    it('should return empty array when all exercises have performed data', () => {
+      const workout: ProgrammedWorkoutWithStages = {
+        workout: { id: 1, name: 'Test Workout' },
+        stages: [
+          {
+            id: 1,
+            stage: { id: 1, name: 'Primary', stage_type_id: 1 },
+            exercises: [
+              {
+                id: 1,
+                exercise: createExercise(1, 'Bench Press'),
+                set_schemes: [
+                  {
+                    id: 1,
+                    target_weight: 100,
+                    target_rep_count: 10,
+                    performed_weight: 105,
+                    performed_rep_count: 10,
+                  } as SetScheme,
+                ],
+              },
+            ],
+          } as WorkoutStageWithExercises,
+        ],
+      };
+
+      expect(getExercisesAwaitingTrackingFromWorkout(workout)).toHaveLength(0);
     });
   });
 
