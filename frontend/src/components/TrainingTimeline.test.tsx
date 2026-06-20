@@ -1,7 +1,8 @@
 import { render, screen, fireEvent, act } from '@testing-library/react';
-import React from 'react';
 
 import { TrainingTimeline } from './TrainingTimeline';
+
+import type React from 'react';
 
 class ResizeObserverMock {
   observe() {}
@@ -25,7 +26,9 @@ const createMockWorkout = (id: number, name: string) => ({
 const createMockWeek = (
   weekNumber: number,
   workoutCount: number,
-  completedWorkoutIndexes: number[] = weekNumber < 2 ? Array.from({ length: workoutCount }, (_, i) => i) : []
+  completedWorkoutIndexes: number[] = weekNumber < 2
+    ? Array.from({ length: workoutCount }, (_, i) => i)
+    : []
 ) => ({
   weekNumber,
   workouts: Array.from({ length: workoutCount }, (_, index) => ({
@@ -242,11 +245,7 @@ describe('TrainingTimeline', () => {
     }));
 
     render(
-      <TrainingTimeline
-        weeks={manyIncompleteWeeks}
-        onWeekClick={jest.fn()}
-        currentWeek={1}
-      />
+      <TrainingTimeline weeks={manyIncompleteWeeks} onWeekClick={jest.fn()} currentWeek={1} />
     );
 
     expect(screen.getAllByText('current')).toHaveLength(1);

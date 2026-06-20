@@ -2,8 +2,8 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import * as React from 'react';
 import ReactDOM from 'react-dom/client';
 
-import { AppSnackbarProvider } from './AppSnackbarProvider';
 import { App } from './App';
+import { AppSnackbarProvider } from './AppSnackbarProvider';
 
 import '@mui/material-pigment-css/styles.css';
 import '@fontsource/roboto/300.css';

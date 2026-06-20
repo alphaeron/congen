@@ -1,4 +1,8 @@
-import { ExpandMore as ExpandMoreIcon, ExpandLess as ExpandLessIcon, Pending } from '@mui/icons-material';
+import {
+  ExpandMore as ExpandMoreIcon,
+  ExpandLess as ExpandLessIcon,
+  Pending,
+} from '@mui/icons-material';
 import {
   Box,
   Alert,
@@ -258,10 +262,7 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
         if (currentWorkout) {
           const workoutsPerWeek = activeProgram.program_preferences.program_days_per_week;
           const workoutWeek = Math.ceil(currentWorkout.workout.day_number / workoutsPerWeek);
-          const weekSummaries = buildWeekProgressSummaries(
-            activeProgram.workouts,
-            workoutsPerWeek
-          );
+          const weekSummaries = buildWeekProgressSummaries(activeProgram.workouts, workoutsPerWeek);
           const progressCurrentWeek = getCurrentWeekFromProgress(weekSummaries);
 
           setIsMostRecentWeek(workoutWeek === progressCurrentWeek);

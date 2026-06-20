@@ -104,9 +104,7 @@ export interface ExerciseAwaitingTracking {
 /**
  * Check if an exercise is awaiting tracking (has set schemes but no performed data)
  */
-export const exerciseIsAwaitingTracking = (
-  exercise: ProgrammedExerciseWithSetSchemes
-): boolean => {
+export const exerciseIsAwaitingTracking = (exercise: ProgrammedExerciseWithSetSchemes): boolean => {
   return exercise.set_schemes.length > 0 && !exerciseHasPerformedData(exercise);
 };
 
