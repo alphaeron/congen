@@ -5,6 +5,10 @@ import {
   calculateWorkoutProgress,
   calculateWeekProgress,
   calculateProgramProgress,
+  buildWeekProgressSummaries,
+  getCurrentWeekFromProgress,
+  getTotalWeeksFromWorkouts,
+  getWeekTimelineStatus,
   getProgressIcon,
   getProgressColor,
 } from './progressUtils';
@@ -776,6 +780,135 @@ describe('progressUtils', () => {
       expect(result.totalWeeks).toBe(0);
       expect(result.completedWeeks).toBe(0);
       expect(result.completionRate).toBe(0);
+    });
+  });
+
+  describe('buildWeekProgressSummaries', () => {
+    it('should group workouts by week and mark completion from performed data', () => {
+      const workouts: ProgrammedWorkoutWithStages[] = [
+        {
+          workout: { id: 1, name: 'Workout 1', day_number: 1 },
+          stages: [
+            {
+              id: 1,
+              stage_type: 'warmup',
+              exercises: [
+                {
+                  id: 1,
+                  exercise: createExercise(1, 'Bench Press'),
+                  set_schemes: [
+                    {
+                      id: 1,
+                      target_weight: 100,
+                      target_rep_count: 10,
+                      performed_weight: 105,
+                      performed_rep_count: 12,
+                    } as SetScheme,
+                  ],
+                },
+              ],
+            } as WorkoutStageWithExercises,
+          ],
+        },
+        {
+          workout: { id: 2, name: 'Workout 2', day_number: 2 },
+          stages: [
+            {
+              id: 2,
+              stage_type: 'warmup',
+              exercises: [
+                {
+                  id: 2,
+                  exercise: createExercise(2, 'Squat'),
+                  set_schemes: [
+                    {
+                      id: 2,
+                      target_weight: 100,
+                      target_rep_count: 10,
+                    } as SetScheme,
+                  ],
+                },
+              ],
+            } as WorkoutStageWithExercises,
+          ],
+        },
+      ];
+
+      const summaries = buildWeekProgressSummaries(workouts, 1);
+
+      expect(summaries).toEqual([
+        { weekNumber: 1, isCompleted: true },
+        { weekNumber: 2, isCompleted: false },
+      ]);
+      expect(getCurrentWeekFromProgress(summaries)).toBe(2);
+      expect(getTotalWeeksFromWorkouts(summaries)).toBe(2);
+    });
+  });
+
+  describe('getCurrentWeekFromProgress', () => {
+    it('should return week 1 when multiple weeks exist but none are completed', () => {
+      const weeks = [
+        { weekNumber: 1, isCompleted: false },
+        { weekNumber: 2, isCompleted: false },
+        { weekNumber: 3, isCompleted: false },
+        { weekNumber: 4, isCompleted: false },
+        { weekNumber: 5, isCompleted: false },
+      ];
+
+      expect(getCurrentWeekFromProgress(weeks)).toBe(1);
+    });
+
+    it('should return week 2 when week 1 is completed and week 2 is not', () => {
+      const weeks = [
+        { weekNumber: 1, isCompleted: true },
+        { weekNumber: 2, isCompleted: false },
+      ];
+
+      expect(getCurrentWeekFromProgress(weeks)).toBe(2);
+    });
+
+    it('should return the last week when all weeks are completed', () => {
+      const weeks = [
+        { weekNumber: 1, isCompleted: true },
+        { weekNumber: 2, isCompleted: true },
+      ];
+
+      expect(getCurrentWeekFromProgress(weeks)).toBe(2);
+    });
+
+    it('should return week 1 when no weeks exist', () => {
+      expect(getCurrentWeekFromProgress([])).toBe(1);
+    });
+  });
+
+  describe('getWeekTimelineStatus', () => {
+    it('should mark week 2 as current when week 1 is completed', () => {
+      const currentWeek = getCurrentWeekFromProgress([
+        { weekNumber: 1, isCompleted: true },
+        { weekNumber: 2, isCompleted: false },
+      ]);
+
+      expect(getWeekTimelineStatus({ weekNumber: 1, isCompleted: true }, currentWeek)).toBe(
+        'completed'
+      );
+      expect(getWeekTimelineStatus({ weekNumber: 2, isCompleted: false }, currentWeek)).toBe(
+        'current'
+      );
+      expect(getWeekTimelineStatus({ weekNumber: 3, isCompleted: false }, currentWeek)).toBe(
+        'future'
+      );
+    });
+
+    it('should not mark later generated weeks as current when earlier weeks are incomplete', () => {
+      const currentWeek = getCurrentWeekFromProgress([
+        { weekNumber: 1, isCompleted: false },
+        { weekNumber: 5, isCompleted: false },
+      ]);
+
+      expect(currentWeek).toBe(1);
+      expect(getWeekTimelineStatus({ weekNumber: 5, isCompleted: false }, currentWeek)).toBe(
+        'future'
+      );
     });
   });
 

@@ -340,8 +340,9 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
                         textVariant="secondary"
                         className={GAME_CLASSES.marginBottom2}
                       >
-                        Week {weekNumber} of {activeProgram.program.current_week_number} • Click any
-                        workout to view details
+                        Week {weekNumber} of{' '}
+                        {Math.max(activeProgram.program.current_week_number, 1)} • Click any workout
+                        to view details
                       </GameText>
                       {isLoading ? (
                         <Box display="flex" justifyContent="center" p={3}>

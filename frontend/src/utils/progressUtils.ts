@@ -34,6 +34,51 @@ export interface ProgramProgress {
   completionRate: number;
 }
 
+export type WeekTimelineStatus = 'current' | 'completed' | 'past' | 'future';
+
+export interface WeekProgressSummary {
+  weekNumber: number;
+  isCompleted: boolean;
+}
+
+/**
+ * Determine the current program week from workout completion progress.
+ * The current week is the first week that is not fully completed.
+ */
+export const getCurrentWeekFromProgress = (weeks: WeekProgressSummary[]): number => {
+  if (weeks.length === 0) {
+    return 1;
+  }
+
+  const sortedWeeks = [...weeks].sort((a, b) => a.weekNumber - b.weekNumber);
+  const firstIncompleteWeek = sortedWeeks.find(week => !week.isCompleted);
+
+  if (firstIncompleteWeek) {
+    return firstIncompleteWeek.weekNumber;
+  }
+
+  return sortedWeeks[sortedWeeks.length - 1].weekNumber;
+};
+
+/**
+ * Determine timeline status for a week relative to the current program week.
+ */
+export const getWeekTimelineStatus = (
+  week: WeekProgressSummary,
+  currentWeek: number
+): WeekTimelineStatus => {
+  if (week.weekNumber === currentWeek) {
+    return 'current';
+  }
+  if (week.isCompleted) {
+    return 'completed';
+  }
+  if (week.weekNumber < currentWeek) {
+    return 'past';
+  }
+  return 'future';
+};
+
 /**
  * Check if a set scheme has performed data
  */
@@ -98,6 +143,44 @@ export const calculateWorkoutProgress = (workout: ProgrammedWorkoutWithStages): 
     totalExercises,
     completionRate: totalExercises > 0 ? (completedExercises / totalExercises) * 100 : 0,
   };
+};
+
+/**
+ * Build per-week completion summaries from programmed workouts.
+ */
+export const buildWeekProgressSummaries = (
+  workouts: ProgrammedWorkoutWithStages[],
+  workoutsPerWeek: number
+): WeekProgressSummary[] => {
+  const weekMap = new Map<number, ProgrammedWorkoutWithStages[]>();
+
+  workouts.forEach(workout => {
+    const weekNumber = Math.ceil(workout.workout.day_number / workoutsPerWeek);
+    if (!weekMap.has(weekNumber)) {
+      weekMap.set(weekNumber, []);
+    }
+    weekMap.get(weekNumber)!.push(workout);
+  });
+
+  return Array.from(weekMap.entries())
+    .map(([weekNumber, weekWorkouts]) => ({
+      weekNumber,
+      isCompleted: weekWorkouts.every(
+        weekWorkout => calculateWorkoutProgress(weekWorkout).status === 'completed'
+      ),
+    }))
+    .sort((a, b) => a.weekNumber - b.weekNumber);
+};
+
+/**
+ * Get the total number of generated weeks from workout data.
+ */
+export const getTotalWeeksFromWorkouts = (weeks: WeekProgressSummary[]): number => {
+  if (weeks.length === 0) {
+    return 1;
+  }
+
+  return Math.max(...weeks.map(week => week.weekNumber));
 };
 
 /**

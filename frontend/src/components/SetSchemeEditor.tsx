@@ -36,7 +36,7 @@ export const SetSchemeEditor: React.FC<SetSchemeEditorProps> = ({
 
   const handleClick = (event: React.MouseEvent<HTMLElement>) => {
     if (!isMostRecentWeek) {
-      enqueueSnackbar('Editing is only available for the most recent week', { variant: 'warning' });
+      enqueueSnackbar('Editing is only available for the current week', { variant: 'warning' });
       return;
     }
     setAnchorEl(event.currentTarget);
@@ -215,7 +215,7 @@ export const SetSchemeEditor: React.FC<SetSchemeEditorProps> = ({
   return (
     <React.Fragment>
       <Tooltip
-        title={isMostRecentWeek ? 'Edit exercise' : 'Editing only available for most recent week'}
+        title={isMostRecentWeek ? 'Edit exercise' : 'Editing only available for the current week'}
       >
         {isMostRecentWeek ? (
           <IconButton size="small" onClick={handleClick} color="primary" aria-label="Edit exercise">
@@ -228,7 +228,7 @@ export const SetSchemeEditor: React.FC<SetSchemeEditorProps> = ({
               onClick={handleClick}
               color="default"
               disabled={true}
-              aria-label="Editing only available for most recent week"
+              aria-label="Editing only available for the current week"
             >
               <Edit fontSize="small" />
             </IconButton>

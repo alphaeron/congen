@@ -96,7 +96,7 @@ describe('SetSchemeEditor', () => {
 
     // When disabled, the button is wrapped in a span, so we need to find the button inside
     const editButton = screen.getByRole('button', {
-      name: /editing only available for most recent week/i,
+      name: /editing only available for the current week/i,
     });
     expect(editButton).toBeDisabled();
   });
@@ -112,13 +112,13 @@ describe('SetSchemeEditor', () => {
 
     // When disabled, the button is wrapped in a span, so we need to find the button inside
     const editButton = screen.getByRole('button', {
-      name: /editing only available for most recent week/i,
+      name: /editing only available for the current week/i,
     });
 
     // For disabled buttons, we can't test tooltip interaction directly
     // Instead, we'll just verify the button is disabled and has the correct aria-label
     expect(editButton).toBeDisabled();
-    expect(editButton).toHaveAttribute('aria-label', 'Editing only available for most recent week');
+    expect(editButton).toHaveAttribute('aria-label', 'Editing only available for the current week');
   });
 
   it('opens popover when edit button is clicked', async () => {

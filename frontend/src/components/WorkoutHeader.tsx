@@ -23,7 +23,7 @@ interface WorkoutHeaderProps {
   completedWeekWorkouts?: number;
   // Day context props
   dayNumber?: number;
-  totalDayNumber?: number;
+  daysPerWeek?: number;
   workoutName?: string;
   totalExercises?: number;
   completedExercises?: number;
@@ -60,7 +60,7 @@ export const WorkoutHeader: React.FC<WorkoutHeaderProps> = ({
   completedWeekWorkouts,
   // Day context props
   dayNumber,
-  totalDayNumber,
+  daysPerWeek,
   workoutName,
   totalExercises,
   completedExercises,
@@ -141,16 +141,13 @@ export const WorkoutHeader: React.FC<WorkoutHeaderProps> = ({
                     : 'Current training week')}
                 {context === 'week' && `${totalWorkouts || 0} workouts in week`}
                 {context === 'day' && (
-                  <React.Fragment>
-                    <span>{workoutName}</span>
-                    {totalDayNumber && (
-                      <span style={{ marginLeft: '4px' }}>
-                        <GameText variant="caption" textVariant="secondary">
-                          • Total day {totalDayNumber} of program
-                        </GameText>
-                      </span>
-                    )}
-                  </React.Fragment>
+                  <span>
+                    {weekNumber != null && dayNumber != null && daysPerWeek != null
+                      ? `Week ${weekNumber} - Day ${dayNumber} of ${daysPerWeek}${
+                          workoutName ? ` (${workoutName})` : ''
+                        }`
+                      : workoutName}
+                  </span>
                 )}
               </GameText>
             </Box>

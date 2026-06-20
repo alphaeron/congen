@@ -56,7 +56,7 @@ import {
 } from '../common/utils';
 import { useData } from '../contexts/DataContext';
 import { exportWorkoutToPDF } from '../utils/exportUtils';
-import { calculateWorkoutProgress } from '../utils/progressUtils';
+import { calculateWorkoutProgress, buildWeekProgressSummaries, getCurrentWeekFromProgress } from '../utils/progressUtils';
 
 interface WorkoutDetailProps {
   workoutId: number;
@@ -238,29 +238,26 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
     setSelectedStageId('');
   }, []);
 
-  // Determine if this is the most recent week when userData is available
+  // Determine if this workout belongs to the current program week
   useEffect(() => {
     if (userData?.training_programs && userData.training_programs.length > 0) {
       const activeProgram = userData.training_programs.find(
         (program: ProgramWithWorkouts) => program.program.is_active
       );
       if (activeProgram) {
-        // Find the current workout's week
         const currentWorkout = activeProgram.workouts.find(
           (workout: ProgrammedWorkoutWithStages) => workout.workout.id === workoutId
         );
         if (currentWorkout) {
           const workoutsPerWeek = activeProgram.program_preferences.program_days_per_week;
-          const currentWeek = Math.ceil(currentWorkout.workout.day_number / workoutsPerWeek);
-
-          // Find the highest week number in the program
-          const maxWeek = Math.max(
-            ...activeProgram.workouts.map((workout: ProgrammedWorkoutWithStages) =>
-              Math.ceil(workout.workout.day_number / workoutsPerWeek)
-            )
+          const workoutWeek = Math.ceil(currentWorkout.workout.day_number / workoutsPerWeek);
+          const weekSummaries = buildWeekProgressSummaries(
+            activeProgram.workouts,
+            workoutsPerWeek
           );
+          const progressCurrentWeek = getCurrentWeekFromProgress(weekSummaries);
 
-          setIsMostRecentWeek(currentWeek === maxWeek);
+          setIsMostRecentWeek(workoutWeek === progressCurrentWeek);
         }
       }
     }
@@ -270,7 +267,7 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
   const handleOpenNotesEditor = useCallback(
     (exerciseData: ProgrammedExerciseWithSetSchemes) => {
       if (!isMostRecentWeek) {
-        enqueueSnackbar('Editing is only available for the most recent week', {
+        enqueueSnackbar('Editing is only available for the current week', {
           variant: 'warning',
         });
         return;
@@ -343,7 +340,7 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
     const weekNumber = Math.ceil(dayNumber / workoutsPerWeek);
     const dayInWeek = dayNumber - workoutsPerWeek * (weekNumber - 1);
 
-    return { dayInWeek, weekNumber, totalDayNumber: dayNumber };
+    return { dayInWeek, weekNumber, daysPerWeek: workoutsPerWeek };
   }, [workoutData, userData]);
 
   // Update parent component with workout details for breadcrumb
@@ -398,9 +395,16 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
     const rows: TableRow[] = [];
 
     workoutData.stages.forEach(stageData => {
+      const exercisesWithSetSchemes = stageData.exercises.filter(
+        exerciseData => (exerciseData.set_schemes || []).length > 0
+      );
+
+      if (exercisesWithSetSchemes.length === 0) {
+        return;
+      }
+
       const isCollapsed = collapsedStages.has(stageData.stage.id);
 
-      // Add stage header row
       rows.push({
         id: `stage-${stageData.stage.id}`,
         type: 'stage',
@@ -408,11 +412,9 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
         stageId: stageData.stage.id,
       });
 
-      // Add exercise rows only if stage is not collapsed
       if (!isCollapsed) {
-        stageData.exercises.forEach(exerciseData => {
+        exercisesWithSetSchemes.forEach(exerciseData => {
           const setSchemes = exerciseData.set_schemes || [];
-          if (setSchemes.length === 0) return;
 
           // Aggregate set scheme data
           const firstSetScheme = setSchemes[0];
@@ -674,8 +676,9 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
         <WorkoutHeader
           context="day"
           dayNumber={dayInWeekData?.dayInWeek}
-          totalDayNumber={dayInWeekData?.totalDayNumber}
-          workoutName={workoutData?.workout.workout_name}
+          weekNumber={dayInWeekData?.weekNumber}
+          daysPerWeek={dayInWeekData?.daysPerWeek}
+          workoutName={replaceUnderscoresWithSpaces(workoutData.workout.name)}
           totalExercises={progressMetrics?.totalExercises}
           completedExercises={progressMetrics?.completedExercises}
           onExportPDF={handleExportPDF}

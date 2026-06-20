@@ -186,6 +186,21 @@ describe('WorkoutHeader', () => {
     expect(screen.getByText('5/8 exercises')).toBeInTheDocument();
   });
 
+  it('renders week and day position in day context', () => {
+    render(
+      <WorkoutHeader
+        {...defaultProps}
+        context="day"
+        dayNumber={3}
+        weekNumber={2}
+        daysPerWeek={4}
+        workoutName="Upper Body"
+      />
+    );
+
+    expect(screen.getByText('Week 2 - Day 3 of 4 (Upper Body)')).toBeInTheDocument();
+  });
+
   it('calls onExportPDF when export button is clicked', () => {
     const onExportPDF = jest.fn();
     render(<WorkoutHeader {...defaultProps} onExportPDF={onExportPDF} />);

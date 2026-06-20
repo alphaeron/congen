@@ -1,7 +1,45 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, act } from '@testing-library/react';
 import React from 'react';
 
 import { TrainingTimeline } from './TrainingTimeline';
+
+class ResizeObserverMock {
+  observe() {}
+
+  unobserve() {}
+
+  disconnect() {}
+}
+
+global.ResizeObserver = ResizeObserverMock;
+
+const createMockWorkout = (id: number, name: string) => ({
+  id,
+  program_id: 1,
+  day_number: id,
+  name,
+  created_at: new Date('2024-01-01T00:00:00.000Z'),
+  updated_at: new Date('2024-01-01T00:00:00.000Z'),
+});
+
+const createMockWeek = (
+  weekNumber: number,
+  workoutCount: number,
+  completedWorkoutIndexes: number[] = weekNumber < 2 ? Array.from({ length: workoutCount }, (_, i) => i) : []
+) => ({
+  weekNumber,
+  workouts: Array.from({ length: workoutCount }, (_, index) => ({
+    workout: createMockWorkout(weekNumber * 10 + index, `Workout ${weekNumber}-${index + 1}`),
+    isCompleted: completedWorkoutIndexes.includes(index),
+  })),
+  isCompleted: weekNumber < 2,
+  completedWorkouts: completedWorkoutIndexes.length,
+});
+
+const createMockWeekWorkout = (id: number, name: string, isCompleted: boolean) => ({
+  workout: createMockWorkout(id, name),
+  isCompleted,
+});
 
 // Mock framer-motion
 jest.mock('framer-motion', () => {
@@ -124,7 +162,9 @@ jest.mock('framer-motion', () => {
         );
       },
     },
-    AnimatePresence: () => 'div',
+    AnimatePresence: ({ children }: { children: React.ReactNode }) => (
+      <React.Fragment>{children}</React.Fragment>
+    ),
   };
 });
 
@@ -133,8 +173,8 @@ describe('TrainingTimeline', () => {
     {
       weekNumber: 1,
       workouts: [
-        { id: 1, name: 'Workout 1' },
-        { id: 2, name: 'Workout 2' },
+        createMockWeekWorkout(1, 'Workout 1', true),
+        createMockWeekWorkout(2, 'Workout 2', true),
       ],
       isCompleted: true,
       completedWorkouts: 2,
@@ -142,16 +182,16 @@ describe('TrainingTimeline', () => {
     {
       weekNumber: 2,
       workouts: [
-        { id: 3, name: 'Workout 3' },
-        { id: 4, name: 'Workout 4' },
-        { id: 5, name: 'Workout 5' },
+        createMockWeekWorkout(3, 'Workout 3', true),
+        createMockWeekWorkout(4, 'Workout 4', false),
+        createMockWeekWorkout(5, 'Workout 5', false),
       ],
       isCompleted: false,
       completedWorkouts: 1,
     },
     {
       weekNumber: 3,
-      workouts: [{ id: 6, name: 'Workout 6' }],
+      workouts: [createMockWeekWorkout(6, 'Workout 6', false)],
       isCompleted: false,
       completedWorkouts: 0,
     },
@@ -188,12 +228,83 @@ describe('TrainingTimeline', () => {
   it('displays correct week status indicators', () => {
     render(<TrainingTimeline {...defaultProps} />);
 
-    // Week 1 should be completed (green)
-    // Week 2 should be current (blue)
-    // Week 3 should be future (amber)
     expect(screen.getByText('completed')).toBeInTheDocument();
     expect(screen.getByText('current')).toBeInTheDocument();
     expect(screen.getByText('future')).toBeInTheDocument();
+  });
+
+  it('marks week 1 as current when later weeks exist but none are completed', () => {
+    const manyIncompleteWeeks = Array.from({ length: 5 }, (_, index) => ({
+      weekNumber: index + 1,
+      workouts: [createMockWeekWorkout(index + 1, `Workout ${index + 1}`, false)],
+      isCompleted: false,
+      completedWorkouts: 0,
+    }));
+
+    render(
+      <TrainingTimeline
+        weeks={manyIncompleteWeeks}
+        onWeekClick={jest.fn()}
+        currentWeek={1}
+      />
+    );
+
+    expect(screen.getAllByText('current')).toHaveLength(1);
+    expect(screen.getByText('Week 1').closest('[data-week-number="1"]')).toBeInTheDocument();
+    expect(screen.getAllByText('future')).toHaveLength(4);
+  });
+
+  it('marks week 2 as current when week 1 is completed', () => {
+    const weeks = [
+      {
+        weekNumber: 1,
+        workouts: [createMockWeekWorkout(1, 'Workout 1', true)],
+        isCompleted: true,
+        completedWorkouts: 1,
+      },
+      {
+        weekNumber: 2,
+        workouts: [createMockWeekWorkout(2, 'Workout 2', false)],
+        isCompleted: false,
+        completedWorkouts: 0,
+      },
+    ];
+
+    render(<TrainingTimeline weeks={weeks} onWeekClick={jest.fn()} currentWeek={2} />);
+
+    expect(screen.getByText('completed')).toBeInTheDocument();
+    expect(screen.getByText('current')).toBeInTheDocument();
+    expect(screen.queryByText('future')).not.toBeInTheDocument();
+  });
+
+  it('marks completion dots based on individual workout completion', () => {
+    const weeks = [
+      {
+        weekNumber: 2,
+        workouts: [
+          createMockWeekWorkout(1, 'ME Upper', false),
+          createMockWeekWorkout(2, 'DE Lower', true),
+          createMockWeekWorkout(3, 'ME Lower', false),
+        ],
+        isCompleted: false,
+        completedWorkouts: 1,
+      },
+    ];
+
+    render(<TrainingTimeline weeks={weeks} onWeekClick={jest.fn()} currentWeek={2} />);
+
+    expect(screen.getByTestId('workout-completion-dot-1')).toHaveAttribute(
+      'data-completed',
+      'false'
+    );
+    expect(screen.getByTestId('workout-completion-dot-2')).toHaveAttribute(
+      'data-completed',
+      'true'
+    );
+    expect(screen.getByTestId('workout-completion-dot-3')).toHaveAttribute(
+      'data-completed',
+      'false'
+    );
   });
 
   it('displays completion dots for each week', () => {
@@ -224,12 +335,99 @@ describe('TrainingTimeline', () => {
   it('displays workout count for each week', () => {
     render(<TrainingTimeline {...defaultProps} />);
 
-    // Should show workout names for each week
-    expect(screen.getByText('Workout 1')).toBeInTheDocument(); // Week 1 has 2 workouts
-    expect(screen.getByText('Workout 2')).toBeInTheDocument(); // Week 1 has 2 workouts
-    expect(screen.getByText('Workout 3')).toBeInTheDocument(); // Week 2 has 3 workouts
-    expect(screen.getByText('Workout 4')).toBeInTheDocument(); // Week 2 has 3 workouts
-    expect(screen.getByText('Workout 5')).toBeInTheDocument(); // Week 2 has 3 workouts
-    expect(screen.getByText('Workout 6')).toBeInTheDocument(); // Week 3 has 1 workout
+    expect(screen.getByText('Workout 1')).toBeInTheDocument();
+    expect(screen.getByText('Workout 2')).toBeInTheDocument();
+    expect(screen.getByText('Workout 3')).toBeInTheDocument();
+    expect(screen.getByText('Workout 4')).toBeInTheDocument();
+    expect(screen.getByText('Workout 5')).toBeInTheDocument();
+    expect(screen.getByText('Workout 6')).toBeInTheDocument();
+  });
+
+  it('does not show scroll arrows when all weeks fit in the container', () => {
+    render(<TrainingTimeline {...defaultProps} />);
+
+    const scrollContainer = screen.getByTestId('timeline-scroll-container');
+    Object.defineProperty(scrollContainer, 'clientWidth', {
+      configurable: true,
+      value: 2000,
+    });
+    Object.defineProperty(scrollContainer, 'scrollWidth', {
+      configurable: true,
+      value: 2000,
+    });
+    Object.defineProperty(scrollContainer, 'scrollLeft', {
+      configurable: true,
+      value: 0,
+      writable: true,
+    });
+
+    act(() => {
+      fireEvent.scroll(scrollContainer);
+    });
+
+    expect(screen.queryByTestId('timeline-scroll-left')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('timeline-scroll-right')).not.toBeInTheDocument();
+  });
+
+  it('shows scroll arrows when timeline content overflows the container', () => {
+    const manyWeeks = Array.from({ length: 10 }, (_, index) => createMockWeek(index + 1, 1));
+
+    render(<TrainingTimeline weeks={manyWeeks} onWeekClick={jest.fn()} currentWeek={5} />);
+
+    const scrollContainer = screen.getByTestId('timeline-scroll-container');
+    Object.defineProperty(scrollContainer, 'clientWidth', {
+      configurable: true,
+      value: 800,
+    });
+    Object.defineProperty(scrollContainer, 'scrollWidth', {
+      configurable: true,
+      value: 2000,
+    });
+    Object.defineProperty(scrollContainer, 'scrollLeft', {
+      configurable: true,
+      value: 0,
+      writable: true,
+    });
+
+    act(() => {
+      fireEvent.scroll(scrollContainer);
+    });
+
+    expect(screen.getByTestId('timeline-scroll-right')).toBeInTheDocument();
+    expect(screen.queryByTestId('timeline-scroll-left')).not.toBeInTheDocument();
+  });
+
+  it('scrolls timeline content when arrow buttons are clicked', () => {
+    const manyWeeks = Array.from({ length: 10 }, (_, index) => createMockWeek(index + 1, 1));
+
+    render(<TrainingTimeline weeks={manyWeeks} onWeekClick={jest.fn()} currentWeek={5} />);
+
+    const scrollContainer = screen.getByTestId('timeline-scroll-container');
+    const scrollBy = jest.fn();
+    Object.defineProperty(scrollContainer, 'clientWidth', {
+      configurable: true,
+      value: 800,
+    });
+    Object.defineProperty(scrollContainer, 'scrollWidth', {
+      configurable: true,
+      value: 2000,
+    });
+    Object.defineProperty(scrollContainer, 'scrollLeft', {
+      configurable: true,
+      value: 0,
+      writable: true,
+    });
+    scrollContainer.scrollBy = scrollBy;
+
+    act(() => {
+      fireEvent.scroll(scrollContainer);
+    });
+
+    fireEvent.click(screen.getByTestId('timeline-scroll-right'));
+
+    expect(scrollBy).toHaveBeenCalledWith({
+      left: 600,
+      behavior: 'smooth',
+    });
   });
 });

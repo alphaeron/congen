@@ -302,6 +302,50 @@ describe('WorkoutWeekDetails', () => {
     );
   }, 15000);
 
+  it('displays week one of one when current_week_number is zero for new program', async () => {
+    const newProgramWithPreferences: ProgramWithPreferences = {
+      ...mockProgramWithPreferences,
+      program: {
+        ...mockProgramWithPreferences.program,
+        current_week_number: 0,
+      },
+    };
+
+    const newProgramMockDataContext = {
+      ...defaultMockDataContext,
+      userData: {
+        training_programs: [
+          {
+            program: newProgramWithPreferences.program,
+            workouts: [
+              {
+                workout: mockWorkout,
+                stages: [],
+              },
+            ],
+          },
+        ],
+      },
+      programPreferences: [newProgramWithPreferences],
+      programmedWorkouts: [mockWorkout],
+      loadProgramPreferences: jest.fn().mockResolvedValue([newProgramWithPreferences]),
+    };
+
+    mockUseData.mockReturnValue(newProgramMockDataContext);
+    mock.onGet('/program/with-preferences').reply(200, [newProgramWithPreferences]);
+
+    await act(async () => {
+      renderWithProviders(<WorkoutWeekDetails user={mockUser} weekNumber={1} />);
+    });
+
+    await waitFor(
+      () => {
+        expect(screen.getByText(/Week 1 of 1/)).toBeInTheDocument();
+      },
+      { timeout: 10000 }
+    );
+  }, 15000);
+
   it('displays week workouts when workouts exist for the week', async () => {
     const workoutWithStages = {
       workout: {

@@ -198,7 +198,6 @@ export const WorkoutGenerationWizard: React.FC<WorkoutGenerationWizardProps> = (
 
       const updatedWorkout = await updateWorkoutWithOneRepMax(program.id);
 
-      enqueueSnackbar('Workout updated successfully!', { variant: 'success' });
       onComplete(updatedWorkout);
     } catch {
       enqueueSnackbar('Failed to update workout with 1RM data', { variant: 'error' });

@@ -1,22 +1,31 @@
 import { ChevronLeft, ChevronRight } from '@mui/icons-material';
 import { Box, Typography, Chip, IconButton } from '@mui/material';
-import { motion, AnimatePresence } from 'framer-motion';
-import React, { useState, useMemo } from 'react';
+import { motion } from 'framer-motion';
+import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 
 import { GameCard, GameText, GAME_CLASSES } from './GameTheme';
 import type { ProgrammedWorkout } from '../api/types';
 import { replaceUnderscoresWithSpaces } from '../common/utils';
+import { getWeekTimelineStatus } from '../utils/progressUtils';
+
+interface TrainingTimelineWeekWorkout {
+  workout: ProgrammedWorkout;
+  isCompleted: boolean;
+}
 
 interface TrainingTimelineProps {
   weeks: Array<{
     weekNumber: number;
-    workouts: ProgrammedWorkout[];
+    workouts: TrainingTimelineWeekWorkout[];
     isCompleted: boolean;
     completedWorkouts: number;
   }>;
   onWeekClick: (weekNumber: number) => void;
   currentWeek: number;
 }
+
+const WEEK_CARD_MIN_WIDTH = 180;
+const WEEK_CARD_GAP = 16;
 
 /**
  * Training Timeline component for displaying workout weeks in a horizontal scrollable format.
@@ -31,71 +40,104 @@ export const TrainingTimeline: React.FC<TrainingTimelineProps> = ({
   onWeekClick,
   currentWeek,
 }) => {
-  const [scrollPosition, setScrollPosition] = useState(0);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
 
   const sortedWeeks = useMemo(() => {
     return [...weeks].sort((a, b) => b.weekNumber - a.weekNumber);
   }, [weeks]);
 
+  const updateScrollButtons = useCallback(() => {
+    const container = scrollContainerRef.current;
+    if (!container) {
+      setCanScrollLeft(false);
+      setCanScrollRight(false);
+      return;
+    }
+
+    const maxScrollLeft = container.scrollWidth - container.clientWidth;
+    setCanScrollLeft(container.scrollLeft > 0);
+    setCanScrollRight(container.scrollLeft < maxScrollLeft - 1);
+  }, []);
+
   const handleScroll = (direction: 'left' | 'right') => {
-    const scrollAmount = 200;
-    const newPosition =
-      direction === 'left'
-        ? Math.max(0, scrollPosition - scrollAmount)
-        : scrollPosition + scrollAmount;
+    const container = scrollContainerRef.current;
+    if (!container) {
+      return;
+    }
 
-    setScrollPosition(newPosition);
+    const scrollAmount = Math.max(
+      container.clientWidth * 0.75,
+      WEEK_CARD_MIN_WIDTH + WEEK_CARD_GAP
+    );
 
-    setTimeout(() => setIsScrolling(false), 300);
+    container.scrollBy({
+      left: direction === 'left' ? -scrollAmount : scrollAmount,
+      behavior: 'smooth',
+    });
   };
 
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container) {
+      return;
+    }
+
+    updateScrollButtons();
+
+    const handleScrollEvent = () => {
+      updateScrollButtons();
+    };
+
+    container.addEventListener('scroll', handleScrollEvent, { passive: true });
+
+    const resizeObserver = new ResizeObserver(() => {
+      updateScrollButtons();
+    });
+
+    resizeObserver.observe(container);
+
+    return () => {
+      container.removeEventListener('scroll', handleScrollEvent);
+      resizeObserver.disconnect();
+    };
+  }, [sortedWeeks, updateScrollButtons]);
+
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container) {
+      return;
+    }
+
+    const currentWeekElement = container.querySelector(
+      `[data-week-number="${currentWeek}"]`
+    ) as HTMLElement | null;
+
+    if (currentWeekElement?.scrollIntoView) {
+      currentWeekElement.scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest',
+        inline: 'center',
+      });
+    }
+  }, [currentWeek, sortedWeeks]);
+
   const getWeekStatus = (week: (typeof weeks)[0]) => {
-    if (week.weekNumber === currentWeek) return 'current';
-    if (week.isCompleted) return 'completed';
-    if (week.weekNumber < currentWeek) return 'past';
-    return 'future';
+    return getWeekTimelineStatus(week, currentWeek);
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'current':
-        return 'var(--game-info)'; // Blue
+        return 'var(--game-info)';
       case 'completed':
-        return 'var(--game-success)'; // Green
+        return 'var(--game-success)';
       case 'past':
-        return 'var(--game-gray-light)'; // Gray
+        return 'var(--game-gray-light)';
       default:
-        return 'var(--game-warning)'; // Amber
+        return 'var(--game-warning)';
     }
-  };
-
-  const getCompletionDots = (week: (typeof weeks)[0]) => {
-    const totalWorkouts = week.workouts.length;
-    const completedWorkouts = week.completedWorkouts || 0;
-    const dots = [];
-
-    for (let i = 0; i < totalWorkouts; i++) {
-      dots.push(
-        <motion.div
-          key={i}
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ duration: 0.3, delay: i * 0.1 }}
-          whileHover={{ scale: 1.2 }}
-        >
-          <Box
-            sx={{
-              width: 6,
-              height: 6,
-              borderRadius: '50%',
-              backgroundColor: i < completedWorkouts ? 'var(--game-cyan)' : 'var(--game-gray)',
-            }}
-          />
-        </motion.div>
-      );
-    }
-
-    return dots;
   };
 
   if (weeks.length === 0) {
@@ -123,170 +165,181 @@ export const TrainingTimeline: React.FC<TrainingTimelineProps> = ({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, ease: 'easeOut' }}
     >
-      <GameCard className="glassmorphism-card game-overflow-visible">
-        {/* Header */}
+      <GameCard className="glassmorphism-card">
         <Box sx={{ p: 2, borderBottom: '1px solid var(--game-cyan-border)' }}>
           <GameText variant="h6" className={GAME_CLASSES.textMedium}>
             Training Timeline
           </GameText>
         </Box>
 
-        {/* Timeline Container */}
-        <Box sx={{ position: 'relative', p: 2, overflow: 'visible' }}>
-          {/* Scroll Buttons */}
-          <AnimatePresence>
-            {scrollPosition > 0 && (
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.2 }}
-                style={{
-                  position: 'absolute',
-                  left: 8,
-                  top: '50%',
-                  y: '-50%',
-                  zIndex: 2,
-                }}
-              >
-                <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}>
-                  <IconButton
-                    onClick={() => handleScroll('left')}
-                    sx={{
-                      backgroundColor: 'var(--game-gray-dark)',
-                      color: 'var(--game-white)',
-                    }}
-                  >
-                    <ChevronLeft />
-                  </IconButton>
-                </motion.div>
-              </motion.div>
-            )}
+        <Box sx={{ position: 'relative', p: 2 }}>
+          {canScrollLeft && (
+            <IconButton
+              aria-label="Scroll timeline left"
+              data-testid="timeline-scroll-left"
+              onClick={() => handleScroll('left')}
+              sx={{
+                position: 'absolute',
+                left: 8,
+                top: '50%',
+                transform: 'translateY(-50%)',
+                zIndex: 2,
+                backgroundColor: 'var(--game-gray-dark)',
+                color: 'var(--game-white)',
+                boxShadow: 2,
+                '&:hover': {
+                  backgroundColor: 'var(--game-gray)',
+                },
+              }}
+            >
+              <ChevronLeft />
+            </IconButton>
+          )}
 
-            {scrollPosition < (sortedWeeks.length - 3) * 200 && (
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 20 }}
-                transition={{ duration: 0.2 }}
-                style={{
-                  position: 'absolute',
-                  right: 8,
-                  top: '50%',
-                  y: '-50%',
-                  zIndex: 2,
-                }}
-              >
-                <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}>
-                  <IconButton
-                    onClick={() => handleScroll('right')}
-                    sx={{
-                      backgroundColor: 'var(--game-gray-dark)',
-                      color: 'var(--game-white)',
-                    }}
-                  >
-                    <ChevronRight />
-                  </IconButton>
-                </motion.div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+          {canScrollRight && (
+            <IconButton
+              aria-label="Scroll timeline right"
+              data-testid="timeline-scroll-right"
+              onClick={() => handleScroll('right')}
+              sx={{
+                position: 'absolute',
+                right: 8,
+                top: '50%',
+                transform: 'translateY(-50%)',
+                zIndex: 2,
+                backgroundColor: 'var(--game-gray-dark)',
+                color: 'var(--game-white)',
+                boxShadow: 2,
+                '&:hover': {
+                  backgroundColor: 'var(--game-gray)',
+                },
+              }}
+            >
+              <ChevronRight />
+            </IconButton>
+          )}
 
-          {/* Weeks Container */}
-          <motion.div
-            animate={{ x: -scrollPosition }}
-            transition={{ duration: 0.3, ease: 'easeOut' }}
-            style={{
-              display: 'flex',
-              gap: 16,
-              overflow: 'visible',
+          <Box
+            ref={scrollContainerRef}
+            data-testid="timeline-scroll-container"
+            sx={{
+              overflowX: 'auto',
+              overflowY: 'hidden',
+              scrollBehavior: 'smooth',
               scrollbarWidth: 'none',
               msOverflowStyle: 'none',
+              px: canScrollLeft || canScrollRight ? 5 : 0,
+              '&::-webkit-scrollbar': {
+                display: 'none',
+              },
             }}
           >
-            {sortedWeeks.map(week => {
-              const status = getWeekStatus(week);
-              const isCurrentWeek = week.weekNumber === currentWeek;
+            <Box
+              sx={{
+                display: 'flex',
+                gap: `${WEEK_CARD_GAP}px`,
+                width: 'max-content',
+              }}
+            >
+              {sortedWeeks.map(week => {
+                const status = getWeekStatus(week);
+                const isCurrentWeek = week.weekNumber === currentWeek;
 
-              return (
-                <motion.div
-                  key={week.weekNumber}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3, delay: week.weekNumber * 0.1 }}
-                  whileHover={{ y: -8 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => onWeekClick(week.weekNumber)}
-                  style={{
-                    minWidth: 180,
-                    padding: 16,
-                    background: isCurrentWeek
-                      ? 'linear-gradient(135deg, var(--game-info) 0%, var(--game-success) 100%)'
-                      : 'var(--game-gray)',
-                    border: `2px solid ${getStatusColor(status)}`,
-                    borderRadius: 8,
-                    cursor: 'pointer',
-                  }}
-                >
-                  {/* Week Header */}
-                  <Box
-                    sx={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      mb: 1,
+                return (
+                  <motion.div
+                    key={week.weekNumber}
+                    data-week-number={week.weekNumber}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, delay: week.weekNumber * 0.1 }}
+                    whileHover={{ filter: 'brightness(1.1)', zIndex: 2 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => onWeekClick(week.weekNumber)}
+                    style={{
+                      minWidth: WEEK_CARD_MIN_WIDTH,
+                      flexShrink: 0,
+                      padding: 16,
+                      background: isCurrentWeek
+                        ? 'linear-gradient(135deg, var(--game-info) 0%, var(--game-success) 100%)'
+                        : 'var(--game-gray)',
+                      border: `2px solid ${getStatusColor(status)}`,
+                      borderRadius: 8,
+                      cursor: 'pointer',
                     }}
                   >
-                    <Typography variant="h6" sx={{ color: 'white', fontWeight: 600 }}>
-                      Week {week.weekNumber}
-                    </Typography>
-                    <Chip
-                      label={status}
-                      size="small"
+                    <Box
                       sx={{
-                        backgroundColor: getStatusColor(status),
-                        color: 'white',
-                        fontSize: '0.7rem',
-                        height: 20,
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        gap: 1,
+                        mb: 1,
                       }}
-                    />
-                  </Box>
-
-                  {/* Completion Dots */}
-                  <Box sx={{ display: 'flex', gap: 0.5, mb: 1, flexWrap: 'wrap' }}>
-                    {getCompletionDots(week)}
-                  </Box>
-
-                  {/* Workout Types */}
-                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-                    {week.workouts.slice(0, 3).map((workout, index) => (
+                    >
                       <Typography
-                        key={index}
-                        variant="caption"
+                        variant="h6"
+                        sx={{ color: 'white', fontWeight: 600, flexShrink: 0 }}
+                      >
+                        Week {week.weekNumber}
+                      </Typography>
+                      <Chip
+                        label={status}
+                        size="small"
                         sx={{
-                          color: 'var(--game-white-muted)',
-                          fontSize: '0.75rem',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap',
+                          backgroundColor: getStatusColor(status),
+                          color: 'white',
+                          fontSize: '0.7rem',
+                          height: 20,
+                          flexShrink: 0,
                         }}
-                      >
-                        {replaceUnderscoresWithSpaces(workout.name)}
-                      </Typography>
-                    ))}
-                    {week.workouts.length > 3 && (
-                      <Typography
-                        variant="caption"
-                        sx={{ color: 'var(--game-gray-light)', fontSize: '0.7rem' }}
-                      >
-                        +{week.workouts.length - 3} more
-                      </Typography>
-                    )}
-                  </Box>
-                </motion.div>
-              );
-            })}
-          </motion.div>
+                      />
+                    </Box>
+
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                      {week.workouts.map(({ workout, isCompleted }, index) => (
+                        <Box
+                          key={workout.id}
+                          sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
+                        >
+                          <motion.div
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            transition={{ duration: 0.3, delay: index * 0.1 }}
+                          >
+                            <Box
+                              data-testid={`workout-completion-dot-${workout.id}`}
+                              data-completed={isCompleted ? 'true' : 'false'}
+                              sx={{
+                                width: 6,
+                                height: 6,
+                                borderRadius: '50%',
+                                flexShrink: 0,
+                                backgroundColor: isCompleted
+                                  ? 'var(--game-cyan)'
+                                  : 'var(--game-gray)',
+                              }}
+                            />
+                          </motion.div>
+                          <Typography
+                            variant="caption"
+                            sx={{
+                              color: 'var(--game-white-muted)',
+                              fontSize: '0.75rem',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap',
+                            }}
+                          >
+                            {replaceUnderscoresWithSpaces(workout.name)}
+                          </Typography>
+                        </Box>
+                      ))}
+                    </Box>
+                  </motion.div>
+                );
+              })}
+            </Box>
+          </Box>
         </Box>
       </GameCard>
     </motion.div>
