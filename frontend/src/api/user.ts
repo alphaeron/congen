@@ -28,6 +28,7 @@ export const getCurrentUser = (): Promise<User> =>
   REQUEST({
     method: 'GET',
     url: '/user/me',
+    forceRefresh: process.env.NODE_ENV === 'development',
   });
 
 /**

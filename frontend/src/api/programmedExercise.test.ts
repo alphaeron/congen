@@ -1,5 +1,6 @@
 import MockAdapter from 'axios-mock-adapter';
 
+import { expectRequestError } from './apiRequestErrorTestUtils';
 import { ENDPOINT } from './endpoint';
 import { getProgrammedExercisesByStage, getProgrammedExercise } from './programmedExercise';
 import type { ProgrammedExercise } from './types';
@@ -37,7 +38,7 @@ describe('ProgrammedExercise API', () => {
       const errorResponse = { message: 'Stage not found' };
       mock.onGet('/programmed_exercise/stage/1').reply(404, errorResponse);
 
-      await expect(getProgrammedExercisesByStage(1)).rejects.toEqual(errorResponse);
+      await expectRequestError(getProgrammedExercisesByStage(1), errorResponse);
     });
 
     it('should handle empty response when no exercises exist', async () => {
@@ -66,7 +67,7 @@ describe('ProgrammedExercise API', () => {
       const errorResponse = { message: 'Exercise not found' };
       mock.onGet('/programmed_exercise/1').reply(404, errorResponse);
 
-      await expect(getProgrammedExercise(1)).rejects.toEqual(errorResponse);
+      await expectRequestError(getProgrammedExercise(1), errorResponse);
     });
 
     it('should handle exercise without notes', async () => {

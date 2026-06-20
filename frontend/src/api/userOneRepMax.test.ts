@@ -1,5 +1,6 @@
 import MockAdapter from 'axios-mock-adapter';
 
+import { expectRequestError } from './apiRequestErrorTestUtils';
 import { ENDPOINT, encodeExerciseName } from './endpoint';
 import type { UserOneRepMax } from './types';
 import {
@@ -56,7 +57,7 @@ describe('UserOneRepMax API', () => {
       const errorResponse = { message: 'Internal server error' };
       mock.onGet(`/user_one_rep_max/user/${mockUserId}`).reply(500, errorResponse);
 
-      await expect(getUserOneRepMaxes(mockUserId)).rejects.toEqual(errorResponse);
+      await expectRequestError(getUserOneRepMaxes(mockUserId), errorResponse);
     });
   });
 
@@ -103,7 +104,7 @@ describe('UserOneRepMax API', () => {
         .onGet(`/user_one_rep_max/user/${mockUserId}/exercise/${encodeExerciseName(exerciseName)}`)
         .reply(404, errorResponse);
 
-      await expect(getUserOneRepMax(mockUserId, exerciseName)).rejects.toEqual(errorResponse);
+      await expectRequestError(getUserOneRepMax(mockUserId, exerciseName), errorResponse);
     });
   });
 
@@ -122,7 +123,8 @@ describe('UserOneRepMax API', () => {
       const errorResponse = { message: 'Bad request' };
       mock.onPut('/user_one_rep_max/').reply(400, errorResponse);
 
-      await expect(upsertUserOneRepMax(mockUserId, 'Bench Press', 225, 'KG')).rejects.toEqual(
+      await expectRequestError(
+        upsertUserOneRepMax(mockUserId, 'Bench Press', 225, 'KG'),
         errorResponse
       );
     });
@@ -155,7 +157,7 @@ describe('UserOneRepMax API', () => {
         )
         .reply(404, errorResponse);
 
-      await expect(deleteUserOneRepMax(mockUserId, exerciseName)).rejects.toEqual(errorResponse);
+      await expectRequestError(deleteUserOneRepMax(mockUserId, exerciseName), errorResponse);
     });
   });
 });

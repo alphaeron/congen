@@ -1,5 +1,6 @@
 import AxiosMockAdapter from 'axios-mock-adapter';
 
+import { expectRequestError } from './apiRequestErrorTestUtils';
 import { ENDPOINT } from './endpoint';
 import type { UserWeakMuscle } from './types';
 import { getUserWeakMuscles, addUserWeakMuscle, removeUserWeakMuscle } from './userWeakMuscle';
@@ -41,35 +42,35 @@ describe('userWeakMuscle API', () => {
       const errorResponse = { error: 'User not found' };
       mockAdapter.onGet('/user_weak_muscle/test-user-id').reply(404, errorResponse);
 
-      await expect(getUserWeakMuscles('test-user-id')).rejects.toEqual(errorResponse);
+      await expectRequestError(getUserWeakMuscles('test-user-id'), errorResponse);
     });
 
     it('should handle 401 error', async () => {
       const errorResponse = { error: 'Unauthorized' };
       mockAdapter.onGet('/user_weak_muscle/test-user-id').reply(401, errorResponse);
 
-      await expect(getUserWeakMuscles('test-user-id')).rejects.toEqual(errorResponse);
+      await expectRequestError(getUserWeakMuscles('test-user-id'), errorResponse);
     });
 
     it('should handle 500 error', async () => {
       const errorResponse = { error: 'Internal server error' };
       mockAdapter.onGet('/user_weak_muscle/test-user-id').reply(500, errorResponse);
 
-      await expect(getUserWeakMuscles('test-user-id')).rejects.toEqual(errorResponse);
+      await expectRequestError(getUserWeakMuscles('test-user-id'), errorResponse);
     });
 
     it('should handle network error', async () => {
       mockAdapter.onGet('/user_weak_muscle/test-user-id').networkError();
 
-      await expect(getUserWeakMuscles('test-user-id')).rejects.toEqual({ error: 'Network Error' });
+      await expect(getUserWeakMuscles('test-user-id')).rejects.toThrow('Network Error');
     }, 10000);
 
     it('should handle timeout error', async () => {
       mockAdapter.onGet('/user_weak_muscle/test-user-id').timeout();
 
-      await expect(getUserWeakMuscles('test-user-id')).rejects.toEqual({
-        error: 'timeout of 10000ms exceeded',
-      });
+      await expect(getUserWeakMuscles('test-user-id')).rejects.toThrow(
+        'timeout of 10000ms exceeded'
+      );
     });
 
     it('should encode user ID in URL', async () => {
@@ -99,44 +100,42 @@ describe('userWeakMuscle API', () => {
       const errorResponse = { error: 'Bad request' };
       mockAdapter.onPost('/user_weak_muscle/').reply(400, errorResponse);
 
-      await expect(addUserWeakMuscle('test-user-id', 'Deltoids')).rejects.toEqual(errorResponse);
+      await expectRequestError(addUserWeakMuscle('test-user-id', 'Deltoids'), errorResponse);
     });
 
     it('should handle 422 error', async () => {
       const errorResponse = { error: 'Validation error' };
       mockAdapter.onPost('/user_weak_muscle/').reply(422, errorResponse);
 
-      await expect(addUserWeakMuscle('test-user-id', 'Deltoids')).rejects.toEqual(errorResponse);
+      await expectRequestError(addUserWeakMuscle('test-user-id', 'Deltoids'), errorResponse);
     });
 
     it('should handle 409 error', async () => {
       const errorResponse = { error: 'Conflict' };
       mockAdapter.onPost('/user_weak_muscle/').reply(409, errorResponse);
 
-      await expect(addUserWeakMuscle('test-user-id', 'Deltoids')).rejects.toEqual(errorResponse);
+      await expectRequestError(addUserWeakMuscle('test-user-id', 'Deltoids'), errorResponse);
     });
 
     it('should handle 500 error', async () => {
       const errorResponse = { error: 'Internal server error' };
       mockAdapter.onPost('/user_weak_muscle/').reply(500, errorResponse);
 
-      await expect(addUserWeakMuscle('test-user-id', 'Deltoids')).rejects.toEqual(errorResponse);
+      await expectRequestError(addUserWeakMuscle('test-user-id', 'Deltoids'), errorResponse);
     });
 
     it('should handle network error', async () => {
       mockAdapter.onPost('/user_weak_muscle/').networkError();
 
-      await expect(addUserWeakMuscle('test-user-id', 'Deltoids')).rejects.toEqual({
-        error: 'Network Error',
-      });
+      await expect(addUserWeakMuscle('test-user-id', 'Deltoids')).rejects.toThrow('Network Error');
     }, 10000);
 
     it('should handle timeout error', async () => {
       mockAdapter.onPost('/user_weak_muscle/').timeout();
 
-      await expect(addUserWeakMuscle('test-user-id', 'Deltoids')).rejects.toEqual({
-        error: 'timeout of 10000ms exceeded',
-      });
+      await expect(addUserWeakMuscle('test-user-id', 'Deltoids')).rejects.toThrow(
+        'timeout of 10000ms exceeded'
+      );
     });
   });
 
@@ -157,37 +156,37 @@ describe('userWeakMuscle API', () => {
       const errorResponse = { error: 'User weak muscle not found' };
       mockAdapter.onDelete('/user_weak_muscle/').reply(404, errorResponse);
 
-      await expect(removeUserWeakMuscle('test-user-id', 'Deltoids')).rejects.toEqual(errorResponse);
+      await expectRequestError(removeUserWeakMuscle('test-user-id', 'Deltoids'), errorResponse);
     });
 
     it('should handle 401 error', async () => {
       const errorResponse = { error: 'Unauthorized' };
       mockAdapter.onDelete('/user_weak_muscle/').reply(401, errorResponse);
 
-      await expect(removeUserWeakMuscle('test-user-id', 'Deltoids')).rejects.toEqual(errorResponse);
+      await expectRequestError(removeUserWeakMuscle('test-user-id', 'Deltoids'), errorResponse);
     });
 
     it('should handle 500 error', async () => {
       const errorResponse = { error: 'Internal server error' };
       mockAdapter.onDelete('/user_weak_muscle/').reply(500, errorResponse);
 
-      await expect(removeUserWeakMuscle('test-user-id', 'Deltoids')).rejects.toEqual(errorResponse);
+      await expectRequestError(removeUserWeakMuscle('test-user-id', 'Deltoids'), errorResponse);
     });
 
     it('should handle network error', async () => {
       mockAdapter.onDelete('/user_weak_muscle/').networkError();
 
-      await expect(removeUserWeakMuscle('test-user-id', 'Deltoids')).rejects.toEqual({
-        error: 'Network Error',
-      });
+      await expect(removeUserWeakMuscle('test-user-id', 'Deltoids')).rejects.toThrow(
+        'Network Error'
+      );
     }, 10000);
 
     it('should handle timeout error', async () => {
       mockAdapter.onDelete('/user_weak_muscle/').timeout();
 
-      await expect(removeUserWeakMuscle('test-user-id', 'Deltoids')).rejects.toEqual({
-        error: 'timeout of 10000ms exceeded',
-      });
+      await expect(removeUserWeakMuscle('test-user-id', 'Deltoids')).rejects.toThrow(
+        'timeout of 10000ms exceeded'
+      );
     });
   });
 });

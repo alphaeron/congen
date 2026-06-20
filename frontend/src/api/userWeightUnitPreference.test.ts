@@ -1,5 +1,6 @@
 import MockAdapter from 'axios-mock-adapter';
 
+import { expectRequestError } from './apiRequestErrorTestUtils';
 import { ENDPOINT } from './endpoint';
 import { WeightUnit } from './types';
 import {
@@ -50,9 +51,10 @@ describe('userWeightUnitPreference API', () => {
     it('should handle API errors', async () => {
       mock.onPut('/user_weight_unit_preference/').reply(400, { message: 'Bad request' });
 
-      await expect(
-        upsertUserWeightUnitPreference('test-user-id', 'Bench Press', WeightUnit.LBS)
-      ).rejects.toEqual({ message: 'Bad request' });
+      await expectRequestError(
+        upsertUserWeightUnitPreference('test-user-id', 'Bench Press', WeightUnit.LBS),
+        { message: 'Bad request' }
+      );
     });
   });
 
@@ -70,7 +72,7 @@ describe('userWeightUnitPreference API', () => {
     it('should handle API errors', async () => {
       mock.onGet('/user_weight_unit_preference/test-user-id').reply(404, { message: 'Not found' });
 
-      await expect(getUserWeightUnitPreferences('test-user-id')).rejects.toEqual({
+      await expectRequestError(getUserWeightUnitPreferences('test-user-id'), {
         message: 'Not found',
       });
     });
@@ -95,7 +97,7 @@ describe('userWeightUnitPreference API', () => {
         .onGet('/user_weight_unit_preference/test-user-id/Bench%20Press')
         .reply(404, { message: 'Not found' });
 
-      await expect(getUserWeightUnitPreference('test-user-id', 'Bench Press')).rejects.toEqual({
+      await expectRequestError(getUserWeightUnitPreference('test-user-id', 'Bench Press'), {
         message: 'Not found',
       });
     });
@@ -120,7 +122,7 @@ describe('userWeightUnitPreference API', () => {
         .onDelete('/user_weight_unit_preference/test-user-id/Bench%20Press')
         .reply(404, { message: 'Not found' });
 
-      await expect(deleteUserWeightUnitPreference('test-user-id', 'Bench Press')).rejects.toEqual({
+      await expectRequestError(deleteUserWeightUnitPreference('test-user-id', 'Bench Press'), {
         message: 'Not found',
       });
     });

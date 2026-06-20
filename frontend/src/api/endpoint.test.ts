@@ -1,6 +1,6 @@
 import MockAdapter from 'axios-mock-adapter';
 
-import { ENDPOINT, setTokenGetter, REQUEST } from './endpoint';
+import { ApiRequestError, ENDPOINT, setTokenGetter, REQUEST } from './endpoint';
 
 // Mock the globals module
 jest.mock('../globals', () => ({
@@ -135,7 +135,7 @@ describe('endpoint', () => {
       expect(result).toEqual(responseData);
     });
 
-    it('should reject with response data on error', async () => {
+    it('should reject with ApiRequestError including response summary on error', async () => {
       const errorData = { error: 'Not found' };
       mock.onGet('/test').reply(404, errorData);
 
@@ -144,7 +144,49 @@ describe('endpoint', () => {
           url: '/test',
           method: 'GET',
         })
-      ).rejects.toEqual(errorData);
+      ).rejects.toThrow('Not found');
+    });
+
+    it('should include request call stack in ApiRequestError message', async () => {
+      const errorData = { error: 'Resource not found' };
+      mock.onGet('/user/me').reply(404, errorData);
+
+      let caught: ApiRequestError | undefined;
+      try {
+        await REQUEST({
+          url: '/user/me',
+          method: 'GET',
+        });
+      } catch (error) {
+        caught = error as ApiRequestError;
+      }
+
+      expect(caught).toBeInstanceOf(ApiRequestError);
+      expect(caught?.message).toContain('Resource not found');
+      expect(caught?.message).toContain('HTTP 404 GET /user/me');
+      expect(caught?.message).toContain('Request initiated from:');
+      expect(caught?.responseData).toEqual(errorData);
+    });
+
+    it('should not reuse cached promise after request fails', async () => {
+      mock.onGet('/test').reply(404, { error: 'Not found' });
+
+      await expect(
+        REQUEST({
+          url: '/test',
+          method: 'GET',
+        })
+      ).rejects.toThrow('Not found');
+
+      mock.onGet('/test').reply(200, { id: 1 });
+
+      const result = await REQUEST({
+        url: '/test',
+        method: 'GET',
+      });
+
+      expect(result).toEqual({ id: 1 });
+      expect(mock.history.get.length).toBe(2);
     });
 
     it('should handle network errors', async () => {
@@ -155,7 +197,7 @@ describe('endpoint', () => {
           url: '/test',
           method: 'GET',
         })
-      ).rejects.toEqual({ error: 'Network Error' });
+      ).rejects.toThrow('Network Error');
     }, 10000);
 
     it('should handle timeout errors', async () => {
@@ -166,7 +208,7 @@ describe('endpoint', () => {
           url: '/test',
           method: 'GET',
         })
-      ).rejects.toEqual({ error: 'timeout of 10000ms exceeded' });
+      ).rejects.toThrow('timeout of 10000ms exceeded');
     });
 
     it('should work with POST requests', async () => {

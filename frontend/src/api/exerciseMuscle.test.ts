@@ -1,5 +1,6 @@
 import AxiosMockAdapter from 'axios-mock-adapter';
 
+import { expectRequestError } from './apiRequestErrorTestUtils';
 import { ENDPOINT } from './endpoint';
 import { getExerciseMuscle } from './exerciseMuscle';
 import type { ExerciseMuscle } from './types';
@@ -57,14 +58,14 @@ describe('exerciseMuscle API', () => {
       const errorData = { error: 'Internal Server Error' };
       mockAdapter.onGet('/exercise_muscle/').reply(500, errorData);
 
-      await expect(getExerciseMuscle()).rejects.toEqual(errorData);
+      await expectRequestError(getExerciseMuscle(), errorData);
       expect(mockAdapter.history.get.length).toBe(1);
     });
 
     it('should handle timeout errors', async () => {
       mockAdapter.onGet('/exercise_muscle/').timeout();
 
-      await expect(getExerciseMuscle()).rejects.toEqual({ error: 'timeout of 10000ms exceeded' });
+      await expect(getExerciseMuscle()).rejects.toThrow('timeout of 10000ms exceeded');
       expect(mockAdapter.history.get.length).toBe(1);
     });
 
@@ -72,7 +73,7 @@ describe('exerciseMuscle API', () => {
       const errorData = { error: 'Not found' };
       mockAdapter.onGet('/exercise_muscle/').reply(404, errorData);
 
-      await expect(getExerciseMuscle()).rejects.toEqual(errorData);
+      await expectRequestError(getExerciseMuscle(), errorData);
       expect(mockAdapter.history.get.length).toBe(1);
     });
 
@@ -80,7 +81,7 @@ describe('exerciseMuscle API', () => {
       const errorData = { error: 'Forbidden' };
       mockAdapter.onGet('/exercise_muscle/').reply(403, errorData);
 
-      await expect(getExerciseMuscle()).rejects.toEqual(errorData);
+      await expectRequestError(getExerciseMuscle(), errorData);
       expect(mockAdapter.history.get.length).toBe(1);
     });
 

@@ -1,5 +1,6 @@
 import MockAdapter from 'axios-mock-adapter';
 
+import { expectRequestError } from './apiRequestErrorTestUtils';
 import { ENDPOINT } from './endpoint';
 import { createProgram, getPrograms, getProgram, updateProgram, deleteProgram } from './program';
 import type { Program } from './types';
@@ -42,7 +43,7 @@ describe('Program API', () => {
       const errorResponse = { message: 'Bad request' };
       mock.onPost('/program/').reply(400, errorResponse);
 
-      await expect(createProgram('Test Program', 4, 'test-user-id')).rejects.toEqual(errorResponse);
+      await expectRequestError(createProgram('Test Program', 4, 'test-user-id'), errorResponse);
     });
   });
 
@@ -62,7 +63,7 @@ describe('Program API', () => {
       const errorResponse = { message: 'Internal server error' };
       mock.onGet('/program/').reply(500, errorResponse);
 
-      await expect(getPrograms()).rejects.toEqual(errorResponse);
+      await expectRequestError(getPrograms(), errorResponse);
     });
   });
 
@@ -81,7 +82,7 @@ describe('Program API', () => {
       const errorResponse = { message: 'Program not found' };
       mock.onGet('/program/1').reply(404, errorResponse);
 
-      await expect(getProgram(1)).rejects.toEqual(errorResponse);
+      await expectRequestError(getProgram(1), errorResponse);
     });
   });
 
@@ -101,7 +102,7 @@ describe('Program API', () => {
       const errorResponse = { message: 'Bad request' };
       mock.onPatch('/program/1').reply(400, errorResponse);
 
-      await expect(updateProgram(1, 'Updated Program', 2, false)).rejects.toEqual(errorResponse);
+      await expectRequestError(updateProgram(1, 'Updated Program', 2, false), errorResponse);
     });
   });
 
@@ -120,7 +121,7 @@ describe('Program API', () => {
       const errorResponse = { message: 'Program not found' };
       mock.onDelete('/program/1').reply(404, errorResponse);
 
-      await expect(deleteProgram(1)).rejects.toEqual(errorResponse);
+      await expectRequestError(deleteProgram(1), errorResponse);
     });
   });
 });

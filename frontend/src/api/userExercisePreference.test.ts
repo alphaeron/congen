@@ -1,5 +1,6 @@
 import AxiosMockAdapter from 'axios-mock-adapter';
 
+import { expectRequestError } from './apiRequestErrorTestUtils';
 import { ENDPOINT } from './endpoint';
 import type { UserExercisePreference } from './types';
 import {
@@ -50,37 +51,35 @@ describe('userExercisePreference API', () => {
       const errorResponse = { error: 'User not found' };
       mockAdapter.onGet('/user_exercise_preference/test-user-id').reply(404, errorResponse);
 
-      await expect(getUserExercisePreferences('test-user-id')).rejects.toEqual(errorResponse);
+      await expectRequestError(getUserExercisePreferences('test-user-id'), errorResponse);
     });
 
     it('should handle 401 error', async () => {
       const errorResponse = { error: 'Unauthorized' };
       mockAdapter.onGet('/user_exercise_preference/test-user-id').reply(401, errorResponse);
 
-      await expect(getUserExercisePreferences('test-user-id')).rejects.toEqual(errorResponse);
+      await expectRequestError(getUserExercisePreferences('test-user-id'), errorResponse);
     });
 
     it('should handle 500 error', async () => {
       const errorResponse = { error: 'Internal server error' };
       mockAdapter.onGet('/user_exercise_preference/test-user-id').reply(500, errorResponse);
 
-      await expect(getUserExercisePreferences('test-user-id')).rejects.toEqual(errorResponse);
+      await expectRequestError(getUserExercisePreferences('test-user-id'), errorResponse);
     });
 
     it('should handle network error', async () => {
       mockAdapter.onGet('/user_exercise_preference/test-user-id').networkError();
 
-      await expect(getUserExercisePreferences('test-user-id')).rejects.toEqual({
-        error: 'Network Error',
-      });
+      await expect(getUserExercisePreferences('test-user-id')).rejects.toThrow('Network Error');
     }, 10000);
 
     it('should handle timeout error', async () => {
       mockAdapter.onGet('/user_exercise_preference/test-user-id').timeout();
 
-      await expect(getUserExercisePreferences('test-user-id')).rejects.toEqual({
-        error: 'timeout of 10000ms exceeded',
-      });
+      await expect(getUserExercisePreferences('test-user-id')).rejects.toThrow(
+        'timeout of 10000ms exceeded'
+      );
     });
 
     it('should encode user ID in URL', async () => {
@@ -113,7 +112,8 @@ describe('userExercisePreference API', () => {
       const errorResponse = { error: 'Bad request' };
       mockAdapter.onPut('/user_exercise_preference/').reply(400, errorResponse);
 
-      await expect(upsertUserExercisePreference('test-user-id', 'Deadlift', false)).rejects.toEqual(
+      await expectRequestError(
+        upsertUserExercisePreference('test-user-id', 'Deadlift', false),
         errorResponse
       );
     });
@@ -122,7 +122,8 @@ describe('userExercisePreference API', () => {
       const errorResponse = { error: 'Validation error' };
       mockAdapter.onPut('/user_exercise_preference/').reply(422, errorResponse);
 
-      await expect(upsertUserExercisePreference('test-user-id', 'Deadlift', false)).rejects.toEqual(
+      await expectRequestError(
+        upsertUserExercisePreference('test-user-id', 'Deadlift', false),
         errorResponse
       );
     });
@@ -131,7 +132,8 @@ describe('userExercisePreference API', () => {
       const errorResponse = { error: 'Internal server error' };
       mockAdapter.onPut('/user_exercise_preference/').reply(500, errorResponse);
 
-      await expect(upsertUserExercisePreference('test-user-id', 'Deadlift', false)).rejects.toEqual(
+      await expectRequestError(
+        upsertUserExercisePreference('test-user-id', 'Deadlift', false),
         errorResponse
       );
     });
@@ -139,16 +141,16 @@ describe('userExercisePreference API', () => {
     it('should handle network error', async () => {
       mockAdapter.onPut('/user_exercise_preference/').networkError();
 
-      await expect(upsertUserExercisePreference('test-user-id', 'Deadlift', false)).rejects.toEqual(
-        { error: 'Network Error' }
+      await expect(upsertUserExercisePreference('test-user-id', 'Deadlift', false)).rejects.toThrow(
+        'Network Error'
       );
     }, 10000);
 
     it('should handle timeout error', async () => {
       mockAdapter.onPut('/user_exercise_preference/').timeout();
 
-      await expect(upsertUserExercisePreference('test-user-id', 'Deadlift', false)).rejects.toEqual(
-        { error: 'timeout of 10000ms exceeded' }
+      await expect(upsertUserExercisePreference('test-user-id', 'Deadlift', false)).rejects.toThrow(
+        'timeout of 10000ms exceeded'
       );
     });
   });
@@ -170,7 +172,8 @@ describe('userExercisePreference API', () => {
       const errorResponse = { error: 'Exercise preference not found' };
       mockAdapter.onDelete('/user_exercise_preference/').reply(404, errorResponse);
 
-      await expect(removeUserExercisePreference('test-user-id', 'Deadlift')).rejects.toEqual(
+      await expectRequestError(
+        removeUserExercisePreference('test-user-id', 'Deadlift'),
         errorResponse
       );
     });
@@ -179,7 +182,8 @@ describe('userExercisePreference API', () => {
       const errorResponse = { error: 'Unauthorized' };
       mockAdapter.onDelete('/user_exercise_preference/').reply(401, errorResponse);
 
-      await expect(removeUserExercisePreference('test-user-id', 'Deadlift')).rejects.toEqual(
+      await expectRequestError(
+        removeUserExercisePreference('test-user-id', 'Deadlift'),
         errorResponse
       );
     });
@@ -188,7 +192,8 @@ describe('userExercisePreference API', () => {
       const errorResponse = { error: 'Internal server error' };
       mockAdapter.onDelete('/user_exercise_preference/').reply(500, errorResponse);
 
-      await expect(removeUserExercisePreference('test-user-id', 'Deadlift')).rejects.toEqual(
+      await expectRequestError(
+        removeUserExercisePreference('test-user-id', 'Deadlift'),
         errorResponse
       );
     });
@@ -196,17 +201,17 @@ describe('userExercisePreference API', () => {
     it('should handle network error', async () => {
       mockAdapter.onDelete('/user_exercise_preference/').networkError();
 
-      await expect(removeUserExercisePreference('test-user-id', 'Deadlift')).rejects.toEqual({
-        error: 'Network Error',
-      });
+      await expect(removeUserExercisePreference('test-user-id', 'Deadlift')).rejects.toThrow(
+        'Network Error'
+      );
     }, 10000);
 
     it('should handle timeout error', async () => {
       mockAdapter.onDelete('/user_exercise_preference/').timeout();
 
-      await expect(removeUserExercisePreference('test-user-id', 'Deadlift')).rejects.toEqual({
-        error: 'timeout of 10000ms exceeded',
-      });
+      await expect(removeUserExercisePreference('test-user-id', 'Deadlift')).rejects.toThrow(
+        'timeout of 10000ms exceeded'
+      );
     });
   });
 });

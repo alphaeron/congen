@@ -1,5 +1,6 @@
 import MockAdapter from 'axios-mock-adapter';
 
+import { expectRequestError } from './apiRequestErrorTestUtils';
 import { generateNextWeek } from './conjugateWorkoutGenerator';
 import { ENDPOINT } from './endpoint';
 import type { Program } from './types';
@@ -37,7 +38,7 @@ describe('conjugateWorkoutGenerator', () => {
     it('should handle generation errors', async () => {
       const errorResponse = { message: 'Program not found' };
       mock.onPost('/conjugate_workout_generator/999').reply(404, errorResponse);
-      await expect(generateNextWeek(999)).rejects.toEqual(errorResponse);
+      await expectRequestError(generateNextWeek(999), errorResponse);
     });
   });
 });

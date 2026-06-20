@@ -12,6 +12,90 @@ import { BACKEND_URL } from '../globals';
 import type { AxiosError, AxiosRequestConfig, AxiosResponse } from 'axios';
 
 /**
+ * Error thrown when a backend API request fails.
+ * The message includes HTTP context and full stack traces for debugging.
+ */
+export class ApiRequestError extends Error {
+  readonly status?: number;
+  readonly method?: string;
+  readonly url?: string;
+  readonly responseData?: unknown;
+
+  constructor(
+    message: string,
+    options: {
+      status?: number;
+      method?: string;
+      url?: string;
+      responseData?: unknown;
+    } = {}
+  ) {
+    super(message);
+    this.name = 'ApiRequestError';
+    this.status = options.status;
+    this.method = options.method;
+    this.url = options.url;
+    this.responseData = options.responseData;
+  }
+}
+
+const getMessageFromResponseData = (data: unknown, fallback: string): string => {
+  if (data && typeof data === 'object' && 'error' in data) {
+    const errorField = (data as { error: unknown }).error;
+    if (typeof errorField === 'string') {
+      return errorField;
+    }
+  }
+  if (typeof data === 'string') {
+    return data;
+  }
+  return fallback;
+};
+
+const captureRequestCallStack = (): string => {
+  const stack = new Error().stack;
+  if (!stack) {
+    return '';
+  }
+  const lines = stack.split('\n');
+  const requestHelperIndex = lines.findIndex(line => line.includes(' at REQUEST'));
+  const startIndex = requestHelperIndex >= 0 ? requestHelperIndex + 1 : 2;
+  return lines.slice(startIndex).join('\n');
+};
+
+const buildApiRequestError = (
+  summary: string,
+  callStack: string,
+  error: AxiosError<unknown>
+): ApiRequestError => {
+  const method = (error.config?.method ?? 'get').toUpperCase();
+  const url = error.config?.url ?? 'unknown';
+  const status = error.response?.status;
+  const responseData = error.response?.data;
+  const messageParts = [summary, `HTTP ${status ?? 'unknown'} ${method} ${url}`];
+  if (responseData !== undefined) {
+    messageParts.push(`Response: ${JSON.stringify(responseData)}`);
+  }
+  if (callStack) {
+    messageParts.push(`Request initiated from:\n${callStack}`);
+  }
+  if (error.stack) {
+    messageParts.push(`Axios error stack:\n${error.stack}`);
+  }
+  const fullMessage = messageParts.join('\n\n');
+  const apiError = new ApiRequestError(fullMessage, {
+    status,
+    method,
+    url,
+    responseData,
+  });
+  if (callStack && apiError.stack) {
+    apiError.stack = `${apiError.stack}\n\nRequest initiated from:\n${callStack}`;
+  }
+  return apiError;
+};
+
+/**
  * Custom encoding function that properly encodes exercise names including parentheses and slashes.
  * encodeURIComponent() doesn't encode parentheses, but they can cause issues in URLs.
  * Slashes also need to be encoded to avoid path conflicts.
@@ -183,7 +267,8 @@ const isCacheValid = (key: string): boolean => {
  */
 export const REQUEST = async <T>(
   options: AxiosRequestConfig & { forceRefresh?: boolean },
-  retryCount = 0
+  retryCount = 0,
+  callStack = captureRequestCallStack()
 ): Promise<T> => {
   const maxRetries = 3;
   const retryDelay = 1000; // 1 second
@@ -217,17 +302,19 @@ export const REQUEST = async <T>(
       await new Promise(resolve => setTimeout(resolve, retryDelay * (retryCount + 1)));
 
       // Retry the request
-      return REQUEST<T>(options, retryCount + 1);
+      return REQUEST<T>(options, retryCount + 1, callStack);
     }
 
-    // Provide better error information for non-retryable errors
-    if (error.response?.data) {
-      return Promise.reject(error.response.data);
-    } else if (error.message) {
-      return Promise.reject({ error: error.message });
-    } else {
-      return Promise.reject({ error: 'Unknown error occurred' });
+    if (cacheKey) {
+      requestCache.delete(cacheKey);
+      cacheTimestamps.delete(cacheKey);
     }
+
+    const summary = error.response?.data
+      ? getMessageFromResponseData(error.response.data, 'Request failed')
+      : error.message || 'Unknown error occurred';
+
+    return Promise.reject(buildApiRequestError(summary, callStack, error));
   };
 
   // Create the request promise

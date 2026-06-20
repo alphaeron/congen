@@ -36,34 +36,34 @@ describe('user API', () => {
       const errorResponse = { error: 'Bad request' };
       mockAdapter.onPost('/user/').reply(400, errorResponse);
 
-      await expect(createUserProfile()).rejects.toEqual(errorResponse);
+      await expect(createUserProfile()).rejects.toThrow(errorResponse.error);
     });
 
     it('should handle 422 error', async () => {
       const errorResponse = { error: 'Validation error' };
       mockAdapter.onPost('/user/').reply(422, errorResponse);
 
-      await expect(createUserProfile()).rejects.toEqual(errorResponse);
+      await expect(createUserProfile()).rejects.toThrow(errorResponse.error);
     });
 
     it('should handle 409 error', async () => {
       const errorResponse = { error: 'Conflict' };
       mockAdapter.onPost('/user/').reply(409, errorResponse);
 
-      await expect(createUserProfile()).rejects.toEqual(errorResponse);
+      await expect(createUserProfile()).rejects.toThrow(errorResponse.error);
     });
 
     it('should handle 500 error', async () => {
       const errorResponse = { error: 'Internal server error' };
       mockAdapter.onPost('/user/').reply(500, errorResponse);
 
-      await expect(createUserProfile()).rejects.toEqual(errorResponse);
+      await expect(createUserProfile()).rejects.toThrow(errorResponse.error);
     });
 
     it('should handle timeout error', async () => {
       mockAdapter.onPost('/user/').timeout();
 
-      await expect(createUserProfile()).rejects.toEqual({ error: 'timeout of 10000ms exceeded' });
+      await expect(createUserProfile()).rejects.toThrow('timeout of 10000ms exceeded');
     });
   });
 
@@ -81,27 +81,27 @@ describe('user API', () => {
       const errorResponse = { error: 'User not found' };
       mockAdapter.onGet('/user/me').reply(404, errorResponse);
 
-      await expect(getCurrentUser()).rejects.toEqual(errorResponse);
+      await expect(getCurrentUser()).rejects.toThrow(errorResponse.error);
     });
 
     it('should handle 401 error', async () => {
       const errorResponse = { error: 'Unauthorized' };
       mockAdapter.onGet('/user/me').reply(401, errorResponse);
 
-      await expect(getCurrentUser()).rejects.toEqual(errorResponse);
+      await expect(getCurrentUser()).rejects.toThrow(errorResponse.error);
     });
 
     it('should handle 500 error', async () => {
       const errorResponse = { error: 'Internal server error' };
       mockAdapter.onGet('/user/me').reply(500, errorResponse);
 
-      await expect(getCurrentUser()).rejects.toEqual(errorResponse);
+      await expect(getCurrentUser()).rejects.toThrow(errorResponse.error);
     });
 
     it('should handle timeout error', async () => {
       mockAdapter.onGet('/user/me').timeout();
 
-      await expect(getCurrentUser()).rejects.toEqual({ error: 'timeout of 10000ms exceeded' });
+      await expect(getCurrentUser()).rejects.toThrow('timeout of 10000ms exceeded');
     });
   });
 
@@ -158,7 +158,7 @@ describe('user API', () => {
       const errorResponse = { error: 'Bad request' };
       mockAdapter.onPatch('/user/me').reply(400, errorResponse);
 
-      await expect(updateUserProfile(updateData)).rejects.toEqual(errorResponse);
+      await expect(updateUserProfile(updateData)).rejects.toThrow(errorResponse.error);
     });
 
     it('should handle 401 error', async () => {
@@ -166,7 +166,7 @@ describe('user API', () => {
       const errorResponse = { error: 'Unauthorized' };
       mockAdapter.onPatch('/user/me').reply(401, errorResponse);
 
-      await expect(updateUserProfile(updateData)).rejects.toEqual(errorResponse);
+      await expect(updateUserProfile(updateData)).rejects.toThrow(errorResponse.error);
     });
 
     it('should handle 404 error', async () => {
@@ -174,7 +174,7 @@ describe('user API', () => {
       const errorResponse = { error: 'User not found' };
       mockAdapter.onPatch('/user/me').reply(404, errorResponse);
 
-      await expect(updateUserProfile(updateData)).rejects.toEqual(errorResponse);
+      await expect(updateUserProfile(updateData)).rejects.toThrow(errorResponse.error);
     });
 
     it('should handle 500 error', async () => {
@@ -182,16 +182,14 @@ describe('user API', () => {
       const errorResponse = { error: 'Internal server error' };
       mockAdapter.onPatch('/user/me').reply(500, errorResponse);
 
-      await expect(updateUserProfile(updateData)).rejects.toEqual(errorResponse);
+      await expect(updateUserProfile(updateData)).rejects.toThrow(errorResponse.error);
     });
 
     it('should handle timeout error', async () => {
       const updateData = { name: 'Updated User' };
       mockAdapter.onPatch('/user/me').timeout();
 
-      await expect(updateUserProfile(updateData)).rejects.toEqual({
-        error: 'timeout of 10000ms exceeded',
-      });
+      await expect(updateUserProfile(updateData)).rejects.toThrow('timeout of 10000ms exceeded');
     });
   });
 });

@@ -1,6 +1,6 @@
 import MockAdapter from 'axios-mock-adapter';
 
-import { ENDPOINT } from './endpoint';
+import { ENDPOINT, ApiRequestError } from './endpoint';
 import {
   recordConsent,
   getConsentStatus,
@@ -146,8 +146,10 @@ describe('GDPR API', () => {
       try {
         await deleteAllPersonalData('WRONG_CONFIRMATION');
       } catch (error: unknown) {
-        const axiosError = error as { error: string };
-        expect(axiosError.error).toContain('To delete all data, confirmation parameter must be');
+        expect(error).toBeInstanceOf(ApiRequestError);
+        expect((error as ApiRequestError).message).toContain(
+          'To delete all data, confirmation parameter must be'
+        );
       }
     });
   });
@@ -193,8 +195,9 @@ describe('GDPR API', () => {
       try {
         await getPrivacyPolicy();
       } catch (error: unknown) {
-        const axiosError = error as { message: string };
-        expect(axiosError.message).toBe('Service unavailable');
+        expect(error).toBeInstanceOf(ApiRequestError);
+        expect((error as ApiRequestError).responseData).toEqual({ message: 'Service unavailable' });
+        expect((error as ApiRequestError).message).toContain('Request failed');
       }
     });
   });
@@ -203,38 +206,31 @@ describe('GDPR API', () => {
     it('should handle network errors for recordConsent', async () => {
       mock.onPost('/gdpr/consent').networkError();
 
-      await expect(recordConsent(true)).rejects.toEqual({ error: 'Network Error' });
+      await expect(recordConsent(true)).rejects.toThrow('Network Error');
     }, 10000);
 
     it('should handle network errors for getConsentStatus', async () => {
       mock.onGet('/gdpr/consent').networkError();
 
-      await expect(getConsentStatus()).rejects.toEqual({ error: 'Network Error' });
+      await expect(getConsentStatus()).rejects.toThrow('Network Error');
     }, 10000);
 
     it('should handle network errors for exportUserData', async () => {
       mock.onGet('/gdpr/export').networkError();
 
-      await expect(exportUserData()).rejects.toEqual({ error: 'Network Error' });
+      await expect(exportUserData()).rejects.toThrow('Network Error');
     }, 10000);
 
     it('should handle network errors for deleteAllPersonalData', async () => {
       mock.onDelete('/gdpr/delete_all_data').networkError();
 
-      await expect(deleteAllPersonalData('DELETE_ALL_MY_DATA')).rejects.toEqual({
-        error: 'Network Error',
-      });
+      await expect(deleteAllPersonalData('DELETE_ALL_MY_DATA')).rejects.toThrow('Network Error');
     }, 10000);
 
     it('should handle timeout errors', async () => {
       mock.onGet('/gdpr/export').timeout();
 
-      try {
-        await exportUserData();
-      } catch (error: unknown) {
-        const axiosError = error as { error: string };
-        expect(axiosError.error).toContain('timeout');
-      }
+      await expect(exportUserData()).rejects.toThrow('timeout');
     });
 
     it('should handle malformed JSON responses', async () => {
@@ -254,8 +250,9 @@ describe('GDPR API', () => {
       try {
         await recordConsent(true);
       } catch (error: unknown) {
-        const axiosError = error as { message: string };
-        expect(axiosError.message).toBe('Unauthorized');
+        expect(error).toBeInstanceOf(ApiRequestError);
+        expect((error as ApiRequestError).responseData).toEqual({ message: 'Unauthorized' });
+        expect((error as ApiRequestError).message).toContain('Request failed');
       }
     });
 
@@ -265,8 +262,9 @@ describe('GDPR API', () => {
       try {
         await getConsentStatus();
       } catch (error: unknown) {
-        const axiosError = error as { message: string };
-        expect(axiosError.message).toBe('Forbidden');
+        expect(error).toBeInstanceOf(ApiRequestError);
+        expect((error as ApiRequestError).responseData).toEqual({ message: 'Forbidden' });
+        expect((error as ApiRequestError).message).toContain('Request failed');
       }
     });
 
@@ -276,8 +274,9 @@ describe('GDPR API', () => {
       try {
         await exportUserData();
       } catch (error: unknown) {
-        const axiosError = error as { message: string };
-        expect(axiosError.message).toBe('User not found');
+        expect(error).toBeInstanceOf(ApiRequestError);
+        expect((error as ApiRequestError).responseData).toEqual({ message: 'User not found' });
+        expect((error as ApiRequestError).message).toContain('Request failed');
       }
     });
 
@@ -287,8 +286,9 @@ describe('GDPR API', () => {
       try {
         await recordConsent(true);
       } catch (error: unknown) {
-        const axiosError = error as { message: string };
-        expect(axiosError.message).toBe('Too many requests');
+        expect(error).toBeInstanceOf(ApiRequestError);
+        expect((error as ApiRequestError).responseData).toEqual({ message: 'Too many requests' });
+        expect((error as ApiRequestError).message).toContain('Request failed');
       }
     });
 
@@ -298,8 +298,11 @@ describe('GDPR API', () => {
       try {
         await getPrivacyPolicy();
       } catch (error: unknown) {
-        const axiosError = error as { message: string };
-        expect(axiosError.message).toBe('Service temporarily unavailable');
+        expect(error).toBeInstanceOf(ApiRequestError);
+        expect((error as ApiRequestError).responseData).toEqual({
+          message: 'Service temporarily unavailable',
+        });
+        expect((error as ApiRequestError).message).toContain('Request failed');
       }
     });
   });
@@ -365,8 +368,8 @@ describe('GDPR API', () => {
       try {
         await deleteAllPersonalData(specialConfirmation);
       } catch (error: unknown) {
-        const axiosError = error as { error: string };
-        expect(axiosError.error).toContain(
+        expect(error).toBeInstanceOf(ApiRequestError);
+        expect((error as ApiRequestError).message).toContain(
           "To delete all data, confirmation parameter must be 'DELETE_ALL_MY_DATA'"
         );
       }

@@ -1,5 +1,6 @@
 import MockAdapter from 'axios-mock-adapter';
 
+import { expectRequestError } from './apiRequestErrorTestUtils';
 import { ENDPOINT } from './endpoint';
 import type { WorkoutStage } from './types';
 import { getWorkoutStagesByWorkout, getWorkoutStage } from './workoutStage';
@@ -37,7 +38,7 @@ describe('WorkoutStage API', () => {
       const errorResponse = { message: 'Workout not found' };
       mock.onGet('/workout_stage/workout/1').reply(404, errorResponse);
 
-      await expect(getWorkoutStagesByWorkout(1)).rejects.toEqual(errorResponse);
+      await expectRequestError(getWorkoutStagesByWorkout(1), errorResponse);
     });
 
     it('should handle empty response when no stages exist', async () => {
@@ -102,7 +103,7 @@ describe('WorkoutStage API', () => {
       const errorResponse = { message: 'Stage not found' };
       mock.onGet('/workout_stage/1').reply(404, errorResponse);
 
-      await expect(getWorkoutStage(1)).rejects.toEqual(errorResponse);
+      await expectRequestError(getWorkoutStage(1), errorResponse);
     });
 
     it('should handle stage with different stage type', async () => {

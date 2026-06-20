@@ -1,5 +1,6 @@
 import MockAdapter from 'axios-mock-adapter';
 
+import { expectRequestError } from './apiRequestErrorTestUtils';
 import { ENDPOINT } from './endpoint';
 import { getProgramPreferences, updateProgramPreferences } from './programPreferences';
 import type { ProgramPreferences } from './types';
@@ -32,7 +33,7 @@ describe('programPreferences API', () => {
     it('should handle API errors', async () => {
       mock.onGet('/program_preferences/1').reply(404, { message: 'Not found' });
 
-      await expect(getProgramPreferences(1)).rejects.toEqual({ message: 'Not found' });
+      await expectRequestError(getProgramPreferences(1), { message: 'Not found' });
     });
   });
 
@@ -53,7 +54,7 @@ describe('programPreferences API', () => {
     it('should handle API errors', async () => {
       mock.onPatch('/program_preferences/').reply(400, { message: 'Bad request' });
 
-      await expect(updateProgramPreferences(1, 90)).rejects.toEqual({ message: 'Bad request' });
+      await expectRequestError(updateProgramPreferences(1, 90), { message: 'Bad request' });
     });
   });
 });

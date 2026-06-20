@@ -1,5 +1,6 @@
 import MockAdapter from 'axios-mock-adapter';
 
+import { expectRequestError } from './apiRequestErrorTestUtils';
 import { ENDPOINT } from './endpoint';
 import { getSetSchemesByExercise, getSetScheme } from './setScheme';
 import type { SetScheme } from './types';
@@ -43,7 +44,7 @@ describe('SetScheme API', () => {
       const errorResponse = { message: 'Exercise not found' };
       mock.onGet('/set_scheme/exercise/1').reply(404, errorResponse);
 
-      await expect(getSetSchemesByExercise(1)).rejects.toEqual(errorResponse);
+      await expectRequestError(getSetSchemesByExercise(1), errorResponse);
     });
 
     it('should handle empty response when no set schemes exist', async () => {
@@ -89,7 +90,7 @@ describe('SetScheme API', () => {
       const errorResponse = { message: 'Set scheme not found' };
       mock.onGet('/set_scheme/1').reply(404, errorResponse);
 
-      await expect(getSetScheme(1)).rejects.toEqual(errorResponse);
+      await expectRequestError(getSetScheme(1), errorResponse);
     });
 
     it('should handle set scheme without target rep count', async () => {

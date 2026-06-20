@@ -2,7 +2,7 @@ import { useSnackbar } from 'notistack';
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { useAuth as useOidcAuth } from 'react-oidc-context';
 
-import { setTokenGetter } from '../api/endpoint';
+import { ApiRequestError, setTokenGetter } from '../api/endpoint';
 import type { User } from '../api/types';
 import { createUserProfile, getCurrentUser } from '../api/user';
 import {
@@ -104,9 +104,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           const userProfile = await getCurrentUser();
           setUser(userProfile);
         } catch (error) {
-          // If user doesn't have a profile, create one automatically
-          // This handles both 404 status codes and "Resource not found" error messages
           if (
+            (error instanceof ApiRequestError &&
+              (error.status === 404 || error.message.includes('Resource not found'))) ||
             (error &&
               typeof error === 'object' &&
               'response' in error &&
@@ -129,8 +129,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             } finally {
               setIsLoading(false);
             }
-          } else {
-            // Don't set error here as it might be expected (user doesn't have profile yet)
           }
         }
       } else {

@@ -1,9 +1,10 @@
-import { render, screen, waitFor, act } from '@testing-library/react';
+import { cleanup, render, screen, waitFor, act } from '@testing-library/react';
 import { SnackbarProvider } from 'notistack';
 import React from 'react';
 import { useAuth as useOidcAuth } from 'react-oidc-context';
 
 import { AuthProvider, useAuth } from './AuthContext';
+import { ApiRequestError } from '../api/endpoint';
 import type { User } from '../api/types';
 import { createUserProfile, getCurrentUser } from '../api/user';
 
@@ -42,7 +43,8 @@ const TestComponent: React.FC = () => {
 
 describe('AuthContext', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    mockGetCurrentUser.mockReset();
+    mockCreateUserProfile.mockReset();
     mockUseOidcAuth.mockReturnValue({
       isAuthenticated: false,
       isLoading: false,
@@ -52,6 +54,10 @@ describe('AuthContext', () => {
       signoutRedirect: jest.fn(),
       removeUser: jest.fn(),
     } as unknown as ReturnType<typeof useOidcAuth>);
+  });
+
+  afterEach(() => {
+    cleanup();
   });
 
   it('should provide authentication context', () => {
@@ -154,6 +160,38 @@ describe('AuthContext', () => {
     mockGetCurrentUser
       .mockRejectedValueOnce({ response: { status: 404 } })
       .mockResolvedValueOnce(mockUser);
+    mockCreateUserProfile.mockResolvedValue(mockUser);
+
+    await act(async () => {
+      renderWithProviders(
+        <AuthProvider>
+          <TestComponent />
+        </AuthProvider>
+      );
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId('user')).toHaveTextContent('Test User');
+    });
+    expect(mockCreateUserProfile).toHaveBeenCalled();
+  });
+
+  it('should automatically create profile when getCurrentUser throws ApiRequestError 404', async () => {
+    mockUseOidcAuth.mockReturnValue({
+      isAuthenticated: true,
+      isLoading: false,
+      user: {} as Record<string, unknown>,
+      error: null,
+      signinRedirect: jest.fn(),
+      signoutRedirect: jest.fn(),
+      removeUser: jest.fn(),
+    } as unknown as ReturnType<typeof useOidcAuth>);
+
+    mockGetCurrentUser.mockImplementation(() =>
+      Promise.reject(
+        new ApiRequestError('Resource not found', { status: 404, url: '/user/me', method: 'GET' })
+      )
+    );
     mockCreateUserProfile.mockResolvedValue(mockUser);
 
     await act(async () => {

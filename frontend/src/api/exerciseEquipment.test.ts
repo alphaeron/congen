@@ -1,5 +1,6 @@
 import AxiosMockAdapter from 'axios-mock-adapter';
 
+import { expectRequestError } from './apiRequestErrorTestUtils';
 import { ENDPOINT } from './endpoint';
 import { getExerciseEquipment } from './exerciseEquipment';
 import type { ExerciseEquipment } from './types';
@@ -53,16 +54,14 @@ describe('exerciseEquipment API', () => {
       const errorData = { error: 'Internal Server Error' };
       mockAdapter.onGet('/exercise_equipment/').reply(500, errorData);
 
-      await expect(getExerciseEquipment()).rejects.toEqual(errorData);
+      await expectRequestError(getExerciseEquipment(), errorData);
       expect(mockAdapter.history.get.length).toBe(1);
     });
 
     it('should handle timeout errors', async () => {
       mockAdapter.onGet('/exercise_equipment/').timeout();
 
-      await expect(getExerciseEquipment()).rejects.toEqual({
-        error: 'timeout of 10000ms exceeded',
-      });
+      await expect(getExerciseEquipment()).rejects.toThrow('timeout of 10000ms exceeded');
       expect(mockAdapter.history.get.length).toBe(1);
     });
 
@@ -70,7 +69,7 @@ describe('exerciseEquipment API', () => {
       const errorData = { error: 'Not found' };
       mockAdapter.onGet('/exercise_equipment/').reply(404, errorData);
 
-      await expect(getExerciseEquipment()).rejects.toEqual(errorData);
+      await expectRequestError(getExerciseEquipment(), errorData);
       expect(mockAdapter.history.get.length).toBe(1);
     });
 
@@ -78,7 +77,7 @@ describe('exerciseEquipment API', () => {
       const errorData = { error: 'Forbidden' };
       mockAdapter.onGet('/exercise_equipment/').reply(403, errorData);
 
-      await expect(getExerciseEquipment()).rejects.toEqual(errorData);
+      await expectRequestError(getExerciseEquipment(), errorData);
       expect(mockAdapter.history.get.length).toBe(1);
     });
 

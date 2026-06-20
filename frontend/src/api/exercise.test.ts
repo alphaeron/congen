@@ -1,5 +1,6 @@
 import AxiosMockAdapter from 'axios-mock-adapter';
 
+import { expectRequestError } from './apiRequestErrorTestUtils';
 import { ENDPOINT } from './endpoint';
 import {
   getExercises,
@@ -53,21 +54,21 @@ describe('exercise API', () => {
       const errorData = { error: 'Internal Server Error' };
       mockAdapter.onGet('/exercise/').reply(500, errorData);
 
-      await expect(getExercises()).rejects.toEqual(errorData);
+      await expectRequestError(getExercises(), errorData);
       expect(mockAdapter.history.get.length).toBe(1);
     });
 
     it('should handle network errors', async () => {
       mockAdapter.onGet('/exercise/').networkError();
 
-      await expect(getExercises()).rejects.toEqual({ error: 'Network Error' });
+      await expect(getExercises()).rejects.toThrow('Network Error');
       expect(mockAdapter.history.get.length).toBe(4); // 1 initial + 3 retries
     }, 10000);
 
     it('should handle timeout errors', async () => {
       mockAdapter.onGet('/exercise/').timeout();
 
-      await expect(getExercises()).rejects.toEqual({ error: 'timeout of 10000ms exceeded' });
+      await expect(getExercises()).rejects.toThrow('timeout of 10000ms exceeded');
       expect(mockAdapter.history.get.length).toBe(1);
     });
   });
@@ -95,7 +96,7 @@ describe('exercise API', () => {
       const errorData = { error: 'Exercise not found' };
       mockAdapter.onGet('/exercise/Nonexistent').reply(404, errorData);
 
-      await expect(getIndividualExercise('Nonexistent')).rejects.toEqual(errorData);
+      await expectRequestError(getIndividualExercise('Nonexistent'), errorData);
       expect(mockAdapter.history.get.length).toBe(1);
     });
 
@@ -103,25 +104,23 @@ describe('exercise API', () => {
       const errorData = { error: 'Internal Server Error' };
       mockAdapter.onGet('/exercise/Bench%20Press').reply(500, errorData);
 
-      await expect(getIndividualExercise('Bench Press')).rejects.toEqual(errorData);
+      await expectRequestError(getIndividualExercise('Bench Press'), errorData);
       expect(mockAdapter.history.get.length).toBe(1);
     });
 
     it('should handle network errors', async () => {
       mockAdapter.onGet('/exercise/Bench%20Press').networkError();
 
-      await expect(getIndividualExercise('Bench Press')).rejects.toEqual({
-        error: 'Network Error',
-      });
+      await expect(getIndividualExercise('Bench Press')).rejects.toThrow('Network Error');
       expect(mockAdapter.history.get.length).toBe(4); // 1 initial + 3 retries
     }, 10000);
 
     it('should handle timeout errors', async () => {
       mockAdapter.onGet('/exercise/Bench%20Press').timeout();
 
-      await expect(getIndividualExercise('Bench Press')).rejects.toEqual({
-        error: 'timeout of 10000ms exceeded',
-      });
+      await expect(getIndividualExercise('Bench Press')).rejects.toThrow(
+        'timeout of 10000ms exceeded'
+      );
       expect(mockAdapter.history.get.length).toBe(1);
     });
 
@@ -129,7 +128,7 @@ describe('exercise API', () => {
       const errorData = { error: 'Exercise not found' };
       mockAdapter.onGet('/exercise/').reply(404, errorData);
 
-      await expect(getIndividualExercise('')).rejects.toEqual(errorData);
+      await expectRequestError(getIndividualExercise(''), errorData);
       expect(mockAdapter.history.get.length).toBe(1);
     });
   });
@@ -159,7 +158,7 @@ describe('exercise API', () => {
       const errorData = { error: 'Exercise not found' };
       mockAdapter.onGet('/exercise/Nonexistent/muscle').reply(404, errorData);
 
-      await expect(getExerciseMuscles('Nonexistent')).rejects.toEqual(errorData);
+      await expectRequestError(getExerciseMuscles('Nonexistent'), errorData);
       expect(mockAdapter.history.get.length).toBe(1);
     });
 
@@ -167,23 +166,23 @@ describe('exercise API', () => {
       const errorData = { error: 'Internal Server Error' };
       mockAdapter.onGet('/exercise/Bench%20Press/muscle').reply(500, errorData);
 
-      await expect(getExerciseMuscles('Bench Press')).rejects.toEqual(errorData);
+      await expectRequestError(getExerciseMuscles('Bench Press'), errorData);
       expect(mockAdapter.history.get.length).toBe(1);
     });
 
     it('should handle network errors', async () => {
       mockAdapter.onGet('/exercise/Bench%20Press/muscle').networkError();
 
-      await expect(getExerciseMuscles('Bench Press')).rejects.toEqual({ error: 'Network Error' });
+      await expect(getExerciseMuscles('Bench Press')).rejects.toThrow('Network Error');
       expect(mockAdapter.history.get.length).toBe(4); // 1 initial + 3 retries
     }, 10000);
 
     it('should handle timeout errors', async () => {
       mockAdapter.onGet('/exercise/Bench%20Press/muscle').timeout();
 
-      await expect(getExerciseMuscles('Bench Press')).rejects.toEqual({
-        error: 'timeout of 10000ms exceeded',
-      });
+      await expect(getExerciseMuscles('Bench Press')).rejects.toThrow(
+        'timeout of 10000ms exceeded'
+      );
       expect(mockAdapter.history.get.length).toBe(1);
     });
 
@@ -191,7 +190,7 @@ describe('exercise API', () => {
       const errorData = { error: 'Exercise not found' };
       mockAdapter.onGet('/exercise//muscle').reply(404, errorData);
 
-      await expect(getExerciseMuscles('')).rejects.toEqual(errorData);
+      await expectRequestError(getExerciseMuscles(''), errorData);
       expect(mockAdapter.history.get.length).toBe(1);
     });
   });
@@ -221,7 +220,7 @@ describe('exercise API', () => {
       const errorData = { error: 'Exercise not found' };
       mockAdapter.onGet('/exercise/Nonexistent/equipment').reply(404, errorData);
 
-      await expect(getExerciseEquipment('Nonexistent')).rejects.toEqual(errorData);
+      await expectRequestError(getExerciseEquipment('Nonexistent'), errorData);
       expect(mockAdapter.history.get.length).toBe(1);
     });
 
@@ -229,23 +228,23 @@ describe('exercise API', () => {
       const errorData = { error: 'Internal Server Error' };
       mockAdapter.onGet('/exercise/Bench%20Press/equipment').reply(500, errorData);
 
-      await expect(getExerciseEquipment('Bench Press')).rejects.toEqual(errorData);
+      await expectRequestError(getExerciseEquipment('Bench Press'), errorData);
       expect(mockAdapter.history.get.length).toBe(1);
     });
 
     it('should handle network errors', async () => {
       mockAdapter.onGet('/exercise/Bench%20Press/equipment').networkError();
 
-      await expect(getExerciseEquipment('Bench Press')).rejects.toEqual({ error: 'Network Error' });
+      await expect(getExerciseEquipment('Bench Press')).rejects.toThrow('Network Error');
       expect(mockAdapter.history.get.length).toBe(4); // 1 initial + 3 retries
     }, 10000);
 
     it('should handle timeout errors', async () => {
       mockAdapter.onGet('/exercise/Bench%20Press/equipment').timeout();
 
-      await expect(getExerciseEquipment('Bench Press')).rejects.toEqual({
-        error: 'timeout of 10000ms exceeded',
-      });
+      await expect(getExerciseEquipment('Bench Press')).rejects.toThrow(
+        'timeout of 10000ms exceeded'
+      );
       expect(mockAdapter.history.get.length).toBe(1);
     });
 
@@ -253,7 +252,7 @@ describe('exercise API', () => {
       const errorData = { error: 'Exercise not found' };
       mockAdapter.onGet('/exercise//equipment').reply(404, errorData);
 
-      await expect(getExerciseEquipment('')).rejects.toEqual(errorData);
+      await expectRequestError(getExerciseEquipment(''), errorData);
       expect(mockAdapter.history.get.length).toBe(1);
     });
   });
