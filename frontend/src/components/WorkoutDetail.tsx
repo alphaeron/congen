@@ -148,7 +148,7 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
   const addExerciseForm = useForm({
     defaultValues: {
       totalSets: 1,
-      targetWeight: 1,
+      targetWeight: 0,
       targetReps: 1,
       restSeconds: 60,
       performedWeight: undefined as number | undefined,

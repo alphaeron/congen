@@ -2,7 +2,11 @@ import MockAdapter from 'axios-mock-adapter';
 
 import { expectRequestError } from './apiRequestErrorTestUtils';
 import { ENDPOINT } from './endpoint';
-import { getProgrammedExercisesByStage, getProgrammedExercise } from './programmedExercise';
+import {
+  createProgrammedExercise,
+  getProgrammedExercisesByStage,
+  getProgrammedExercise,
+} from './programmedExercise';
 import type { ProgrammedExercise } from './types';
 
 const mock = new MockAdapter(ENDPOINT);
@@ -78,6 +82,32 @@ describe('ProgrammedExercise API', () => {
 
       expect(result).toEqual(exerciseWithoutNotes);
       expect(result.notes).toBeUndefined();
+    });
+  });
+
+  describe('createProgrammedExercise', () => {
+    it('should preserve zero target weight when creating set schemes', async () => {
+      mock.onPost(/\/programmed_exercise\//).reply(200, mockProgrammedExercise);
+      mock.onPost(/\/set_scheme\//).reply(200, { id: 1 });
+
+      await createProgrammedExercise(1, 'Bench Press', 1, '', 1, 0, 5, 60);
+
+      expect(mock.history.post).toHaveLength(2);
+      expect(mock.history.post[1].params).toEqual(
+        expect.objectContaining({
+          target_weight: '0',
+        })
+      );
+    });
+
+    it('should default missing target weight to zero', async () => {
+      mock.onPost(/\/programmed_exercise\//).reply(200, mockProgrammedExercise);
+      mock.onPost(/\/set_scheme\//).reply(200, { id: 1 });
+
+      await createProgrammedExercise(1, 'Bench Press', 1, '', 1);
+
+      expect(mock.history.post).toHaveLength(2);
+      expect(mock.history.post[1].params).toEqual(expect.objectContaining({ target_weight: '0' }));
     });
   });
 });

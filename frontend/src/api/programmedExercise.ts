@@ -128,40 +128,38 @@ export const createProgrammedExercise = async (
     const setSchemePromises = [];
 
     for (let setNumber = 1; setNumber <= totalSets; setNumber++) {
-      const setSchemeParams = new URLSearchParams({
+      const setSchemeParams: Record<string, string> = {
         programmed_exercise_id: createdExercise.id.toString(),
         set_number: setNumber.toString(),
         is_amrap: (isAmrap || false).toString(),
         is_emom: (isEmom || false).toString(),
         use_tempo: (tempo !== undefined && tempo !== '').toString(),
-      });
+        target_weight: (targetWeight ?? 0).toString(),
+        target_rep_count: (targetReps ?? 0).toString(),
+        rest_seconds: (restSeconds || 60).toString(),
+      };
 
-      // Add tempo parameters if tempo is provided
       if (tempo && tempo !== '') {
         const tempoParts = tempo.split('-');
         if (tempoParts.length === 3) {
-          setSchemeParams.append('eccentric_tempo', tempoParts[0] || '');
-          setSchemeParams.append('isometric_tempo', tempoParts[1] || '');
-          setSchemeParams.append('concentric_tempo', tempoParts[2] || '');
+          setSchemeParams.eccentric_tempo = tempoParts[0] || '';
+          setSchemeParams.isometric_tempo = tempoParts[1] || '';
+          setSchemeParams.concentric_tempo = tempoParts[2] || '';
         }
       }
-      // Don't append tempo parameters if tempo is not provided - let backend use defaults
 
-      // Add weight and rep parameters with defaults
-      setSchemeParams.append('target_weight', (targetWeight || 1).toString());
       if (performedWeight !== undefined) {
-        setSchemeParams.append('performed_weight', performedWeight.toString());
+        setSchemeParams.performed_weight = performedWeight.toString();
       }
-      setSchemeParams.append('target_rep_count', (targetReps || 1).toString());
       if (performedReps !== undefined) {
-        setSchemeParams.append('performed_rep_count', performedReps.toString());
+        setSchemeParams.performed_rep_count = performedReps.toString();
       }
-      setSchemeParams.append('rest_seconds', (restSeconds || 60).toString());
 
       setSchemePromises.push(
         REQUEST({
           method: 'POST',
-          url: `/set_scheme/?${setSchemeParams.toString()}`,
+          url: '/set_scheme/',
+          params: setSchemeParams,
         })
       );
     }

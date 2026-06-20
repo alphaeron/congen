@@ -169,13 +169,7 @@ export const SetSchemeForm: React.FC<SetSchemeFormProps> = ({
                 label={`Target Weight (${weightUnitLabel})`}
                 type="text"
                 inputProps={{ inputMode: 'decimal' }}
-                value={
-                  field.state.value !== undefined &&
-                  field.state.value !== null &&
-                  field.state.value !== ''
-                    ? field.state.value.toString()
-                    : ''
-                }
+                value={field.state.value === 0 ? '' : field.state.value.toString()}
                 onChange={e => {
                   const inputValue = e.target.value;
                   // Allow any valid numeric input including decimals
