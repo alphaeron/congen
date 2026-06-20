@@ -1,8 +1,8 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { SnackbarProvider } from 'notistack';
 import * as React from 'react';
 import ReactDOM from 'react-dom/client';
 
+import { AppSnackbarProvider } from './AppSnackbarProvider';
 import { App } from './App';
 
 import '@mui/material-pigment-css/styles.css';
@@ -19,10 +19,10 @@ const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement)
 
 root.render(
   <React.StrictMode>
-    <SnackbarProvider>
+    <AppSnackbarProvider>
       <QueryClientProvider client={queryClient}>
         <App />
       </QueryClientProvider>
-    </SnackbarProvider>
+    </AppSnackbarProvider>
   </React.StrictMode>
 );

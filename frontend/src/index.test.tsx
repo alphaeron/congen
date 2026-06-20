@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { SnackbarProvider } from 'notistack';
 import * as React from 'react';
+
+import { AppSnackbarProvider } from './AppSnackbarProvider';
 
 // Mock the App component
 jest.mock('./App', () => ({
@@ -21,7 +22,7 @@ describe('index.tsx', () => {
     expect(React).toBeDefined();
     expect(QueryClient).toBeDefined();
     expect(QueryClientProvider).toBeDefined();
-    expect(SnackbarProvider).toBeDefined();
+    expect(AppSnackbarProvider).toBeDefined();
   });
 
   it('should have App component available', () => {
