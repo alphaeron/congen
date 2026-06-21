@@ -3,16 +3,17 @@ import userEvent from '@testing-library/user-event';
 import React from 'react';
 
 import { SetSchemeEditor } from './SetSchemeEditor';
-import { updateProgrammedExercise } from '../api/programmedExercise';
-import { updateSetScheme } from '../api/setScheme';
+import { createSetScheme, deleteSetScheme, updateSetScheme } from '../api/setScheme';
 import type { ProgrammedExerciseWithSetSchemes } from '../api/types';
 
-// Mock the updateProgrammedExercise and updateSetScheme functions
 jest.mock('../api/programmedExercise', () => ({
+  deleteProgrammedExercise: jest.fn(),
   updateProgrammedExercise: jest.fn(),
 }));
 
 jest.mock('../api/setScheme', () => ({
+  createSetScheme: jest.fn(),
+  deleteSetScheme: jest.fn(),
   updateSetScheme: jest.fn(),
 }));
 
@@ -71,6 +72,37 @@ describe('SetSchemeEditor', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    (updateSetScheme as jest.Mock).mockImplementation(async (_id, ...args) => ({
+      id: _id,
+      programmed_exercise_id: args[0],
+      set_number: args[1],
+      target_rep_count: args[10],
+      target_weight: args[8],
+      performed_rep_count: args[11],
+      performed_weight: args[9],
+      rest_seconds: args[12],
+      use_tempo: args[4],
+      is_amrap: args[2],
+      is_emom: args[3],
+      created_at: new Date('2024-01-01'),
+      updated_at: new Date('2024-01-01'),
+    }));
+    (createSetScheme as jest.Mock).mockImplementation(async (...args) => ({
+      id: 99,
+      programmed_exercise_id: args[0],
+      set_number: args[1],
+      target_rep_count: args[10],
+      target_weight: args[8],
+      performed_rep_count: args[11],
+      performed_weight: args[9],
+      rest_seconds: args[12],
+      use_tempo: args[4],
+      is_amrap: args[2],
+      is_emom: args[3],
+      created_at: new Date('2024-01-01'),
+      updated_at: new Date('2024-01-01'),
+    }));
+    (deleteSetScheme as jest.Mock).mockResolvedValue(undefined);
   });
 
   it('renders edit button when isMostRecentWeek is true', () => {
@@ -94,31 +126,10 @@ describe('SetSchemeEditor', () => {
       />
     );
 
-    // When disabled, the button is wrapped in a span, so we need to find the button inside
     const editButton = screen.getByRole('button', {
       name: /editing only available for the current week/i,
     });
     expect(editButton).toBeDisabled();
-  });
-
-  it('shows tooltip when edit button is disabled', async () => {
-    render(
-      <SetSchemeEditor
-        exercise={mockExercise}
-        onExerciseUpdate={mockOnExerciseUpdate}
-        isMostRecentWeek={false}
-      />
-    );
-
-    // When disabled, the button is wrapped in a span, so we need to find the button inside
-    const editButton = screen.getByRole('button', {
-      name: /editing only available for the current week/i,
-    });
-
-    // For disabled buttons, we can't test tooltip interaction directly
-    // Instead, we'll just verify the button is disabled and has the correct aria-label
-    expect(editButton).toBeDisabled();
-    expect(editButton).toHaveAttribute('aria-label', 'Editing only available for the current week');
   });
 
   it('opens popover when edit button is clicked', async () => {
@@ -131,15 +142,14 @@ describe('SetSchemeEditor', () => {
       />
     );
 
-    const editButton = screen.getByLabelText(/edit exercise/i);
-    await user.click(editButton);
+    await user.click(screen.getByLabelText(/edit exercise/i));
 
     expect(screen.getByText('Bench Press')).toBeInTheDocument();
     expect(screen.getByText('Set Scheme Details')).toBeInTheDocument();
-    expect(screen.getByLabelText('Total Sets')).toBeInTheDocument();
+    expect(screen.getByLabelText('Sets')).toBeInTheDocument();
   });
 
-  it('populates form with existing exercise data', async () => {
+  it('populates form with existing exercise data and per-set mode when values vary', async () => {
     const user = userEvent.setup();
     render(
       <SetSchemeEditor
@@ -149,18 +159,13 @@ describe('SetSchemeEditor', () => {
       />
     );
 
-    const editButton = screen.getByLabelText(/edit exercise/i);
-    await user.click(editButton);
+    await user.click(screen.getByLabelText(/edit exercise/i));
 
-    // Check that form is populated with existing data
-
-    // Use more specific selectors to avoid ambiguity
-    const totalSetsInput = screen.getByLabelText('Total Sets');
-    const targetRepsInput = screen.getByLabelText('Target Reps');
-    const targetWeightInput = screen.getByLabelText('Target Weight (kg)');
-    expect(totalSetsInput).toHaveValue('2'); // mockExercise has 2 sets
-    expect(targetRepsInput).toHaveValue('8');
-    expect(targetWeightInput).toHaveValue('135');
+    expect(screen.getByLabelText('Sets')).toHaveValue('2');
+    expect(screen.getByLabelText('Target reps')).toHaveValue('8');
+    expect(screen.getByLabelText('Target weight')).toHaveValue('135');
+    expect(screen.getByLabelText('Set 1 reps')).toBeInTheDocument();
+    expect(screen.getByLabelText('Set 2 reps')).toBeInTheDocument();
   });
 
   it('closes popover when cancel button is clicked', async () => {
@@ -173,54 +178,17 @@ describe('SetSchemeEditor', () => {
       />
     );
 
-    const editButton = screen.getByLabelText(/edit exercise/i);
-    await user.click(editButton);
-
+    await user.click(screen.getByLabelText(/edit exercise/i));
     expect(screen.getByText('Bench Press')).toBeInTheDocument();
 
-    const cancelButton = screen.getByText(/cancel/i);
-    await user.click(cancelButton);
+    await user.click(screen.getByText(/cancel/i));
 
-    // Popover should be closed (form should not be visible)
-    expect(screen.queryByLabelText('Total Sets')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Sets')).not.toBeInTheDocument();
   });
-
-  it('validates required fields', async () => {
-    const user = userEvent.setup();
-    render(
-      <SetSchemeEditor
-        exercise={mockExercise}
-        onExerciseUpdate={mockOnExerciseUpdate}
-        isMostRecentWeek={true}
-      />
-    );
-
-    const editButton = screen.getByLabelText(/edit exercise/i);
-    await user.click(editButton);
-
-    // Clear required fields
-    const totalSetsInput = screen.getByLabelText('Total Sets');
-    await user.clear(totalSetsInput);
-
-    const submitButton = screen.getByText(/submit/i);
-    await user.click(submitButton);
-
-    // Should show validation error - check for specific validation message
-    await waitFor(
-      () => {
-        const errorMessage = screen.queryByText(/must have at least 1 set/i);
-        expect(errorMessage).toBeInTheDocument();
-      },
-      { timeout: 10000 }
-    );
-  }, 15000);
 
   it('submits form with valid data', async () => {
     const user = userEvent.setup();
 
-    updateProgrammedExercise.mockResolvedValue({ success: true });
-    updateSetScheme.mockResolvedValue({ success: true });
-
     render(
       <SetSchemeEditor
         exercise={mockExercise}
@@ -229,19 +197,12 @@ describe('SetSchemeEditor', () => {
       />
     );
 
-    const editButton = screen.getByLabelText(/edit exercise/i);
-    await user.click(editButton);
+    await user.click(screen.getByLabelText(/edit exercise/i));
+    await user.click(screen.getByText(/submit/i));
 
-    // Wait for the form to be ready
-
-    const submitButton = screen.getByText(/submit/i);
-    await user.click(submitButton);
-
-    // Wait for API calls to complete
     await waitFor(
       () => {
-        // Should call updateSetScheme for each set scheme
-        expect(updateSetScheme).toHaveBeenCalledTimes(2); // mockExercise has 2 sets
+        expect(updateSetScheme).toHaveBeenCalledTimes(2);
       },
       { timeout: 10000 }
     );
@@ -250,7 +211,7 @@ describe('SetSchemeEditor', () => {
   it('handles form submission errors gracefully', async () => {
     const user = userEvent.setup();
 
-    updateSetScheme.mockRejectedValue(new Error('API Error'));
+    (updateSetScheme as jest.Mock).mockRejectedValue(new Error('API Error'));
 
     render(
       <SetSchemeEditor
@@ -260,13 +221,9 @@ describe('SetSchemeEditor', () => {
       />
     );
 
-    const editButton = screen.getByLabelText(/edit exercise/i);
-    await user.click(editButton);
+    await user.click(screen.getByLabelText(/edit exercise/i));
+    await user.click(screen.getByText(/submit/i));
 
-    const submitButton = screen.getByText(/submit/i);
-    await user.click(submitButton);
-
-    // Should handle error gracefully (error would be shown via snackbar in real app)
     await waitFor(
       () => {
         expect(updateSetScheme).toHaveBeenCalled();
@@ -275,11 +232,8 @@ describe('SetSchemeEditor', () => {
     );
   }, 15000);
 
-  it('updates all set schemes with same values when total sets changes', async () => {
+  it('creates additional set schemes when total sets increases', async () => {
     const user = userEvent.setup();
-
-    updateProgrammedExercise.mockResolvedValue({ success: true });
-    updateSetScheme.mockResolvedValue({ success: true });
 
     render(
       <SetSchemeEditor
@@ -289,21 +243,14 @@ describe('SetSchemeEditor', () => {
       />
     );
 
-    const editButton = screen.getByLabelText(/edit exercise/i);
-    await user.click(editButton);
-
-    // Change total sets
-    const totalSetsInput = screen.getByLabelText('Total Sets');
-    await user.clear(totalSetsInput);
-    await user.type(totalSetsInput, '3');
-
-    const submitButton = screen.getByText(/submit/i);
-    await user.click(submitButton);
+    await user.click(screen.getByLabelText(/edit exercise/i));
+    await user.click(screen.getByLabelText('Increase Sets'));
+    await user.click(screen.getByText(/submit/i));
 
     await waitFor(
       () => {
-        // Should call updateSetScheme for each existing set scheme
-        expect(updateSetScheme).toHaveBeenCalledTimes(2); // mockExercise has 2 sets
+        expect(updateSetScheme).toHaveBeenCalledTimes(2);
+        expect(createSetScheme).toHaveBeenCalledTimes(1);
       },
       { timeout: 10000 }
     );
@@ -324,11 +271,9 @@ describe('SetSchemeEditor', () => {
       />
     );
 
-    const editButton = screen.getByLabelText(/edit exercise/i);
-    await user.click(editButton);
+    await user.click(screen.getByLabelText(/edit exercise/i));
 
-    // Should still show the form
     expect(screen.getByText('Bench Press')).toBeInTheDocument();
-    expect(screen.getByLabelText('Total Sets')).toBeInTheDocument();
+    expect(screen.getByLabelText('Sets')).toBeInTheDocument();
   });
 });

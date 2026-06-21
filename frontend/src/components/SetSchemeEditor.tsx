@@ -1,16 +1,29 @@
 import { Edit } from '@mui/icons-material';
-import { Box, IconButton, Tooltip, Popover, Button, Divider, Alert } from '@mui/material';
+import {
+  Box,
+  IconButton,
+  Tooltip,
+  Popover,
+  Button,
+  Divider,
+  Alert,
+  useMediaQuery,
+  useTheme,
+} from '@mui/material';
 import { useForm } from '@tanstack/react-form';
 import { useSnackbar } from 'notistack';
 import React, { useState } from 'react';
 
 import { GameText } from './GameTheme';
-import { SetSchemeForm } from './SetSchemeForm';
+import {
+  SetSchemeForm,
+  buildSetSchemeFormDefaultsFromExercise,
+  resolvePerformedForSetIndex,
+} from './SetSchemeForm';
 import { deleteProgrammedExercise } from '../api/programmedExercise';
 import { createSetScheme, deleteSetScheme, updateSetScheme } from '../api/setScheme';
 import type { ProgrammedExerciseWithSetSchemes, UserWeightUnitPreference } from '../api/types';
 import {
-  formatWeightWithUnit,
   convertDisplayWeightToKg,
   formatBandWeightWithUnit,
 } from '../common/utils';
@@ -29,6 +42,8 @@ export const SetSchemeEditor: React.FC<SetSchemeEditorProps> = ({
   weightUnitPreferences = [],
 }) => {
   const { enqueueSnackbar } = useSnackbar();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -62,8 +77,7 @@ export const SetSchemeEditor: React.FC<SetSchemeEditorProps> = ({
       enqueueSnackbar('Exercise deleted successfully', { variant: 'success' });
       handleClose();
 
-      // Call the update callback to refresh the parent component
-      onExerciseUpdate(null as unknown as ProgrammedExerciseWithSetSchemes); // This will trigger a refresh
+      onExerciseUpdate(null as unknown as ProgrammedExerciseWithSetSchemes);
     } catch {
       enqueueSnackbar('Failed to delete exercise', { variant: 'error' });
     } finally {
@@ -71,10 +85,8 @@ export const SetSchemeEditor: React.FC<SetSchemeEditorProps> = ({
     }
   };
 
-  // Get the first set scheme for default values (since all sets should have the same reps/weight)
   const firstSetScheme = exercise.set_schemes[0];
 
-  // Get user's weight unit preference for this exercise
   const weightUnitPreference = weightUnitPreferences.find(
     pref => pref.exercise_name === exercise.exercise.exercise_name
   );
@@ -83,41 +95,9 @@ export const SetSchemeEditor: React.FC<SetSchemeEditorProps> = ({
 
   const convertWeightForStorage = (weight: number): number =>
     convertDisplayWeightToKg(weight, unit);
+
   const form = useForm({
-    defaultValues: {
-      totalSets: exercise.set_schemes.length,
-      targetWeight: firstSetScheme?.target_weight
-        ? parseFloat(formatWeightWithUnit(firstSetScheme.target_weight, unit, false)) || 0
-        : 0,
-      performedWeight:
-        firstSetScheme?.performed_weight != null
-          ? (() => {
-              const n = parseFloat(
-                formatWeightWithUnit(firstSetScheme.performed_weight, unit, false)
-              );
-              return Number.isNaN(n) ? undefined : n;
-            })()
-          : undefined,
-      targetReps: firstSetScheme?.target_rep_count || 0,
-      performedReps: firstSetScheme?.performed_rep_count || undefined,
-      performedRepsBySet: exercise.set_schemes
-        .sort((a, b) => a.set_number - b.set_number)
-        .map(s => s.performed_rep_count),
-      performedWeightBySet: exercise.set_schemes
-        .sort((a, b) => a.set_number - b.set_number)
-        .map(s => {
-          if (s.performed_weight == null) return undefined;
-          const n = parseFloat(formatWeightWithUnit(s.performed_weight, unit, false));
-          return Number.isNaN(n) ? undefined : n;
-        }),
-      restSeconds: firstSetScheme?.rest_seconds || 0,
-      useTempo: firstSetScheme?.use_tempo || false,
-      eccentricTempo: firstSetScheme?.eccentric_tempo || '',
-      isometricTempo: firstSetScheme?.isometric_tempo || '',
-      concentricTempo: firstSetScheme?.concentric_tempo || '',
-      isAmrap: firstSetScheme?.is_amrap || false,
-      isEmom: firstSetScheme?.is_emom || false,
-    },
+    defaultValues: buildSetSchemeFormDefaultsFromExercise(exercise, unit),
     onSubmit: async ({ value }) => {
       try {
         setSaving(true);
@@ -126,16 +106,14 @@ export const SetSchemeEditor: React.FC<SetSchemeEditorProps> = ({
         const newTotal = Math.max(1, Math.floor(Number(value.totalSets) || 1));
         const sortedSchemes = [...exercise.set_schemes].sort((a, b) => a.set_number - b.set_number);
         const programmedExerciseId = exercise.exercise.id;
-        const performedBySet = value.performedRepsBySet ?? [];
-        const performedWeightBySet = value.performedWeightBySet ?? [];
         const targetWeightKg = convertWeightForStorage(value.targetWeight);
 
         const schemesToUpdate = sortedSchemes.slice(0, newTotal);
         const updatePromises = schemesToUpdate.map(setScheme => {
           const setIndex = setScheme.set_number - 1;
-          const weightDisplay = performedWeightBySet[setIndex];
+          const performed = resolvePerformedForSetIndex(setIndex, value);
           const performedWeightKg =
-            weightDisplay != null ? convertWeightForStorage(weightDisplay) : undefined;
+            performed.weight != null ? convertWeightForStorage(performed.weight) : undefined;
           return updateSetScheme(
             setScheme.id,
             setScheme.programmed_exercise_id,
@@ -149,7 +127,7 @@ export const SetSchemeEditor: React.FC<SetSchemeEditorProps> = ({
             targetWeightKg,
             performedWeightKg,
             value.targetReps,
-            performedBySet[setIndex] ?? value.performedReps,
+            performed.reps,
             value.restSeconds,
             'KG'
           );
@@ -159,10 +137,9 @@ export const SetSchemeEditor: React.FC<SetSchemeEditorProps> = ({
         if (newTotal > currentCount) {
           for (let setNumber = currentCount + 1; setNumber <= newTotal; setNumber++) {
             const setIndex = setNumber - 1;
-            const performedRep = performedBySet[setIndex] ?? value.performedReps;
-            const weightDisplay = performedWeightBySet[setIndex];
+            const performed = resolvePerformedForSetIndex(setIndex, value);
             const performedWeightKg =
-              weightDisplay != null ? convertWeightForStorage(weightDisplay) : undefined;
+              performed.weight != null ? convertWeightForStorage(performed.weight) : undefined;
             createPromises.push(
               createSetScheme(
                 programmedExerciseId,
@@ -176,7 +153,7 @@ export const SetSchemeEditor: React.FC<SetSchemeEditorProps> = ({
                 targetWeightKg,
                 performedWeightKg,
                 value.targetReps,
-                performedRep,
+                performed.reps,
                 value.restSeconds,
                 'KG'
               )
@@ -249,7 +226,12 @@ export const SetSchemeEditor: React.FC<SetSchemeEditorProps> = ({
           horizontal: 'left',
         }}
         PaperProps={{
-          sx: { width: 600, maxHeight: 700 },
+          sx: {
+            width: isMobile ? 'calc(100vw - 16px)' : 600,
+            maxWidth: '100vw',
+            maxHeight: isMobile ? 'calc(100vh - 16px)' : 700,
+            overflow: 'auto',
+          },
         }}
       >
         <Box sx={{ p: 2 }}>
@@ -258,7 +240,8 @@ export const SetSchemeEditor: React.FC<SetSchemeEditorProps> = ({
           </Box>
 
           <Alert severity="info" sx={{ mb: 2 }}>
-            Edit set scheme details. All sets will use the same target values.
+            Enter values for all sets, or customize per set for individual performance. Target values
+            apply to every set.
           </Alert>
 
           <form
@@ -275,7 +258,6 @@ export const SetSchemeEditor: React.FC<SetSchemeEditorProps> = ({
                 exerciseName={exercise.exercise.exercise_name}
                 weightUnitPreferences={weightUnitPreferences}
                 showPerformedFields={true}
-                showPerformedRepsPerSet={true}
                 showTempoFields={true}
                 showSetTypeFields={true}
                 bandWeightDisplay={
@@ -291,20 +273,26 @@ export const SetSchemeEditor: React.FC<SetSchemeEditorProps> = ({
             <Box
               sx={{
                 display: 'flex',
+                flexDirection: { xs: 'column', sm: 'row' },
                 gap: 1,
                 justifyContent: 'space-between',
-                alignItems: 'center',
+                alignItems: { xs: 'stretch', sm: 'center' },
               }}
             >
               <Button onClick={handleDelete} disabled={saving} color="error" variant="contained">
                 Delete Exercise
               </Button>
 
-              <Box sx={{ display: 'flex', gap: 1 }}>
-                <Button onClick={handleClose} disabled={saving}>
+              <Box sx={{ display: 'flex', gap: 1, justifyContent: { xs: 'stretch', sm: 'flex-end' } }}>
+                <Button onClick={handleClose} disabled={saving} sx={{ flex: { xs: 1, sm: 'none' } }}>
                   Cancel
                 </Button>
-                <Button type="submit" variant="contained" disabled={saving}>
+                <Button
+                  type="submit"
+                  variant="contained"
+                  disabled={saving}
+                  sx={{ flex: { xs: 1, sm: 'none' } }}
+                >
                   Submit
                 </Button>
               </Box>
