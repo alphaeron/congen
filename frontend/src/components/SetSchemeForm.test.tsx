@@ -89,6 +89,15 @@ const openAdvanced = async (user: ReturnType<typeof userEvent.setup>) => {
 };
 
 describe('SetSchemeForm', () => {
+  it('hides rep fields when AMRAP is enabled', () => {
+    render(<TestWrapper defaultValues={{ isAmrap: true }} showSetTypeFields={true} />);
+
+    expect(screen.queryByLabelText('Target reps')).not.toBeInTheDocument();
+    expect(screen.getByLabelText('Target weight')).toBeInTheDocument();
+    expect(screen.queryByLabelText('Performed reps')).not.toBeInTheDocument();
+    expect(screen.getByLabelText('Performed weight')).toBeInTheDocument();
+  });
+
   it('renders core form fields by default', () => {
     render(<TestWrapper />);
 
@@ -131,23 +140,23 @@ describe('SetSchemeForm', () => {
     const user = userEvent.setup();
     render(<TestWrapper showTempoFields={true} />);
 
-    expect(screen.queryByText('Use Tempo')).not.toBeInTheDocument();
+    expect(screen.getByText('Use Tempo')).not.toBeVisible();
 
     await openAdvanced(user);
 
-    expect(screen.getByText('Use Tempo')).toBeInTheDocument();
+    expect(screen.getByText('Use Tempo')).toBeVisible();
   });
 
   it('hides set type fields until advanced is expanded', async () => {
     const user = userEvent.setup();
     render(<TestWrapper showSetTypeFields={true} />);
 
-    expect(screen.queryByText('AMRAP')).not.toBeInTheDocument();
+    expect(screen.getByText('AMRAP')).not.toBeVisible();
 
     await openAdvanced(user);
 
-    expect(screen.getByText('AMRAP')).toBeInTheDocument();
-    expect(screen.getByText('EMOM')).toBeInTheDocument();
+    expect(screen.getByText('AMRAP')).toBeVisible();
+    expect(screen.getByText('EMOM')).toBeVisible();
   });
 
   it('shows tempo input fields when tempo is enabled', async () => {

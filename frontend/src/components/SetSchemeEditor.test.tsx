@@ -132,7 +132,7 @@ describe('SetSchemeEditor', () => {
     expect(editButton).toBeDisabled();
   });
 
-  it('opens popover when edit button is clicked', async () => {
+  it('opens editor dialog when edit button is clicked', async () => {
     const user = userEvent.setup();
     render(
       <SetSchemeEditor
@@ -168,7 +168,7 @@ describe('SetSchemeEditor', () => {
     expect(screen.getByLabelText('Set 2 reps')).toBeInTheDocument();
   });
 
-  it('closes popover when cancel button is clicked', async () => {
+  it('closes editor dialog when cancel button is clicked', async () => {
     const user = userEvent.setup();
     render(
       <SetSchemeEditor
@@ -179,11 +179,13 @@ describe('SetSchemeEditor', () => {
     );
 
     await user.click(screen.getByLabelText(/edit exercise/i));
-    expect(screen.getByText('Bench Press')).toBeInTheDocument();
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
 
     await user.click(screen.getByText(/cancel/i));
 
-    expect(screen.queryByLabelText('Sets')).not.toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
   });
 
   it('submits form with valid data', async () => {

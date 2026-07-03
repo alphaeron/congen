@@ -1,4 +1,5 @@
 import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 import { exportWorkoutToPDF, exportWeekToPDF, exportProgramToPDF } from './exportUtils';
 import type {
@@ -125,8 +126,40 @@ describe('exportUtils', () => {
 
       await exportWorkoutToPDF(mockWorkoutData, mockWeightUnitPreferences, options);
 
-      // Verify jsPDF methods were called
       expect(jsPDF).toHaveBeenCalled();
+    });
+
+    it('shows AMRAP in the reps column for amrap exercises', async () => {
+      const amrapWorkout: ProgrammedWorkoutWithStages = {
+        ...mockWorkoutData,
+        stages: [
+          {
+            ...mockStage,
+            exercises: [
+              {
+                exercise: { exercise_name: 'Pull-ups' },
+                set_schemes: [
+                  {
+                    ...mockSetScheme,
+                    is_amrap: true,
+                    target_rep_count: 10,
+                  } as SetScheme,
+                ],
+              },
+            ],
+          },
+        ],
+      };
+
+      await exportWorkoutToPDF(amrapWorkout, mockWeightUnitPreferences, {
+        title: 'Test Workout',
+        filename: 'test-workout',
+      });
+
+      const autoTableMock = autoTable as jest.Mock;
+      const tableBody = autoTableMock.mock.calls[0][1].body as string[][];
+      const pullUpRow = tableBody.find(row => row[0] === 'Pull-ups');
+      expect(pullUpRow?.[2]).toBe('AMRAP');
     });
   });
 

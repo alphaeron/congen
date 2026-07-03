@@ -3,9 +3,11 @@ import {
   Box,
   IconButton,
   Tooltip,
-  Popover,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
   Button,
-  Divider,
   Alert,
   useMediaQuery,
   useTheme,
@@ -14,7 +16,6 @@ import { useForm } from '@tanstack/react-form';
 import { useSnackbar } from 'notistack';
 import React, { useState } from 'react';
 
-import { GameText } from './GameTheme';
 import {
   SetSchemeForm,
   buildSetSchemeFormDefaultsFromExercise,
@@ -44,21 +45,20 @@ export const SetSchemeEditor: React.FC<SetSchemeEditorProps> = ({
   const { enqueueSnackbar } = useSnackbar();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
+  const [editorOpen, setEditorOpen] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  const open = Boolean(anchorEl);
-
   const handleClick = (event: React.MouseEvent<HTMLElement>) => {
+    event.stopPropagation();
     if (!isMostRecentWeek) {
       enqueueSnackbar('Editing is only available for the current week', { variant: 'warning' });
       return;
     }
-    setAnchorEl(event.currentTarget);
+    setEditorOpen(true);
   };
 
   const handleClose = () => {
-    setAnchorEl(null);
+    setEditorOpen(false);
   };
 
   const handleDelete = async () => {
@@ -179,7 +179,7 @@ export const SetSchemeEditor: React.FC<SetSchemeEditorProps> = ({
         };
 
         onExerciseUpdate(updatedExercise);
-        setAnchorEl(null);
+        setEditorOpen(false);
         enqueueSnackbar('Exercise updated successfully', { variant: 'success' });
       } catch {
         enqueueSnackbar('Failed to update exercise', { variant: 'error' });
@@ -213,93 +213,79 @@ export const SetSchemeEditor: React.FC<SetSchemeEditorProps> = ({
         )}
       </Tooltip>
 
-      <Popover
-        open={open}
-        anchorEl={anchorEl}
+      <Dialog
+        open={editorOpen}
         onClose={handleClose}
-        anchorOrigin={{
-          vertical: 'bottom',
-          horizontal: 'left',
-        }}
-        transformOrigin={{
-          vertical: 'top',
-          horizontal: 'left',
-        }}
-        PaperProps={{
-          sx: {
-            width: isMobile ? 'calc(100vw - 16px)' : 600,
-            maxWidth: '100vw',
-            maxHeight: isMobile ? 'calc(100vh - 16px)' : 700,
-            overflow: 'auto',
+        fullScreen={isMobile}
+        maxWidth="sm"
+        fullWidth
+        scroll="paper"
+        onClick={e => e.stopPropagation()}
+        slotProps={{
+          paper: {
+            sx: {
+              maxHeight: isMobile ? '100%' : 'calc(100vh - 64px)',
+            },
           },
         }}
       >
-        <Box sx={{ p: 2 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-            <GameText variant="subtitle1">{exercise.exercise.exercise_name}</GameText>
-          </Box>
+        <Box
+          component="form"
+          onSubmit={e => {
+            e.preventDefault();
+            e.stopPropagation();
+            form.handleSubmit();
+          }}
+        >
+          <DialogTitle>{exercise.exercise.exercise_name}</DialogTitle>
 
-          <Alert severity="info" sx={{ mb: 2 }}>
-            Enter values for all sets, or customize per set for individual performance. Target values
-            apply to every set.
-          </Alert>
+          <DialogContent dividers>
+            <Alert severity="info" sx={{ mb: 2 }}>
+              Enter values for all sets, or customize per set for individual performance. Target values
+              apply to every set.
+            </Alert>
 
-          <form
-            onSubmit={e => {
-              e.preventDefault();
-              e.stopPropagation();
-              form.handleSubmit();
+            <SetSchemeForm
+              form={form}
+              saving={saving}
+              exerciseName={exercise.exercise.exercise_name}
+              weightUnitPreferences={weightUnitPreferences}
+              showPerformedFields={true}
+              showTempoFields={true}
+              showSetTypeFields={true}
+              compactSteppers={true}
+              bandWeightDisplay={
+                firstSetScheme
+                  ? formatBandWeightWithUnit(firstSetScheme.band_weight_lbs) || undefined
+                  : undefined
+              }
+            />
+          </DialogContent>
+
+          <DialogActions
+            sx={{
+              flexWrap: 'wrap',
+              justifyContent: 'space-between',
+              gap: 1,
+              px: 3,
+              py: 2,
             }}
           >
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              <SetSchemeForm
-                form={form}
-                saving={saving}
-                exerciseName={exercise.exercise.exercise_name}
-                weightUnitPreferences={weightUnitPreferences}
-                showPerformedFields={true}
-                showTempoFields={true}
-                showSetTypeFields={true}
-                bandWeightDisplay={
-                  firstSetScheme
-                    ? formatBandWeightWithUnit(firstSetScheme.band_weight_lbs) || undefined
-                    : undefined
-                }
-              />
-            </Box>
+            <Button onClick={handleDelete} disabled={saving} color="error" variant="contained">
+              Delete Exercise
+            </Button>
 
-            <Divider sx={{ my: 2 }} />
-
-            <Box
-              sx={{
-                display: 'flex',
-                flexDirection: { xs: 'column', sm: 'row' },
-                gap: 1,
-                justifyContent: 'space-between',
-                alignItems: { xs: 'stretch', sm: 'center' },
-              }}
-            >
-              <Button onClick={handleDelete} disabled={saving} color="error" variant="contained">
-                Delete Exercise
+            <Box sx={{ display: 'flex', gap: 1 }}>
+              <Button onClick={handleClose} disabled={saving}>
+                Cancel
               </Button>
-
-              <Box sx={{ display: 'flex', gap: 1, justifyContent: { xs: 'stretch', sm: 'flex-end' } }}>
-                <Button onClick={handleClose} disabled={saving} sx={{ flex: { xs: 1, sm: 'none' } }}>
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  variant="contained"
-                  disabled={saving}
-                  sx={{ flex: { xs: 1, sm: 'none' } }}
-                >
-                  Submit
-                </Button>
-              </Box>
+              <Button type="submit" variant="contained" disabled={saving}>
+                Submit
+              </Button>
             </Box>
-          </form>
+          </DialogActions>
         </Box>
-      </Popover>
+      </Dialog>
     </React.Fragment>
   );
 };

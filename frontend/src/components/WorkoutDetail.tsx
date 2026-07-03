@@ -86,6 +86,7 @@ interface TableRow {
   exerciseName?: string;
   sets?: number;
   reps?: number;
+  isAmrap?: boolean;
   tempo?: string;
   weight?: string;
   rest?: string;
@@ -99,6 +100,8 @@ interface TableRow {
 }
 
 const columnHelper = createColumnHelper<TableRow>();
+
+const compactTableCellTextSx = { whiteSpace: 'nowrap' as const };
 
 /**
  * Detailed workout display component.
@@ -462,7 +465,8 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
             type: 'exercise',
             exerciseName: exerciseData.exercise.exercise_name,
             sets: totalSets,
-            reps: reps || undefined,
+            reps: firstSetScheme.is_amrap ? undefined : reps || undefined,
+            isAmrap: firstSetScheme.is_amrap,
             tempo: tempo !== '-' ? tempo : undefined,
             weight: weightWithBand,
             rest: rest ? `${rest}s` : undefined,
@@ -550,7 +554,18 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
         header: 'Reps',
         cell: ({ row }) => {
           if (row.original.type === 'exercise') {
-            return <GameText variant="body2">{row.original.reps || '-'}</GameText>;
+            if (row.original.isAmrap) {
+              return (
+                <GameText variant="body2" sx={compactTableCellTextSx}>
+                  AMRAP
+                </GameText>
+              );
+            }
+            return (
+              <GameText variant="body2" sx={compactTableCellTextSx}>
+                {row.original.reps || '-'}
+              </GameText>
+            );
           }
           return null;
         },

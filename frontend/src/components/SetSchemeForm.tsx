@@ -1,4 +1,4 @@
-import { Add, ExpandMore, Remove, RestartAlt, VerticalAlignBottom } from '@mui/icons-material';
+import { ExpandMore, RestartAlt, VerticalAlignBottom } from '@mui/icons-material';
 import {
   Box,
   Button,
@@ -9,9 +9,15 @@ import {
   TextField,
   Tooltip,
 } from '@mui/material';
-import React, { useState, useEffect } from 'react';
+import type { SxProps, Theme } from '@mui/material/styles';
+import React, { useState } from 'react';
 
 import { GameText } from './GameTheme';
+import {
+  NumericStepInput,
+  compactNumericStepFieldSx,
+  defaultNumericStepFieldSx,
+} from './NumericStepInput';
 import type { ProgrammedExerciseWithSetSchemes, UserWeightUnitPreference } from '../api/types';
 import { formatWeightWithUnit } from '../common/utils';
 
@@ -59,6 +65,7 @@ export interface SetSchemeFormProps {
   showTempoFields?: boolean;
   showSetTypeFields?: boolean;
   bandWeightDisplay?: string;
+  compactSteppers?: boolean;
 }
 
 export function getEffectivePerformedForSetIndex(
@@ -203,204 +210,6 @@ export function buildSetSchemeFormDefaultsFromExercise(
   };
 }
 
-interface NumericStepInputProps {
-  label: string;
-  value: number | undefined;
-  onChange: (value: number | undefined) => void;
-  min?: number;
-  max?: number;
-  step?: number;
-  integer?: boolean;
-  disabled?: boolean;
-  error?: boolean;
-  helperText?: string;
-  allowEmpty?: boolean;
-  suffix?: string;
-  flexSx?: object;
-  inputAriaLabel?: string;
-  labelAction?: React.ReactNode;
-}
-
-const NumericStepInput: React.FC<NumericStepInputProps> = ({
-  label,
-  value,
-  onChange,
-  min = 0,
-  max,
-  step = 1,
-  integer = false,
-  disabled = false,
-  error = false,
-  helperText,
-  allowEmpty = false,
-  suffix,
-  flexSx,
-  inputAriaLabel,
-  labelAction,
-}) => {
-  const fieldAriaLabel = inputAriaLabel ?? label;
-  const [draft, setDraft] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (draft === null) {
-      return;
-    }
-    const external =
-      value === undefined || value === null
-        ? ''
-        : value.toString();
-    if (external !== draft && document.activeElement === null) {
-      setDraft(null);
-    }
-  }, [value, draft]);
-
-  const valueToDisplay = (): string => {
-    if (draft !== null) {
-      return draft;
-    }
-    if (value === undefined || value === null) {
-      return '';
-    }
-    return value.toString();
-  };
-
-  const commitDraft = (raw: string) => {
-    if (raw === '') {
-      onChange(allowEmpty ? undefined : min);
-      return;
-    }
-    const numValue = integer ? parseInt(raw, 10) : parseFloat(raw);
-    if (Number.isNaN(numValue)) {
-      return;
-    }
-    let next = integer ? Math.floor(numValue) : numValue;
-    if (max !== undefined) {
-      next = Math.min(max, next);
-    }
-    next = Math.max(min, next);
-    onChange(next);
-  };
-
-  const applyNumericChange = (raw: string) => {
-    if (raw === '') {
-      setDraft('');
-      if (allowEmpty) {
-        onChange(undefined);
-      }
-      return;
-    }
-    const pattern = integer ? /^\d*$/ : /^\d*\.?\d*$/;
-    if (!pattern.test(raw)) {
-      return;
-    }
-    setDraft(raw);
-    if (!raw.endsWith('.') && raw !== '.') {
-      commitDraft(raw);
-    }
-  };
-
-  const decrement = () => {
-    if (value === undefined) {
-      onChange(min);
-      return;
-    }
-    const next = value - step;
-    if (next < min) {
-      onChange(allowEmpty ? undefined : min);
-      return;
-    }
-    onChange(integer ? Math.floor(next) : next);
-  };
-
-  const increment = () => {
-    const base = value ?? min;
-    let next = base + step;
-    if (max !== undefined) {
-      next = Math.min(max, next);
-    }
-    onChange(integer ? Math.floor(next) : next);
-  };
-
-  return (
-    <Box sx={{ flex: '1 1 160px', minWidth: 140, ...flexSx }}>
-      <Box
-        sx={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: 0.5,
-          mb: 0.5,
-        }}
-      >
-        <GameText variant="caption" color="text.secondary">
-          {label}
-          {suffix ? ` (${suffix})` : ''}
-        </GameText>
-        {labelAction ?? null}
-      </Box>
-      <Box
-        sx={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 0.5,
-        }}
-      >
-        <IconButton
-          size="small"
-          onClick={decrement}
-          disabled={disabled}
-          aria-label={`Decrease ${fieldAriaLabel}`}
-          sx={{ minWidth: { xs: 48, sm: 40 }, minHeight: { xs: 48, sm: 40 } }}
-        >
-          <Remove fontSize="small" />
-        </IconButton>
-        <TextField
-          size="small"
-          value={valueToDisplay()}
-          onChange={e => applyNumericChange(e.target.value)}
-          onBlur={e => {
-            const raw = e.target.value;
-            setDraft(null);
-            if (raw === '' && allowEmpty) {
-              onChange(undefined);
-              return;
-            }
-            if (raw === '') {
-              onChange(min);
-              return;
-            }
-            commitDraft(raw);
-          }}
-          disabled={disabled}
-          error={error}
-          inputProps={{
-            inputMode: integer ? 'numeric' : 'decimal',
-            'aria-label': fieldAriaLabel,
-            style: { textAlign: 'center' },
-          }}
-          sx={{ flex: 1, minWidth: 0 }}
-        />
-        <IconButton
-          size="small"
-          onClick={increment}
-          disabled={disabled}
-          aria-label={`Increase ${fieldAriaLabel}`}
-          sx={{ minWidth: { xs: 48, sm: 40 }, minHeight: { xs: 48, sm: 40 } }}
-        >
-          <Add fontSize="small" />
-        </IconButton>
-      </Box>
-      {helperText ? (
-        <GameText variant="caption" color={error ? 'error' : 'text.secondary'} sx={{ mt: 0.5 }}>
-          {helperText}
-        </GameText>
-      ) : null}
-    </Box>
-  );
-};
-
-const flexFieldSx = { flex: '1 1 160px', minWidth: { xs: '100%', sm: 140 } };
-
 export const SetSchemeForm: React.FC<SetSchemeFormProps> = ({
   form,
   saving = false,
@@ -410,6 +219,7 @@ export const SetSchemeForm: React.FC<SetSchemeFormProps> = ({
   showTempoFields = true,
   showSetTypeFields = true,
   bandWeightDisplay,
+  compactSteppers = false,
 }) => {
   const [advancedOpen, setAdvancedOpen] = useState(false);
 
@@ -419,6 +229,24 @@ export const SetSchemeForm: React.FC<SetSchemeFormProps> = ({
 
   const preferredUnit = weightUnitPreference?.preferred_unit;
   const weightUnitLabel = preferredUnit === 'LBS' ? 'lbs' : 'kg';
+  const fieldFlexSx = compactSteppers ? compactNumericStepFieldSx : defaultNumericStepFieldSx;
+  const compactFieldRowSx: SxProps<Theme> = {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: 2,
+    justifyContent: 'flex-start',
+    alignItems: 'flex-end',
+  };
+  const gridFieldRowSx: SxProps<Theme> = {
+    display: 'grid',
+    gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))' },
+    gap: 2,
+    alignItems: 'start',
+  };
+  const fieldRowSx = compactSteppers ? compactFieldRowSx : gridFieldRowSx;
+  const weightFieldCellSx = (isAmrap: boolean): SxProps<Theme> | undefined =>
+    isAmrap && !compactSteppers ? { gridColumn: { sm: '1' } } : undefined;
+  const stepperCompact = compactSteppers;
 
   const syncPerformedToTarget = (values: SetSchemeFormData) => {
     form.setFieldValue('performedReps', values.targetReps);
@@ -534,7 +362,7 @@ export const SetSchemeForm: React.FC<SetSchemeFormProps> = ({
 
       <form.Subscribe selector={(state: { values: SetSchemeFormData }) => state.values}>
         {(values: SetSchemeFormData) => (
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
+          <Box sx={fieldRowSx}>
             <form.Field
               name="totalSets"
               validators={{
@@ -553,7 +381,8 @@ export const SetSchemeForm: React.FC<SetSchemeFormProps> = ({
                   disabled={saving}
                   error={!!field.state.meta.errors.length}
                   helperText={field.state.meta.errors.join(', ')}
-                  flexSx={flexFieldSx}
+                  flexSx={fieldFlexSx}
+                  compact={stepperCompact}
                 />
               )}
             </form.Field>
@@ -577,7 +406,8 @@ export const SetSchemeForm: React.FC<SetSchemeFormProps> = ({
                   disabled={saving}
                   error={!!field.state.meta.errors.length}
                   helperText={field.state.meta.errors.join(', ')}
-                  flexSx={flexFieldSx}
+                  flexSx={fieldFlexSx}
+                  compact={stepperCompact}
                 />
               )}
             </form.Field>
@@ -585,59 +415,70 @@ export const SetSchemeForm: React.FC<SetSchemeFormProps> = ({
         )}
       </form.Subscribe>
 
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-        <GameText variant="subtitle2">Target (all sets)</GameText>
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
-          <form.Field
-            name="targetWeight"
-            validators={{
-              onChange: ({ value }) => (value < 0 ? 'Weight cannot be negative' : undefined),
-            }}
-          >
-            {field => (
-              <NumericStepInput
-                label="Target weight"
-                suffix={weightUnitLabel}
-                value={field.state.value}
-                onChange={v => field.handleChange(v ?? 0)}
-                min={0}
-                step={0.5}
-                disabled={saving}
-                error={!!field.state.meta.errors.length}
-                helperText={field.state.meta.errors.join(', ')}
-                flexSx={flexFieldSx}
-              />
-            )}
-          </form.Field>
+      <form.Subscribe selector={(state: { values: SetSchemeFormData }) => state.values.isAmrap}>
+        {isAmrap => (
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+            <GameText variant="subtitle2">Target (all sets)</GameText>
+            <Box sx={fieldRowSx}>
+              {!isAmrap ? (
+                <form.Field
+                  name="targetReps"
+                  validators={{
+                    onChange: ({ value }) => (value < 1 ? 'Must have at least 1 rep' : undefined),
+                  }}
+                >
+                  {field => (
+                    <NumericStepInput
+                      label="Target reps"
+                      value={field.state.value}
+                      onChange={v => field.handleChange(v ?? 1)}
+                      min={1}
+                      integer
+                      disabled={saving}
+                      error={!!field.state.meta.errors.length}
+                      helperText={field.state.meta.errors.join(', ')}
+                      flexSx={fieldFlexSx}
+                      compact={stepperCompact}
+                    />
+                  )}
+                </form.Field>
+              ) : null}
 
-          <form.Field
-            name="targetReps"
-            validators={{
-              onChange: ({ value }) => (value < 1 ? 'Must have at least 1 rep' : undefined),
-            }}
-          >
-            {field => (
-              <NumericStepInput
-                label="Target reps"
-                value={field.state.value}
-                onChange={v => field.handleChange(v ?? 1)}
-                min={1}
-                integer
-                disabled={saving}
-                error={!!field.state.meta.errors.length}
-                helperText={field.state.meta.errors.join(', ')}
-                flexSx={flexFieldSx}
-              />
-            )}
-          </form.Field>
-        </Box>
-      </Box>
+              <Box sx={weightFieldCellSx(isAmrap)}>
+                <form.Field
+                  name="targetWeight"
+                  validators={{
+                    onChange: ({ value }) => (value < 0 ? 'Weight cannot be negative' : undefined),
+                  }}
+                >
+                  {field => (
+                    <NumericStepInput
+                      label="Target weight"
+                      suffix={weightUnitLabel}
+                      value={field.state.value}
+                      onChange={v => field.handleChange(v ?? 0)}
+                      min={0}
+                      step={0.5}
+                      disabled={saving}
+                      error={!!field.state.meta.errors.length}
+                      helperText={field.state.meta.errors.join(', ')}
+                      flexSx={fieldFlexSx}
+                      compact={stepperCompact}
+                    />
+                  )}
+                </form.Field>
+              </Box>
+            </Box>
+          </Box>
+        )}
+      </form.Subscribe>
 
       {showPerformedFields ? (
         <form.Subscribe selector={(state: { values: SetSchemeFormData }) => state.values}>
           {(values: SetSchemeFormData) => {
             const totalSets = Math.max(1, Math.floor(Number(values.totalSets) || 1));
             const customizePerSet = values.customizePerSet;
+            const isAmrap = values.isAmrap;
 
             return (
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
@@ -680,148 +521,145 @@ export const SetSchemeForm: React.FC<SetSchemeFormProps> = ({
                   </Tooltip>
                 </Box>
 
-                <Collapse in={!customizePerSet} unmountOnExit>
-                  <Box
-                    sx={{
-                      display: 'flex',
-                      flexWrap: 'wrap',
-                      gap: 2,
-                      alignItems: 'flex-end',
-                    }}
-                  >
-                    <form.Field
-                      name="performedWeight"
-                      validators={{
-                        onChange: ({ value }: { value: number | undefined }) =>
-                          value !== undefined && value < 0
-                            ? 'Weight cannot be negative'
-                            : undefined,
-                      }}
-                    >
-                      {field => (
-                        <NumericStepInput
-                          label="Performed weight"
-                          suffix={weightUnitLabel}
-                          value={field.state.value}
-                          onChange={v => field.handleChange(v)}
-                          min={0}
-                          step={0.5}
-                          allowEmpty
-                          disabled={saving}
-                          error={!!field.state.meta.errors.length}
-                          helperText={field.state.meta.errors.join(', ')}
-                          flexSx={flexFieldSx}
-                        />
-                      )}
-                    </form.Field>
-
-                    <form.Field
-                      name="performedReps"
-                      validators={{
-                        onChange: ({ value }: { value: number | undefined }) =>
-                          value !== undefined && value < 0 ? 'Reps cannot be negative' : undefined,
-                      }}
-                    >
-                      {field => (
-                        <NumericStepInput
-                          label="Performed reps"
-                          value={field.state.value}
-                          onChange={v => field.handleChange(v)}
-                          min={0}
-                          integer
-                          allowEmpty
-                          disabled={saving}
-                          error={!!field.state.meta.errors.length}
-                          helperText={field.state.meta.errors.join(', ')}
-                          flexSx={flexFieldSx}
-                        />
-                      )}
-                    </form.Field>
-                  </Box>
-                </Collapse>
-
-                <Collapse in={customizePerSet} unmountOnExit>
+                {customizePerSet ? (
                   <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                     {Array.from({ length: totalSets }, (_, setIndex) => (
-                      <Box
-                        key={setIndex}
-                        sx={{
-                          display: 'flex',
-                          flexWrap: 'wrap',
-                          gap: 2,
-                          alignItems: 'flex-end',
-                        }}
-                      >
-                        <form.Field name="performedWeightBySet">
-                          {field => {
-                            const arr = field.state.value ?? [];
-                            const effective =
-                              arr[setIndex] ??
-                              values.performedWeight ??
-                              values.targetWeight;
-                            return (
-                              <NumericStepInput
-                                label={`Set ${setIndex + 1} weight`}
-                                suffix={weightUnitLabel}
-                                value={effective}
-                                onChange={v => {
-                                  const next = [...arr];
-                                  while (next.length < setIndex + 1) {
-                                    next.push(undefined);
-                                  }
-                                  next[setIndex] = v;
-                                  field.handleChange(next);
-                                }}
-                                min={0}
-                                step={0.5}
-                                allowEmpty
-                                disabled={saving}
-                                flexSx={flexFieldSx}
-                                labelAction={renderFillDownLabelAction(
-                                  'Apply this weight to all sets',
-                                  `Apply set ${setIndex + 1} weight to all sets`,
-                                  () => applyWeightFromSetToAll(values, setIndex)
-                                )}
-                              />
-                            );
-                          }}
-                        </form.Field>
+                      <Box key={setIndex} sx={fieldRowSx}>
+                        {!isAmrap ? (
+                          <form.Field name="performedRepsBySet">
+                            {field => {
+                              const arr = field.state.value ?? [];
+                              const effective =
+                                arr[setIndex] ?? values.performedReps ?? values.targetReps;
+                              return (
+                                <NumericStepInput
+                                  label={`Set ${setIndex + 1} reps`}
+                                  value={effective}
+                                  onChange={v => {
+                                    const next = [...arr];
+                                    while (next.length < setIndex + 1) {
+                                      next.push(undefined);
+                                    }
+                                    next[setIndex] = v;
+                                    field.handleChange(next);
+                                  }}
+                                  min={0}
+                                  integer
+                                  allowEmpty
+                                  disabled={saving}
+                                  flexSx={fieldFlexSx}
+                                  compact={stepperCompact}
+                                  labelAction={renderFillDownLabelAction(
+                                    'Apply this reps to all sets',
+                                    `Apply set ${setIndex + 1} reps to all sets`,
+                                    () => applyRepsFromSetToAll(values, setIndex)
+                                  )}
+                                />
+                              );
+                            }}
+                          </form.Field>
+                        ) : null}
 
-                        <form.Field name="performedRepsBySet">
-                          {field => {
-                            const arr = field.state.value ?? [];
-                            const effective =
-                              arr[setIndex] ?? values.performedReps ?? values.targetReps;
-                            return (
-                              <NumericStepInput
-                                label={`Set ${setIndex + 1} reps`}
-                                value={effective}
-                                onChange={v => {
-                                  const next = [...arr];
-                                  while (next.length < setIndex + 1) {
-                                    next.push(undefined);
-                                  }
-                                  next[setIndex] = v;
-                                  field.handleChange(next);
-                                }}
-                                min={0}
-                                integer
-                                allowEmpty
-                                disabled={saving}
-                                flexSx={flexFieldSx}
-                                labelAction={renderFillDownLabelAction(
-                                  'Apply this reps to all sets',
-                                  `Apply set ${setIndex + 1} reps to all sets`,
-                                  () => applyRepsFromSetToAll(values, setIndex)
-                                )}
-                              />
-                            );
-                          }}
-                        </form.Field>
+                        <Box sx={weightFieldCellSx(isAmrap)}>
+                          <form.Field name="performedWeightBySet">
+                            {field => {
+                              const arr = field.state.value ?? [];
+                              const effective =
+                                arr[setIndex] ??
+                                values.performedWeight ??
+                                values.targetWeight;
+                              return (
+                                <NumericStepInput
+                                  label={`Set ${setIndex + 1} weight`}
+                                  suffix={weightUnitLabel}
+                                  value={effective}
+                                  onChange={v => {
+                                    const next = [...arr];
+                                    while (next.length < setIndex + 1) {
+                                      next.push(undefined);
+                                    }
+                                    next[setIndex] = v;
+                                    field.handleChange(next);
+                                  }}
+                                  min={0}
+                                  step={0.5}
+                                  allowEmpty
+                                  disabled={saving}
+                                  flexSx={fieldFlexSx}
+                                  compact={stepperCompact}
+                                  labelAction={renderFillDownLabelAction(
+                                    'Apply this weight to all sets',
+                                    `Apply set ${setIndex + 1} weight to all sets`,
+                                    () => applyWeightFromSetToAll(values, setIndex)
+                                  )}
+                                />
+                              );
+                            }}
+                          </form.Field>
+                        </Box>
                       </Box>
                     ))}
                   </Box>
-                </Collapse>
+                ) : (
+                  <Box sx={fieldRowSx}>
+                    {!isAmrap ? (
+                      <form.Field
+                        name="performedReps"
+                        validators={{
+                          onChange: ({ value }: { value: number | undefined }) =>
+                            value !== undefined && value < 0
+                              ? 'Reps cannot be negative'
+                              : undefined,
+                        }}
+                      >
+                        {field => (
+                          <NumericStepInput
+                            label="Performed reps"
+                            value={field.state.value}
+                            onChange={v => field.handleChange(v)}
+                            min={0}
+                            integer
+                            allowEmpty
+                            disabled={saving}
+                            error={!!field.state.meta.errors.length}
+                            helperText={field.state.meta.errors.join(', ')}
+                            flexSx={fieldFlexSx}
+                            compact={stepperCompact}
+                          />
+                        )}
+                      </form.Field>
+                    ) : null}
+
+                    <Box sx={weightFieldCellSx(isAmrap)}>
+                      <form.Field
+                        name="performedWeight"
+                        validators={{
+                          onChange: ({ value }: { value: number | undefined }) =>
+                            value !== undefined && value < 0
+                              ? 'Weight cannot be negative'
+                              : undefined,
+                        }}
+                      >
+                        {field => (
+                          <NumericStepInput
+                            label="Performed weight"
+                            suffix={weightUnitLabel}
+                            value={field.state.value}
+                            onChange={v => field.handleChange(v)}
+                            min={0}
+                            step={0.5}
+                            allowEmpty
+                            disabled={saving}
+                            error={!!field.state.meta.errors.length}
+                            helperText={field.state.meta.errors.join(', ')}
+                            flexSx={fieldFlexSx}
+                            compact={stepperCompact}
+                          />
+                        )}
+                      </form.Field>
+                    </Box>
+                  </Box>
+                )}
               </Box>
             );
           }}
@@ -845,7 +683,7 @@ export const SetSchemeForm: React.FC<SetSchemeFormProps> = ({
           >
             Advanced
           </Button>
-          <Collapse in={advancedOpen} unmountOnExit>
+          <Collapse in={advancedOpen}>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}>
               {showTempoFields ? (
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
@@ -868,7 +706,7 @@ export const SetSchemeForm: React.FC<SetSchemeFormProps> = ({
                   <form.Subscribe selector={(state: { values: SetSchemeFormData }) => state.values.useTempo}>
                     {(useTempo: boolean) =>
                       useTempo ? (
-                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
+                        <Box sx={fieldRowSx}>
                           <Box sx={{ flex: '1 1 150px', minWidth: 150 }}>
                             <form.Field name="eccentricTempo">
                               {field => (
@@ -922,7 +760,7 @@ export const SetSchemeForm: React.FC<SetSchemeFormProps> = ({
               ) : null}
 
               {showSetTypeFields ? (
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
+                <Box sx={fieldRowSx}>
                   <form.Field name="isAmrap">
                     {field => (
                       <FormControlLabel
