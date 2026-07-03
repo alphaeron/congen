@@ -9,11 +9,11 @@ import {
   LinearProgress,
   Radio,
   RadioGroup,
-  TextField,
 } from '@mui/material';
 import React from 'react';
 
 import { GameText, GAME_CLASSES } from './GameTheme';
+import { NumericStepInput } from './NumericStepInput';
 import type { Exercise } from '../api/types';
 import { formatWeightWithUnit, KG_TO_LBS } from '../common/utils';
 
@@ -180,41 +180,36 @@ export const OneRepMaxInputStep: React.FC<OneRepMaxInputStepProps> = ({
           </GameText>
           <Grid container spacing={2}>
             <Grid size={4}>
-              <TextField
+              <NumericStepInput
                 label="Reps"
-                type="number"
-                value={currentInput.reps || 8}
-                onChange={e => {
-                  const reps = parseInt(e.target.value);
-                  if (!isNaN(reps)) {
-                    handleRepsWeightChange(
-                      currentExercise.name,
-                      reps,
-                      currentInput.weight || 0,
-                      currentInput.unit || 'KG'
-                    );
-                  }
-                }}
-                fullWidth
+                value={currentInput.reps ?? 8}
+                onChange={reps =>
+                  handleRepsWeightChange(
+                    currentExercise.name,
+                    reps ?? 8,
+                    currentInput.weight ?? 0,
+                    currentInput.unit || 'KG'
+                  )
+                }
+                min={1}
+                integer
               />
             </Grid>
             <Grid size={4}>
-              <TextField
+              <NumericStepInput
                 label="Weight"
-                type="number"
-                value={currentInput.weight || 0}
-                onChange={e => {
-                  const weight = parseFloat(e.target.value);
-                  if (!isNaN(weight)) {
-                    handleRepsWeightChange(
-                      currentExercise.name,
-                      currentInput.reps || 8,
-                      weight,
-                      currentInput.unit || 'KG'
-                    );
-                  }
-                }}
-                fullWidth
+                suffix={(currentInput.unit || 'KG').toLowerCase()}
+                value={currentInput.weight ?? 0}
+                onChange={weight =>
+                  handleRepsWeightChange(
+                    currentExercise.name,
+                    currentInput.reps ?? 8,
+                    weight ?? 0,
+                    currentInput.unit || 'KG'
+                  )
+                }
+                min={0}
+                step={0.5}
               />
             </Grid>
             <Grid size={4}>

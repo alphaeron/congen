@@ -7,6 +7,7 @@ import React from 'react';
 import { FormField } from './FormField';
 import { GameText, GameCard, GAME_CLASSES } from './GameTheme';
 import { LoadingSpinner } from './LoadingSpinner';
+import { NumericStepInput } from './NumericStepInput';
 import { updateUserProfile, getCurrentUser } from '../api/user';
 import { useAuth } from '../contexts/AuthContext';
 import { useData } from '../contexts/DataContext';
@@ -165,14 +166,25 @@ export function PhysicalAttributesSection(): React.ReactElement {
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ duration: 0.6, ease: 'easeOut', delay: 0.9 }}
                   >
-                    <FormField
-                      type="number"
-                      label="Weight (lbs)"
-                      name="weight"
-                      form={form}
-                      inputProps={{ min: 1, max: 1000 }}
-                      helperText="Your weight in pounds"
-                    />
+                    <form.Field name="weight">
+                      {field => (
+                        <NumericStepInput
+                          label="Weight"
+                          suffix="lbs"
+                          value={
+                            field.state.value === '' || field.state.value == null
+                              ? undefined
+                              : Number(field.state.value)
+                          }
+                          onChange={value => field.handleChange(value === undefined ? '' : value)}
+                          min={1}
+                          max={1000}
+                          step={0.5}
+                          allowEmpty
+                          helperText="Your weight in pounds"
+                        />
+                      )}
+                    </form.Field>
                   </motion.div>
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6 }}>

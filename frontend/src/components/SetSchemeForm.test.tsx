@@ -349,6 +349,18 @@ describe('SetSchemeForm', () => {
     expect(targetWeightInput).toHaveValue('135.5');
   });
 
+  it('allows typing a leading decimal in target weight', async () => {
+    const user = userEvent.setup();
+    render(
+      <TestWrapper exerciseName="Bench Press" weightUnitPreferences={mockWeightUnitPreferences} />
+    );
+
+    const targetWeightInput = screen.getByLabelText('Target weight');
+    await user.clear(targetWeightInput);
+    await user.type(targetWeightInput, '.5');
+    expect(targetWeightInput).toHaveValue('.5');
+  });
+
   it('handles integer fields for sets and reps', async () => {
     const user = userEvent.setup();
     render(<TestWrapper />);

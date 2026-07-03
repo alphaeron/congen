@@ -1,6 +1,6 @@
 import { Add, Remove } from '@mui/icons-material';
 import { Box, IconButton } from '@mui/material';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 import { GameText } from './GameTheme';
 
@@ -56,14 +56,30 @@ export const NumericStepInput: React.FC<NumericStepInputProps> = ({
   compact = false,
 }) => {
   const fieldAriaLabel = inputAriaLabel ?? label;
+  const inputRef = useRef<HTMLInputElement>(null);
   const [draft, setDraft] = useState<string | null>(null);
+
+  const formatExternalValue = (externalValue: number | undefined): string => {
+    if (externalValue === undefined || externalValue === null) {
+      return '';
+    }
+    return externalValue.toString();
+  };
+
+  const isPartialDecimalInput = (raw: string): boolean => {
+    if (integer) {
+      return false;
+    }
+    return raw === '.' || raw.endsWith('.');
+  };
 
   useEffect(() => {
     if (draft === null) {
       return;
     }
-    const external = value === undefined || value === null ? '' : value.toString();
-    if (external !== draft && document.activeElement === null) {
+    const external = formatExternalValue(value);
+    const isFocused = inputRef.current === document.activeElement;
+    if (external !== draft && !isFocused) {
       setDraft(null);
     }
   }, [value, draft]);
@@ -108,9 +124,20 @@ export const NumericStepInput: React.FC<NumericStepInputProps> = ({
       return;
     }
     setDraft(raw);
-    if (!raw.endsWith('.') && raw !== '.') {
+    if (!isPartialDecimalInput(raw)) {
       commitDraft(raw);
     }
+  };
+
+  const normalizeBlurInput = (raw: string): string => {
+    const trimmed = raw.trim();
+    if (trimmed === '' || trimmed === '.') {
+      return '';
+    }
+    if (!integer && trimmed.endsWith('.')) {
+      return trimmed.slice(0, -1);
+    }
+    return trimmed;
   };
 
   const decrement = () => {
@@ -137,15 +164,16 @@ export const NumericStepInput: React.FC<NumericStepInputProps> = ({
 
   const handleInputBlur = (raw: string) => {
     setDraft(null);
-    if (raw === '' && allowEmpty) {
+    const normalized = normalizeBlurInput(raw);
+    if (normalized === '' && allowEmpty) {
       onChange(undefined);
       return;
     }
-    if (raw === '') {
+    if (normalized === '') {
       onChange(min);
       return;
     }
-    commitDraft(raw);
+    commitDraft(normalized);
   };
 
   const containerSx = compact
@@ -205,6 +233,7 @@ export const NumericStepInput: React.FC<NumericStepInputProps> = ({
         </IconButton>
         <Box
           component="input"
+          ref={inputRef}
           value={valueToDisplay()}
           onChange={(e: React.ChangeEvent<HTMLInputElement>) => applyNumericChange(e.target.value)}
           onBlur={(e: React.FocusEvent<HTMLInputElement>) => handleInputBlur(e.target.value)}

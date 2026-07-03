@@ -165,8 +165,8 @@ describe('OneRepMaxInputStep', () => {
     const repsInput = screen.getByLabelText('Reps');
     const weightInput = screen.getByLabelText('Weight');
 
-    expect(repsInput).toHaveValue(8); // From set_schemes[0].reps
-    expect(weightInput).toHaveValue(185); // From set_schemes[0].weight
+    expect(repsInput).toHaveValue('8');
+    expect(weightInput).toHaveValue('185');
   });
 
   it('shows calculated 1RM when reps and weight are provided', () => {

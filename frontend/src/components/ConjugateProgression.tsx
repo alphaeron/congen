@@ -7,8 +7,7 @@ import {
   useReactTable,
   flexRender,
 } from '@tanstack/react-table';
-import { useVirtualizer } from '@tanstack/react-virtual';
-import React, { useMemo, useState, useRef, useEffect } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 
 import { ExerciseName } from './ExerciseName';
 import { GameText, GameCard, GameTextField, GAME_CLASSES } from './GameTheme';
@@ -43,9 +42,6 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [globalFilter, setGlobalFilter] = useState('');
-
-  // Virtualization setup
-  const tableParentRef = useRef<HTMLDivElement>(null);
 
   // Load additional data that's not in DataContext
   useEffect(() => {
@@ -142,14 +138,6 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = () => {
     },
     onGlobalFilterChange: setGlobalFilter,
     globalFilterFn: 'includesString',
-  });
-
-  // Create virtualizer for table rows
-  const rowVirtualizer = useVirtualizer({
-    count: table.getRowModel().rows.length,
-    getScrollElement: () => tableParentRef.current,
-    estimateSize: () => 50, // Approximate row height
-    overscan: 5, // Render 5 extra rows above and below viewport
   });
 
   // Show loading state
@@ -265,11 +253,9 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = () => {
               sx={{ mb: 2 }}
             />
             <Box
-              ref={tableParentRef}
               sx={{
                 maxHeight: 400,
                 overflow: 'auto',
-                height: '400px',
                 borderRadius: 2,
                 border: '1px solid rgba(0, 188, 212, 0.3)',
                 backgroundColor: 'rgba(255, 255, 255, 0.05)',
@@ -283,14 +269,20 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = () => {
                   fontFamily: 'inherit',
                 }}
               >
-                <thead>
+                <thead
+                  style={{
+                    position: 'sticky',
+                    top: 0,
+                    zIndex: 1,
+                  }}
+                >
                   {table.getHeaderGroups().map(headerGroup => (
                     <tr key={headerGroup.id}>
-                      {headerGroup.headers.map(header => (
+                      {headerGroup.headers.map((header, index) => (
                         <th
                           key={header.id}
                           style={{
-                            textAlign: 'left',
+                            textAlign: index === 1 ? 'right' : 'left',
                             padding: '12px 16px',
                             borderBottom: '2px solid rgba(0, 188, 212, 0.3)',
                             fontWeight: '600',
@@ -308,53 +300,31 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = () => {
                   ))}
                 </thead>
                 <tbody>
-                  <tr>
-                    <td
-                      colSpan={columns.length}
-                      style={{
-                        height: `${rowVirtualizer.getTotalSize()}px`,
-                        padding: 0,
-                      }}
-                    />
-                  </tr>
-                  {rowVirtualizer.getVirtualItems().map(virtualRow => {
-                    const row = table.getRowModel().rows[virtualRow.index];
-                    if (!row) return null;
-                    return (
-                      <tr
-                        key={row.id}
-                        style={{
-                          position: 'absolute',
-                          top: 0,
-                          left: 0,
-                          width: '100%',
-                          height: `${virtualRow.size}px`,
-                          transform: `translateY(${virtualRow.start}px)`,
-                        }}
-                      >
-                        {row.getVisibleCells().map(cell => (
-                          <td
-                            key={cell.id}
-                            style={{
-                              padding: '12px 16px',
-                              borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-                              fontSize: '0.875rem',
-                              color: '#ffffff',
-                              transition: 'background-color 0.2s ease',
-                            }}
-                            onMouseEnter={e => {
-                              e.currentTarget.style.backgroundColor = 'rgba(0, 188, 212, 0.15)';
-                            }}
-                            onMouseLeave={e => {
-                              e.currentTarget.style.backgroundColor = 'transparent';
-                            }}
-                          >
-                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                          </td>
-                        ))}
-                      </tr>
-                    );
-                  })}
+                  {table.getRowModel().rows.map(row => (
+                    <tr key={row.id}>
+                      {row.getVisibleCells().map((cell, index) => (
+                        <td
+                          key={cell.id}
+                          style={{
+                            padding: '12px 16px',
+                            borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+                            fontSize: '0.875rem',
+                            color: '#ffffff',
+                            transition: 'background-color 0.2s ease',
+                            textAlign: index === 1 ? 'right' : 'left',
+                          }}
+                          onMouseEnter={e => {
+                            e.currentTarget.style.backgroundColor = 'rgba(0, 188, 212, 0.15)';
+                          }}
+                          onMouseLeave={e => {
+                            e.currentTarget.style.backgroundColor = 'transparent';
+                          }}
+                        >
+                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </Box>

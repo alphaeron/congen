@@ -16,6 +16,7 @@ import { FormDialog } from './FormDialog';
 import { FormField } from './FormField';
 import { GameCard, GameText, GameTextField, GAME_CLASSES } from './GameTheme';
 import { LoadingSpinner } from './LoadingSpinner';
+import { NumericStepInput } from './NumericStepInput';
 import type { UserOneRepMax } from '../api/types';
 import { formatWeightWithUnit, KG_TO_LBS } from '../common/utils';
 import { useData } from '../contexts/DataContext';
@@ -469,13 +470,24 @@ export const OneRepMaxRecords: React.FC<OneRepMaxRecordsProps> = () => {
                 options={availableExercises}
                 required
               />
-              <FormField
-                type="number"
-                label={`1RM Weight (${selectedExercise ? getDefaultWeightUnit(selectedExercise) : 'KG'})`}
-                name="one_rep_max"
-                form={form}
-                required
-              />
+              <form.Field name="one_rep_max">
+                {field => {
+                  const unitLabel = (
+                    selectedExercise ? getDefaultWeightUnit(selectedExercise) : 'KG'
+                  ).toLowerCase();
+                  return (
+                    <NumericStepInput
+                      label="1RM Weight"
+                      suffix={unitLabel}
+                      value={field.state.value as number}
+                      onChange={value => field.handleChange(value ?? 0)}
+                      min={0}
+                      step={0.5}
+                      disabled={isSaving}
+                    />
+                  );
+                }}
+              </form.Field>
             </Box>
           );
         }}
