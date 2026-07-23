@@ -131,6 +131,17 @@ describe('ProgramManagement', () => {
     is_active: true,
   };
 
+  const mockProgramWithPreferences = {
+    program: mockProgram,
+    program_preferences: {
+      program_id: 1,
+      program_days_per_week: 4,
+      session_time_length_in_minutes: 60,
+      created_at: new Date('2024-01-01T00:00:00.000Z'),
+      updated_at: new Date('2024-01-01T00:00:00.000Z'),
+    },
+  };
+
   const mockWorkout: ProgrammedWorkout = {
     id: 1,
     program_id: 1,
@@ -161,18 +172,14 @@ describe('ProgramManagement', () => {
       userData: mockUserData,
       exerciseMuscleData: new Map(),
       weightUnitPreferences: [],
+      programPreferences: [mockProgramWithPreferences],
       isLoading: false,
       isReady: true,
       error: null,
       refreshData: jest.fn(),
+      refreshSpecificData: jest.fn(),
       isDataStale: false,
-      getProgramPreferencesById: jest.fn().mockResolvedValue({
-        program_id: 1,
-        program_days_per_week: 4,
-        session_time_length_in_minutes: 60,
-        created_at: new Date('2024-01-01T00:00:00.000Z'),
-        updated_at: new Date('2024-01-01T00:00:00.000Z'),
-      }),
+      loadProgramPreferences: jest.fn().mockResolvedValue([mockProgramWithPreferences]),
     };
 
     mockUseData.mockReturnValue(mockDataContext);
@@ -195,8 +202,10 @@ describe('ProgramManagement', () => {
       isReady: false,
       error: null,
       refreshData: jest.fn(),
+      refreshSpecificData: jest.fn(),
       isDataStale: false,
-      getProgramPreferencesById: jest.fn(),
+      programPreferences: [],
+      loadProgramPreferences: jest.fn(),
     };
 
     mockUseData.mockReturnValue(loadingMockDataContext);
@@ -218,14 +227,10 @@ describe('ProgramManagement', () => {
       isReady: true,
       error: null,
       refreshData: jest.fn(),
+      refreshSpecificData: jest.fn(),
       isDataStale: false,
-      getProgramPreferencesById: jest.fn().mockResolvedValue({
-        program_id: 1,
-        program_days_per_week: 4,
-        session_time_length_in_minutes: 60,
-        created_at: new Date('2024-01-01T00:00:00.000Z'),
-        updated_at: new Date('2024-01-01T00:00:00.000Z'),
-      }),
+      programPreferences: [],
+      loadProgramPreferences: jest.fn().mockResolvedValue([]),
     };
 
     mockUseData.mockReturnValue(emptyMockDataContext);
@@ -312,14 +317,10 @@ describe('ProgramManagement', () => {
       isReady: true,
       error: null,
       refreshData: jest.fn(),
+      refreshSpecificData: jest.fn(),
       isDataStale: false,
-      getProgramPreferencesById: jest.fn().mockResolvedValue({
-        program_id: 1,
-        program_days_per_week: 4,
-        session_time_length_in_minutes: 60,
-        created_at: new Date('2024-01-01T00:00:00.000Z'),
-        updated_at: new Date('2024-01-01T00:00:00.000Z'),
-      }),
+      programPreferences: [],
+      loadProgramPreferences: jest.fn().mockResolvedValue([]),
     };
 
     mockUseData.mockReturnValue(emptyMockDataContext);
@@ -342,14 +343,10 @@ describe('ProgramManagement', () => {
       isReady: true,
       error: 'Failed to load data',
       refreshData: jest.fn(),
+      refreshSpecificData: jest.fn(),
       isDataStale: false,
-      getProgramPreferencesById: jest.fn().mockResolvedValue({
-        program_id: 1,
-        program_days_per_week: 4,
-        session_time_length_in_minutes: 60,
-        created_at: new Date('2024-01-01T00:00:00.000Z'),
-        updated_at: new Date('2024-01-01T00:00:00.000Z'),
-      }),
+      programPreferences: [],
+      loadProgramPreferences: jest.fn(),
     };
 
     mockUseData.mockReturnValue(errorMockDataContext);

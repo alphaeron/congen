@@ -1288,6 +1288,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
       setProgramPreferences([]);
       setProgrammedWorkouts([]);
       setUserOneRepMaxes([]);
+      setUserExercisePool(null);
       setAllExercisesMap(new Map());
     } else {
       // Clear specific cache type
@@ -1315,6 +1316,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
           setUserWeakMuscles([]);
           setUserExercisePreferences([]);
           setUserOneRepMaxes([]);
+          setUserExercisePool(null);
           break;
       }
     }
@@ -1348,10 +1350,12 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
             setUserWeakMuscles([]);
             setUserExercisePreferences([]);
             setUserOneRepMaxes([]);
+            setUserExercisePool(null);
             await loadUserEquipment();
             await loadUserWeakMuscles();
             await loadUserExercisePreferences();
             await loadUserOneRepMaxes();
+            await loadUserExercisePool();
             break;
           case 'all':
             await refreshData();
@@ -1375,6 +1379,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
       loadUserWeakMuscles,
       loadUserExercisePreferences,
       loadUserOneRepMaxes,
+      loadUserExercisePool,
       refreshData,
     ]
   );

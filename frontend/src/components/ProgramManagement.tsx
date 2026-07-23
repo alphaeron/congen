@@ -19,7 +19,7 @@ import { LoadingSpinner } from './LoadingSpinner';
 import { StatusChip } from './StatusChip';
 import { createProgram, updateProgram, deleteProgram } from '../api/program';
 import { updateProgramPreferences } from '../api/programPreferences';
-import type { User, Program, ProgramPreferences } from '../api/types';
+import type { User, Program } from '../api/types';
 import { formatDate } from '../common/utils';
 import { useData } from '../contexts/DataContext';
 
@@ -38,11 +38,16 @@ interface ProgramManagementProps {
  */
 export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) => {
   const { enqueueSnackbar } = useSnackbar();
-  const { userData, refreshData, isLoading, getProgramPreferencesById, isReady } = useData();
-  const [programPreferences, setProgramPreferences] = useState<Map<number, ProgramPreferences>>(
-    new Map()
-  );
-  const [isLoadingPreferences, setIsLoadingPreferences] = useState(true);
+  const {
+    userData,
+    refreshData,
+    refreshSpecificData,
+    isLoading,
+    isReady,
+    programPreferences = [],
+    loadProgramPreferences,
+  } = useData();
+  const [isLoadingPrograms, setIsLoadingPrograms] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -61,46 +66,25 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
   }
 
   useEffect(() => {
-    loadProgramPreferences();
-  }, [userData]);
-
-  const loadProgramPreferences = async () => {
-    if (!userData?.training_programs?.length) {
-      setIsLoadingPreferences(false);
-      return;
-    }
-
-    try {
-      setIsLoadingPreferences(true);
-
-      // Load program preferences for each program
-      const preferencesMap = new Map<number, ProgramPreferences>();
-      for (const programData of userData.training_programs) {
-        try {
-          const preferences = await getProgramPreferencesById(programData.program.id);
-          if (preferences) {
-            preferencesMap.set(programData.program.id, preferences);
-          }
-        } catch {
-          // Use default preferences if loading fails
-          preferencesMap.set(programData.program.id, {
-            program_id: programData.program.id,
-            program_days_per_week: 4,
-            session_time_length_in_minutes: 60,
-            created_at: programData.program.created_at,
-            updated_at: programData.program.updated_at,
-          });
-        }
+    const loadPrograms = async () => {
+      if (!userData?.training_programs?.length || programPreferences.length > 0) {
+        return;
       }
-      setProgramPreferences(preferencesMap);
-    } catch {
-      enqueueSnackbar('Failed to load program preferences. Please try again.', {
-        variant: 'error',
-      });
-    } finally {
-      setIsLoadingPreferences(false);
-    }
-  };
+
+      try {
+        setIsLoadingPrograms(true);
+        await loadProgramPreferences();
+      } catch {
+        enqueueSnackbar('Failed to load program preferences. Please try again.', {
+          variant: 'error',
+        });
+      } finally {
+        setIsLoadingPrograms(false);
+      }
+    };
+
+    loadPrograms();
+  }, [userData, programPreferences.length, loadProgramPreferences, enqueueSnackbar]);
 
   const handleCreateProgram = async (data: CreateProgramFormData) => {
     // Close dialog immediately and show loading state
@@ -109,8 +93,8 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
 
     try {
       await createProgram(data.name, data.numDaysPerWeek, user.keycloak_id);
-      // Refresh all data from server to get the updated programs
       await refreshData();
+      await refreshSpecificData('programs');
       enqueueSnackbar('Program created successfully!', { variant: 'success' });
     } catch {
       enqueueSnackbar('Failed to create program. Please try again.', { variant: 'error' });
@@ -125,20 +109,7 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
     try {
       await updateProgramPreferences(selectedProgram.id, data.sessionTimeLengthInMinutes);
 
-      // Update the local program preferences state
-      setProgramPreferences(prev => {
-        const newMap = new Map(prev);
-        const existingPreferences = prev.get(selectedProgram.id);
-        if (existingPreferences) {
-          const updatedPreferences = {
-            ...existingPreferences,
-            session_time_length_in_minutes: data.sessionTimeLengthInMinutes,
-            updated_at: new Date(),
-          };
-          newMap.set(selectedProgram.id, updatedPreferences);
-        }
-        return newMap;
-      });
+      await refreshSpecificData('programs');
 
       setEditDialogOpen(false);
       setSelectedProgram(null);
@@ -158,8 +129,8 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
         selectedProgram.current_week_number,
         false // Set to inactive
       );
-      // Refresh all data from server to get the updated programs
       await refreshData();
+      await refreshSpecificData('programs');
       setStopDialogOpen(false);
       setSelectedProgram(null);
       enqueueSnackbar('Program stopped successfully.', { variant: 'success' });
@@ -179,8 +150,8 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
         true // Set to active
       );
 
-      // Refresh all data from server to get the updated programs
       await refreshData();
+      await refreshSpecificData('programs');
 
       setResumeDialogOpen(false);
       setSelectedProgram(null);
@@ -195,13 +166,8 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
 
     try {
       await deleteProgram(selectedProgram.id);
-      // Refresh all data from server to get the updated programs
       await refreshData();
-      setProgramPreferences(prev => {
-        const newMap = new Map(prev);
-        newMap.delete(selectedProgram.id);
-        return newMap;
-      });
+      await refreshSpecificData('programs');
       setDeleteDialogOpen(false);
       setSelectedProgram(null);
     } catch {
@@ -213,23 +179,14 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
     sessionTimeLengthInMinutes: 60,
   });
 
-  const openEditDialog = async (program: Program) => {
+  const openEditDialog = (program: Program) => {
     setSelectedProgram(program);
 
-    try {
-      // Load program preferences to get session time
-      const preferences = await getProgramPreferencesById(program.id);
-      if (preferences) {
-        setEditFormData({
-          sessionTimeLengthInMinutes: preferences.session_time_length_in_minutes,
-        });
-      }
-    } catch {
-      // Fallback to default values if preferences can't be loaded
-      setEditFormData({
-        sessionTimeLengthInMinutes: 60,
-      });
-    }
+    const preferences = programPreferences.find(item => item.program.id === program.id);
+    setEditFormData({
+      sessionTimeLengthInMinutes:
+        preferences?.program_preferences.session_time_length_in_minutes ?? 60,
+    });
 
     setEditDialogOpen(true);
   };
@@ -255,7 +212,7 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
     return programData?.workouts || [];
   };
 
-  if (!isReady || isLoading || isLoadingPreferences) {
+  if (!isReady || isLoading || isLoadingPrograms) {
     return <LoadingSpinner message="Loading programs..." fullHeight={false} />;
   }
 
@@ -314,8 +271,11 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
           ?.map((programData, index) => {
             const program = programData.program;
             const programWorkouts = getWorkoutsForProgram(program.id);
-            const preferences = programPreferences.get(program.id);
-            const sessionDuration = preferences?.session_time_length_in_minutes || 60;
+            const programWithPreferences = programPreferences.find(
+              item => item.program.id === program.id
+            );
+            const sessionDuration =
+              programWithPreferences?.program_preferences.session_time_length_in_minutes || 60;
 
             return (
               <HoverCard

@@ -50,19 +50,35 @@ export const OneRepMaxRecords: React.FC<OneRepMaxRecordsProps> = () => {
   } = useData();
   const { enqueueSnackbar } = useSnackbar();
 
-  // State for loaded data
-  const [oneRepMaxes, setOneRepMaxes] = useState<UserOneRepMax[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [globalFilter, setGlobalFilter] = useState('');
 
-  // State for recording dialog
   const [recordDialogOpen, setRecordDialogOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [selectedExercise, setSelectedExercise] = useState<string>('');
 
-  // Virtualization setup
   const tableParentRef = useRef<HTMLDivElement>(null);
+
+  const oneRepMaxes = useMemo(() => {
+    if (userOneRepMaxes.length > 0) {
+      return userOneRepMaxes;
+    }
+
+    if (!userData?.user_one_rep_max) {
+      return [];
+    }
+
+    if (Array.isArray(userData.user_one_rep_max)) {
+      return userData.user_one_rep_max as unknown as UserOneRepMax[];
+    }
+
+    if (typeof userData.user_one_rep_max === 'object' && userData.user_one_rep_max !== null) {
+      return Object.values(userData.user_one_rep_max) as unknown as UserOneRepMax[];
+    }
+
+    return [];
+  }, [userOneRepMaxes, userData]);
 
   // Get available exercises for the form
   const availableExercises = useMemo(() => {
@@ -77,16 +93,7 @@ export const OneRepMaxRecords: React.FC<OneRepMaxRecordsProps> = () => {
 
   // Get existing 1RM value for an exercise
   const getExistingOneRepMax = (exerciseName: string): number | null => {
-    // Handle both array and object formats
-    let records: UserOneRepMax[] = [];
-    if (Array.isArray(userOneRepMaxes)) {
-      records = userOneRepMaxes;
-    } else if (typeof userOneRepMaxes === 'object' && userOneRepMaxes !== null) {
-      // Convert object to array
-      records = Object.values(userOneRepMaxes);
-    }
-
-    const existingRecord = records.find(record => record.exercise_name === exerciseName);
+    const existingRecord = oneRepMaxes.find(record => record.exercise_name === exerciseName);
     return existingRecord ? existingRecord.one_rep_max : null;
   };
 
@@ -108,7 +115,6 @@ export const OneRepMaxRecords: React.FC<OneRepMaxRecordsProps> = () => {
     }
   };
 
-  // Load exercises and 1RM data
   useEffect(() => {
     const loadData = async () => {
       if (!userData) return;
@@ -116,29 +122,13 @@ export const OneRepMaxRecords: React.FC<OneRepMaxRecordsProps> = () => {
       setIsLoading(true);
       setError(null);
       try {
-        // Load exercises if not already loaded
         if (allExercises.length === 0) {
           await loadAllExercises();
         }
 
-        let fallbackData: UserOneRepMax[] = [];
-        if (Array.isArray(userData.user_one_rep_max)) {
-          fallbackData = userData.user_one_rep_max as unknown as UserOneRepMax[];
-        } else if (
-          typeof userData.user_one_rep_max === 'object' &&
-          userData.user_one_rep_max !== null
-        ) {
-          fallbackData = Object.values(userData.user_one_rep_max) as unknown as UserOneRepMax[];
+        if (userOneRepMaxes.length === 0) {
+          await loadUserOneRepMaxes();
         }
-
-        let dataToShow: UserOneRepMax[];
-        if (userOneRepMaxes.length > 0) {
-          dataToShow = userOneRepMaxes;
-        } else {
-          const loaded = await loadUserOneRepMaxes();
-          dataToShow = loaded.length > 0 ? loaded : fallbackData;
-        }
-        setOneRepMaxes(dataToShow);
       } catch {
         setError('Failed to load 1RM records data');
       } finally {

@@ -71,6 +71,7 @@ const mockUser: User = {
 jest.mock('../contexts/AuthContext', () => ({
   useAuth: () => ({
     user: mockUser,
+    refreshUser: jest.fn(),
   }),
 }));
 

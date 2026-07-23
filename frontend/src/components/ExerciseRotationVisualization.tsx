@@ -13,7 +13,6 @@ import { ExercisePoolSunburstChart } from './ExercisePoolSunburstChart';
 import { GameText, GameCard, GameSubCard } from './GameTheme';
 import { LoadingSpinner } from './LoadingSpinner';
 import { RadialBarChart } from './RadialBarChart';
-import type { UserExercisePoolResponse } from '../api/types';
 import { useAuth } from '../contexts/AuthContext';
 import { useData } from '../contexts/DataContext';
 
@@ -34,38 +33,38 @@ export const ExerciseRotationVisualization: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [isLoading, setIsLoading] = useState(true);
-  const [exercisePoolData, setExercisePoolData] = useState<UserExercisePoolResponse | null>(null);
   const [showCategoryDetails, setShowCategoryDetails] = useState(false);
 
-  // Check if we're viewing a specific category
   const selectedCategory = searchParams.get('category');
 
   useEffect(() => {
-    if (user?.keycloak_id) {
-      loadData();
-    }
-  }, [user?.keycloak_id]);
+    const loadPool = async () => {
+      if (!user?.keycloak_id) {
+        setIsLoading(false);
+        return;
+      }
 
-  // Update showCategoryDetails when selectedCategory changes
+      if (userExercisePool) {
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        setIsLoading(true);
+        await loadUserExercisePool();
+      } catch {
+        enqueueSnackbar('Failed to load exercise pool data. Please try again.', { variant: 'error' });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadPool();
+  }, [user?.keycloak_id, userExercisePool, loadUserExercisePool, enqueueSnackbar]);
+
   useEffect(() => {
     setShowCategoryDetails(!!selectedCategory);
   }, [selectedCategory]);
-
-  const loadData = async () => {
-    try {
-      setIsLoading(true);
-
-      // Load user exercise pool if not already loaded
-      if (!userExercisePool) {
-        await loadUserExercisePool();
-      }
-      setExercisePoolData(userExercisePool);
-    } catch {
-      enqueueSnackbar('Failed to load exercise pool data. Please try again.', { variant: 'error' });
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const handleCategoryClick = (category: string) => {
     const newSearchParams = new URLSearchParams();
@@ -127,20 +126,20 @@ export const ExerciseRotationVisualization: React.FC = () => {
 
   // Exercise pool analysis
   const exercisePoolAnalysis = useMemo(() => {
-    if (!exercisePoolData) return null;
+    if (!userExercisePool) return null;
 
     return {
-      totalExercises: exercisePoolData.total_exercises,
-      availableExercises: exercisePoolData.available_exercises,
+      totalExercises: userExercisePool.total_exercises,
+      availableExercises: userExercisePool.available_exercises,
       categorizedExercises: {
-        primary: exercisePoolData.primary_exercises,
-        accessory: exercisePoolData.accessory_exercises,
+        primary: userExercisePool.primary_exercises,
+        accessory: userExercisePool.accessory_exercises,
       },
-      userEquipment: exercisePoolData.user_equipment,
-      userPreferences: exercisePoolData.user_preferences,
-      previouslyUsedExercises: exercisePoolData.previously_used_exercises,
+      userEquipment: userExercisePool.user_equipment,
+      userPreferences: userExercisePool.user_preferences,
+      previouslyUsedExercises: userExercisePool.previously_used_exercises,
     };
-  }, [exercisePoolData]);
+  }, [userExercisePool]);
 
   if (isLoading) {
     return <LoadingSpinner message="Loading exercise pool data..." />;
@@ -179,7 +178,7 @@ export const ExerciseRotationVisualization: React.FC = () => {
                       {/* Pool Availability - Pie Chart */}
                       <Grid size={{ xs: 12, md: 4 }}>
                         <ExercisePoolPieChart
-                          exercisePoolData={exercisePoolData}
+                          exercisePoolData={userExercisePool}
                           title="Exercise Availability"
                           description={`${exercisePoolAnalysis.availableExercises} of ${exercisePoolAnalysis.totalExercises} exercises available`}
                           height={250}
@@ -189,7 +188,7 @@ export const ExerciseRotationVisualization: React.FC = () => {
                       {/* Exercise Variety - Radial Bar Chart */}
                       <Grid size={{ xs: 12, md: 4 }}>
                         <RadialBarChart
-                          exercisePoolData={exercisePoolData}
+                          exercisePoolData={userExercisePool}
                           title="Exercise Variety"
                           description="Primary vs accessory distribution"
                           height={250}
@@ -199,7 +198,7 @@ export const ExerciseRotationVisualization: React.FC = () => {
                       {/* Exercise Selection - Sunburst Chart */}
                       <Grid size={{ xs: 12, md: 4 }}>
                         <ExercisePoolSunburstChart
-                          exercisePoolData={exercisePoolData}
+                          exercisePoolData={userExercisePool}
                           title="Exercise Selection"
                           description="Hierarchical pool structure"
                           height={250}

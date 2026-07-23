@@ -186,9 +186,11 @@ describe('Workouts', () => {
       userData: defaultMockUserData,
       exerciseMuscleData: new Map(),
       weightUnitPreferences: [],
+      programPreferences: [mockProgramWithPreferences],
       isLoading: false,
       error: null,
       refreshData: jest.fn(),
+      refreshSpecificData: jest.fn(),
       isDataStale: false,
       loadProgramPreferences: jest.fn().mockResolvedValue([mockProgramWithPreferences]),
       getExercise: jest.fn().mockResolvedValue({
@@ -219,10 +221,14 @@ describe('Workouts', () => {
       userData: { training_programs: [] },
       exerciseMuscleData: new Map(),
       weightUnitPreferences: [],
+      programPreferences: [],
       isLoading: false,
       error: null,
       refreshData: jest.fn(),
+      refreshSpecificData: jest.fn(),
       isDataStale: false,
+      loadProgramPreferences: jest.fn().mockResolvedValue([]),
+      getExercise: jest.fn().mockResolvedValue(null),
     };
 
     mockUseData.mockReturnValue(emptyMockDataContext);
@@ -257,10 +263,14 @@ describe('Workouts', () => {
       },
       exerciseMuscleData: new Map(),
       weightUnitPreferences: [],
+      programPreferences: [{ ...mockProgramWithPreferences, program: { ...mockProgramWithPreferences.program, is_active: false } }],
       isLoading: false,
       error: null,
       refreshData: jest.fn(),
+      refreshSpecificData: jest.fn(),
       isDataStale: false,
+      loadProgramPreferences: jest.fn().mockResolvedValue([]),
+      getExercise: jest.fn().mockResolvedValue(null),
     };
 
     mockUseData.mockReturnValue(noActiveProgramMockDataContext);
@@ -444,9 +454,11 @@ describe('Workouts', () => {
       },
       exerciseMuscleData: new Map(),
       weightUnitPreferences: [],
+      programPreferences: [mockProgramWithPreferences],
       isLoading: false,
       error: null,
       refreshData: jest.fn(),
+      refreshSpecificData: jest.fn(),
       isDataStale: false,
       loadProgramPreferences: jest.fn().mockResolvedValue([mockProgramWithPreferences]),
       getExercise: jest.fn().mockResolvedValue({
@@ -481,9 +493,11 @@ describe('Workouts', () => {
       userData: { training_programs: [] },
       exerciseMuscleData: new Map(),
       weightUnitPreferences: [],
+      programPreferences: [],
       isLoading: false,
       error: null,
       refreshData: jest.fn(),
+      refreshSpecificData: jest.fn(),
       isDataStale: false,
       loadProgramPreferences: jest.fn().mockResolvedValue([]),
       getExercise: jest.fn().mockResolvedValue(null),

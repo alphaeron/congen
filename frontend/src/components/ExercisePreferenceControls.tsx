@@ -5,7 +5,7 @@ import {
 } from '@mui/icons-material';
 import { Chip, IconButton, Tooltip, ToggleButton, ToggleButtonGroup } from '@mui/material';
 import { useSnackbar } from 'notistack';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 
 import { GameText } from './GameTheme';
 import { LoadingSpinner } from './LoadingSpinner';
@@ -44,44 +44,40 @@ export function ExercisePreferenceControls(
   const { exerciseName, variant = 'segmented', size = 'small', onPreferenceChange } = props;
   const { user } = useAuth();
   const { enqueueSnackbar } = useSnackbar();
-  const { userExercisePreferences, loadUserExercisePreferences, refreshData } = useData();
+  const { userExercisePreferences, loadUserExercisePreferences, refreshSpecificData } = useData();
 
-  const [preference, setPreference] = useState<UserExercisePreference | null>(null);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  // Load current preference from DataContext
+  // Ensure the shared preference list is loaded once for this user.
   useEffect(() => {
-    const loadPreference = async () => {
-      if (!user?.keycloak_id) return;
+    const ensurePreferencesLoaded = async () => {
+      if (!user?.keycloak_id || userExercisePreferences.length > 0) return;
 
       setLoading(true);
       try {
-        // Load user exercise preferences if not already loaded
-        if (userExercisePreferences.length === 0) {
-          await loadUserExercisePreferences();
-        }
-
-        // Find current preference from DataContext data
-        const currentPreference = userExercisePreferences.find(
-          p => p.exercise_name === exerciseName
-        );
-        setPreference(currentPreference || null);
+        await loadUserExercisePreferences();
       } catch {
-        enqueueSnackbar('Failed to load exercise preference:', { variant: 'error' });
+        enqueueSnackbar('Failed to load exercise preference', { variant: 'error' });
       } finally {
         setLoading(false);
       }
     };
 
-    loadPreference();
+    ensurePreferencesLoaded();
   }, [
     user?.keycloak_id,
-    exerciseName,
-    userExercisePreferences,
+    userExercisePreferences.length,
     loadUserExercisePreferences,
     enqueueSnackbar,
   ]);
+
+  // Derive the current preference directly from DataContext so the control
+  // always reflects the latest shared state without mirroring it locally.
+  const preference = useMemo<UserExercisePreference | null>(
+    () => userExercisePreferences.find(p => p.exercise_name === exerciseName) ?? null,
+    [userExercisePreferences, exerciseName]
+  );
 
   const getCurrentPreferenceState = (): ExercisePreferenceState => {
     if (!preference) return 'neutral';
@@ -97,7 +93,6 @@ export function ExercisePreferenceControls(
         // Remove preference
         if (preference) {
           await removeUserExercisePreference(user.keycloak_id, exerciseName);
-          setPreference(null);
           onPreferenceChange?.(null);
           enqueueSnackbar('Exercise preference removed', { variant: 'success' });
         }
@@ -109,7 +104,6 @@ export function ExercisePreferenceControls(
           exerciseName,
           shouldAvoid
         );
-        setPreference(newPreference);
         onPreferenceChange?.(newPreference);
 
         enqueueSnackbar(`Exercise ${shouldAvoid ? 'ignored' : 'preferred'} successfully`, {
@@ -118,7 +112,7 @@ export function ExercisePreferenceControls(
       }
 
       // Refresh DataContext to ensure all components have the latest data
-      await refreshData();
+      await refreshSpecificData('userData');
     } catch {
       enqueueSnackbar('Failed to update exercise preference', { variant: 'error' });
     } finally {

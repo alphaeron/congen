@@ -385,6 +385,7 @@ describe('WorkoutWeekDetails', () => {
         audit_logs: [],
         data_retention_policies: [],
       },
+      programPreferences: [mockProgramWithPreferences],
       loadProgramPreferences: jest.fn().mockResolvedValue([mockProgramWithPreferences]),
     };
     mockUseData.mockReturnValue(workoutDataContext);
@@ -432,6 +433,7 @@ describe('WorkoutWeekDetails', () => {
         audit_logs: [],
         data_retention_policies: [],
       },
+      programPreferences: [mockProgramWithPreferences],
       loadProgramPreferences: jest.fn().mockResolvedValue([mockProgramWithPreferences]),
     };
 
@@ -554,6 +556,7 @@ describe('WorkoutWeekDetails', () => {
         audit_logs: [],
         data_retention_policies: [],
       },
+      programPreferences: [mockProgramWithPreferences],
       loadProgramPreferences: jest.fn().mockResolvedValue([mockProgramWithPreferences]),
     };
     mockUseData.mockReturnValue(multipleWorkoutsDataContext);

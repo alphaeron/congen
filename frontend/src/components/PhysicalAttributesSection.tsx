@@ -2,13 +2,13 @@ import { Button, CardContent, CircularProgress, Grid } from '@mui/material';
 import { useForm } from '@tanstack/react-form';
 import { motion } from 'framer-motion';
 import { useSnackbar } from 'notistack';
-import React from 'react';
+import React, { useEffect } from 'react';
 
 import { FormField } from './FormField';
 import { GameText, GameCard, GAME_CLASSES } from './GameTheme';
 import { LoadingSpinner } from './LoadingSpinner';
 import { NumericStepInput } from './NumericStepInput';
-import { updateUserProfile, getCurrentUser } from '../api/user';
+import { updateUserProfile } from '../api/user';
 import { useAuth } from '../contexts/AuthContext';
 import { useData } from '../contexts/DataContext';
 
@@ -28,7 +28,7 @@ interface PhysicalAttributesFormData {
 }
 
 export function PhysicalAttributesSection(): React.ReactElement {
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
   const { refreshData, isReady } = useData();
   const { enqueueSnackbar } = useSnackbar();
 
@@ -59,36 +59,54 @@ export function PhysicalAttributesSection(): React.ReactElement {
       },
     },
     onSubmit: async ({ value }: { value: PhysicalAttributesFormData }) => {
-      if (!user) {
-        enqueueSnackbar('User not found', { variant: 'error' });
-        return;
-      }
-
-      try {
-        const updateData = {
-          name: user.name, // Keep the current name unchanged
-          age: value.age ? Number(value.age) : undefined,
-          weight: value.weight ? Number(value.weight) : undefined,
-          height: value.height ? Number(value.height) : undefined,
-          gender: value.gender || undefined,
-        };
-
-        await updateUserProfile(updateData);
-
-        // Refresh user data to get the updated information
-        const updatedUser = await getCurrentUser();
-
-        // Update the form data with the fresh user data
-        form.setFieldValue('age', updatedUser.age || '');
-        form.setFieldValue('weight', updatedUser.weight || '');
-        form.setFieldValue('height', updatedUser.height || '');
-        form.setFieldValue('gender', updatedUser.gender || '');
-        enqueueSnackbar('Profile updated successfully', { variant: 'success' });
-      } catch {
-        enqueueSnackbar('Failed to update profile', { variant: 'error' });
-      }
+      await savePhysicalAttributes(value);
     },
   });
+
+  const syncFormWithUser = (profile: {
+    age?: number;
+    weight?: number;
+    height?: number;
+    gender?: string;
+  }) => {
+    form.setFieldValue('age', profile.age ?? '');
+    form.setFieldValue('weight', profile.weight ?? '');
+    form.setFieldValue('height', profile.height ?? '');
+    form.setFieldValue('gender', profile.gender ?? '');
+  };
+
+  useEffect(() => {
+    if (!user) {
+      return;
+    }
+
+    syncFormWithUser(user);
+  }, [user?.age, user?.weight, user?.height, user?.gender, user?.keycloak_id]);
+
+  const savePhysicalAttributes = async (value: PhysicalAttributesFormData) => {
+    if (!user) {
+      enqueueSnackbar('User not found', { variant: 'error' });
+      return;
+    }
+
+    try {
+      const updateData = {
+        name: user.name,
+        age: value.age ? Number(value.age) : undefined,
+        weight: value.weight ? Number(value.weight) : undefined,
+        height: value.height ? Number(value.height) : undefined,
+        gender: value.gender || undefined,
+      };
+
+      await updateUserProfile(updateData);
+      await refreshUser();
+      await refreshData();
+
+      enqueueSnackbar('Profile updated successfully', { variant: 'success' });
+    } catch {
+      enqueueSnackbar('Failed to update profile', { variant: 'error' });
+    }
+  };
 
   if (!isReady) {
     return <LoadingSpinner message="Loading profile..." fullHeight={false} />;
@@ -241,7 +259,7 @@ export function PhysicalAttributesSection(): React.ReactElement {
                   style={{ transition: 'box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1)' }}
                 >
                   <Button
-                    type="button"
+                    type="submit"
                     variant="contained"
                     disabled={form.state.isSubmitting}
                     startIcon={form.state.isSubmitting ? <CircularProgress size={20} /> : null}
@@ -250,34 +268,6 @@ export function PhysicalAttributesSection(): React.ReactElement {
                       '&:hover:not(:disabled)': {
                         boxShadow: '0 8px 25px rgba(0, 188, 212, 0.4)',
                       },
-                    }}
-                    onClick={async () => {
-                      // Call the onSubmit function directly
-                      const formData = form.state.values as PhysicalAttributesFormData;
-
-                      if (!user) {
-                        enqueueSnackbar('User not found', { variant: 'error' });
-                        return;
-                      }
-
-                      try {
-                        const updateData = {
-                          name: user.name,
-                          age: formData.age ? Number(formData.age) : undefined,
-                          weight: formData.weight ? Number(formData.weight) : undefined,
-                          height: formData.height ? Number(formData.height) : undefined,
-                          gender: formData.gender || undefined,
-                        };
-
-                        await updateUserProfile(updateData);
-
-                        // Refresh all data in DataContext (including Wilks score)
-                        await refreshData();
-
-                        enqueueSnackbar('Profile updated successfully', { variant: 'success' });
-                      } catch {
-                        enqueueSnackbar('Failed to update profile', { variant: 'error' });
-                      }
                     }}
                   >
                     {form.state.isSubmitting ? 'Saving...' : 'Save Changes'}

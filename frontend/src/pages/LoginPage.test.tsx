@@ -25,6 +25,8 @@ describe('LoginPage', () => {
       isLoading: false,
       login: mockLogin,
       logout: jest.fn(),
+      clearAuthState: jest.fn(),
+      refreshUser: jest.fn(),
       user: null,
       isAuthenticated: false,
     });
@@ -47,6 +49,8 @@ describe('LoginPage', () => {
       isLoading: true,
       login: mockLogin,
       logout: jest.fn(),
+      clearAuthState: jest.fn(),
+      refreshUser: jest.fn(),
       user: null,
       isAuthenticated: false,
     });

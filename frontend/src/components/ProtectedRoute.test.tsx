@@ -35,6 +35,8 @@ describe('ProtectedRoute', () => {
       user: mockUser,
       login: jest.fn(),
       logout: jest.fn(),
+      clearAuthState: jest.fn(),
+      refreshUser: jest.fn(),
     });
 
     const { getByText } = render(
@@ -55,6 +57,8 @@ describe('ProtectedRoute', () => {
       user: null,
       login: jest.fn(),
       logout: jest.fn(),
+      clearAuthState: jest.fn(),
+      refreshUser: jest.fn(),
     });
 
     const { queryByText } = render(
@@ -75,6 +79,8 @@ describe('ProtectedRoute', () => {
       user: null,
       login: jest.fn(),
       logout: jest.fn(),
+      clearAuthState: jest.fn(),
+      refreshUser: jest.fn(),
     });
 
     const { getByText } = render(
@@ -103,6 +109,8 @@ describe('ProtectedRoute', () => {
       user: mockUser,
       login: jest.fn(),
       logout: jest.fn(),
+      clearAuthState: jest.fn(),
+      refreshUser: jest.fn(),
     });
 
     const { queryByText } = render(
@@ -123,6 +131,8 @@ describe('ProtectedRoute', () => {
       user: null,
       login: jest.fn(),
       logout: jest.fn(),
+      clearAuthState: jest.fn(),
+      refreshUser: jest.fn(),
     });
 
     const { getByTestId } = render(
@@ -143,6 +153,8 @@ describe('ProtectedRoute', () => {
       user: null,
       login: jest.fn(),
       logout: jest.fn(),
+      clearAuthState: jest.fn(),
+      refreshUser: jest.fn(),
     });
 
     const { queryByText } = render(

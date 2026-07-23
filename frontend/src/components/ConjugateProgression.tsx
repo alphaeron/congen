@@ -34,14 +34,26 @@ interface ConjugateProgressionProps {}
  * @return Enhanced conjugate progression component
  */
 export const ConjugateProgression: React.FC<ConjugateProgressionProps> = () => {
-  const { userData, weightUnitPreferences, isLoading: isDataLoading, getExercise } = useData();
+  const {
+    userData,
+    weightUnitPreferences,
+    userOneRepMaxes,
+    isLoading: isDataLoading,
+    getExercise,
+  } = useData();
 
   // State for loaded data
   const [exerciseData, setExerciseData] = useState<Map<string, Exercise>>(new Map());
-  const [oneRepMaxes, setOneRepMaxes] = useState<UserOneRepMax[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [globalFilter, setGlobalFilter] = useState('');
+
+  const oneRepMaxes = useMemo(() => {
+    if (userOneRepMaxes.length > 0) {
+      return userOneRepMaxes;
+    }
+    return (userData?.user_one_rep_max as unknown as UserOneRepMax[]) ?? [];
+  }, [userOneRepMaxes, userData]);
 
   // Load additional data that's not in DataContext
   useEffect(() => {
@@ -51,9 +63,6 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = () => {
       setIsLoading(true);
       setError(null);
       try {
-        // Extract one rep maxes from userData
-        setOneRepMaxes((userData.user_one_rep_max as unknown as UserOneRepMax[]) || []);
-
         // Extract unique exercises from userData and fetch exercise details
         const uniqueExercises = new Set<string>();
         userData.training_programs?.forEach(program => {

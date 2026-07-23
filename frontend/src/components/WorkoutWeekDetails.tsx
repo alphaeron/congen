@@ -13,7 +13,6 @@ import { RadarChart } from './RadarChart';
 import { SunburstChart } from './SunburstChart';
 import { WorkoutHeader } from './WorkoutHeader';
 import type {
-  ProgramWithPreferences,
   Exercise,
   ProgrammedWorkoutWithStages,
   WorkoutStageWithExercises,
@@ -47,11 +46,9 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
     isLoading: isDataLoading,
     getExercise,
     loadProgramPreferences,
+    programPreferences = [],
   } = useData();
 
-  const [programsWithPreferences, setProgramsWithPreferences] = useState<
-    Array<ProgramWithPreferences>
-  >([]);
   const [isLoading, setIsLoading] = useState(true);
   const [exerciseData, setExerciseData] = useState<Map<string, Exercise>>(new Map());
 
@@ -59,9 +56,9 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
     const loadAdditionalData = async () => {
       setIsLoading(true);
       try {
-        // Load program preferences using DataContext
-        const programsData = await loadProgramPreferences();
-        setProgramsWithPreferences(programsData);
+        if (programPreferences.length === 0) {
+          await loadProgramPreferences();
+        }
 
         // Extract unique exercises from userData and fetch exercise details
         const uniqueExercises = new Set<string>();
@@ -97,9 +94,9 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
     };
 
     loadAdditionalData();
-  }, [userData, enqueueSnackbar, getExercise, loadProgramPreferences]);
+  }, [userData, programPreferences.length, enqueueSnackbar, getExercise, loadProgramPreferences]);
 
-  const activeProgram = programsWithPreferences?.find(program => program.program.is_active);
+  const activeProgram = programPreferences?.find(program => program.program.is_active);
 
   const weekWorkouts = useMemo(() => {
     if (!activeProgram || !userData?.training_programs?.length) return [];

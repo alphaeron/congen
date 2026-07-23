@@ -19,6 +19,7 @@ interface AuthContextType {
   login: () => Promise<void>;
   logout: () => Promise<void>;
   clearAuthState: () => void;
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -46,6 +47,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setUser(null);
     clearAuthenticationState();
   }, []);
+
+  // Re-fetch the current user profile and update context state. Used after
+  // mutations (e.g. profile edits) so all consumers see the latest values.
+  const refreshUser = useCallback(async (): Promise<void> => {
+    if (!oidcAuth.isAuthenticated) {
+      return;
+    }
+
+    try {
+      const userProfile = await getCurrentUser();
+      setUser(userProfile);
+    } catch {
+      enqueueSnackbar('Failed to refresh profile. Please try again.', { variant: 'error' });
+    }
+  }, [oidcAuth.isAuthenticated, enqueueSnackbar]);
 
   const login = async (): Promise<void> => {
     try {
@@ -187,6 +203,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     login,
     logout,
     clearAuthState,
+    refreshUser,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

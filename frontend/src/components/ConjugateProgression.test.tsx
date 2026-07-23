@@ -238,6 +238,7 @@ describe('ConjugateProgression', () => {
       userData: mockUserDataExport,
       exerciseMuscleData: new Map(),
       weightUnitPreferences: [mockWeightUnitPreference],
+      userOneRepMaxes: [mockOneRepMax],
       exerciseData: new Map(),
       exerciseEquipmentData: new Map(),
       muscleData: new Map(),

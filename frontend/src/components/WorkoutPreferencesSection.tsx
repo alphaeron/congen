@@ -15,9 +15,6 @@ import {
   type Exercise,
   type Muscle,
   type Equipment,
-  type UserEquipment,
-  type UserWeakMuscle,
-  type UserExercisePreference,
 } from '../api/types';
 import { addUserEquipment, removeUserEquipment } from '../api/userEquipment';
 import {
@@ -96,6 +93,9 @@ export function WorkoutPreferencesSection(): React.ReactElement {
   const { enqueueSnackbar } = useSnackbar();
   const {
     weightUnitPreferences,
+    userEquipment,
+    userWeakMuscles,
+    userExercisePreferences,
     loadAllExercises,
     loadAllMuscles,
     loadAllEquipment,
@@ -103,24 +103,17 @@ export function WorkoutPreferencesSection(): React.ReactElement {
     loadUserWeakMuscles,
     loadUserExercisePreferences,
     refreshData,
+    refreshSpecificData,
   } = useData();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [unitDialogOpen, setUnitDialogOpen] = useState(false);
 
-  // Equipment and weak muscles state
   const [muscles, setMuscles] = useState<Muscle[]>([]);
   const [equipment, setEquipment] = useState<Equipment[]>([]);
-  const [userEquipment, setUserEquipment] = useState<UserEquipment[]>([]);
-  const [userWeakMuscles, setUserWeakMuscles] = useState<UserWeakMuscle[]>([]);
   const [equipmentDialogOpen, setEquipmentDialogOpen] = useState(false);
   const [weakMuscleDialogOpen, setWeakMuscleDialogOpen] = useState(false);
-
-  // Exercise preferences state
-  const [userExercisePreferences, setUserExercisePreferences] = useState<UserExercisePreference[]>(
-    []
-  );
   const [exercisePreferenceDialogOpen, setExercisePreferenceDialogOpen] = useState(false);
 
   // Tab state
@@ -162,9 +155,6 @@ export function WorkoutPreferencesSection(): React.ReactElement {
         exercisesData,
         musclesData,
         equipmentData,
-        userEquipmentData,
-        userWeakMusclesData,
-        userExercisePreferencesData,
       ] = await Promise.all([
         loadAllExercises(),
         loadAllMuscles(),
@@ -177,9 +167,6 @@ export function WorkoutPreferencesSection(): React.ReactElement {
       setExercises(exercisesData);
       setMuscles(musclesData);
       setEquipment(equipmentData);
-      setUserEquipment(userEquipmentData);
-      setUserWeakMuscles(userWeakMusclesData);
-      setUserExercisePreferences(userExercisePreferencesData);
     } catch {
       enqueueSnackbar('Failed to load preferences data. Please try again.', { variant: 'error' });
     } finally {
@@ -266,11 +253,7 @@ export function WorkoutPreferencesSection(): React.ReactElement {
       setSaving(true);
       await addUserEquipment(user.keycloak_id, equipmentName);
 
-      // Refresh user equipment using DataContext
-      const userEquipmentResponse = await loadUserEquipment();
-      setUserEquipment(userEquipmentResponse);
-      // Refresh DataContext to keep it in sync
-      await refreshData();
+      await refreshSpecificData('userData');
 
       enqueueSnackbar('Equipment added successfully', { variant: 'success' });
     } catch (err: unknown) {
@@ -290,11 +273,7 @@ export function WorkoutPreferencesSection(): React.ReactElement {
       setSaving(true);
       await removeUserEquipment(user.keycloak_id, equipmentName);
 
-      // Refresh user equipment using DataContext
-      const userEquipmentResponse = await loadUserEquipment();
-      setUserEquipment(userEquipmentResponse);
-      // Refresh DataContext to keep it in sync
-      await refreshData();
+      await refreshSpecificData('userData');
 
       enqueueSnackbar('Equipment removed successfully', { variant: 'success' });
     } catch (err: unknown) {
@@ -315,11 +294,7 @@ export function WorkoutPreferencesSection(): React.ReactElement {
       setSaving(true);
       await addUserWeakMuscle(user.keycloak_id, muscleName);
 
-      // Refresh user weak muscles using DataContext
-      const userWeakMusclesResponse = await loadUserWeakMuscles();
-      setUserWeakMuscles(userWeakMusclesResponse);
-      // Refresh DataContext to keep it in sync
-      await refreshData();
+      await refreshSpecificData('userData');
 
       enqueueSnackbar('Weak muscle group added successfully', { variant: 'success' });
     } catch (err: unknown) {
@@ -339,11 +314,7 @@ export function WorkoutPreferencesSection(): React.ReactElement {
       setSaving(true);
       await removeUserWeakMuscle(user.keycloak_id, muscleName);
 
-      // Refresh user weak muscles using DataContext
-      const userWeakMusclesResponse = await loadUserWeakMuscles();
-      setUserWeakMuscles(userWeakMusclesResponse);
-      // Refresh DataContext to keep it in sync
-      await refreshData();
+      await refreshSpecificData('userData');
 
       enqueueSnackbar('Weak muscle group removed successfully', { variant: 'success' });
     } catch (err: unknown) {
@@ -364,11 +335,7 @@ export function WorkoutPreferencesSection(): React.ReactElement {
       setSaving(true);
       await upsertUserExercisePreference(user.keycloak_id, exerciseName, shouldAvoid);
 
-      // Refresh exercise preferences using DataContext
-      const userExercisePreferencesResponse = await loadUserExercisePreferences();
-      setUserExercisePreferences(userExercisePreferencesResponse);
-      // Refresh DataContext to keep it in sync
-      await refreshData();
+      await refreshSpecificData('userData');
 
       enqueueSnackbar('Exercise preference added successfully', { variant: 'success' });
     } catch (err: unknown) {
@@ -388,11 +355,7 @@ export function WorkoutPreferencesSection(): React.ReactElement {
       setSaving(true);
       await removeUserExercisePreference(user.keycloak_id, exerciseName);
 
-      // Refresh exercise preferences using DataContext
-      const userExercisePreferencesResponse = await loadUserExercisePreferences();
-      setUserExercisePreferences(userExercisePreferencesResponse);
-      // Refresh DataContext to keep it in sync
-      await refreshData();
+      await refreshSpecificData('userData');
 
       enqueueSnackbar('Exercise preference removed successfully', { variant: 'success' });
     } catch (err: unknown) {

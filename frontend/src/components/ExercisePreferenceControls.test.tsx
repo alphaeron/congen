@@ -19,13 +19,13 @@ jest.mock('../api/userExercisePreference');
 // Mock DataContext
 let mockUserExercisePreferences: unknown[] = [];
 const mockLoadUserExercisePreferences = jest.fn();
-const mockRefreshData = jest.fn();
+const mockRefreshSpecificData = jest.fn();
 
 jest.mock('../contexts/DataContext', () => ({
   useData: () => ({
     userExercisePreferences: mockUserExercisePreferences,
     loadUserExercisePreferences: mockLoadUserExercisePreferences,
-    refreshData: mockRefreshData,
+    refreshSpecificData: mockRefreshSpecificData,
   }),
 }));
 
@@ -62,7 +62,7 @@ describe('ExercisePreferenceControls', () => {
     // Reset mock data
     mockUserExercisePreferences = [];
     mockLoadUserExercisePreferences.mockResolvedValue([]);
-    mockRefreshData.mockResolvedValue(undefined);
+    mockRefreshSpecificData.mockResolvedValue(undefined);
 
     mockUseAuth.mockReturnValue({
       user: mockUser,
@@ -71,6 +71,7 @@ describe('ExercisePreferenceControls', () => {
       isAuthenticated: true,
       isLoading: false,
       clearAuthState: jest.fn(),
+      refreshUser: jest.fn(),
     });
 
     mockUseSnackbar.mockReturnValue({

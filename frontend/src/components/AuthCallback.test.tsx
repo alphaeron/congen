@@ -39,6 +39,8 @@ describe('AuthCallback', () => {
       isLoading: true,
       login: jest.fn(),
       logout: jest.fn(),
+      clearAuthState: jest.fn(),
+      refreshUser: jest.fn(),
     });
 
     render(
@@ -63,6 +65,8 @@ describe('AuthCallback', () => {
       isLoading: true,
       login: jest.fn(),
       logout: jest.fn(),
+      clearAuthState: jest.fn(),
+      refreshUser: jest.fn(),
     });
 
     render(

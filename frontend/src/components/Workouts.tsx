@@ -11,7 +11,7 @@ import { TrainingTimeline } from './TrainingTimeline';
 import { VolumeOverviewCards } from './VolumeOverviewCards';
 import { WorkoutGenerationWizard } from './WorkoutGenerationWizard';
 import { WorkoutHeader } from './WorkoutHeader';
-import type { Program, ProgramWithPreferences, Exercise } from '../api/types';
+import type { Program, Exercise } from '../api/types';
 import { useData } from '../contexts/DataContext';
 import { exportProgramToPDF } from '../utils/exportUtils';
 import {
@@ -46,14 +46,13 @@ export const Workouts: React.FC<WorkoutsProps> = () => {
     userData,
     weightUnitPreferences,
     refreshData,
+    refreshSpecificData,
     isLoading: isDataLoading,
     loadProgramPreferences,
+    programPreferences = [],
     getExercise,
   } = useData();
 
-  const [programsWithPreferences, setProgramsWithPreferences] = useState<
-    Array<ProgramWithPreferences>
-  >([]);
   const [isLoading, setIsLoading] = useState(true);
   const [wizardOpen, setWizardOpen] = useState(false);
   const [selectedProgram, setSelectedProgram] = useState<Program | null>(null);
@@ -67,8 +66,9 @@ export const Workouts: React.FC<WorkoutsProps> = () => {
 
       setIsLoading(true);
       try {
-        const programsData = await loadProgramPreferences();
-        setProgramsWithPreferences(programsData);
+        if (programPreferences.length === 0) {
+          await loadProgramPreferences();
+        }
 
         // Extract unique exercises from the userData and fetch exercise details
         const uniqueExercises = new Set<string>();
@@ -108,7 +108,7 @@ export const Workouts: React.FC<WorkoutsProps> = () => {
     };
 
     loadAdditionalData();
-  }, [userData, enqueueSnackbar, loadProgramPreferences, getExercise]);
+  }, [userData, programPreferences.length, enqueueSnackbar, loadProgramPreferences, getExercise]);
 
   // Get active program data consistently from userData
   const activeProgramData = useMemo(() => {
@@ -119,8 +119,8 @@ export const Workouts: React.FC<WorkoutsProps> = () => {
   // Get active program preferences
   const activeProgramPreferences = useMemo(() => {
     if (!activeProgramData) return null;
-    return programsWithPreferences.find(p => p.program.id === activeProgramData.program.id) || null;
-  }, [activeProgramData, programsWithPreferences]);
+    return programPreferences.find(p => p.program.id === activeProgramData.program.id) || null;
+  }, [activeProgramData, programPreferences]);
 
   // Legacy activeProgram for backward compatibility in render
   const activeProgram = activeProgramPreferences;
@@ -191,8 +191,8 @@ export const Workouts: React.FC<WorkoutsProps> = () => {
 
     setIsGenerating(true);
     try {
-      // Refresh all data after generation
       await refreshData();
+      await refreshSpecificData('programs');
       enqueueSnackbar('Workouts generated successfully!', { variant: 'success' });
     } catch {
       enqueueSnackbar('Failed to refresh workout data', { variant: 'error' });

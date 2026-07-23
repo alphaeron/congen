@@ -4,7 +4,6 @@ import React, { useState, useEffect, useMemo } from 'react';
 
 import { ExerciseCard } from './ExerciseCard';
 import { LoadingSpinner } from './LoadingSpinner';
-import type { UserExercisePoolResponse } from '../api/types';
 import { useAuth } from '../contexts/AuthContext';
 import { useData } from '../contexts/DataContext';
 
@@ -30,21 +29,17 @@ export const ExerciseCategoryDetails: React.FC<ExerciseCategoryDetailsProps> = (
   const { user } = useAuth();
   const { userExercisePool, loadUserExercisePool } = useData();
 
-  const [exercisePoolData, setExercisePoolData] = useState<UserExercisePoolResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Load exercise pool data from DataContext
   useEffect(() => {
     const loadData = async () => {
       if (!user?.keycloak_id) return;
 
       try {
         setIsLoading(true);
-        // Load user exercise pool if not already loaded
         if (!userExercisePool) {
           await loadUserExercisePool();
         }
-        setExercisePoolData(userExercisePool);
       } catch {
         enqueueSnackbar('Failed to load exercise pool data. Please try again.', {
           variant: 'error',
@@ -57,27 +52,26 @@ export const ExerciseCategoryDetails: React.FC<ExerciseCategoryDetailsProps> = (
     loadData();
   }, [user?.keycloak_id, userExercisePool, loadUserExercisePool, enqueueSnackbar]);
 
-  // Get category data based on the selected category
   const categoryData = useMemo(() => {
-    if (!exercisePoolData) return null;
+    if (!userExercisePool) return null;
 
     switch (category) {
       case 'primary':
         return {
           title: 'Primary Exercise',
-          exercises: exercisePoolData.primary_exercises,
+          exercises: userExercisePool.primary_exercises,
           color: 'error' as const,
         };
       case 'accessory':
         return {
           title: 'Accessory Exercise',
-          exercises: exercisePoolData.accessory_exercises,
+          exercises: userExercisePool.accessory_exercises,
           color: 'info' as const,
         };
       case 'recent':
         return {
           title: 'Recent Exercise',
-          exercises: exercisePoolData.previously_used_exercises.map(exerciseName => ({
+          exercises: userExercisePool.previously_used_exercises.map(exerciseName => ({
             name: exerciseName,
             description: `Recently used: ${exerciseName}`,
             movement_type: 'recent',
@@ -90,7 +84,7 @@ export const ExerciseCategoryDetails: React.FC<ExerciseCategoryDetailsProps> = (
       default:
         return null;
     }
-  }, [exercisePoolData, category]);
+  }, [userExercisePool, category]);
 
   if (isLoading) {
     return <LoadingSpinner message="Loading exercise category details..." />;
@@ -106,7 +100,6 @@ export const ExerciseCategoryDetails: React.FC<ExerciseCategoryDetailsProps> = (
 
   return (
     <Box>
-      {/* Exercise Grid */}
       <Grid container spacing={3}>
         {categoryData.exercises.map(exercise => (
           <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={exercise.name}>
