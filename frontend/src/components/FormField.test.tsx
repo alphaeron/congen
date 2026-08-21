@@ -137,6 +137,59 @@ describe('FormField', () => {
       const input = container.querySelector('input');
       expect(input).toBeInTheDocument();
     });
+
+    it('renders multiple autocomplete with selected chips', () => {
+      render(
+        <FormField
+          type="autocomplete"
+          label="Exercises"
+          value={['Option 1', 'Option 2']}
+          onChange={mockOnChange}
+          options={options}
+          multiple
+        />
+      );
+
+      expect(screen.getByLabelText('Exercises')).toBeInTheDocument();
+      expect(screen.getByText('Option 1')).toBeInTheDocument();
+      expect(screen.getByText('Option 2')).toBeInTheDocument();
+    });
+
+    it('calls onChange with array when selecting in multiple mode', () => {
+      render(
+        <FormField
+          type="autocomplete"
+          label="Exercises"
+          value={[]}
+          onChange={mockOnChange}
+          options={options}
+          multiple
+        />
+      );
+
+      const input = screen.getByLabelText('Exercises');
+      fireEvent.mouseDown(input);
+      fireEvent.click(screen.getByText('Option 1'));
+
+      expect(mockOnChange).toHaveBeenCalledWith(['Option 1']);
+    });
+
+    it('does not set HTML required on the search input when multiple is enabled', () => {
+      const { container } = render(
+        <FormField
+          type="autocomplete"
+          label="Exercises"
+          value={['Option 1']}
+          onChange={mockOnChange}
+          options={options}
+          multiple
+          required
+        />
+      );
+
+      const input = container.querySelector('input');
+      expect(input).not.toBeRequired();
+    });
   });
 
   describe('Common Props', () => {

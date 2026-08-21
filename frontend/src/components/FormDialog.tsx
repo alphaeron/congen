@@ -16,7 +16,6 @@ interface FormDialogProps<TFormData = unknown> {
   loading?: boolean;
   disabled?: boolean;
   children: React.ReactNode | ((form: unknown) => React.ReactNode);
-  // TanStack Form integration
   defaultValues?: Partial<TFormData>;
   validate?: (values: TFormData) => Record<string, string> | undefined;
   useTanStackForm?: boolean;
@@ -27,7 +26,8 @@ interface FormDialogProps<TFormData = unknown> {
  *
  * Provides a consistent interface for form dialogs with form content,
  * validation, and action buttons. Supports both traditional controlled
- * components and TanStack Form integration.
+ * components and TanStack Form integration. When using TanStack Form, the
+ * submit button subscribes to form validity so it updates as fields change.
  *
  * @param open Whether the dialog is open
  * @param onClose Function to call when dialog should be closed
@@ -81,12 +81,9 @@ export const FormDialog = <TFormData extends Record<string, unknown>>({
     }
   };
 
-  const isFormValid = form ? form.state.isValid : true;
-  const isSubmitting = form ? form.state.isSubmitting : false;
-
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      {useTanStackForm ? (
+      {useTanStackForm && form ? (
         <form onSubmit={handleSubmit}>
           <DialogTitle>
             <GameText variant="body1" sx={{ fontSize: '1.25rem', fontWeight: 600 }}>
@@ -104,21 +101,28 @@ export const FormDialog = <TFormData extends Record<string, unknown>>({
               </GameText>
             )}
             {typeof children === 'function'
-              ? (children as (form: unknown) => React.ReactNode)(form!)
+              ? (children as (form: unknown) => React.ReactNode)(form)
               : children}
           </DialogContent>
           <DialogActions>
-            <Button onClick={onClose} disabled={loading || isSubmitting}>
-              {cancelText}
-            </Button>
-            <Button
-              type="submit"
-              variant="contained"
-              color={submitColor}
-              disabled={loading || disabled || !isFormValid || isSubmitting}
-            >
-              {loading || isSubmitting ? 'Processing...' : submitText}
-            </Button>
+            <form.Subscribe
+              selector={state => state.isSubmitting}
+              children={isSubmitting => (
+                <>
+                  <Button onClick={onClose} disabled={loading || isSubmitting}>
+                    {cancelText}
+                  </Button>
+                  <Button
+                    type="submit"
+                    variant="contained"
+                    color={submitColor}
+                    disabled={loading || disabled || isSubmitting}
+                  >
+                    {loading || isSubmitting ? 'Processing...' : submitText}
+                  </Button>
+                </>
+              )}
+            />
           </DialogActions>
         </form>
       ) : (

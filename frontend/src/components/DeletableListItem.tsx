@@ -1,5 +1,6 @@
 import { Delete as DeleteIcon } from '@mui/icons-material';
 import {
+  Box,
   ListItem,
   ListItemText,
   ListItemSecondaryAction,
@@ -14,6 +15,7 @@ interface DeletableListItemProps {
   onDelete: () => void;
   deleteTooltip: string;
   disabled?: boolean;
+  actions?: React.ReactNode;
 }
 
 /**
@@ -21,12 +23,14 @@ interface DeletableListItemProps {
  *
  * Provides a standardized list item with primary/secondary text and
  * a delete button with tooltip for consistent UX across preference sections.
+ * Optional actions can be rendered beside the delete control.
  *
  * @param primary Primary text to display
  * @param secondary Optional secondary text to display
  * @param onDelete Function to call when delete button is clicked
  * @param deleteTooltip Tooltip text for the delete button
  * @param disabled Whether the delete button should be disabled
+ * @param actions Optional additional actions rendered before the delete button
  * @return Deletable list item component
  */
 export const DeletableListItem: React.FC<DeletableListItemProps> = ({
@@ -35,24 +39,28 @@ export const DeletableListItem: React.FC<DeletableListItemProps> = ({
   onDelete,
   deleteTooltip,
   disabled = false,
+  actions,
 }) => {
   return (
     <ListItem>
       <ListItemText primary={primary} secondary={secondary} />
       <ListItemSecondaryAction>
-        <Tooltip title={deleteTooltip}>
-          {disabled ? (
-            <span>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          {actions}
+          <Tooltip title={deleteTooltip}>
+            {disabled ? (
+              <span>
+                <IconButton edge="end" aria-label="delete" onClick={onDelete} disabled={disabled}>
+                  <DeleteIcon />
+                </IconButton>
+              </span>
+            ) : (
               <IconButton edge="end" aria-label="delete" onClick={onDelete} disabled={disabled}>
                 <DeleteIcon />
               </IconButton>
-            </span>
-          ) : (
-            <IconButton edge="end" aria-label="delete" onClick={onDelete} disabled={disabled}>
-              <DeleteIcon />
-            </IconButton>
-          )}
-        </Tooltip>
+            )}
+          </Tooltip>
+        </Box>
       </ListItemSecondaryAction>
     </ListItem>
   );

@@ -79,6 +79,15 @@ interface DataContextType {
   userData: UserDataExport | null;
   exerciseMuscleData: Map<string, string[]>;
   weightUnitPreferences: UserWeightUnitPreference[];
+  /**
+   * Loads user weight unit preferences into context.
+   *
+   * @param options Optional forceRefresh flag to bypass the in-memory cache
+   * @return The loaded weight unit preferences
+   */
+  loadUserWeightUnitPreferences: (options?: {
+    forceRefresh?: boolean;
+  }) => Promise<UserWeightUnitPreference[]>;
   exerciseData: Map<string, Exercise>;
   exerciseEquipmentData: Map<string, ExerciseEquipment[]>;
   muscleData: Map<string, Muscle>;
@@ -673,6 +682,36 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
       return [];
     }
   }, [user?.keycloak_id, userExercisePreferences]);
+
+  /**
+   * Loads the current user's weight unit preferences into DataContext.
+   *
+   * @param options Optional configuration including forceRefresh flag
+   * @return The loaded weight unit preferences
+   */
+  const loadUserWeightUnitPreferences = useCallback(
+    async (options: { forceRefresh?: boolean } = {}): Promise<UserWeightUnitPreference[]> => {
+      if (!user?.keycloak_id) return [];
+
+      if (!options.forceRefresh && weightUnitPreferences.length > 0) {
+        return weightUnitPreferences;
+      }
+
+      try {
+        const preferences = await getUserWeightUnitPreferences(user.keycloak_id, {
+          forceRefresh: options.forceRefresh,
+        });
+        setWeightUnitPreferences(preferences);
+        return preferences;
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : 'Failed to load user weight unit preferences data';
+        setError(errorMessage);
+        return [];
+      }
+    },
+    [user?.keycloak_id, weightUnitPreferences]
+  );
 
   const loadProgramPreferences = useCallback(async (): Promise<ProgramWithPreferences[]> => {
     if (programPreferences.length > 0) {
@@ -1357,6 +1396,9 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
             await loadUserOneRepMaxes();
             await loadUserExercisePool();
             break;
+          case 'weightUnitPreferences':
+            await loadUserWeightUnitPreferences({ forceRefresh: true });
+            break;
           case 'all':
             await refreshData();
             break;
@@ -1380,6 +1422,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
       loadUserExercisePreferences,
       loadUserOneRepMaxes,
       loadUserExercisePool,
+      loadUserWeightUnitPreferences,
       refreshData,
     ]
   );
@@ -1495,6 +1538,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
       loadUserEquipment,
       loadUserWeakMuscles,
       loadUserExercisePreferences,
+      loadUserWeightUnitPreferences,
       loadProgramPreferences,
       loadProgrammedWorkouts,
       loadUserOneRepMaxes,
@@ -1570,6 +1614,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
       loadUserEquipment,
       loadUserWeakMuscles,
       loadUserExercisePreferences,
+      loadUserWeightUnitPreferences,
       loadProgramPreferences,
       loadProgrammedWorkouts,
       loadUserOneRepMaxes,

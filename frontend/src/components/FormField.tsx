@@ -1,4 +1,4 @@
-import { Autocomplete } from '@mui/material';
+import { Autocomplete, Checkbox, Chip } from '@mui/material';
 import { useField } from '@tanstack/react-form';
 import React, { useMemo } from 'react';
 
@@ -21,7 +21,6 @@ interface BaseFormFieldProps {
   required?: boolean;
   fullWidth?: boolean;
   sx?: unknown;
-  // TanStack Form integration
   name?: string;
   form?: unknown;
 }
@@ -42,9 +41,30 @@ interface AutocompleteFormFieldProps extends BaseFormFieldProps {
   type: 'autocomplete';
   options: string[];
   getOptionLabel?: (option: string) => string;
+  multiple?: boolean;
+  placeholder?: string;
 }
 
 type FormFieldProps = TextFormFieldProps | SelectFormFieldProps | AutocompleteFormFieldProps;
+
+/**
+ * Returns a validation error message when a required field value is empty.
+ *
+ * @param value The field value to validate
+ * @return An error message when invalid, otherwise undefined
+ */
+function getRequiredFieldError(value: unknown): string | undefined {
+  if (Array.isArray(value)) {
+    if (value.length === 0) {
+      return 'This field is required';
+    }
+    return undefined;
+  }
+  if (!value || (typeof value === 'string' && !value.trim())) {
+    return 'This field is required';
+  }
+  return undefined;
+}
 
 /**
  * Reusable form field component with consistent styling and validation.
@@ -52,6 +72,7 @@ type FormFieldProps = TextFormFieldProps | SelectFormFieldProps | AutocompleteFo
  * Provides a unified interface for different types of form fields including
  * text inputs, selects, and autocomplete fields with consistent styling.
  * Supports both traditional controlled components and TanStack Form integration.
+ * Autocomplete fields support single or multi-select with searchable options.
  *
  * @param type Type of form field ('text', 'number', 'email', 'password', 'select', 'autocomplete')
  * @param label Field label
@@ -67,6 +88,8 @@ type FormFieldProps = TextFormFieldProps | SelectFormFieldProps | AutocompleteFo
  * @param inputProps Additional props for the input element
  * @param options Options for select/autocomplete fields
  * @param getOptionLabel Function to get display label for autocomplete options
+ * @param multiple Whether autocomplete allows selecting multiple options
+ * @param placeholder Placeholder text for autocomplete search input
  * @param name Field name for TanStack Form integration
  * @param form Form instance for TanStack Form integration
  * @return Form field component
@@ -87,7 +110,6 @@ export const FormField: React.FC<FormFieldProps> = props => {
     form,
   } = props;
 
-  // TanStack Form integration
   const tanstackField =
     name && form
       ? useField({
@@ -95,18 +117,18 @@ export const FormField: React.FC<FormFieldProps> = props => {
           form,
           validators: {
             onChange: required
-              ? (value: unknown) => {
-                  if (!value || (typeof value === 'string' && !value.trim())) {
-                    return 'This field is required';
-                  }
-                  return undefined;
+              ? (props: { value: unknown } | unknown) => {
+                  const fieldVal =
+                    props && typeof props === 'object' && 'value' in props
+                      ? (props as { value: unknown }).value
+                      : props;
+                  return getRequiredFieldError(fieldVal);
                 }
               : undefined,
           },
         })
       : null;
 
-  // Use TanStack Form values if available, otherwise fall back to controlled props
   const fieldValue = tanstackField ? tanstackField.state.value : value;
   const fieldError = tanstackField ? tanstackField.state.meta.errors.length > 0 : error;
   const fieldHelperText = tanstackField ? tanstackField.state.meta.errors[0] : helperText;
@@ -130,7 +152,7 @@ export const FormField: React.FC<FormFieldProps> = props => {
           onBlur={handleBlur}
         >
           {options.map(option => (
-            <GameMenuItem key={option.value} value={option.value}>
+            <GameMenuItem key={String(option.value)} value={option.value as string | number}>
               {option.label}
             </GameMenuItem>
           ))}
@@ -145,18 +167,51 @@ export const FormField: React.FC<FormFieldProps> = props => {
   }
 
   if (type === 'autocomplete') {
-    const { options, getOptionLabel } = props as AutocompleteFormFieldProps;
+    const { options, getOptionLabel, multiple = false, placeholder } =
+      props as AutocompleteFormFieldProps;
     const memoizedGetOptionLabel = useMemo(
       () => getOptionLabel || ((option: string) => option),
       [getOptionLabel]
     );
+    const autocompleteValue = multiple
+      ? Array.isArray(fieldValue)
+        ? fieldValue
+        : []
+      : fieldValue || null;
+
     return (
       <Autocomplete
+        multiple={multiple}
         options={options}
-        value={fieldValue || null}
+        value={autocompleteValue}
         onChange={(_, newValue) => handleChange?.(newValue)}
         onBlur={handleBlur}
         getOptionLabel={memoizedGetOptionLabel}
+        disableCloseOnSelect={multiple}
+        renderTags={
+          multiple
+            ? (selected, getTagProps) =>
+                selected.map((option, index) => {
+                  const { key, ...tagProps } = getTagProps({ index });
+                  return (
+                    <Chip
+                      key={key}
+                      variant="outlined"
+                      label={memoizedGetOptionLabel(option)}
+                      size="small"
+                      color="primary"
+                      {...tagProps}
+                    />
+                  );
+                })
+            : undefined
+        }
+        renderOption={(optionProps, option, { selected }) => (
+          <li {...optionProps} key={option}>
+            {multiple && <Checkbox style={{ marginRight: 8 }} checked={selected} />}
+            {memoizedGetOptionLabel(option)}
+          </li>
+        )}
         renderInput={params => (
           <GameTextField
             {...params}
@@ -166,17 +221,26 @@ export const FormField: React.FC<FormFieldProps> = props => {
             error={fieldError}
             helperText={fieldHelperText}
             disabled={disabled}
-            required={required}
+            required={multiple ? false : required}
+            placeholder={placeholder}
+            inputProps={{
+              ...params.inputProps,
+              ...(multiple ? { required: false } : {}),
+            }}
+            InputLabelProps={{
+              ...params.InputLabelProps,
+              required,
+            }}
           />
         )}
-        clearOnBlur
+        clearOnBlur={!multiple}
         selectOnFocus
         handleHomeEndKeys
+        disabled={disabled}
       />
     );
   }
 
-  // Text field types
   const { multiline = false, rows, inputProps } = props as TextFormFieldProps;
   return (
     <GameTextField

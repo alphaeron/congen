@@ -1,5 +1,7 @@
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import MockAdapter from 'axios-mock-adapter';
+import { SnackbarProvider } from 'notistack';
 import React from 'react';
 import { MemoryRouter } from 'react-router';
 
@@ -30,7 +32,11 @@ jest.mock('../contexts/DataContext', () => ({
 }));
 
 const renderWithProviders = (component: React.ReactElement) => {
-  return render(<MemoryRouter>{component}</MemoryRouter>);
+  return render(
+    <MemoryRouter>
+      <SnackbarProvider>{component}</SnackbarProvider>
+    </MemoryRouter>
+  );
 };
 
 describe('WorkoutPreferencesSection', () => {
@@ -60,6 +66,7 @@ describe('WorkoutPreferencesSection', () => {
       loadUserEquipment: jest.fn().mockResolvedValue([]),
       loadUserWeakMuscles: jest.fn().mockResolvedValue([]),
       loadUserExercisePreferences: jest.fn().mockResolvedValue([]),
+      loadUserWeightUnitPreferences: jest.fn().mockResolvedValue([]),
     };
 
     mockUseData.mockReturnValue(defaultMockDataContext);
@@ -101,7 +108,9 @@ describe('WorkoutPreferencesSection', () => {
     // Then check for the content
     expect(screen.getAllByText('Weight Unit Preferences')).toHaveLength(2); // Main heading and card heading
     expect(
-      screen.getByText('Set your preferred weight units for specific exercises.')
+      screen.getByText(
+        'Set your preferred weight units for specific exercises. Search and select multiple exercises at once.'
+      )
     ).toBeInTheDocument();
   });
 
@@ -146,8 +155,8 @@ describe('WorkoutPreferencesSection', () => {
     // Click the first "Add Preference" button (weight units section)
     fireEvent.click(addButtons[0]);
 
-    expect(screen.getByText('Add Weight Unit Preference')).toBeInTheDocument();
-    expect(screen.getAllByText('Exercise')[0]).toBeInTheDocument();
+    expect(screen.getByText('Add Weight Unit Preferences')).toBeInTheDocument();
+    expect(screen.getAllByText('Exercises')[0]).toBeInTheDocument();
     expect(screen.getAllByText('Preferred Unit')[0]).toBeInTheDocument();
   });
 
@@ -170,6 +179,182 @@ describe('WorkoutPreferencesSection', () => {
 
     expect(screen.getByText('No weight unit preferences set yet.')).toBeInTheDocument();
   });
+
+  it('should filter and sort weight unit preferences', async () => {
+    const preferences = [
+      {
+        user_id: 'test-user-id',
+        exercise_name: 'Squat',
+        preferred_unit: 'KG',
+        created_at: new Date(),
+        updated_at: new Date(),
+      },
+      {
+        user_id: 'test-user-id',
+        exercise_name: 'Bench Press',
+        preferred_unit: 'LBS',
+        created_at: new Date(),
+        updated_at: new Date(),
+      },
+      {
+        user_id: 'test-user-id',
+        exercise_name: 'Deadlift',
+        preferred_unit: 'LBS',
+        created_at: new Date(),
+        updated_at: new Date(),
+      },
+    ];
+
+    mockUseData.mockReturnValue({
+      userData: null,
+      exerciseMuscleData: new Map(),
+      weightUnitPreferences: preferences,
+      userEquipment: [],
+      userWeakMuscles: [],
+      userExercisePreferences: [],
+      isLoading: false,
+      error: null,
+      refreshData: jest.fn(),
+      refreshSpecificData: jest.fn(),
+      isDataStale: false,
+      loadAllExercises: jest.fn().mockResolvedValue([
+        {
+          name: 'Bench Press',
+          description: '',
+          movement_type: 'press',
+          is_unilateral: false,
+          is_upper: true,
+          is_accessory: false,
+        },
+        {
+          name: 'Deadlift',
+          description: '',
+          movement_type: 'hinge',
+          is_unilateral: false,
+          is_upper: false,
+          is_accessory: false,
+        },
+        {
+          name: 'Squat',
+          description: '',
+          movement_type: 'squat',
+          is_unilateral: false,
+          is_upper: false,
+          is_accessory: false,
+        },
+      ]),
+      loadAllMuscles: jest.fn().mockResolvedValue([]),
+      loadAllEquipment: jest.fn().mockResolvedValue([]),
+      loadUserEquipment: jest.fn().mockResolvedValue([]),
+      loadUserWeakMuscles: jest.fn().mockResolvedValue([]),
+      loadUserExercisePreferences: jest.fn().mockResolvedValue([]),
+      loadUserWeightUnitPreferences: jest.fn().mockResolvedValue([]),
+    });
+
+    await act(async () => {
+      renderWithProviders(<WorkoutPreferencesSection />);
+    });
+
+    await waitFor(
+      () => {
+        expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+      },
+      { timeout: 10000 }
+    );
+
+    expect(screen.getByText('Bench Press')).toBeInTheDocument();
+    expect(screen.getByText('Deadlift')).toBeInTheDocument();
+    expect(screen.getByText('Squat')).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText('Filter exercises'), {
+      target: { value: 'bench' },
+    });
+
+    expect(screen.getByText('Bench Press')).toBeInTheDocument();
+    expect(screen.queryByText('Deadlift')).not.toBeInTheDocument();
+    expect(screen.queryByText('Squat')).not.toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText('Filter exercises'), {
+      target: { value: '' },
+    });
+    fireEvent.click(screen.getByLabelText('Show pounds only'));
+
+    expect(screen.getByText('Bench Press')).toBeInTheDocument();
+    expect(screen.getByText('Deadlift')).toBeInTheDocument();
+    expect(screen.queryByText('Squat')).not.toBeInTheDocument();
+
+    expect(screen.getByLabelText('Set Bench Press to pounds')).toHaveAttribute(
+      'aria-pressed',
+      'true'
+    );
+  });
+
+  it('should allow selecting multiple exercises in the weight unit preference dialog', async () => {
+    const user = userEvent.setup();
+    mockUseData.mockReturnValue({
+      userData: null,
+      exerciseMuscleData: new Map(),
+      weightUnitPreferences: [],
+      userEquipment: [],
+      userWeakMuscles: [],
+      userExercisePreferences: [],
+      isLoading: false,
+      error: null,
+      refreshData: jest.fn(),
+      refreshSpecificData: jest.fn(),
+      isDataStale: false,
+      loadAllExercises: jest.fn().mockResolvedValue([
+        {
+          name: 'Bench Press',
+          description: '',
+          movement_type: 'press',
+          is_unilateral: false,
+          is_upper: true,
+          is_accessory: false,
+        },
+        {
+          name: 'Squat',
+          description: '',
+          movement_type: 'squat',
+          is_unilateral: false,
+          is_upper: false,
+          is_accessory: false,
+        },
+      ]),
+      loadAllMuscles: jest.fn().mockResolvedValue([]),
+      loadAllEquipment: jest.fn().mockResolvedValue([]),
+      loadUserEquipment: jest.fn().mockResolvedValue([]),
+      loadUserWeakMuscles: jest.fn().mockResolvedValue([]),
+      loadUserExercisePreferences: jest.fn().mockResolvedValue([]),
+      loadUserWeightUnitPreferences: jest.fn().mockResolvedValue([]),
+    });
+
+    await act(async () => {
+      renderWithProviders(<WorkoutPreferencesSection />);
+    });
+
+    await waitFor(
+      () => {
+        expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+      },
+      { timeout: 10000 }
+    );
+
+    await user.click(screen.getByText('Add Preference'));
+    expect(await screen.findByText('Add Weight Unit Preferences')).toBeInTheDocument();
+    expect(
+      await screen.findByPlaceholderText('Search and select exercises...')
+    ).toBeInTheDocument();
+
+    const exerciseInput = screen.getByPlaceholderText('Search and select exercises...');
+    await user.click(exerciseInput);
+    await user.click(await screen.findByRole('option', { name: /Bench Press/i }));
+    await user.click(await screen.findByRole('option', { name: /Squat/i }));
+
+    expect(await screen.findByRole('button', { name: /Bench Press/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Squat/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Add Preferences' })).toBeInTheDocument();
+  }, 15000);
 
   it('should handle loading state', async () => {
     // Mock slow DataContext functions to ensure loading state is visible
@@ -210,6 +395,7 @@ describe('WorkoutPreferencesSection', () => {
       loadUserEquipment: slowLoadUserEquipment,
       loadUserWeakMuscles: slowLoadUserWeakMuscles,
       loadUserExercisePreferences: slowLoadUserExercisePreferences,
+      loadUserWeightUnitPreferences: jest.fn().mockResolvedValue([]),
     });
 
     await act(async () => {

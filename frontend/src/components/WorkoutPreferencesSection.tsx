@@ -1,4 +1,11 @@
-import { Box, List, Tabs, Tab } from '@mui/material';
+import {
+  Box,
+  List,
+  Tabs,
+  Tab,
+  ToggleButton,
+  ToggleButtonGroup,
+} from '@mui/material';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSnackbar } from 'notistack';
 import React, { useState, useEffect, useMemo } from 'react';
@@ -7,14 +14,24 @@ import { DeletableChip } from './DeletableChip';
 import { DeletableListItem } from './DeletableListItem';
 import { FormDialog } from './FormDialog';
 import { FormField } from './FormField';
-import { GAME_CLASSES } from './GameTheme';
+import {
+  GAME_CLASSES,
+  GameFormControl,
+  GameInputLabel,
+  GameMenuItem,
+  GameSelect,
+  GameText,
+  GameTextField,
+} from './GameTheme';
 import { LoadingSpinner } from './LoadingSpinner';
 import { PreferenceSection } from './PreferenceSection';
+import { WeightUnitPreferenceControls } from './WeightUnitPreferenceControls';
 import {
   WeightUnit,
   type Exercise,
   type Muscle,
   type Equipment,
+  type UserWeightUnitPreference,
 } from '../api/types';
 import { addUserEquipment, removeUserEquipment } from '../api/userEquipment';
 import {
@@ -30,6 +47,16 @@ import { useAuth } from '../contexts/AuthContext';
 import { useData } from '../contexts/DataContext';
 
 import type { AxiosError } from 'axios';
+
+/**
+ * Sort options for the weight unit preference list.
+ */
+type WeightUnitPreferenceSort = 'name-asc' | 'name-desc' | 'unit-asc' | 'unit-desc';
+
+/**
+ * Unit filter options for the weight unit preference list.
+ */
+type WeightUnitPreferenceFilter = 'ALL' | WeightUnit;
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -102,7 +129,6 @@ export function WorkoutPreferencesSection(): React.ReactElement {
     loadUserEquipment,
     loadUserWeakMuscles,
     loadUserExercisePreferences,
-    refreshData,
     refreshSpecificData,
   } = useData();
   const [loading, setLoading] = useState(true);
@@ -115,6 +141,9 @@ export function WorkoutPreferencesSection(): React.ReactElement {
   const [equipmentDialogOpen, setEquipmentDialogOpen] = useState(false);
   const [weakMuscleDialogOpen, setWeakMuscleDialogOpen] = useState(false);
   const [exercisePreferenceDialogOpen, setExercisePreferenceDialogOpen] = useState(false);
+  const [weightUnitSearch, setWeightUnitSearch] = useState('');
+  const [weightUnitFilter, setWeightUnitFilter] = useState<WeightUnitPreferenceFilter>('ALL');
+  const [weightUnitSort, setWeightUnitSort] = useState<WeightUnitPreferenceSort>('name-asc');
 
   // Tab state
   const [activeTab, setActiveTab] = useState(0);
@@ -122,7 +151,7 @@ export function WorkoutPreferencesSection(): React.ReactElement {
 
   // Form data types for TanStack Form
   interface WeightUnitPreferenceFormData extends Record<string, unknown> {
-    exerciseName: string;
+    exerciseNames: string[];
     preferredUnit: WeightUnit;
   }
 
@@ -192,13 +221,22 @@ export function WorkoutPreferencesSection(): React.ReactElement {
     try {
       setSaving(true);
 
-      await upsertUserWeightUnitPreference(user.keycloak_id, data.exerciseName, data.preferredUnit);
+      await Promise.all(
+        data.exerciseNames.map(exerciseName =>
+          upsertUserWeightUnitPreference(user.keycloak_id, exerciseName, data.preferredUnit)
+        )
+      );
 
-      // Refresh weight unit preferences from DataContext
-      await refreshData();
+      await refreshSpecificData('weightUnitPreferences');
 
       setUnitDialogOpen(false);
-      enqueueSnackbar('Weight unit preference added successfully', { variant: 'success' });
+      const count = data.exerciseNames.length;
+      enqueueSnackbar(
+        count === 1
+          ? 'Weight unit preference added successfully'
+          : `${count} weight unit preferences added successfully`,
+        { variant: 'success' }
+      );
     } catch (err: unknown) {
       const axiosError = err as AxiosError<{ message?: string }>;
       enqueueSnackbar(
@@ -218,8 +256,7 @@ export function WorkoutPreferencesSection(): React.ReactElement {
 
       await deleteUserWeightUnitPreference(user.keycloak_id, exerciseName);
 
-      // Refresh weight unit preferences from DataContext
-      await refreshData();
+      await refreshSpecificData('weightUnitPreferences');
 
       enqueueSnackbar('Weight unit preference deleted successfully', { variant: 'success' });
     } catch (err: unknown) {
@@ -241,9 +278,52 @@ export function WorkoutPreferencesSection(): React.ReactElement {
     return map;
   }, [exercises]);
 
+  const exerciseNameOptions = useMemo(
+    () => exercises.map(exercise => exercise.name).sort((a, b) => a.localeCompare(b)),
+    [exercises]
+  );
+
   const getExerciseName = (exerciseName: string) => {
     return exerciseNameMap.get(exerciseName) || exerciseName;
   };
+
+  /**
+   * Filters and sorts weight unit preferences for display in the list.
+   *
+   * @return The filtered and sorted preference list
+   */
+  const filteredSortedWeightUnitPreferences = useMemo((): UserWeightUnitPreference[] => {
+    const resolveName = (exerciseName: string) => exerciseNameMap.get(exerciseName) || exerciseName;
+    const searchQuery = weightUnitSearch.trim().toLowerCase();
+    const filtered = weightUnitPreferences.filter(pref => {
+      const displayName = resolveName(pref.exercise_name);
+      const matchesSearch =
+        searchQuery.length === 0 ||
+        pref.exercise_name.toLowerCase().includes(searchQuery) ||
+        displayName.toLowerCase().includes(searchQuery);
+      const matchesUnit = weightUnitFilter === 'ALL' || pref.preferred_unit === weightUnitFilter;
+      return matchesSearch && matchesUnit;
+    });
+
+    const sorted = [...filtered];
+    sorted.sort((a, b) => {
+      const nameCompare = resolveName(a.exercise_name).localeCompare(resolveName(b.exercise_name));
+      const unitCompare = a.preferred_unit.localeCompare(b.preferred_unit);
+
+      if (weightUnitSort === 'name-asc') {
+        return nameCompare;
+      }
+      if (weightUnitSort === 'name-desc') {
+        return -nameCompare;
+      }
+      if (weightUnitSort === 'unit-asc') {
+        return unitCompare !== 0 ? unitCompare : nameCompare;
+      }
+      return unitCompare !== 0 ? -unitCompare : nameCompare;
+    });
+
+    return sorted;
+  }, [weightUnitPreferences, weightUnitSearch, weightUnitFilter, weightUnitSort, exerciseNameMap]);
 
   // Equipment handlers
   const handleAddEquipment = async (equipmentName: string) => {
@@ -450,24 +530,95 @@ export function WorkoutPreferencesSection(): React.ReactElement {
         <TabPanel value={activeTab} index={0} slideDirection={slideDirection}>
           <PreferenceSection
             title="Weight Unit Preferences"
-            description="Set your preferred weight units for specific exercises."
+            description="Set your preferred weight units for specific exercises. Search and select multiple exercises at once."
             addButtonText="Add Preference"
             onAddClick={() => setUnitDialogOpen(true)}
             hasItems={weightUnitPreferences.length > 0}
             emptyMessage="No weight unit preferences set yet."
           >
-            <List dense>
-              {weightUnitPreferences.map(pref => (
-                <DeletableListItem
-                  key={`${pref.user_id}-${pref.exercise_name}`}
-                  primary={getExerciseName(pref.exercise_name)}
-                  secondary={`Preferred unit: ${pref.preferred_unit}`}
-                  onDelete={() => handleDeleteWeightUnitPreference(pref.exercise_name)}
-                  deleteTooltip="Remove weight unit preference"
-                  disabled={saving}
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <Box
+                sx={{
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  gap: 2,
+                  alignItems: 'center',
+                }}
+              >
+                <GameTextField
+                  label="Filter exercises"
+                  value={weightUnitSearch}
+                  onChange={e => setWeightUnitSearch(e.target.value)}
+                  size="small"
+                  sx={{ minWidth: 200, flex: 1 }}
                 />
-              ))}
-            </List>
+                <ToggleButtonGroup
+                  value={weightUnitFilter}
+                  exclusive
+                  size="small"
+                  onChange={(_, newFilter: WeightUnitPreferenceFilter | null) => {
+                    if (newFilter !== null) {
+                      setWeightUnitFilter(newFilter);
+                    }
+                  }}
+                  aria-label="Filter by weight unit"
+                >
+                  <ToggleButton value="ALL" aria-label="Show all units">
+                    All
+                  </ToggleButton>
+                  <ToggleButton value={WeightUnit.KG} aria-label="Show kilograms only">
+                    KG
+                  </ToggleButton>
+                  <ToggleButton value={WeightUnit.LBS} aria-label="Show pounds only">
+                    LBS
+                  </ToggleButton>
+                </ToggleButtonGroup>
+                <GameFormControl size="small" sx={{ minWidth: 160 }}>
+                  <GameInputLabel id="weight-unit-sort-label">Sort by</GameInputLabel>
+                  <GameSelect
+                    labelId="weight-unit-sort-label"
+                    label="Sort by"
+                    value={weightUnitSort}
+                    onChange={e =>
+                      setWeightUnitSort(e.target.value as WeightUnitPreferenceSort)
+                    }
+                  >
+                    <GameMenuItem value="name-asc">Name (A–Z)</GameMenuItem>
+                    <GameMenuItem value="name-desc">Name (Z–A)</GameMenuItem>
+                    <GameMenuItem value="unit-asc">Unit (KG first)</GameMenuItem>
+                    <GameMenuItem value="unit-desc">Unit (LBS first)</GameMenuItem>
+                  </GameSelect>
+                </GameFormControl>
+              </Box>
+
+              {filteredSortedWeightUnitPreferences.length === 0 ? (
+                <GameText
+                  variant="body2"
+                  textVariant="secondary"
+                  className={`${GAME_CLASSES.textCenter} ${GAME_CLASSES.padding2}`}
+                >
+                  No preferences match your filters.
+                </GameText>
+              ) : (
+                <List dense>
+                  {filteredSortedWeightUnitPreferences.map(pref => (
+                    <DeletableListItem
+                      key={`${pref.user_id}-${pref.exercise_name}`}
+                      primary={getExerciseName(pref.exercise_name)}
+                      onDelete={() => handleDeleteWeightUnitPreference(pref.exercise_name)}
+                      deleteTooltip="Remove weight unit preference"
+                      disabled={saving}
+                      actions={
+                        <WeightUnitPreferenceControls
+                          exerciseName={pref.exercise_name}
+                          size="small"
+                        />
+                      }
+                    />
+                  ))}
+                </List>
+              )}
+            </Box>
           </PreferenceSection>
         </TabPanel>
 
@@ -551,18 +702,18 @@ export function WorkoutPreferencesSection(): React.ReactElement {
         open={unitDialogOpen}
         onClose={() => setUnitDialogOpen(false)}
         onSubmit={handleAddWeightUnitPreference}
-        title="Add Weight Unit Preference"
-        submitText="Add Preference"
+        title="Add Weight Unit Preferences"
+        submitText="Add Preferences"
         loading={saving}
         useTanStackForm={true}
         defaultValues={{
-          exerciseName: '',
+          exerciseNames: [],
           preferredUnit: WeightUnit.LBS,
         }}
         validate={values => {
           const errors: Record<string, string> = {};
-          if (!values.exerciseName) {
-            errors.exerciseName = 'Please select an exercise';
+          if (!values.exerciseNames || values.exerciseNames.length === 0) {
+            errors.exerciseNames = 'Please select at least one exercise';
           }
           if (!values.preferredUnit) {
             errors.preferredUnit = 'Please select a preferred unit';
@@ -573,15 +724,14 @@ export function WorkoutPreferencesSection(): React.ReactElement {
         {form => (
           <Box display="flex" flexDirection="column" gap={2} sx={{ mt: 1 }}>
             <FormField
-              type="select"
-              label="Exercise"
-              name="exerciseName"
+              type="autocomplete"
+              label="Exercises"
+              name="exerciseNames"
               form={form}
-              options={
-                exercises && exercises.length > 0
-                  ? exercises.map(exercise => ({ value: exercise.name, label: exercise.name }))
-                  : [{ value: '', label: 'No exercises available' }]
-              }
+              multiple
+              options={exerciseNameOptions}
+              placeholder="Search and select exercises..."
+              required
             />
 
             <FormField

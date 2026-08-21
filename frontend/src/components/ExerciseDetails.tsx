@@ -7,6 +7,7 @@ import { ExercisePreferenceControls } from './ExercisePreferenceControls';
 import { GameCard, GameText, GameTextSecondary, GAME_CLASSES } from './GameTheme';
 import { LoadingSpinner } from './LoadingSpinner';
 import { RichTextDisplay } from './RichTextDisplay';
+import { WeightUnitPreferenceControls } from './WeightUnitPreferenceControls';
 import type { Exercise, ExerciseEquipment, ExerciseMuscle, Equipment, Muscle } from '../api/types';
 import { capitalizeEachWord, formatWeightWithUnit } from '../common/utils';
 import { useData } from '../contexts/DataContext';
@@ -177,7 +178,7 @@ export function ExerciseDetails(
         {/* Exercise Header */}
         <GameCard className="glassmorphism-card">
           <Box sx={{ p: 3 }}>
-            <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+            <Box display="flex" justifyContent="space-between" alignItems="center" mb={3} gap={2}>
               <GameText
                 variant="h1"
                 className={GAME_CLASSES.textBold}
@@ -188,11 +189,14 @@ export function ExerciseDetails(
               >
                 {exercise.name}
               </GameText>
-              <ExercisePreferenceControls
-                exerciseName={exercise.name}
-                variant="segmented"
-                size="medium"
-              />
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexShrink: 0 }}>
+                <WeightUnitPreferenceControls exerciseName={exercise.name} size="medium" />
+                <ExercisePreferenceControls
+                  exerciseName={exercise.name}
+                  variant="segmented"
+                  size="medium"
+                />
+              </Box>
             </Box>
 
             {/* Exercise Tags */}

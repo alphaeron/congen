@@ -64,4 +64,18 @@ describe('DeletableListItem', () => {
     const deleteButton = screen.getByLabelText('delete');
     expect(deleteButton).toBeDisabled();
   });
+
+  it('renders optional actions beside the delete button', () => {
+    render(
+      <DeletableListItem
+        primary="Test Item"
+        onDelete={mockOnDelete}
+        deleteTooltip="Delete item"
+        actions={<button type="button">Extra Action</button>}
+      />
+    );
+
+    expect(screen.getByText('Extra Action')).toBeInTheDocument();
+    expect(screen.getByLabelText('delete')).toBeInTheDocument();
+  });
 });
