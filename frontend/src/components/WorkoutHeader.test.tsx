@@ -201,14 +201,25 @@ describe('WorkoutHeader', () => {
     expect(screen.getByText('Week 2 - Day 3 of 4 (Upper Body)')).toBeInTheDocument();
   });
 
-  it('calls onExportPDF when export button is clicked', () => {
-    const onExportPDF = jest.fn();
-    render(<WorkoutHeader {...defaultProps} onExportPDF={onExportPDF} />);
+  it('calls onGenerateWeek when generate button is clicked in program context', () => {
+    const onGenerateWeek = jest.fn();
+    render(<WorkoutHeader {...defaultProps} currentWeek={1} onGenerateWeek={onGenerateWeek} />);
 
-    const exportButton = screen.getByTestId('export-buttons');
-    fireEvent.click(exportButton);
+    fireEvent.click(screen.getByTestId('generate-next-week-button'));
+    expect(onGenerateWeek).toHaveBeenCalledTimes(1);
+  });
 
-    expect(onExportPDF).toHaveBeenCalledTimes(1);
+  it('shows generating label when generateLoading is true', () => {
+    render(
+      <WorkoutHeader
+        {...defaultProps}
+        currentWeek={1}
+        onGenerateWeek={jest.fn()}
+        generateLoading={true}
+      />
+    );
+
+    expect(screen.getByText('Generating...')).toBeInTheDocument();
   });
 
   it('calls onSettings when settings button is clicked', () => {

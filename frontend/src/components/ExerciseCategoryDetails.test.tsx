@@ -21,11 +21,16 @@ jest.mock('../contexts/AuthContext', () => ({
 // Mock DataContext
 let mockUserExercisePool: UserExercisePoolResponse | null = null;
 const mockLoadUserExercisePool = jest.fn();
+const mockLoadUserExercisePreferences = jest.fn().mockResolvedValue([]);
+const mockRefreshSpecificData = jest.fn();
 
 jest.mock('../contexts/DataContext', () => ({
   useData: () => ({
     userExercisePool: mockUserExercisePool,
     loadUserExercisePool: mockLoadUserExercisePool,
+    userExercisePreferences: [],
+    loadUserExercisePreferences: mockLoadUserExercisePreferences,
+    refreshSpecificData: mockRefreshSpecificData,
     isLoading: false,
   }),
 }));

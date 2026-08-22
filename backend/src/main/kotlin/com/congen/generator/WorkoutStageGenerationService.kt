@@ -1006,6 +1006,7 @@ abstract class WorkoutStageGenerationService(
      * @param oneRepMaxes User's one rep max values
      * @param currentWeekNumber Current week number
      * @param preparedData The prepared data containing all required information
+     * @param applyDeBandWeight Whether to compute bar and band weights for a DE lift
      * @return Mono containing list of set scheme parameters
      */
     protected fun generateSetSchemes(
@@ -1015,6 +1016,7 @@ abstract class WorkoutStageGenerationService(
         oneRepMaxes: List<UserOneRepMax>,
         currentWeekNumber: Int,
         preparedData: WorkoutGenerationPreparedData,
+        applyDeBandWeight: Boolean = false,
     ): Mono<List<SetSchemeParams>> {
         return generatePrilepinBasedScheme(
             exercise = exercise,
@@ -1022,7 +1024,8 @@ abstract class WorkoutStageGenerationService(
             dayType = dayType,
             oneRepMaxes = oneRepMaxes,
             currentWeekNumber = currentWeekNumber,
-            preparedData = preparedData
+            preparedData = preparedData,
+            applyDeBandWeight = applyDeBandWeight,
         )
     }
 
@@ -1035,6 +1038,7 @@ abstract class WorkoutStageGenerationService(
      * @param oneRepMaxes User's one rep max values
      * @param currentWeekNumber Current week number
      * @param preparedData The prepared data containing all required information
+     * @param applyDeBandWeight Whether to compute bar and band weights for a DE lift
      * @return Mono containing the generated set schemes
      */
     protected fun generatePrilepinBasedScheme(
@@ -1044,6 +1048,7 @@ abstract class WorkoutStageGenerationService(
         oneRepMaxes: List<UserOneRepMax>,
         currentWeekNumber: Int,
         preparedData: WorkoutGenerationPreparedData,
+        applyDeBandWeight: Boolean = false,
     ): Mono<List<SetSchemeParams>> {
         val (guidelines, intensity) =
             prilepinGuidelinesService.getUndulatingPeriodizationGuidelines(
@@ -1067,18 +1072,16 @@ abstract class WorkoutStageGenerationService(
                 totalRepsRange = guidelines.totalRepsRange
             )
 
-        val isDynamicEffort = dayType.startsWith("DE_")
-        // For non-DE exercises, use standard weight calculation
         return weightSelectionService.getTargetWeight(
             exercise.name,
             intensity,
             oneRepMaxes,
-            isDynamicEffort = isDynamicEffort,
+            isDynamicEffort = applyDeBandWeight,
             currentWeekNumber = currentWeekNumber,
             preparedData = preparedData
         )
             .map { result ->
-                val useTempo = movementRole != "primary" && !isDynamicEffort && Random.nextBoolean()
+                val useTempo = movementRole != "primary" && !applyDeBandWeight && Random.nextBoolean()
                 val eccentric = if (useTempo) Random.nextInt(1, 4).toString() else "0"
                 val isometric = if (useTempo) Random.nextInt(0, 3).toString() else "0"
                 val concentric =
@@ -1105,7 +1108,7 @@ abstract class WorkoutStageGenerationService(
                         targetRepCount = repsPerSet,
                         performedRepCount = null,
                         restSeconds = restSeconds,
-                        band = result.band,
+                        band = if (applyDeBandWeight) result.band else null,
                     )
                 }
             }
@@ -1119,6 +1122,7 @@ abstract class WorkoutStageGenerationService(
      * @param oneRepMaxes User's one rep max values
      * @param currentWeekNumber Current week number
      * @param preparedData The prepared data containing all required information
+     * @param applyDeBandWeight Whether to compute bar and band weights for a DE lift
      * @return Mono containing the generated set schemes
      */
     protected fun generateSecondaryExerciseScheme(
@@ -1127,6 +1131,7 @@ abstract class WorkoutStageGenerationService(
         oneRepMaxes: List<UserOneRepMax>,
         currentWeekNumber: Int,
         preparedData: WorkoutGenerationPreparedData,
+        applyDeBandWeight: Boolean = false,
     ): Mono<List<SetSchemeParams>> {
         return generatePrilepinBasedScheme(
             exercise = exercise,
@@ -1134,7 +1139,8 @@ abstract class WorkoutStageGenerationService(
             dayType = dayType,
             oneRepMaxes = oneRepMaxes,
             currentWeekNumber = currentWeekNumber,
-            preparedData = preparedData
+            preparedData = preparedData,
+            applyDeBandWeight = applyDeBandWeight,
         )
     }
 
@@ -1226,18 +1232,16 @@ abstract class WorkoutStageGenerationService(
                 weekInCycle = weekInCycle
             )
 
-        val isDynamicEffort = dayType.startsWith("DE_")
-        // For non-DE exercises, use standard weight calculation
         return weightSelectionService.getTargetWeight(
             exercise.name,
             intensity,
             oneRepMaxes,
-            isDynamicEffort = isDynamicEffort,
+            isDynamicEffort = false,
             currentWeekNumber = currentWeekNumber,
             preparedData = preparedData
         )
             .map { result ->
-                val useTempo = Random.nextBoolean() // Random tempo for accessory exercises
+                val useTempo = Random.nextBoolean()
                 val eccentric = if (useTempo) Random.nextInt(1, 4).toString() else "0"
                 val isometric = if (useTempo) Random.nextInt(0, 3).toString() else "0"
                 val concentric =
@@ -1264,7 +1268,7 @@ abstract class WorkoutStageGenerationService(
                         targetRepCount = repsPerSet,
                         performedRepCount = null,
                         restSeconds = consistentRestSeconds,
-                        band = result.band,
+                        band = null,
                     )
                 }
             }

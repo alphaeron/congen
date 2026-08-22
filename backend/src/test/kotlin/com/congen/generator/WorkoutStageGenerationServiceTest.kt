@@ -1,5 +1,6 @@
 package com.congen.generator
 
+import com.congen.model.Band
 import com.congen.model.Exercise
 import com.congen.model.ExerciseEquipment
 import com.congen.model.ExerciseMuscle
@@ -247,6 +248,148 @@ class WorkoutStageGenerationServiceTest {
     }
 
     @Test
+    fun `generatePrilepinBasedScheme should apply band weight only when applyDeBandWeight is true`() {
+        val exercise = createSampleExercise("Box Squat", MovementType.SQUAT)
+        val preparedData = createSamplePreparedData()
+        val band = Band(BigDecimal("30"))
+
+        whenever(
+            prilepinGuidelinesService.getUndulatingPeriodizationGuidelines(any(), any(), any())
+        ).thenReturn(
+            Pair(
+                PrilepinGuidelines(
+                    intensityRange = 0.50..0.60,
+                    repsPerSetRange = 2..4,
+                    totalReps = 27,
+                    totalRepsRange = 24..30,
+                    restSeconds = 60..90
+                ),
+                0.55
+            )
+        )
+        whenever(
+            prilepinGuidelinesService.getRepsAndSetsBasedOnIntensity(any(), any(), any())
+        ).thenReturn(Pair(3, 9))
+        whenever(
+            prilepinGuidelinesService.getRestTimeBasedOnIntensity(any(), any(), any(), any())
+        ).thenReturn(75)
+
+        whenever(
+            weightSelectionService.getTargetWeight(
+                exerciseName = eq("Box Squat"),
+                intensity = any(),
+                oneRepMaxes = any(),
+                isDynamicEffort = eq(true),
+                currentWeekNumber = any(),
+                preparedData = any()
+            )
+        ).thenReturn(Mono.just(WeightSelectionService.TargetWeightResult(BigDecimal("135"), band)))
+
+        whenever(
+            weightSelectionService.getTargetWeight(
+                exerciseName = eq("Box Squat"),
+                intensity = any(),
+                oneRepMaxes = any(),
+                isDynamicEffort = eq(false),
+                currentWeekNumber = any(),
+                preparedData = any()
+            )
+        ).thenReturn(Mono.just(WeightSelectionService.TargetWeightResult(BigDecimal("185"), band)))
+
+        StepVerifier.create(
+            baseService.exposeGeneratePrilepinBasedScheme(
+                exercise = exercise,
+                movementRole = "primary",
+                dayType = "DE_Lower",
+                oneRepMaxes = preparedData.oneRepMaxes,
+                currentWeekNumber = 1,
+                preparedData = preparedData,
+                applyDeBandWeight = true
+            )
+        )
+            .assertNext { schemes ->
+                assertTrue(schemes.isNotEmpty())
+                schemes.forEach { scheme ->
+                    assertEquals(band, scheme.band)
+                }
+            }
+            .verifyComplete()
+
+        StepVerifier.create(
+            baseService.exposeGeneratePrilepinBasedScheme(
+                exercise = exercise,
+                movementRole = "secondary",
+                dayType = "DE_Upper",
+                oneRepMaxes = preparedData.oneRepMaxes,
+                currentWeekNumber = 1,
+                preparedData = preparedData,
+                applyDeBandWeight = false
+            )
+        )
+            .assertNext { schemes ->
+                assertTrue(schemes.isNotEmpty())
+                schemes.forEach { scheme ->
+                    assertEquals(null, scheme.band)
+                }
+            }
+            .verifyComplete()
+    }
+
+    @Test
+    fun `generateAccessorySchemeWithConsistentRest should never apply band weight on DE days`() {
+        val exercise = createSampleExercise("RDL", MovementType.HINGE)
+        val preparedData = createSamplePreparedData()
+        val band = Band(BigDecimal("30"))
+
+        whenever(
+            prilepinGuidelinesService.getUndulatingPeriodizationGuidelines(any(), any(), any())
+        ).thenReturn(
+            Pair(
+                PrilepinGuidelines(
+                    intensityRange = 0.65..0.75,
+                    repsPerSetRange = 8..12,
+                    totalReps = 24,
+                    totalRepsRange = 20..30,
+                    restSeconds = 60..90
+                ),
+                0.70
+            )
+        )
+        whenever(
+            prilepinGuidelinesService.getAccessoryRepsAndSets(any(), any(), any())
+        ).thenReturn(Pair(10, 3))
+
+        whenever(
+            weightSelectionService.getTargetWeight(
+                exerciseName = eq("RDL"),
+                intensity = any(),
+                oneRepMaxes = any(),
+                isDynamicEffort = eq(false),
+                currentWeekNumber = any(),
+                preparedData = any()
+            )
+        ).thenReturn(Mono.just(WeightSelectionService.TargetWeightResult(BigDecimal("135"), band)))
+
+        StepVerifier.create(
+            baseService.exposeGenerateAccessorySchemeWithConsistentRest(
+                exercise = exercise,
+                dayType = "DE_Lower",
+                oneRepMaxes = preparedData.oneRepMaxes,
+                currentWeekNumber = 1,
+                consistentRestSeconds = 90,
+                preparedData = preparedData
+            )
+        )
+            .assertNext { schemes ->
+                assertTrue(schemes.isNotEmpty())
+                schemes.forEach { scheme ->
+                    assertEquals(null, scheme.band)
+                }
+            }
+            .verifyComplete()
+    }
+
+    @Test
     fun `generateWorkoutStages should handle empty exercise selection gracefully`() {
         val preparedData = createSamplePreparedData()
 
@@ -488,6 +631,42 @@ class WorkoutStageGenerationServiceTest {
             generateAmrapOrEmomScheme(
                 exercise = exercise,
                 oneRepMaxes = oneRepMaxes,
+                preparedData = preparedData
+            )
+
+        fun exposeGeneratePrilepinBasedScheme(
+            exercise: Exercise,
+            movementRole: String,
+            dayType: String,
+            oneRepMaxes: List<UserOneRepMax>,
+            currentWeekNumber: Int,
+            preparedData: WorkoutGenerationPreparedData,
+            applyDeBandWeight: Boolean,
+        ): Mono<List<SetSchemeParams>> =
+            generatePrilepinBasedScheme(
+                exercise = exercise,
+                movementRole = movementRole,
+                dayType = dayType,
+                oneRepMaxes = oneRepMaxes,
+                currentWeekNumber = currentWeekNumber,
+                preparedData = preparedData,
+                applyDeBandWeight = applyDeBandWeight
+            )
+
+        fun exposeGenerateAccessorySchemeWithConsistentRest(
+            exercise: Exercise,
+            dayType: String,
+            oneRepMaxes: List<UserOneRepMax>,
+            currentWeekNumber: Int,
+            consistentRestSeconds: Int,
+            preparedData: WorkoutGenerationPreparedData,
+        ): Mono<List<SetSchemeParams>> =
+            generateAccessorySchemeWithConsistentRest(
+                exercise = exercise,
+                dayType = dayType,
+                oneRepMaxes = oneRepMaxes,
+                currentWeekNumber = currentWeekNumber,
+                consistentRestSeconds = consistentRestSeconds,
                 preparedData = preparedData
             )
 

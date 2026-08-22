@@ -114,7 +114,8 @@ class TwoDayWorkoutStageGenerationService(
                     dayType = primaryMovementType,
                     oneRepMaxes = preparedData.oneRepMaxes,
                     currentWeekNumber = preparedData.currentWeekNumber,
-                    preparedData = preparedData
+                    preparedData = preparedData,
+                    applyDeBandWeight = primaryMovementType.startsWith("DE_"),
                 )
             }.onErrorResume { error ->
                 logger.error("Failed to generate set schemes for primary exercise. Error: {}", error.message)
@@ -129,7 +130,8 @@ class TwoDayWorkoutStageGenerationService(
                     dayType = secondaryMovementType!!,
                     oneRepMaxes = preparedData.oneRepMaxes,
                     currentWeekNumber = preparedData.currentWeekNumber,
-                    preparedData = preparedData
+                    preparedData = preparedData,
+                    applyDeBandWeight = secondaryMovementType.startsWith("DE_"),
                 )
             }.onErrorResume { error ->
                 logger.error("Failed to generate set schemes for secondary exercise. Error: {}", error.message)

@@ -1,5 +1,5 @@
-import { render, screen, fireEvent, act } from '@testing-library/react';
 import React from 'react';
+import { render, screen, fireEvent, act } from '@testing-library/react';
 
 import { TrainingTimeline } from './TrainingTimeline';
 
@@ -339,6 +339,32 @@ describe('TrainingTimeline', () => {
     expect(screen.getByText('Workout 4')).toBeInTheDocument();
     expect(screen.getByText('Workout 5')).toBeInTheDocument();
     expect(screen.getByText('Workout 6')).toBeInTheDocument();
+  });
+
+  it('displays adherence density and status hints when provided', () => {
+    render(
+      <TrainingTimeline
+        {...defaultProps}
+        weeks={[
+          {
+            weekNumber: 1,
+            workouts: [
+              createMockWeekWorkout(1, 'ME Upper', true),
+              createMockWeekWorkout(2, 'DE Lower', false),
+            ],
+            isCompleted: false,
+            completedWorkouts: 1,
+            plannedWorkouts: 2,
+            totalVolume: 5000,
+            statusHint: '1 of 2 sessions · No ME volume',
+          },
+        ]}
+      />
+    );
+
+    expect(screen.getByTestId('week-adherence-1')).toBeInTheDocument();
+    expect(screen.getByTestId('week-volume-1')).toBeInTheDocument();
+    expect(screen.getByText('1 of 2 sessions · No ME volume')).toBeInTheDocument();
   });
 
   it('does not show scroll arrows when all weeks fit in the container', () => {

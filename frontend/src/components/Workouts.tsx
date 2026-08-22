@@ -4,7 +4,6 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 
 import { GameCard, GameText, GAME_CLASSES } from './GameTheme';
-import { HeroCTA } from './HeroCTA';
 import { LoadingBackdrop } from './LoadingBackdrop';
 import { LoadingSpinner } from './LoadingSpinner';
 import { TrainingTimeline } from './TrainingTimeline';
@@ -20,6 +19,7 @@ import {
   buildWeekProgressSummaries,
   getCurrentWeekFromProgress,
 } from '../utils/progressUtils';
+import { buildWeekVolumeTotals } from '../utils/volumeOverviewUtils';
 
 interface WorkoutsProps {
   selectedWorkout?: string | null;
@@ -172,6 +172,40 @@ export const Workouts: React.FC<WorkoutsProps> = () => {
 
   const currentWeek = useMemo(() => getCurrentWeekFromProgress(weeks), [weeks]);
 
+  const preferredUnit = useMemo((): 'KG' | 'LBS' => {
+    const preference = weightUnitPreferences.find(item => item.preferred_unit);
+    return preference?.preferred_unit === 'KG' ? 'KG' : 'LBS';
+  }, [weightUnitPreferences]);
+
+  const timelineWeekSummaries = useMemo(() => {
+    if (!activeProgramData || !activeProgramPreferences) {
+      return [];
+    }
+
+    const weekVolumes = buildWeekVolumeTotals(
+      activeProgramData.workouts,
+      exerciseData,
+      activeProgramPreferences.program_preferences.program_days_per_week,
+      preferredUnit
+    );
+    const volumeByWeek = new Map(weekVolumes.map(week => [week.weekNumber, week]));
+
+    return weeks.map(week => {
+      const volume = volumeByWeek.get(week.weekNumber);
+      const meUnderHint = volume && volume.maxEffortVolume <= 0 ? ' · No ME volume' : '';
+
+      return {
+        weekNumber: week.weekNumber,
+        workouts: week.workouts,
+        isCompleted: week.isCompleted,
+        completedWorkouts: week.completedWorkouts,
+        plannedWorkouts: week.workoutCount,
+        totalVolume: volume?.totalVolume || 0,
+        statusHint: `${week.completedWorkouts} of ${week.workoutCount} sessions${meUnderHint}`,
+      };
+    });
+  }, [activeProgramData, activeProgramPreferences, weeks, exerciseData, preferredUnit]);
+
   const openWizard = (program: Program) => {
     setSelectedProgram(program);
     setWizardOpen(true);
@@ -267,37 +301,28 @@ export const Workouts: React.FC<WorkoutsProps> = () => {
                 completedWorkouts={
                   weeks.find(w => w.weekNumber === currentWeek)?.completedWorkouts || 0
                 }
+                onGenerateWeek={() => openWizard(activeProgram.program)}
+                generateDisabled={isGenerating}
+                generateLoading={isGenerating}
               />
             )}
 
-            {/* Hero CTA Section */}
-            <HeroCTA
-              onClick={() => openWizard(activeProgram.program)}
-              disabled={isGenerating}
-              loading={isGenerating}
-              subtitle="Ready to level up your training? Create your next workout week and keep progressing!"
-              variant="primary"
-            />
-
-            {/* Stats Dashboard */}
             {userData?.training_programs &&
               userData.training_programs.length > 0 &&
               userData.training_programs.some(program => program.workouts.length > 0) && (
                 <VolumeOverviewCards
                   userDataExport={userData}
                   exerciseData={exerciseData}
-                  height={200}
+                  workoutsPerWeek={
+                    activeProgramPreferences?.program_preferences.program_days_per_week || 3
+                  }
+                  currentWeek={currentWeek}
+                  preferredUnit={preferredUnit}
                 />
               )}
 
-            {/* Training Timeline */}
             <TrainingTimeline
-              weeks={weeks.map(week => ({
-                weekNumber: week.weekNumber,
-                workouts: week.workouts,
-                isCompleted: week.isCompleted,
-                completedWorkouts: week.completedWorkouts,
-              }))}
+              weeks={timelineWeekSummaries}
               onWeekClick={handleWeekClick}
               currentWeek={currentWeek}
             />

@@ -145,7 +145,8 @@ class ThreeDayWorkoutStageGenerationService(
                     dayType = primaryMovementType,
                     oneRepMaxes = preparedData.oneRepMaxes,
                     currentWeekNumber = preparedData.currentWeekNumber,
-                    preparedData = preparedData
+                    preparedData = preparedData,
+                    applyDeBandWeight = primaryMovementType.startsWith("DE_"),
                 )
             }.onErrorResume { error ->
                 logger.error("Failed to generate set schemes for primary exercise. Error: {}", error.message)
@@ -160,7 +161,8 @@ class ThreeDayWorkoutStageGenerationService(
                     dayType = secondaryMovementType!!,
                     oneRepMaxes = preparedData.oneRepMaxes,
                     currentWeekNumber = preparedData.currentWeekNumber,
-                    preparedData = preparedData
+                    preparedData = preparedData,
+                    applyDeBandWeight = secondaryMovementType.startsWith("DE_"),
                 )
             }.onErrorResume { error ->
                 logger.error("Failed to generate set schemes for secondary exercise. Error: {}", error.message)
@@ -293,7 +295,8 @@ class ThreeDayWorkoutStageGenerationService(
                         dayType = "DE_Upper",
                         oneRepMaxes = preparedData.oneRepMaxes,
                         currentWeekNumber = preparedData.currentWeekNumber,
-                        preparedData = preparedData
+                        preparedData = preparedData,
+                        applyDeBandWeight = true,
                     ).onErrorResume { error ->
                         logger.error("Failed to generate set schemes for upper DE exercise. Error: {}", error.message)
                         Mono.just(emptyList())
@@ -305,7 +308,8 @@ class ThreeDayWorkoutStageGenerationService(
                         dayType = "DE_Lower",
                         oneRepMaxes = preparedData.oneRepMaxes,
                         currentWeekNumber = preparedData.currentWeekNumber,
-                        preparedData = preparedData
+                        preparedData = preparedData,
+                        applyDeBandWeight = true,
                     ).onErrorResume { error ->
                         logger.error("Failed to generate set schemes for lower DE exercise. Error: {}", error.message)
                         Mono.just(emptyList())

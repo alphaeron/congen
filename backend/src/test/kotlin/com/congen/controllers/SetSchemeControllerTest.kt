@@ -303,7 +303,8 @@ class SetSchemeControllerTest {
                 TARGET_REP_COUNT,
                 null,
                 REST_SECONDS_90,
-                "KG"
+                "KG",
+                null,
             )
         ).thenReturn(Mono.just(setScheme))
         doReturn(Mono.just(true)).whenever(gdprComplianceService).hasUserConsent(any<String>())
@@ -323,7 +324,8 @@ class SetSchemeControllerTest {
                 TARGET_REP_COUNT,
                 null,
                 REST_SECONDS_90,
-                "KG"
+                "KG",
+                null,
             )
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(setScheme))
@@ -385,7 +387,8 @@ class SetSchemeControllerTest {
                 null,
                 null,
                 REST_SECONDS_120,
-                "KG"
+                "KG",
+                null,
             )
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(setScheme))
@@ -512,7 +515,8 @@ class SetSchemeControllerTest {
                 TARGET_REP_COUNT,
                 null,
                 REST_SECONDS_90,
-                "LBS"
+                "LBS",
+                null,
             )
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(setScheme))
@@ -575,7 +579,8 @@ class SetSchemeControllerTest {
                 null,
                 null,
                 REST_SECONDS_120,
-                "LBS"
+                "LBS",
+                null,
             )
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(setScheme))

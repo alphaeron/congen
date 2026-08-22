@@ -167,8 +167,12 @@ export const FormField: React.FC<FormFieldProps> = props => {
   }
 
   if (type === 'autocomplete') {
-    const { options, getOptionLabel, multiple = false, placeholder } =
-      props as AutocompleteFormFieldProps;
+    const {
+      options,
+      getOptionLabel,
+      multiple = false,
+      placeholder,
+    } = props as AutocompleteFormFieldProps;
     const memoizedGetOptionLabel = useMemo(
       () => getOptionLabel || ((option: string) => option),
       [getOptionLabel]

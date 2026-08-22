@@ -45,6 +45,7 @@ export const getSetScheme = (id: number): Promise<SetScheme> => {
  * @param performedRepCount Performed rep count
  * @param restSeconds Rest period in seconds
  * @param unit Weight unit (KG or LBS)
+ * @param bandWeightLbs Optional band weight in pounds for Dynamic Effort exercises
  * @returns Promise containing the updated set scheme
  */
 export const updateSetScheme = (
@@ -62,7 +63,8 @@ export const updateSetScheme = (
   targetRepCount?: number,
   performedRepCount?: number,
   restSeconds?: number,
-  unit: string = 'KG'
+  unit: string = 'KG',
+  bandWeightLbs?: number | null
 ): Promise<SetScheme> => {
   const params = new URLSearchParams({
     programmed_exercise_id: programmedExerciseId.toString(),
@@ -82,6 +84,7 @@ export const updateSetScheme = (
   if (performedRepCount !== undefined)
     params.append('performed_rep_count', performedRepCount.toString());
   if (restSeconds !== undefined) params.append('rest_seconds', restSeconds.toString());
+  if (bandWeightLbs !== undefined) params.append('band_weight_lbs', bandWeightLbs.toString());
 
   return REQUEST({
     method: 'PATCH',
@@ -106,6 +109,7 @@ export const updateSetScheme = (
  * @param performedRepCount Performed rep count
  * @param restSeconds Rest period in seconds
  * @param unit Weight unit (KG or LBS)
+ * @param bandWeightLbs Optional band weight in pounds for Dynamic Effort exercises
  * @returns Promise containing the created set scheme
  */
 export const createSetScheme = (
@@ -122,7 +126,8 @@ export const createSetScheme = (
   targetRepCount?: number,
   performedRepCount?: number,
   restSeconds?: number,
-  unit: string = 'KG'
+  unit: string = 'KG',
+  bandWeightLbs?: number | null
 ): Promise<SetScheme> => {
   const params = new URLSearchParams({
     programmed_exercise_id: programmedExerciseId.toString(),
@@ -141,6 +146,7 @@ export const createSetScheme = (
   if (performedRepCount !== undefined)
     params.append('performed_rep_count', performedRepCount.toString());
   params.append('rest_seconds', (restSeconds ?? 60).toString());
+  if (bandWeightLbs !== undefined) params.append('band_weight_lbs', bandWeightLbs.toString());
 
   return REQUEST({
     method: 'POST',

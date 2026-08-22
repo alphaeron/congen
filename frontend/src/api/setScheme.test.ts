@@ -2,7 +2,7 @@ import MockAdapter from 'axios-mock-adapter';
 
 import { expectRequestError } from './apiRequestErrorTestUtils';
 import { ENDPOINT } from './endpoint';
-import { getSetSchemesByExercise, getSetScheme } from './setScheme';
+import { getSetSchemesByExercise, getSetScheme, updateSetScheme } from './setScheme';
 import type { SetScheme } from './types';
 
 const mock = new MockAdapter(ENDPOINT);
@@ -128,6 +128,59 @@ describe('SetScheme API', () => {
       expect(result.target_weight).toBe(0);
       expect(result.rest_seconds).toBe(0);
       expect(result.target_rep_count).toBe(0);
+    });
+  });
+
+  describe('updateSetScheme', () => {
+    it('should include band_weight_lbs when provided', async () => {
+      mock.onPatch(/\/set_scheme\/1/).reply(200, { ...mockSetScheme, band_weight_lbs: 60 });
+
+      await updateSetScheme(
+        1,
+        1,
+        1,
+        false,
+        false,
+        false,
+        undefined,
+        undefined,
+        undefined,
+        135,
+        135,
+        8,
+        8,
+        90,
+        'KG',
+        60
+      );
+
+      expect(mock.history.patch).toHaveLength(1);
+      expect(mock.history.patch[0].url).toContain('band_weight_lbs=60');
+    });
+
+    it('should omit band_weight_lbs when not provided', async () => {
+      mock.onPatch(/\/set_scheme\/1/).reply(200, mockSetScheme);
+
+      await updateSetScheme(
+        1,
+        1,
+        1,
+        false,
+        false,
+        false,
+        undefined,
+        undefined,
+        undefined,
+        135,
+        135,
+        8,
+        8,
+        90,
+        'KG'
+      );
+
+      expect(mock.history.patch).toHaveLength(1);
+      expect(mock.history.patch[0].url).not.toContain('band_weight_lbs');
     });
   });
 });

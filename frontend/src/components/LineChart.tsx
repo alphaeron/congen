@@ -9,8 +9,9 @@ import type {
   ProgrammedWorkoutWithStages,
   WorkoutStageWithExercises,
 } from '../api/types';
-import { formatDate, KG_TO_LBS } from '../common/utils';
+import { formatDate } from '../common/utils';
 import { createCongenNivoTheme, congenColorSchemes } from '../theme/nivoTheme';
+import { computeSetVolume } from '../utils/volumeOverviewUtils';
 
 interface LineChartProps {
   userDataExport: UserDataExport | null;
@@ -104,14 +105,8 @@ export const LineChart: React.FC<LineChartProps> = ({
         (workoutData.stages as WorkoutStageWithExercises[]).forEach(stage => {
           stage.exercises.forEach(exerciseWithSchemes => {
             exerciseWithSchemes.set_schemes.forEach(setScheme => {
-              const weight = setScheme.performed_weight || setScheme.target_weight || 0;
-              const reps = setScheme.performed_rep_count || setScheme.target_rep_count || 0;
-              const bandWeight =
-                typeof setScheme.band_weight_lbs === 'number' && setScheme.band_weight_lbs > 0
-                  ? setScheme.band_weight_lbs
-                  : 0;
-              const convertedWeight = weight * KG_TO_LBS;
-              totalVolume += (convertedWeight + bandWeight) * reps;
+              const { volume } = computeSetVolume(setScheme);
+              totalVolume += volume;
             });
           });
         });

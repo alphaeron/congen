@@ -105,10 +105,9 @@ export const FormDialog = <TFormData extends Record<string, unknown>>({
               : children}
           </DialogContent>
           <DialogActions>
-            <form.Subscribe
-              selector={state => state.isSubmitting}
-              children={isSubmitting => (
-                <>
+            <form.Subscribe selector={state => state.isSubmitting}>
+              {isSubmitting => (
+                <React.Fragment>
                   <Button onClick={onClose} disabled={loading || isSubmitting}>
                     {cancelText}
                   </Button>
@@ -120,9 +119,9 @@ export const FormDialog = <TFormData extends Record<string, unknown>>({
                   >
                     {loading || isSubmitting ? 'Processing...' : submitText}
                   </Button>
-                </>
+                </React.Fragment>
               )}
-            />
+            </form.Subscribe>
           </DialogActions>
         </form>
       ) : (

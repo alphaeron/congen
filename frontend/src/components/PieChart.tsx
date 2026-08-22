@@ -10,8 +10,8 @@ import type {
   WorkoutStageWithExercises,
   UserWeightUnitPreference,
 } from '../api/types';
-import { KG_TO_LBS } from '../common/utils';
 import { createCongenNivoTheme } from '../theme/nivoTheme';
+import { computeSetVolume } from '../utils/volumeOverviewUtils';
 
 interface PieChartProps {
   userDataExport: UserDataExport | null;
@@ -72,15 +72,8 @@ export const PieChart: React.FC<PieChartProps> = ({
           // Calculate volume for this exercise in this stage
           let stageVolume = 0;
           exerciseWithSchemes.set_schemes.forEach(setScheme => {
-            const weight = setScheme.performed_weight || setScheme.target_weight || 0;
-            const reps = setScheme.performed_rep_count || setScheme.target_rep_count || 0;
-            const bandWeight =
-              typeof setScheme.band_weight_lbs === 'number' && setScheme.band_weight_lbs > 0
-                ? setScheme.band_weight_lbs
-                : 0;
-
-            const convertedWeight = weight * KG_TO_LBS;
-            stageVolume += (convertedWeight + bandWeight) * reps;
+            const { volume } = computeSetVolume(setScheme);
+            stageVolume += volume;
           });
 
           // Add to stage volume

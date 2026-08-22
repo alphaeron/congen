@@ -3,10 +3,13 @@ package com.congen.dal
 import com.congen.client.PostgresClient
 import com.congen.exceptions.ValidationException
 import com.congen.mockSetScheme
+import com.congen.model.Band
 import com.congen.model.SetScheme
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import org.mockito.kotlin.any
+import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
@@ -218,39 +221,27 @@ class SetSchemeDALTest {
     }
 
     @Test
-    fun `updateSetScheme should return updated set scheme`() {
+    fun `updateSetScheme should return updated set scheme without changing band weight when not requested`() {
         val updatedSetScheme = mockSetScheme()
-        val expectedQuery =
-            """
-            UPDATE set_scheme
-            SET programmed_exercise_id=$2, set_number=$3, is_amrap=$4, is_emom=$5, use_tempo=$6,
-                eccentric_tempo=$7, isometric_tempo=$8, concentric_tempo=$9, target_weight=$10, performed_weight=$11,
-                target_rep_count=$12, performed_rep_count=$13, rest_seconds=$14, band_weight_lbs=$15, updated_at=NOW()
-            WHERE id=$1
-            RETURNING id, programmed_exercise_id, set_number, is_amrap, is_emom, use_tempo,
-                      eccentric_tempo, isometric_tempo, concentric_tempo, target_weight, performed_weight,
-                      target_rep_count, performed_rep_count, rest_seconds, band_weight_lbs, created_at, updated_at
-            """.trimIndent()
 
         whenever(
             postgresClient.updateLiteral(
-                expectedQuery,
-                SetScheme::class,
-                updatedSetScheme.id,
-                updatedSetScheme.programmedExerciseId,
-                updatedSetScheme.setNumber,
-                updatedSetScheme.isAmrap,
-                updatedSetScheme.isEmom,
-                updatedSetScheme.useTempo,
-                updatedSetScheme.eccentricTempo,
-                updatedSetScheme.isometricTempo,
-                updatedSetScheme.concentricTempo,
-                updatedSetScheme.targetWeight,
-                updatedSetScheme.performedWeight,
-                updatedSetScheme.targetRepCount,
-                updatedSetScheme.performedRepCount,
-                updatedSetScheme.restSeconds,
-                null,
+                any(),
+                eq(SetScheme::class),
+                eq(updatedSetScheme.id),
+                eq(updatedSetScheme.programmedExerciseId),
+                eq(updatedSetScheme.setNumber),
+                eq(updatedSetScheme.isAmrap),
+                eq(updatedSetScheme.isEmom),
+                eq(updatedSetScheme.useTempo),
+                eq(updatedSetScheme.eccentricTempo),
+                eq(updatedSetScheme.isometricTempo),
+                eq(updatedSetScheme.concentricTempo),
+                eq(updatedSetScheme.targetWeight),
+                eq(updatedSetScheme.performedWeight),
+                eq(updatedSetScheme.targetRepCount),
+                eq(updatedSetScheme.performedRepCount),
+                eq(updatedSetScheme.restSeconds),
             ),
         ).thenReturn(Mono.just(updatedSetScheme))
         val result =
@@ -269,27 +260,91 @@ class SetSchemeDALTest {
                 updatedSetScheme.targetRepCount,
                 updatedSetScheme.performedRepCount,
                 updatedSetScheme.restSeconds,
-                band = null
             )
         StepVerifier.create(result).expectNext(updatedSetScheme).verifyComplete()
         verify(postgresClient).updateLiteral(
-            expectedQuery,
-            SetScheme::class,
-            updatedSetScheme.id,
-            updatedSetScheme.programmedExerciseId,
-            updatedSetScheme.setNumber,
-            updatedSetScheme.isAmrap,
-            updatedSetScheme.isEmom,
-            updatedSetScheme.useTempo,
-            updatedSetScheme.eccentricTempo,
-            updatedSetScheme.isometricTempo,
-            updatedSetScheme.concentricTempo,
-            updatedSetScheme.targetWeight,
-            updatedSetScheme.performedWeight,
-            updatedSetScheme.targetRepCount,
-            updatedSetScheme.performedRepCount,
-            updatedSetScheme.restSeconds,
-            null,
+            any(),
+            eq(SetScheme::class),
+            eq(updatedSetScheme.id),
+            eq(updatedSetScheme.programmedExerciseId),
+            eq(updatedSetScheme.setNumber),
+            eq(updatedSetScheme.isAmrap),
+            eq(updatedSetScheme.isEmom),
+            eq(updatedSetScheme.useTempo),
+            eq(updatedSetScheme.eccentricTempo),
+            eq(updatedSetScheme.isometricTempo),
+            eq(updatedSetScheme.concentricTempo),
+            eq(updatedSetScheme.targetWeight),
+            eq(updatedSetScheme.performedWeight),
+            eq(updatedSetScheme.targetRepCount),
+            eq(updatedSetScheme.performedRepCount),
+            eq(updatedSetScheme.restSeconds),
+        )
+    }
+
+    @Test
+    fun `updateSetScheme should update band weight when requested`() {
+        val updatedSetScheme = mockSetScheme()
+        val band = Band(BigDecimal("60"))
+
+        whenever(
+            postgresClient.updateLiteral(
+                any(),
+                eq(SetScheme::class),
+                eq(updatedSetScheme.id),
+                eq(updatedSetScheme.programmedExerciseId),
+                eq(updatedSetScheme.setNumber),
+                eq(updatedSetScheme.isAmrap),
+                eq(updatedSetScheme.isEmom),
+                eq(updatedSetScheme.useTempo),
+                eq(updatedSetScheme.eccentricTempo),
+                eq(updatedSetScheme.isometricTempo),
+                eq(updatedSetScheme.concentricTempo),
+                eq(updatedSetScheme.targetWeight),
+                eq(updatedSetScheme.performedWeight),
+                eq(updatedSetScheme.targetRepCount),
+                eq(updatedSetScheme.performedRepCount),
+                eq(updatedSetScheme.restSeconds),
+                eq(band.weightLbs.toDouble()),
+            ),
+        ).thenReturn(Mono.just(updatedSetScheme))
+        val result =
+            setSchemeDAL.updateSetScheme(
+                updatedSetScheme.id,
+                updatedSetScheme.programmedExerciseId,
+                updatedSetScheme.setNumber,
+                updatedSetScheme.isAmrap,
+                updatedSetScheme.isEmom,
+                updatedSetScheme.useTempo,
+                updatedSetScheme.eccentricTempo,
+                updatedSetScheme.isometricTempo,
+                updatedSetScheme.concentricTempo,
+                updatedSetScheme.targetWeight,
+                updatedSetScheme.performedWeight,
+                updatedSetScheme.targetRepCount,
+                updatedSetScheme.performedRepCount,
+                updatedSetScheme.restSeconds,
+                band = band,
+            )
+        StepVerifier.create(result).expectNext(updatedSetScheme).verifyComplete()
+        verify(postgresClient).updateLiteral(
+            any(),
+            eq(SetScheme::class),
+            eq(updatedSetScheme.id),
+            eq(updatedSetScheme.programmedExerciseId),
+            eq(updatedSetScheme.setNumber),
+            eq(updatedSetScheme.isAmrap),
+            eq(updatedSetScheme.isEmom),
+            eq(updatedSetScheme.useTempo),
+            eq(updatedSetScheme.eccentricTempo),
+            eq(updatedSetScheme.isometricTempo),
+            eq(updatedSetScheme.concentricTempo),
+            eq(updatedSetScheme.targetWeight),
+            eq(updatedSetScheme.performedWeight),
+            eq(updatedSetScheme.targetRepCount),
+            eq(updatedSetScheme.performedRepCount),
+            eq(updatedSetScheme.restSeconds),
+            eq(band.weightLbs.toDouble()),
         )
     }
 

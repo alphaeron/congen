@@ -9,7 +9,6 @@ import {
   TextField,
   Tooltip,
 } from '@mui/material';
-import type { SxProps, Theme } from '@mui/material/styles';
 import React, { useState } from 'react';
 
 import { GameText } from './GameTheme';
@@ -21,6 +20,7 @@ import {
 import type { ProgrammedExerciseWithSetSchemes, UserWeightUnitPreference } from '../api/types';
 import { formatWeightWithUnit } from '../common/utils';
 
+import type { SxProps, Theme } from '@mui/material/styles';
 import type { ReactFormExtendedApi } from '@tanstack/react-form';
 
 export interface SetSchemeFormData {
@@ -151,9 +151,7 @@ export function performedValuesVary(
   const effectiveWeights = weightBySet.map(w => w ?? sharedWeight);
   const firstRep = effectiveReps[0];
   const firstWeight = effectiveWeights[0];
-  return (
-    effectiveReps.some(r => r !== firstRep) || effectiveWeights.some(w => w !== firstWeight)
-  );
+  return effectiveReps.some(r => r !== firstRep) || effectiveWeights.some(w => w !== firstWeight);
 }
 
 export function buildSetSchemeFormDefaultsFromExercise(
@@ -565,9 +563,7 @@ export const SetSchemeForm: React.FC<SetSchemeFormProps> = ({
                             {field => {
                               const arr = field.state.value ?? [];
                               const effective =
-                                arr[setIndex] ??
-                                values.performedWeight ??
-                                values.targetWeight;
+                                arr[setIndex] ?? values.performedWeight ?? values.targetWeight;
                               return (
                                 <NumericStepInput
                                   label={`Set ${setIndex + 1} weight`}
@@ -703,7 +699,9 @@ export const SetSchemeForm: React.FC<SetSchemeFormProps> = ({
                     )}
                   </form.Field>
 
-                  <form.Subscribe selector={(state: { values: SetSchemeFormData }) => state.values.useTempo}>
+                  <form.Subscribe
+                    selector={(state: { values: SetSchemeFormData }) => state.values.useTempo}
+                  >
                     {(useTempo: boolean) =>
                       useTempo ? (
                         <Box sx={fieldRowSx}>

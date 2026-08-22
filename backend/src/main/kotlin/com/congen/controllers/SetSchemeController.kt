@@ -1,5 +1,6 @@
 package com.congen.controllers
 
+import com.congen.model.Band
 import com.congen.model.SetScheme
 import com.congen.service.GdprComplianceService
 import com.congen.service.ProgrammedExerciseService
@@ -92,6 +93,7 @@ class SetSchemeController(
      * @param performedRepCount Actual number of repetitions completed
      * @param restSeconds Rest period after the set in seconds
      * @param unit Optional unit for weight values (KG or LBS). Defaults to KG
+     * @param bandWeightLbs Optional band weight in pounds for Dynamic Effort exercises
      * @return Mono containing the created set scheme with generated ID
      */
     @PostMapping("/")
@@ -111,6 +113,7 @@ class SetSchemeController(
         @RequestParam("performed_rep_count") performedRepCount: Int?,
         @RequestParam("rest_seconds") restSeconds: Int?,
         @RequestParam(required = false, defaultValue = "KG") unit: String?,
+        @RequestParam(required = false, name = "band_weight_lbs") bandWeightLbs: String?,
     ): Mono<ResponseEntity<SetScheme>> {
         return keycloakUtil.getCurrentUserId().zipWith(keycloakUtil.getCurrentUserRoles()) { userId, roles ->
             Pair(userId, roles)
@@ -140,7 +143,8 @@ class SetSchemeController(
                                 targetRepCount,
                                 performedRepCount,
                                 restSeconds,
-                                unit
+                                unit,
+                                band = bandWeightLbs?.toBigDecimalOrNull()?.let { Band.fromWeight(it) },
                             ).map { ResponseEntity.ok(it) }
                                 .doOnError { e -> logger.error("Error creating set scheme", e) }
                         }
@@ -293,6 +297,7 @@ class SetSchemeController(
      * @param performedRepCount The updated actual number of repetitions completed
      * @param restSeconds The updated rest period after the set in seconds
      * @param unit Optional unit for weight values (KG or LBS). Defaults to KG
+     * @param bandWeightLbs Optional band weight in pounds; when omitted, existing band weight is preserved
      * @return ResponseEntity containing the updated set scheme
      */
     @PatchMapping("/{id}")
@@ -313,6 +318,7 @@ class SetSchemeController(
         @RequestParam("performed_rep_count") performedRepCount: Int?,
         @RequestParam("rest_seconds") restSeconds: Int?,
         @RequestParam(required = false, defaultValue = "KG") unit: String?,
+        @RequestParam(required = false, name = "band_weight_lbs") bandWeightLbs: String?,
     ): Mono<ResponseEntity<SetScheme>> {
         return keycloakUtil.getCurrentUserId().zipWith(keycloakUtil.getCurrentUserRoles()) { userId, roles ->
             Pair(userId, roles)
@@ -349,6 +355,7 @@ class SetSchemeController(
                                 performedRepCount,
                                 restSeconds,
                                 unit,
+                                band = bandWeightLbs?.toBigDecimalOrNull()?.let { Band.fromWeight(it) },
                             ).map { ResponseEntity.ok(it) }
                                 .doOnError { e -> logger.error("Error updating set scheme", e) }
                         }

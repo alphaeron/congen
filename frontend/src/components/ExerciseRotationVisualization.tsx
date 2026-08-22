@@ -53,7 +53,9 @@ export const ExerciseRotationVisualization: React.FC = () => {
         setIsLoading(true);
         await loadUserExercisePool();
       } catch {
-        enqueueSnackbar('Failed to load exercise pool data. Please try again.', { variant: 'error' });
+        enqueueSnackbar('Failed to load exercise pool data. Please try again.', {
+          variant: 'error',
+        });
       } finally {
         setIsLoading(false);
       }

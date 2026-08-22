@@ -263,7 +263,12 @@ describe('Workouts', () => {
       },
       exerciseMuscleData: new Map(),
       weightUnitPreferences: [],
-      programPreferences: [{ ...mockProgramWithPreferences, program: { ...mockProgramWithPreferences.program, is_active: false } }],
+      programPreferences: [
+        {
+          ...mockProgramWithPreferences,
+          program: { ...mockProgramWithPreferences.program, is_active: false },
+        },
+      ],
       isLoading: false,
       error: null,
       refreshData: jest.fn(),
@@ -330,7 +335,7 @@ describe('Workouts', () => {
 
     // Just check that the component renders without errors
     await waitFor(() => {
-      expect(screen.getByTestId('hero-cta')).toBeInTheDocument();
+      expect(screen.getByTestId('workout-header')).toBeInTheDocument();
     });
   });
 
@@ -357,7 +362,7 @@ describe('Workouts', () => {
 
     // Just check that the component renders without errors
     await waitFor(() => {
-      expect(screen.getByTestId('hero-cta')).toBeInTheDocument();
+      expect(screen.getByTestId('workout-header')).toBeInTheDocument();
     });
   });
 
@@ -395,7 +400,7 @@ describe('Workouts', () => {
 
     // Just check that the component renders without errors
     await waitFor(() => {
-      expect(screen.getByTestId('hero-cta')).toBeInTheDocument();
+      expect(screen.getByTestId('workout-header')).toBeInTheDocument();
     });
   }, 15000);
 

@@ -471,7 +471,7 @@ class ConjugateWorkoutGeneratorService(
                             performedRepCount = setScheme.performedRepCount,
                             restSeconds = setScheme.restSeconds,
                             unit = weightUnit.name,
-                            band = setScheme.band
+                            band = setScheme.band,
                         )
                     }
                     .then()

@@ -45,18 +45,21 @@ export function ExercisePreferenceControls(
   const { user } = useAuth();
   const { enqueueSnackbar } = useSnackbar();
   const { userExercisePreferences, loadUserExercisePreferences, refreshSpecificData } = useData();
+  const preferences = userExercisePreferences ?? [];
 
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [hasLoadedPreferences, setHasLoadedPreferences] = useState(false);
 
   // Ensure the shared preference list is loaded once for this user.
   useEffect(() => {
     const ensurePreferencesLoaded = async () => {
-      if (!user?.keycloak_id || userExercisePreferences.length > 0) return;
+      if (!user?.keycloak_id || preferences.length > 0 || hasLoadedPreferences) return;
 
       setLoading(true);
       try {
         await loadUserExercisePreferences();
+        setHasLoadedPreferences(true);
       } catch {
         enqueueSnackbar('Failed to load exercise preference', { variant: 'error' });
       } finally {
@@ -67,7 +70,8 @@ export function ExercisePreferenceControls(
     ensurePreferencesLoaded();
   }, [
     user?.keycloak_id,
-    userExercisePreferences.length,
+    preferences.length,
+    hasLoadedPreferences,
     loadUserExercisePreferences,
     enqueueSnackbar,
   ]);
@@ -75,8 +79,8 @@ export function ExercisePreferenceControls(
   // Derive the current preference directly from DataContext so the control
   // always reflects the latest shared state without mirroring it locally.
   const preference = useMemo<UserExercisePreference | null>(
-    () => userExercisePreferences.find(p => p.exercise_name === exerciseName) ?? null,
-    [userExercisePreferences, exerciseName]
+    () => preferences.find(p => p.exercise_name === exerciseName) ?? null,
+    [preferences, exerciseName]
   );
 
   const getCurrentPreferenceState = (): ExercisePreferenceState => {

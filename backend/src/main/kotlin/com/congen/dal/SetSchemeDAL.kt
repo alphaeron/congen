@@ -312,7 +312,7 @@ class SetSchemeDAL(
      * @param targetRepCount Target number of repetitions
      * @param performedRepCount Actual number of repetitions completed
      * @param restSeconds Rest period after the set in seconds
-     * @param band The band information for Dynamic Effort exercises
+     * @param band When non-null, updates band_weight_lbs; when null, preserves the existing value
      * @return Mono containing the updated set scheme
      * @throws ValidationException if set scheme data fails validation
      * @throws NoResultsFoundException if no set scheme exists with the given ID
@@ -351,35 +351,67 @@ class SetSchemeDAL(
         ValidationUtil.validatePerformedRepCount(performedRepCount)
         ValidationUtil.validateRestSeconds(restSeconds)
 
-        // First perform the update without returning data
-        return postgresClient.updateLiteral(
+        val returningColumns =
             """
-            UPDATE set_scheme
-            SET programmed_exercise_id=$2, set_number=$3, is_amrap=$4, is_emom=$5, use_tempo=$6,
-                eccentric_tempo=$7, isometric_tempo=$8, concentric_tempo=$9, target_weight=$10, performed_weight=$11,
-                target_rep_count=$12, performed_rep_count=$13, rest_seconds=$14, band_weight_lbs=$15, updated_at=NOW()
-            WHERE id=$1
             RETURNING id, programmed_exercise_id, set_number, is_amrap, is_emom, use_tempo,
                       eccentric_tempo, isometric_tempo, concentric_tempo, target_weight, performed_weight,
                       target_rep_count, performed_rep_count, rest_seconds, band_weight_lbs, created_at, updated_at
-            """.trimIndent(),
-            SetScheme::class,
-            id,
-            programmedExerciseId,
-            setNumber,
-            isAmrap,
-            isEmom,
-            useTempo,
-            eccentricTempo,
-            isometricTempo,
-            concentricTempo,
-            targetWeight,
-            performedWeight,
-            targetRepCount,
-            performedRepCount,
-            restSeconds,
-            band?.weightLbs?.toDouble(),
-        )
+            """.trimIndent()
+
+        return if (band != null) {
+            postgresClient.updateLiteral(
+                """
+                UPDATE set_scheme
+                SET programmed_exercise_id=$2, set_number=$3, is_amrap=$4, is_emom=$5, use_tempo=$6,
+                    eccentric_tempo=$7, isometric_tempo=$8, concentric_tempo=$9, target_weight=$10, performed_weight=$11,
+                    target_rep_count=$12, performed_rep_count=$13, rest_seconds=$14, band_weight_lbs=$15, updated_at=NOW()
+                WHERE id=$1
+                $returningColumns
+                """.trimIndent(),
+                SetScheme::class,
+                id,
+                programmedExerciseId,
+                setNumber,
+                isAmrap,
+                isEmom,
+                useTempo,
+                eccentricTempo,
+                isometricTempo,
+                concentricTempo,
+                targetWeight,
+                performedWeight,
+                targetRepCount,
+                performedRepCount,
+                restSeconds,
+                band.weightLbs.toDouble(),
+            )
+        } else {
+            postgresClient.updateLiteral(
+                """
+                UPDATE set_scheme
+                SET programmed_exercise_id=$2, set_number=$3, is_amrap=$4, is_emom=$5, use_tempo=$6,
+                    eccentric_tempo=$7, isometric_tempo=$8, concentric_tempo=$9, target_weight=$10, performed_weight=$11,
+                    target_rep_count=$12, performed_rep_count=$13, rest_seconds=$14, updated_at=NOW()
+                WHERE id=$1
+                $returningColumns
+                """.trimIndent(),
+                SetScheme::class,
+                id,
+                programmedExerciseId,
+                setNumber,
+                isAmrap,
+                isEmom,
+                useTempo,
+                eccentricTempo,
+                isometricTempo,
+                concentricTempo,
+                targetWeight,
+                performedWeight,
+                targetRepCount,
+                performedRepCount,
+                restSeconds,
+            )
+        }
     }
 
     /**

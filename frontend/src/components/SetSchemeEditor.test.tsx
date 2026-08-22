@@ -258,6 +258,37 @@ describe('SetSchemeEditor', () => {
     );
   }, 15000);
 
+  it('passes band weight when updating DE exercise tracking', async () => {
+    const user = userEvent.setup();
+    const deExercise: ProgrammedExerciseWithSetSchemes = {
+      ...mockExercise,
+      set_schemes: mockExercise.set_schemes.map(scheme => ({
+        ...scheme,
+        band_weight_lbs: 60,
+      })),
+    };
+
+    render(
+      <SetSchemeEditor
+        exercise={deExercise}
+        onExerciseUpdate={mockOnExerciseUpdate}
+        isMostRecentWeek={true}
+      />
+    );
+
+    await user.click(screen.getByLabelText(/edit exercise/i));
+    await user.click(screen.getByText(/submit/i));
+
+    await waitFor(
+      () => {
+        expect(updateSetScheme).toHaveBeenCalled();
+        expect((updateSetScheme as jest.Mock).mock.calls[0][15]).toBe(60);
+        expect((updateSetScheme as jest.Mock).mock.calls[1][15]).toBe(60);
+      },
+      { timeout: 10000 }
+    );
+  }, 15000);
+
   it('handles exercises with no set schemes', async () => {
     const user = userEvent.setup();
     const exerciseWithoutSets = {

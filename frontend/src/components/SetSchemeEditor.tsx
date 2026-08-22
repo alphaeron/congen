@@ -24,10 +24,7 @@ import {
 import { deleteProgrammedExercise } from '../api/programmedExercise';
 import { createSetScheme, deleteSetScheme, updateSetScheme } from '../api/setScheme';
 import type { ProgrammedExerciseWithSetSchemes, UserWeightUnitPreference } from '../api/types';
-import {
-  convertDisplayWeightToKg,
-  formatBandWeightWithUnit,
-} from '../common/utils';
+import { convertDisplayWeightToKg, formatBandWeightWithUnit } from '../common/utils';
 
 interface SetSchemeEditorProps {
   exercise: ProgrammedExerciseWithSetSchemes;
@@ -108,6 +105,8 @@ export const SetSchemeEditor: React.FC<SetSchemeEditorProps> = ({
         const programmedExerciseId = exercise.exercise.id;
         const targetWeightKg = convertWeightForStorage(value.targetWeight);
 
+        const bandWeightLbs = firstSetScheme?.band_weight_lbs;
+
         const schemesToUpdate = sortedSchemes.slice(0, newTotal);
         const updatePromises = schemesToUpdate.map(setScheme => {
           const setIndex = setScheme.set_number - 1;
@@ -129,7 +128,8 @@ export const SetSchemeEditor: React.FC<SetSchemeEditorProps> = ({
             value.targetReps,
             performed.reps,
             value.restSeconds,
-            'KG'
+            'KG',
+            bandWeightLbs
           );
         });
 
@@ -155,7 +155,8 @@ export const SetSchemeEditor: React.FC<SetSchemeEditorProps> = ({
                 value.targetReps,
                 performed.reps,
                 value.restSeconds,
-                'KG'
+                'KG',
+                bandWeightLbs
               )
             );
           }
@@ -241,8 +242,8 @@ export const SetSchemeEditor: React.FC<SetSchemeEditorProps> = ({
 
           <DialogContent dividers>
             <Alert severity="info" sx={{ mb: 2 }}>
-              Enter values for all sets, or customize per set for individual performance. Target values
-              apply to every set.
+              Enter values for all sets, or customize per set for individual performance. Target
+              values apply to every set.
             </Alert>
 
             <SetSchemeForm

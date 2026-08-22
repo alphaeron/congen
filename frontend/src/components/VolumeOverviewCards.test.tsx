@@ -1,29 +1,22 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import React from 'react';
 
 import { VolumeOverviewCards } from './VolumeOverviewCards';
 
-// Mock Nivo components
-jest.mock('@nivo/line', () => ({
-  ResponsiveLine: ({ data }: { data: { id: string; data: unknown[] }[] }) => (
-    <div data-testid="responsive-line">
-      {data.map((line: { id: string; data: unknown[] }, index: number) => (
-        <div key={index} data-testid={`line-${index}`}>
-          {line.id}: {line.data.length} points
-        </div>
-      ))}
-    </div>
-  ),
+jest.mock('@nivo/bullet', () => ({
+  ResponsiveBullet: () => <div data-testid="responsive-bullet">Mock Bullet</div>,
 }));
 
-// Mock framer-motion
+jest.mock('@nivo/line', () => ({
+  ResponsiveLine: () => <div data-testid="responsive-line">Mock Line</div>,
+}));
+
 jest.mock('framer-motion', () => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const React = require('react');
   return {
     motion: {
-      div: ({ children, ...props }) => {
-        // Filter out Framer Motion specific props
+      div: ({ children, ...props }: { children?: React.ReactNode; [key: string]: unknown }) => {
         const framerMotionProps = new Set([
           'whileHover',
           'whileTap',
@@ -49,29 +42,54 @@ describe('VolumeOverviewCards', () => {
   const mockUserDataExport = {
     training_programs: [
       {
+        program: {
+          id: 1,
+          is_active: true,
+          current_week_number: 1,
+          name: 'Test Program',
+          user_id: 'u1',
+          created_at: '2023-01-01T00:00:00Z',
+          updated_at: '2023-01-01T00:00:00Z',
+        },
         workouts: [
           {
             workout: {
               id: 1,
-              name: 'Test Workout',
+              program_id: 1,
+              day_number: 1,
+              name: 'ME Upper',
               created_at: '2023-01-01T00:00:00Z',
+              updated_at: '2023-01-01T00:00:00Z',
             },
             stages: [
               {
-                stage: { id: 1, name: 'Max Effort' },
+                stage: {
+                  id: 1,
+                  programmed_workout_id: 1,
+                  name: 'Max Effort',
+                  created_at: '2023-01-01T00:00:00Z',
+                  updated_at: '2023-01-01T00:00:00Z',
+                },
                 exercises: [
                   {
                     exercise: {
                       id: 1,
+                      workout_stage_id: 1,
                       exercise_name: 'Bench Press',
-                      movement_type: 'max_effort',
+                      created_at: '2023-01-01T00:00:00Z',
+                      updated_at: '2023-01-01T00:00:00Z',
                     },
                     set_schemes: [
                       {
+                        id: 1,
+                        programmed_exercise_id: 1,
+                        set_number: 1,
                         performed_weight: 100,
                         performed_rep_count: 5,
                         target_weight: 100,
                         target_rep_count: 5,
+                        created_at: '2023-01-01T00:00:00Z',
+                        updated_at: '2023-01-01T00:00:00Z',
                       },
                     ],
                   },
@@ -82,59 +100,74 @@ describe('VolumeOverviewCards', () => {
         ],
       },
     ],
+    user_one_rep_max: [],
   };
 
   const mockExerciseData = new Map([
     [
       'Bench Press',
       {
-        id: 1,
-        exercise_name: 'Bench Press',
-        movement_type: 'max_effort',
+        name: 'Bench Press',
+        description: 'Press',
+        movement_type: 'horizontal_press',
+        is_unilateral: false,
+        is_upper: true,
+        is_accessory: false,
       },
     ],
   ]);
 
   const defaultProps = {
-    userDataExport: mockUserDataExport,
-    exerciseData: mockExerciseData,
+    userDataExport: mockUserDataExport as never,
+    exerciseData: mockExerciseData as never,
+    workoutsPerWeek: 4,
+    currentWeek: 1,
+    preferredUnit: 'LBS' as const,
   };
 
-  it('renders with required props', () => {
+  it('renders category cards without period controls or summary strip', () => {
     render(<VolumeOverviewCards {...defaultProps} />);
 
     expect(screen.getByText('Max Effort')).toBeInTheDocument();
     expect(screen.getByText('Dynamic Effort')).toBeInTheDocument();
     expect(screen.getByText('Accessory')).toBeInTheDocument();
+    expect(screen.queryByText('This week')).not.toBeInTheDocument();
+    expect(screen.queryByText('Last 4 weeks')).not.toBeInTheDocument();
+    expect(screen.queryByText('Program')).not.toBeInTheDocument();
+    expect(screen.queryByText('Sessions')).not.toBeInTheDocument();
+    expect(screen.queryByText('Total volume')).not.toBeInTheDocument();
+    expect(screen.queryByText(/Target:/)).not.toBeInTheDocument();
   });
 
-  it('renders line charts', () => {
+  it('renders bullet charts and header trend sparklines', () => {
     render(<VolumeOverviewCards {...defaultProps} />);
 
-    // There will be multiple responsive-line elements, so we check that at least one exists
-    const responsiveLines = screen.getAllByTestId('responsive-line');
-    expect(responsiveLines.length).toBeGreaterThan(0);
+    expect(screen.getAllByTestId('responsive-bullet').length).toBe(3);
+    expect(screen.getAllByTestId('volume-trend-sparkline').length).toBe(3);
+    expect(screen.getAllByTestId('responsive-line').length).toBe(3);
   });
 
-  it('renders motion components', () => {
+  it('expands a card to show detailed sparkline trend', () => {
     render(<VolumeOverviewCards {...defaultProps} />);
 
-    const motionDivs = screen.getAllByTestId('motion-div');
-    expect(motionDivs.length).toBeGreaterThan(0);
+    fireEvent.click(screen.getByText('Max Effort'));
+    expect(screen.getByTestId('volume-sparkline-Max Effort')).toBeInTheDocument();
+    expect(screen.getAllByTestId('responsive-line').length).toBe(4);
   });
 
-  it('renders with custom height', () => {
-    render(<VolumeOverviewCards {...defaultProps} height={400} />);
-
-    expect(screen.getByText('Max Effort')).toBeInTheDocument();
-  });
-
-  it('processes workout data correctly', () => {
+  it('shows no baseline instead of target delta on week one', () => {
     render(<VolumeOverviewCards {...defaultProps} />);
 
-    // The component should process the workout data and display it
-    // There will be multiple responsive-line elements, so we check that at least one exists
-    const responsiveLines = screen.getAllByTestId('responsive-line');
-    expect(responsiveLines.length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/No baseline/).length).toBeGreaterThan(0);
+    expect(screen.queryByText(/vs target/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/\+100%/)).not.toBeInTheDocument();
+  });
+
+  it('shows trend percentage in card header', () => {
+    render(<VolumeOverviewCards {...defaultProps} />);
+
+    expect(screen.getAllByText(/↗|↘|—/).length).toBeGreaterThan(0);
+    expect(screen.queryByText('Exceeded')).not.toBeInTheDocument();
+    expect(screen.queryByText('On track')).not.toBeInTheDocument();
   });
 });

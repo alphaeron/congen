@@ -1,11 +1,4 @@
-import {
-  Box,
-  List,
-  Tabs,
-  Tab,
-  ToggleButton,
-  ToggleButtonGroup,
-} from '@mui/material';
+import { Box, List, Tabs, Tab, ToggleButton, ToggleButtonGroup } from '@mui/material';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSnackbar } from 'notistack';
 import React, { useState, useEffect, useMemo } from 'react';
@@ -180,11 +173,7 @@ export function WorkoutPreferencesSection(): React.ReactElement {
 
     try {
       // Load all data in parallel using DataContext
-      const [
-        exercisesData,
-        musclesData,
-        equipmentData,
-      ] = await Promise.all([
+      const [exercisesData, musclesData, equipmentData] = await Promise.all([
         loadAllExercises(),
         loadAllMuscles(),
         loadAllEquipment(),
@@ -579,9 +568,7 @@ export function WorkoutPreferencesSection(): React.ReactElement {
                     labelId="weight-unit-sort-label"
                     label="Sort by"
                     value={weightUnitSort}
-                    onChange={e =>
-                      setWeightUnitSort(e.target.value as WeightUnitPreferenceSort)
-                    }
+                    onChange={e => setWeightUnitSort(e.target.value as WeightUnitPreferenceSort)}
                   >
                     <GameMenuItem value="name-asc">Name (A–Z)</GameMenuItem>
                     <GameMenuItem value="name-desc">Name (Z–A)</GameMenuItem>

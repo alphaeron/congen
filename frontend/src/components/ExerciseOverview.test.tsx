@@ -94,6 +94,9 @@ describe('ExerciseOverview component', () => {
       getProgram: jest.fn(),
       getErrorForDataType: jest.fn().mockReturnValue(null),
       isLoadingSpecific: jest.fn().mockReturnValue(false),
+      userExercisePreferences: [],
+      loadUserExercisePreferences: jest.fn().mockResolvedValue([]),
+      refreshSpecificData: jest.fn(),
     };
 
     mockUseData.mockReturnValue(defaultMockDataContext);

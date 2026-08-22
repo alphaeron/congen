@@ -32,6 +32,9 @@ interface WorkoutHeaderProps {
   onSettings?: () => void;
   onBack?: () => void;
   onAddExercise?: () => void;
+  onGenerateWeek?: () => void;
+  generateDisabled?: boolean;
+  generateLoading?: boolean;
   disabled?: boolean;
   saving?: boolean;
 }
@@ -43,6 +46,9 @@ interface WorkoutHeaderProps {
  * @param onExportPDF Function to call for PDF export
  * @param onSettings Optional function to call for settings
  * @param onBack Optional function to call for back navigation
+ * @param onGenerateWeek Optional generate-next-week handler for program context
+ * @param generateDisabled Whether generate action is disabled
+ * @param generateLoading Whether generate action is in progress
  * @param disabled Whether export is disabled
  * @return Workout Header component
  */
@@ -69,6 +75,9 @@ export const WorkoutHeader: React.FC<WorkoutHeaderProps> = ({
   onSettings,
   onBack,
   onAddExercise,
+  onGenerateWeek,
+  generateDisabled = false,
+  generateLoading = false,
   disabled = false,
   saving = false,
 }) => {
@@ -188,7 +197,16 @@ export const WorkoutHeader: React.FC<WorkoutHeaderProps> = ({
           </Box>
 
           {/* Right Section: Quick Actions */}
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexShrink: 0 }}>
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1,
+              flexShrink: 0,
+              flexWrap: 'wrap',
+              justifyContent: 'flex-end',
+            }}
+          >
             {/* Back Button (for week and day contexts) */}
             {(context === 'week' || context === 'day') && onBack && (
               <Tooltip title="Go Back">
@@ -214,6 +232,32 @@ export const WorkoutHeader: React.FC<WorkoutHeaderProps> = ({
                   }}
                 >
                   Add Exercise
+                </Button>
+              </motion.div>
+            )}
+
+            {context === 'program' && onGenerateWeek && (
+              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                <Button
+                  variant="contained"
+                  onClick={onGenerateWeek}
+                  disabled={generateDisabled || generateLoading}
+                  data-testid="generate-next-week-button"
+                  sx={{
+                    px: { xs: 2, sm: 3 },
+                    py: 1,
+                    fontWeight: 700,
+                    borderRadius: 2,
+                    background: 'linear-gradient(135deg, #3b82f6 0%, #10b981 100%)',
+                    border: 'none',
+                    boxShadow: '0 8px 16px rgba(59, 130, 246, 0.4)',
+                    '&:disabled': {
+                      background: 'rgba(100, 116, 139, 0.3)',
+                      color: 'rgba(255, 255, 255, 0.5)',
+                    },
+                  }}
+                >
+                  {generateLoading ? 'Generating...' : 'Generate Next Week'}
                 </Button>
               </motion.div>
             )}

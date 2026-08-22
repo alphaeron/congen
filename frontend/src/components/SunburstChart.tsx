@@ -9,8 +9,8 @@ import {
   type WorkoutStageWithExercises,
   type UserWeightUnitPreference,
 } from '../api/types';
-import { KG_TO_LBS } from '../common/utils';
 import { createCongenNivoTheme } from '../theme/nivoTheme';
+import { computeSetVolume } from '../utils/volumeOverviewUtils';
 
 // Custom layer to display total volume in the center
 interface CenterMetricProps {
@@ -102,8 +102,11 @@ interface SunburstChartProps {
 export const SunburstChart: React.FC<SunburstChartProps> = ({
   workoutData,
   exerciseMuscleData,
+  weightUnitPreferences,
   selectedExercise,
 }) => {
+  const preferredUnit =
+    (weightUnitPreferences[0]?.preferred_unit as 'KG' | 'LBS' | undefined) ?? 'LBS';
   const theme = useTheme();
   const nivoTheme = createCongenNivoTheme(theme.palette.mode);
   const [currentData, setCurrentData] = useState<SunburstData | null>(null);
@@ -131,13 +134,8 @@ export const SunburstChart: React.FC<SunburstChartProps> = ({
           // Calculate volume from set schemes (weights from API are in kg; use lbs for consistent volume)
           let exerciseVolume = 0;
           exercise.set_schemes?.forEach(setScheme => {
-            const weight = setScheme.performed_weight || setScheme.target_weight;
-            const reps = setScheme.performed_rep_count || setScheme.target_rep_count;
-
-            if (weight && reps) {
-              const convertedWeight = weight * KG_TO_LBS;
-              exerciseVolume += convertedWeight * reps;
-            }
+            const { volume } = computeSetVolume(setScheme, preferredUnit);
+            exerciseVolume += volume;
           });
 
           // Add to existing volume (this handles duplicates properly)
@@ -148,7 +146,7 @@ export const SunburstChart: React.FC<SunburstChartProps> = ({
     });
 
     return map;
-  }, [workouts]);
+  }, [workouts, preferredUnit]);
 
   // Calculate exercise statistics for sunburst chart
   const exerciseStats = useMemo(() => {

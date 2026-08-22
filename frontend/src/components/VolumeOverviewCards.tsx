@@ -1,181 +1,117 @@
-import { Box, CardContent, LinearProgress } from '@mui/material';
+import { Box, CardContent, Collapse, useTheme } from '@mui/material';
+import { ResponsiveBullet } from '@nivo/bullet';
 import { ResponsiveLine } from '@nivo/line';
 import { motion } from 'framer-motion';
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 
 import { GameCard, GameText, GAME_CLASSES } from './GameTheme';
-import type { UserDataExport, ProgramWithWorkouts, Exercise } from '../api/types';
-import {
-  categorizeExerciseVolume,
-  replaceUnderscoresWithSpaces,
-  formatDate,
-  KG_TO_LBS,
-} from '../common/utils';
+import type { UserDataExport, Exercise } from '../api/types';
+import { createCongenNivoTheme } from '../theme/nivoTheme';
+import type { VolumeStatus, VolumeCategoryMetrics } from '../utils/volumeOverviewUtils';
+import { buildVolumeOverviewModel, formatCompactVolume } from '../utils/volumeOverviewUtils';
 
 interface VolumeOverviewCardsProps {
   userDataExport: UserDataExport | null;
   exerciseData: Map<string, Exercise>;
-  height?: number;
+  workoutsPerWeek: number;
+  currentWeek: number;
+  preferredUnit?: 'KG' | 'LBS';
 }
 
-interface VolumeData {
-  date: string;
-  maxEffortVolume: number;
-  dynamicEffortVolume: number;
-  accessoryVolume: number;
+function getStatusColor(status: VolumeStatus): string {
+  switch (status) {
+    case 'exceeded':
+      return 'var(--game-success)';
+    case 'on_track':
+      return 'var(--game-cyan)';
+    case 'under':
+      return 'var(--game-warning)';
+    case 'no_volume':
+      return 'var(--game-white-muted)';
+  }
 }
 
-interface VolumeCardData {
-  type: 'Max Effort' | 'Dynamic Effort' | 'Accessory';
-  current: number;
-  target: number;
-  trend: number; // percentage change
-  trendData: Array<{ x: string; y: number }>;
-  color: string;
+function getTrendColor(deltaPercent: number | null): string {
+  if (deltaPercent == null || deltaPercent === 0) {
+    return 'var(--game-white-muted)';
+  }
+  return deltaPercent > 0 ? 'var(--game-cyan)' : 'var(--game-error)';
+}
+
+function formatCardVolume(volume: number, preferredUnit: 'KG' | 'LBS'): string {
+  if (volume === 0) {
+    return formatCompactVolume(0, preferredUnit);
+  }
+  return formatCompactVolume(volume, preferredUnit);
 }
 
 /**
- * Volume Overview Cards component for displaying volume trends and progress.
+ * Compact sparkline for card header trend display.
+ */
+const VolumeTrendSparkline: React.FC<{
+  data: Array<{ x: string; y: number }>;
+  nivoTheme: ReturnType<typeof createCongenNivoTheme>;
+}> = ({ data, nivoTheme }) => (
+  <Box sx={{ width: 72, height: 28, flexShrink: 0 }} data-testid="volume-trend-sparkline">
+    <ResponsiveLine
+      data={[{ id: 'trend', data }]}
+      margin={{ top: 2, right: 2, bottom: 2, left: 2 }}
+      xScale={{ type: 'point' }}
+      yScale={{ type: 'linear', min: 0, max: 'auto' }}
+      curve="monotoneX"
+      axisTop={null}
+      axisRight={null}
+      axisBottom={null}
+      axisLeft={null}
+      enableGridX={false}
+      enableGridY={false}
+      enablePoints={false}
+      enableArea={true}
+      areaOpacity={0.3}
+      colors={['var(--game-cyan)']}
+      lineWidth={2}
+      theme={nivoTheme}
+      animate={true}
+      motionConfig="gentle"
+    />
+  </Box>
+);
+
+/**
+ * Volume overview KPI cards with shared-scale bullets and vs-target deltas.
  *
- * This component shows three cards with bullet-style progress bars and mini line charts
- * for each volume type (Max Effort, Dynamic Effort, Accessory).
- *
- * @param userDataExport The raw user data export containing all workout information
- * @param exerciseData Map of exercise data for categorization
- * @return Volume Overview Cards component
+ * @param userDataExport Raw user export containing workouts and optional 1RM records
+ * @param exerciseData Exercise metadata used for ME/DE/Accessory categorization
+ * @param workoutsPerWeek Program days per week for week bucketing
+ * @param currentWeek Active program week number
+ * @param preferredUnit Weight unit for volume display
+ * @return Volume overview section
  */
 export const VolumeOverviewCards: React.FC<VolumeOverviewCardsProps> = ({
   userDataExport,
   exerciseData,
+  workoutsPerWeek,
+  currentWeek,
+  preferredUnit = 'LBS',
 }) => {
-  // Extract workouts from the raw data
-  const workouts = useMemo(() => {
-    if (!userDataExport?.training_programs?.length) return [];
+  const theme = useTheme();
+  const nivoTheme = createCongenNivoTheme(theme.palette.mode);
+  const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
 
-    return userDataExport.training_programs.flatMap((program: ProgramWithWorkouts) =>
-      program.workouts.map(workoutWithStages => ({
-        workout: workoutWithStages.workout,
-        stages: workoutWithStages.stages.map(stageWithExercises => ({
-          stage: stageWithExercises.stage,
-          exercises: stageWithExercises.exercises.map(exerciseWithSetSchemes => ({
-            exercise: exerciseWithSetSchemes.exercise,
-            set_schemes: exerciseWithSetSchemes.set_schemes,
-          })),
-        })),
-      }))
-    );
-  }, [userDataExport]);
+  const model = useMemo(
+    () =>
+      buildVolumeOverviewModel(
+        userDataExport,
+        exerciseData,
+        workoutsPerWeek,
+        currentWeek,
+        'this_week',
+        preferredUnit
+      ),
+    [userDataExport, exerciseData, workoutsPerWeek, currentWeek, preferredUnit]
+  );
 
-  // Calculate workout volume data
-  const volumeData = useMemo((): VolumeData[] => {
-    if (!workouts.length) return [];
-
-    return workouts
-      .map(workoutData => {
-        let maxEffortVolume = 0;
-        let dynamicEffortVolume = 0;
-        let accessoryVolume = 0;
-
-        workoutData.stages.forEach(stage => {
-          stage.exercises.forEach(exerciseWithSchemes => {
-            exerciseWithSchemes.set_schemes.forEach(setScheme => {
-              const weight = setScheme.performed_weight || setScheme.target_weight || 0;
-              const reps = setScheme.performed_rep_count || setScheme.target_rep_count || 0;
-              const bandWeight =
-                typeof setScheme.band_weight_lbs === 'number' && setScheme.band_weight_lbs > 0
-                  ? setScheme.band_weight_lbs
-                  : 0;
-
-              const exerciseName = exerciseWithSchemes.exercise.exercise_name;
-              const convertedWeight = weight * KG_TO_LBS;
-              const totalWeight = convertedWeight + bandWeight;
-              const setVolume = totalWeight * reps;
-
-              // Get exercise data and categorize volume using shared helper
-              const exerciseInfo = exerciseData.get(exerciseName);
-              const categorizedVolume = categorizeExerciseVolume(
-                exerciseInfo,
-                replaceUnderscoresWithSpaces(workoutData.workout.name),
-                setVolume
-              );
-
-              maxEffortVolume += categorizedVolume.maxEffortVolume;
-              dynamicEffortVolume += categorizedVolume.dynamicEffortVolume;
-              accessoryVolume += categorizedVolume.accessoryVolume;
-            });
-          });
-        });
-
-        return {
-          date: formatDate(workoutData.workout.created_at),
-          maxEffortVolume: Math.round(maxEffortVolume),
-          dynamicEffortVolume: Math.round(dynamicEffortVolume),
-          accessoryVolume: Math.round(accessoryVolume),
-        };
-      })
-      .slice(-10); // Last 10 workouts
-  }, [workouts, exerciseData]);
-
-  // Prepare card data with trends and targets
-  const cardData = useMemo((): VolumeCardData[] => {
-    if (!volumeData.length) return [];
-
-    const currentWeek = volumeData[volumeData.length - 1];
-    const previousWeek = volumeData[volumeData.length - 2];
-
-    // Calculate targets based on historical averages (simplified)
-    const avgMaxEffort =
-      volumeData.reduce((sum, v) => sum + v.maxEffortVolume, 0) / volumeData.length;
-    const avgDynamicEffort =
-      volumeData.reduce((sum, v) => sum + v.dynamicEffortVolume, 0) / volumeData.length;
-    const avgAccessory =
-      volumeData.reduce((sum, v) => sum + v.accessoryVolume, 0) / volumeData.length;
-
-    const calculateTrend = (current: number, previous: number): number => {
-      if (!previous || previous === 0) return 0;
-      return Math.round(((current - previous) / previous) * 100);
-    };
-
-    const prepareTrendData = (volumeType: keyof VolumeData) => {
-      return volumeData.map(v => ({
-        x: v.date.split('/')[0], // Just show month/day
-        y: v[volumeType] as number,
-      }));
-    };
-
-    return [
-      {
-        type: 'Max Effort',
-        current: currentWeek.maxEffortVolume,
-        target: Math.round(avgMaxEffort * 1.1), // 10% above average as target
-        trend: calculateTrend(currentWeek.maxEffortVolume, previousWeek?.maxEffortVolume || 0),
-        trendData: prepareTrendData('maxEffortVolume'),
-        color: 'var(--game-cyan)',
-      },
-      {
-        type: 'Dynamic Effort',
-        current: currentWeek.dynamicEffortVolume,
-        target: Math.round(avgDynamicEffort * 1.1),
-        trend: calculateTrend(
-          currentWeek.dynamicEffortVolume,
-          previousWeek?.dynamicEffortVolume || 0
-        ),
-        trendData: prepareTrendData('dynamicEffortVolume'),
-        color: 'var(--game-cyan)',
-      },
-      {
-        type: 'Accessory',
-        current: currentWeek.accessoryVolume,
-        target: Math.round(avgAccessory * 1.1),
-        trend: calculateTrend(currentWeek.accessoryVolume, previousWeek?.accessoryVolume || 0),
-        trendData: prepareTrendData('accessoryVolume'),
-        color: 'var(--game-cyan)',
-      },
-    ];
-  }, [volumeData]);
-
-  // Don't render if no data
-  if (!cardData.length) {
+  if (!model) {
     return null;
   }
 
@@ -184,129 +120,238 @@ export const VolumeOverviewCards: React.FC<VolumeOverviewCardsProps> = ({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, ease: 'easeOut' }}
-      style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}
+      style={{ display: 'flex', flexDirection: 'column', gap: 12 }}
     >
-      {cardData.map((card, index) => (
-        <motion.div
-          key={card.type}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: index * 0.1 }}
-          whileHover={{ y: -8 }}
-          style={{
-            flex: '1 1 300px',
-            minWidth: 280,
-          }}
-        >
-          <GameCard
-            className="glassmorphism-card"
+      <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+        {model.categories.map((card, index) => (
+          <VolumeCategoryCard
+            key={card.type}
+            card={card}
+            index={index}
+            sharedScaleMax={model.sharedScaleMax}
+            preferredUnit={preferredUnit}
+            nivoTheme={nivoTheme}
+            expanded={expandedCategory === card.type}
+            onToggle={() => setExpandedCategory(prev => (prev === card.type ? null : card.type))}
+            sparklineData={model.weekVolumes.map(week => ({
+              x: `W${week.weekNumber}`,
+              y:
+                card.type === 'Max Effort'
+                  ? week.maxEffortVolume
+                  : card.type === 'Dynamic Effort'
+                    ? week.dynamicEffortVolume
+                    : week.accessoryVolume,
+            }))}
+          />
+        ))}
+      </Box>
+    </motion.div>
+  );
+};
+
+interface VolumeCategoryCardProps {
+  card: VolumeCategoryMetrics;
+  index: number;
+  sharedScaleMax: number;
+  preferredUnit: 'KG' | 'LBS';
+  nivoTheme: ReturnType<typeof createCongenNivoTheme>;
+  expanded: boolean;
+  onToggle: () => void;
+  sparklineData: Array<{ x: string; y: number }>;
+}
+
+/**
+ * Single volume category KPI card with bullet chart and progressive disclosure.
+ */
+const VolumeCategoryCard: React.FC<VolumeCategoryCardProps> = ({
+  card,
+  index,
+  sharedScaleMax,
+  preferredUnit,
+  nivoTheme,
+  expanded,
+  onToggle,
+  sparklineData,
+}) => {
+  const statusColor = getStatusColor(card.status);
+  const deltaPrefix = card.deltaAbsolute >= 0 ? '+' : '';
+  const trendColor = getTrendColor(card.priorPeriodDeltaPercent);
+  const currentLabel = formatCardVolume(card.current, preferredUnit);
+  const targetLabel = card.hasBaseline
+    ? formatCompactVolume(card.target, preferredUnit)
+    : 'No baseline';
+  const bulletData = [
+    {
+      id: card.type,
+      title: '',
+      ranges: card.hasBaseline
+        ? [Math.round(card.target * 0.85), card.target, sharedScaleMax]
+        : [Math.round(sharedScaleMax * 0.5), sharedScaleMax],
+      measures: [card.current],
+      markers: card.hasBaseline ? [card.target] : [],
+    },
+  ];
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, delay: index * 0.1 }}
+      whileHover={{ y: -4 }}
+      style={{
+        flex: '1 1 280px',
+        minWidth: 260,
+      }}
+    >
+      <GameCard
+        sx={{ height: '100%', cursor: 'pointer' }}
+        onClick={onToggle}
+        role="button"
+        tabIndex={0}
+        aria-expanded={expanded}
+        onKeyDown={(event: React.KeyboardEvent) => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            onToggle();
+          }
+        }}
+      >
+        <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+          <Box
             sx={{
-              height: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              mb: 1.5,
+              gap: 1,
+              minWidth: 0,
             }}
           >
-            <CardContent sx={{ p: 2 }}>
-              {/* Header */}
-              <Box
-                sx={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  mb: 2,
-                }}
-              >
-                <GameText variant="h6" className={GAME_CLASSES.textMedium}>
-                  {card.type}
-                </GameText>
-                <GameText
-                  variant="body2"
-                  className={GAME_CLASSES.textMedium}
-                  sx={{
-                    color: card.trend >= 0 ? 'var(--game-cyan)' : 'var(--game-error)',
-                  }}
+            <GameText
+              variant="subtitle1"
+              className={GAME_CLASSES.textMedium}
+              sx={{ flexShrink: 0 }}
+            >
+              {card.type}
+            </GameText>
+            <VolumeTrendSparkline data={sparklineData} nivoTheme={nivoTheme} />
+            <GameText
+              variant="caption"
+              sx={{ color: trendColor, flexShrink: 0, ml: 'auto' }}
+              aria-label={
+                card.priorPeriodDeltaPercent == null
+                  ? `${card.type} trend unavailable`
+                  : `${card.type} trend ${card.priorPeriodDeltaPercent >= 0 ? 'up' : 'down'} ${Math.abs(card.priorPeriodDeltaPercent)} percent`
+              }
+            >
+              {card.priorPeriodDeltaPercent == null
+                ? '—'
+                : `${card.priorPeriodDeltaPercent >= 0 ? '↗' : '↘'} ${Math.abs(card.priorPeriodDeltaPercent)}%`}
+            </GameText>
+          </Box>
+
+          <Box
+            sx={{ display: 'flex', alignItems: 'baseline', flexWrap: 'wrap', gap: 0.5, mb: 0.5 }}
+          >
+            <GameText variant="h3" className={GAME_CLASSES.textBold} sx={{ lineHeight: 1 }}>
+              {currentLabel}
+            </GameText>
+            <GameText variant="body2" className={GAME_CLASSES.textMuted} sx={{ lineHeight: 1 }}>
+              / {targetLabel}
+            </GameText>
+          </Box>
+
+          {card.hasBaseline && card.status !== 'no_volume' ? (
+            <GameText
+              variant="caption"
+              className={GAME_CLASSES.textMuted}
+              sx={{ display: 'block', mb: 1 }}
+            >
+              {deltaPrefix}
+              {formatCompactVolume(Math.abs(card.deltaAbsolute), preferredUnit)} ({deltaPrefix}
+              {card.deltaPercent}%) vs target
+            </GameText>
+          ) : null}
+
+          {card.emptyMessage ? (
+            <GameText
+              variant="caption"
+              className={GAME_CLASSES.textMuted}
+              sx={{ display: 'block', mb: 1 }}
+            >
+              {card.emptyMessage}
+            </GameText>
+          ) : null}
+
+          <Box sx={{ height: 40, width: '100%' }} data-testid={`volume-bullet-${card.type}`}>
+            <ResponsiveBullet
+              data={bulletData}
+              margin={{ top: 4, right: 4, bottom: 4, left: 4 }}
+              spacing={12}
+              titleAlign="start"
+              titleOffsetX={0}
+              titleOffsetY={0}
+              measureSize={0.45}
+              markerSize={0.7}
+              rangeColors={['#1a3333', '#244444', '#2d5555']}
+              measureColors={[statusColor]}
+              markerColors={['var(--game-cyan)']}
+              theme={nivoTheme}
+              animate={true}
+              motionConfig="gentle"
+            />
+          </Box>
+
+          <Collapse in={expanded}>
+            {expanded ? (
+              <Box>
+                <Box
+                  sx={{ height: 90, width: '100%', mt: 1.5 }}
+                  data-testid={`volume-sparkline-${card.type}`}
                 >
-                  {card.trend >= 0 ? '↗' : '↘'} {Math.abs(card.trend)}%
+                  <ResponsiveLine
+                    data={[
+                      {
+                        id: card.type,
+                        data: sparklineData,
+                      },
+                    ]}
+                    margin={{ top: 8, right: 8, bottom: 24, left: 28 }}
+                    xScale={{ type: 'point' }}
+                    yScale={{ type: 'linear', min: 0, max: 'auto' }}
+                    curve="monotoneX"
+                    axisTop={null}
+                    axisRight={null}
+                    axisBottom={{
+                      tickSize: 0,
+                      tickPadding: 4,
+                    }}
+                    axisLeft={{
+                      tickSize: 0,
+                      tickPadding: 4,
+                      tickValues: 3,
+                    }}
+                    enableGridX={false}
+                    enablePoints={true}
+                    pointSize={5}
+                    enableArea={true}
+                    areaOpacity={0.15}
+                    colors={['var(--game-cyan)']}
+                    theme={nivoTheme}
+                    animate={true}
+                    motionConfig="gentle"
+                  />
+                </Box>
+                <GameText variant="caption" className={GAME_CLASSES.textMuted}>
+                  Weekly trend
+                  {card.hasBaseline
+                    ? ` · target ${formatCompactVolume(card.target, preferredUnit)}`
+                    : ' · no baseline yet'}
                 </GameText>
               </Box>
-
-              {/* Current vs Target */}
-              <Box sx={{ mb: 2 }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                  <GameText variant="h4" className={GAME_CLASSES.textBold}>
-                    {card.current.toLocaleString()}
-                  </GameText>
-                  <GameText
-                    variant="body2"
-                    className={GAME_CLASSES.textMuted}
-                    sx={{ alignSelf: 'flex-end' }}
-                  >
-                    / {card.target.toLocaleString()} lbs
-                  </GameText>
-                </Box>
-
-                {/* Progress Bar */}
-                <LinearProgress
-                  variant="determinate"
-                  value={(card.current / card.target) * 100}
-                  sx={{
-                    height: 8,
-                    borderRadius: 4,
-                    backgroundColor: 'var(--game-cyan-light)',
-                    '& .MuiLinearProgress-bar': {
-                      backgroundColor: card.color,
-                      borderRadius: 4,
-                    },
-                  }}
-                />
-              </Box>
-
-              {/* Mini Line Chart */}
-              <Box sx={{ height: 60, width: '100%' }}>
-                <ResponsiveLine
-                  data={[
-                    {
-                      id: card.type,
-                      data: card.trendData,
-                    },
-                  ]}
-                  margin={{ top: 5, right: 5, bottom: 5, left: 5 }}
-                  xScale={{ type: 'point' }}
-                  yScale={{
-                    type: 'linear',
-                    min: 'auto',
-                    max: 'auto',
-                  }}
-                  curve="monotoneX"
-                  axisTop={null}
-                  axisRight={null}
-                  axisBottom={null}
-                  axisLeft={null}
-                  enableGridX={false}
-                  enableGridY={false}
-                  enablePoints={false}
-                  enableArea={true}
-                  areaOpacity={0.3}
-                  colors={[card.color]}
-                  lineWidth={2}
-                  theme={{
-                    background: 'transparent',
-                    text: {
-                      fontSize: 10,
-                      fill: 'var(--game-white-muted)',
-                    },
-                    grid: {
-                      line: {
-                        stroke: 'var(--game-cyan-light)',
-                      },
-                    },
-                  }}
-                  animate={true}
-                  motionConfig="gentle"
-                />
-              </Box>
-            </CardContent>
-          </GameCard>
-        </motion.div>
-      ))}
+            ) : null}
+          </Collapse>
+        </CardContent>
+      </GameCard>
     </motion.div>
   );
 };
