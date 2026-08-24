@@ -4,14 +4,33 @@ import type {
   ProgramWithWorkouts,
   ProgrammedWorkoutWithStages,
   UserDataExport,
+  UserOneRepMax,
 } from '../api/types';
 import { KG_TO_LBS, categorizeExerciseVolume, replaceUnderscoresWithSpaces } from '../common/utils';
 
 export type VolumePeriod = 'this_week' | 'last_4_weeks' | 'program';
 
-export type VolumeStatus = 'under' | 'on_track' | 'exceeded' | 'no_volume';
+export type VolumeStatus = 'under' | 'on_track' | 'exceeded' | 'no_volume' | 'overshoot';
 
 export type VolumeCategory = 'Max Effort' | 'Dynamic Effort' | 'Accessory';
+
+/** Conjugate mesocycle length in weeks. */
+export const MESOCYCLE_WEEKS = 4;
+
+/** Default plan-relative on-track floor (DE). */
+export const DEFAULT_ON_TRACK_FLOOR = 0.85;
+
+/** Overshoot threshold vs programmed plan. */
+export const OVERSHOOT_RATIO = 1.15;
+
+/** Plan vs W{n} avg ratio below which the week looks deload-like. */
+export const DELOAD_PLAN_VS_AVG_RATIO = 0.85;
+
+/** ACWR high-risk threshold (acute / chronic). */
+export const ACWR_HIGH_THRESHOLD = 1.3;
+
+/** Chronic window length in weeks for ACWR. */
+export const ACWR_CHRONIC_WEEKS = 4;
 
 export interface WeekVolumeTotals {
   weekNumber: number;
@@ -19,22 +38,42 @@ export interface WeekVolumeTotals {
   dynamicEffortVolume: number;
   accessoryVolume: number;
   totalVolume: number;
+  maxEffortProgrammedVolume: number;
+  dynamicEffortProgrammedVolume: number;
+  accessoryProgrammedVolume: number;
+  totalProgrammedVolume: number;
   performedSets: number;
   targetSets: number;
   completedWorkouts: number;
   plannedWorkouts: number;
+  maxEffortPeakWeightLbs: number;
+  maxEffortPeakExerciseName: string | null;
 }
 
 export interface VolumeCategoryMetrics {
   type: VolumeCategory;
   current: number;
   target: number;
-  hasBaseline: boolean;
+  hasTarget: boolean;
+  sameWeekSlotAverage: number | null;
+  sameWeekSlotSampleCount: number;
+  mesocycleWeekSlot: number;
   status: VolumeStatus;
   deltaAbsolute: number;
   deltaPercent: number;
   priorPeriodDeltaPercent: number | null;
-  emptyMessage: string | null;
+  onTrackFloor: number;
+  poorEnd: number;
+  okEnd: number;
+  goodEnd: number;
+  scaleMax: number;
+  loggingIncomplete: boolean;
+  isDeloadLike: boolean;
+  isOvershoot: boolean;
+  acwr: number | null;
+  acwrHigh: boolean;
+  intensityPercent: number | null;
+  intensityLabel: string | null;
 }
 
 export interface VolumePeriodSummary {
@@ -53,14 +92,67 @@ export interface VolumeOverviewModel {
   targetLabel: string;
   periodLabel: string;
   categories: VolumeCategoryMetrics[];
-  summary: VolumePeriodSummary;
-  sharedScaleMax: number;
   weekVolumes: WeekVolumeTotals[];
+  summary: VolumePeriodSummary;
 }
 
-const TARGET_BUFFER = 1.1;
-const ON_TRACK_FLOOR = 0.85;
-const LOOKBACK_WEEKS = 4;
+type SetSchemeVolumeFields = {
+  performed_weight?: number | null;
+  performed_rep_count?: number | null;
+  target_weight?: number | null;
+  target_rep_count?: number | null;
+  band_weight_lbs?: number | null;
+};
+
+function getBandLbs(setScheme: SetSchemeVolumeFields): number {
+  return typeof setScheme.band_weight_lbs === 'number' && setScheme.band_weight_lbs > 0
+    ? setScheme.band_weight_lbs
+    : 0;
+}
+
+function toDisplayVolume(
+  weightKg: number,
+  reps: number,
+  bandLbs: number,
+  preferredUnit: 'KG' | 'LBS'
+): number {
+  if (preferredUnit === 'KG') {
+    return (weightKg + bandLbs / KG_TO_LBS) * reps;
+  }
+  return (weightKg * KG_TO_LBS + bandLbs) * reps;
+}
+
+/**
+ * Maps a 1-based program week number to mesocycle slot 1–4.
+ * Backend/frontend week numbers from day_number use Math.ceil and are 1-based;
+ * week 0 (new program) is treated as slot 1.
+ *
+ * @param weekNumber Program week number (1-based in normal use)
+ * @returns Mesocycle week slot in 1..MESOCYCLE_WEEKS
+ */
+export function getMesocycleWeekSlot(weekNumber: number): number {
+  if (weekNumber <= 0) {
+    return 1;
+  }
+  return ((weekNumber - 1) % MESOCYCLE_WEEKS) + 1;
+}
+
+/**
+ * Category-specific on-track floor: tighter for ME, wider for accessory.
+ *
+ * @param category Volume category
+ * @returns Floor multiplier against programmed plan
+ */
+export function getCategoryOnTrackFloor(category: VolumeCategory): number {
+  switch (category) {
+    case 'Max Effort':
+      return 0.9;
+    case 'Dynamic Effort':
+      return DEFAULT_ON_TRACK_FLOOR;
+    case 'Accessory':
+      return 0.75;
+  }
+}
 
 /**
  * Computes performed volume for a single set. Unlogged sets return zero volume.
@@ -70,13 +162,7 @@ const LOOKBACK_WEEKS = 4;
  * @returns Object with volume in display units and whether performed data was used
  */
 export function computeSetVolume(
-  setScheme: {
-    performed_weight?: number | null;
-    performed_rep_count?: number | null;
-    target_weight?: number | null;
-    target_rep_count?: number | null;
-    band_weight_lbs?: number | null;
-  },
+  setScheme: SetSchemeVolumeFields,
   preferredUnit: 'KG' | 'LBS' = 'LBS'
 ): { volume: number; usedPerformed: boolean; hasPerformed: boolean; hasTarget: boolean } {
   const hasPerformedWeight =
@@ -100,26 +186,48 @@ export function computeSetVolume(
     };
   }
 
-  const weightKg = setScheme.performed_weight as number;
-  const reps = setScheme.performed_rep_count as number;
-
-  const bandLbs =
-    typeof setScheme.band_weight_lbs === 'number' && setScheme.band_weight_lbs > 0
-      ? setScheme.band_weight_lbs
-      : 0;
-
-  let displayWeight: number;
-  if (preferredUnit === 'KG') {
-    displayWeight = weightKg + bandLbs / KG_TO_LBS;
-  } else {
-    displayWeight = weightKg * KG_TO_LBS + bandLbs;
-  }
-
   return {
-    volume: displayWeight * reps,
+    volume: toDisplayVolume(
+      setScheme.performed_weight as number,
+      setScheme.performed_rep_count as number,
+      getBandLbs(setScheme),
+      preferredUnit
+    ),
     usedPerformed: true,
     hasPerformed: true,
     hasTarget,
+  };
+}
+
+/**
+ * Computes programmed (target) volume for a single set.
+ *
+ * @param setScheme The set scheme with target fields
+ * @param preferredUnit Display unit preference for converting stored kg weights
+ * @returns Programmed volume in display units and whether target data exists
+ */
+export function computeProgrammedSetVolume(
+  setScheme: SetSchemeVolumeFields,
+  preferredUnit: 'KG' | 'LBS' = 'LBS'
+): { volume: number; hasTarget: boolean } {
+  const hasTargetWeight =
+    typeof setScheme.target_weight === 'number' && setScheme.target_weight > 0;
+  const hasTargetReps =
+    typeof setScheme.target_rep_count === 'number' && setScheme.target_rep_count > 0;
+  const hasTarget = hasTargetWeight && hasTargetReps;
+
+  if (!hasTarget) {
+    return { volume: 0, hasTarget: false };
+  }
+
+  return {
+    volume: toDisplayVolume(
+      setScheme.target_weight as number,
+      setScheme.target_rep_count as number,
+      getBandLbs(setScheme),
+      preferredUnit
+    ),
+    hasTarget: true,
   };
 }
 
@@ -147,19 +255,32 @@ export function formatCompactVolume(volume: number, preferredUnit: 'KG' | 'LBS' 
  *
  * @param current Current period volume
  * @param target Target volume for the period
- * @returns Status including a dedicated empty/no-volume state
+ * @param options Logging gate, overshoot, and category floor overrides
+ * @returns Status including empty/no-volume and overshoot states
  */
-export function resolveVolumeStatus(current: number, target: number): VolumeStatus {
-  if (current <= 0) {
+export function resolveVolumeStatus(
+  current: number,
+  target: number,
+  options?: {
+    loggingIncomplete?: boolean;
+    isOvershoot?: boolean;
+    onTrackFloor?: number;
+  }
+): VolumeStatus {
+  if (options?.loggingIncomplete || current <= 0) {
     return 'no_volume';
   }
+  if (options?.isOvershoot) {
+    return 'overshoot';
+  }
   if (target <= 0) {
-    return current > 0 ? 'on_track' : 'no_volume';
+    return 'on_track';
   }
   if (current > target) {
     return 'exceeded';
   }
-  if (current >= target * ON_TRACK_FLOOR) {
+  const floor = options?.onTrackFloor ?? DEFAULT_ON_TRACK_FLOOR;
+  if (current >= target * floor) {
     return 'on_track';
   }
   return 'under';
@@ -181,34 +302,30 @@ export function getVolumeStatusLabel(status: VolumeStatus): string {
       return 'Under';
     case 'no_volume':
       return 'No volume';
+    case 'overshoot':
+      return 'Over plan';
   }
 }
 
 /**
- * Returns an empty-state teaching message when no volume was logged.
+ * Computes acute:chronic workload ratio for a category.
  *
- * @param category Volume category
- * @param status Resolved status
- * @returns Message or null when not applicable
+ * @param acute This week's performed volume
+ * @param chronicWeeklyAverage Average performed volume over the chronic window
+ * @returns Ratio or null when chronic average is unavailable
  */
-export function getEmptyVolumeMessage(
-  category: VolumeCategory,
-  status: VolumeStatus
-): string | null {
-  if (status !== 'no_volume') {
-    return null;
+export function computeAcwr(
+  acute: number,
+  chronicWeeklyAverage: number | null
+): { ratio: number | null; high: boolean } {
+  if (chronicWeeklyAverage == null || chronicWeeklyAverage <= 0) {
+    return { ratio: null, high: false };
   }
-  switch (category) {
-    case 'Max Effort':
-      return 'No max-effort volume logged for this period';
-    case 'Dynamic Effort':
-      return 'No dynamic-effort volume logged for this period';
-    case 'Accessory':
-      return 'No accessory volume logged for this period';
-  }
+  const ratio = Math.round((acute / chronicWeeklyAverage) * 100) / 100;
+  return { ratio, high: ratio >= ACWR_HIGH_THRESHOLD };
 }
 
-function getCategoryValue(week: WeekVolumeTotals, category: VolumeCategory): number {
+export function getCategoryValue(week: WeekVolumeTotals, category: VolumeCategory): number {
   switch (category) {
     case 'Max Effort':
       return week.maxEffortVolume;
@@ -219,15 +336,26 @@ function getCategoryValue(week: WeekVolumeTotals, category: VolumeCategory): num
   }
 }
 
+export function getProgrammedCategoryValue(
+  week: WeekVolumeTotals,
+  category: VolumeCategory
+): number {
+  switch (category) {
+    case 'Max Effort':
+      return week.maxEffortProgrammedVolume;
+    case 'Dynamic Effort':
+      return week.dynamicEffortProgrammedVolume;
+    case 'Accessory':
+      return week.accessoryProgrammedVolume;
+  }
+}
+
 function sumCategory(weeks: WeekVolumeTotals[], category: VolumeCategory): number {
   return weeks.reduce((sum, week) => sum + getCategoryValue(week, category), 0);
 }
 
-function averageCategory(weeks: WeekVolumeTotals[], category: VolumeCategory): number {
-  if (weeks.length === 0) {
-    return 0;
-  }
-  return sumCategory(weeks, category) / weeks.length;
+function sumProgrammedCategory(weeks: WeekVolumeTotals[], category: VolumeCategory): number {
+  return weeks.reduce((sum, week) => sum + getProgrammedCategoryValue(week, category), 0);
 }
 
 function percentChange(current: number, previous: number): number | null {
@@ -238,7 +366,182 @@ function percentChange(current: number, previous: number): number | null {
 }
 
 /**
- * Aggregates ME/DE/Accessory volume totals for each program week.
+ * Average performed volume for the same mesocycle week slot across prior blocks.
+ *
+ * @param weekVolumes All program week totals (1-based week numbers)
+ * @param currentWeek Active program week number
+ * @param category Volume category
+ * @returns Average and sample count from prior blocks only
+ */
+export function averageSameWeekSlotVolume(
+  weekVolumes: WeekVolumeTotals[],
+  currentWeek: number,
+  category: VolumeCategory
+): { average: number | null; sampleCount: number; slot: number } {
+  const activeWeek = currentWeek > 0 ? currentWeek : 1;
+  const slot = getMesocycleWeekSlot(activeWeek);
+  const priorSameSlot = weekVolumes.filter(
+    week => week.weekNumber < activeWeek && getMesocycleWeekSlot(week.weekNumber) === slot
+  );
+
+  if (priorSameSlot.length === 0) {
+    return { average: null, sampleCount: 0, slot };
+  }
+
+  const total = sumCategory(priorSameSlot, category);
+  return {
+    average: Math.round(total / priorSameSlot.length),
+    sampleCount: priorSameSlot.length,
+    slot,
+  };
+}
+
+/**
+ * Average performed volume over the prior N weeks (chronic ACWR window).
+ *
+ * @param weekVolumes All program week totals
+ * @param currentWeek Active week
+ * @param category Volume category
+ * @param windowWeeks Chronic window length
+ * @returns Weekly average or null
+ */
+export function averageChronicVolume(
+  weekVolumes: WeekVolumeTotals[],
+  currentWeek: number,
+  category: VolumeCategory,
+  windowWeeks: number = ACWR_CHRONIC_WEEKS
+): number | null {
+  const activeWeek = currentWeek > 0 ? currentWeek : 1;
+  const prior = weekVolumes.filter(
+    week => week.weekNumber < activeWeek && week.weekNumber >= activeWeek - windowWeeks
+  );
+  if (prior.length === 0) {
+    return null;
+  }
+  return Math.round(sumCategory(prior, category) / prior.length);
+}
+
+/**
+ * Builds plan-relative bullet range endpoints and per-card scale max.
+ * Four bands: poor → ok → good → overload, with five labeled boundaries.
+ *
+ * @param current Performed volume
+ * @param target Programmed plan volume
+ * @param sameWeekSlotAverage Optional W{n} avg
+ * @param onTrackFloor Category on-track floor
+ * @returns Range ends and scale max
+ */
+export function buildBulletScale(
+  current: number,
+  target: number,
+  sameWeekSlotAverage: number | null,
+  onTrackFloor: number
+): { poorEnd: number; okEnd: number; goodEnd: number; scaleMax: number } {
+  const hasTarget = target > 0;
+  const goodEndCandidate = hasTarget
+    ? Math.round(target * OVERSHOOT_RATIO)
+    : 0;
+  const references = [
+    current,
+    target,
+    sameWeekSlotAverage ?? 0,
+    goodEndCandidate,
+    1,
+  ];
+  const rawMax = Math.max(...references);
+  const scaleMax = Math.max(1, Math.round(rawMax * 1.18));
+  const poorEnd = hasTarget
+    ? Math.round(target * onTrackFloor)
+    : Math.round(scaleMax * onTrackFloor);
+  const okEnd = hasTarget ? target : Math.round(scaleMax * 0.5);
+  const goodEnd = hasTarget
+    ? goodEndCandidate
+    : Math.round(scaleMax * 0.75);
+
+  const clampedPoor = Math.min(Math.max(poorEnd, 0), scaleMax);
+  const clampedOk = Math.min(Math.max(okEnd, clampedPoor), scaleMax);
+  const clampedGood = Math.min(Math.max(goodEnd, clampedOk), scaleMax);
+
+  return {
+    poorEnd: clampedPoor,
+    okEnd: clampedOk,
+    goodEnd: clampedGood,
+    scaleMax,
+  };
+}
+
+export type BulletAxisLabel = {
+  value: number;
+  fraction: number;
+  text: string;
+};
+
+/**
+ * Builds numeric axis labels for all distinct color-band boundaries.
+ * Boundaries: 0, poor/ok, ok/good, good/overload, scale max.
+ *
+ * @param params Scale and band boundary values for one category card
+ * @returns Labels sorted left-to-right on a single line
+ */
+export function buildBulletAxisLabels(params: {
+  scaleMax: number;
+  poorEnd: number;
+  okEnd: number;
+  goodEnd: number;
+  hasTarget: boolean;
+  preferredUnit: 'KG' | 'LBS';
+}): BulletAxisLabel[] {
+  const { scaleMax, poorEnd, okEnd, goodEnd, hasTarget, preferredUnit } = params;
+
+  const formatTick = (volume: number): string =>
+    formatCompactVolume(volume, preferredUnit).replace(/ (lbs|kg)$/, '');
+
+  const toFraction = (value: number): number =>
+    scaleMax > 0 ? Math.min(1, Math.max(0, value / scaleMax)) : 0;
+
+  const values: number[] = [0];
+  if (hasTarget) {
+    if (poorEnd > 0) {
+      values.push(poorEnd);
+    }
+    if (okEnd > 0) {
+      values.push(okEnd);
+    }
+    if (goodEnd > 0) {
+      values.push(goodEnd);
+    }
+  } else {
+    if (poorEnd > 0) {
+      values.push(poorEnd);
+    }
+    if (okEnd > 0) {
+      values.push(okEnd);
+    }
+    if (goodEnd > 0) {
+      values.push(goodEnd);
+    }
+  }
+  if (scaleMax > 0) {
+    values.push(scaleMax);
+  }
+
+  const unique: number[] = [];
+  values.forEach(value => {
+    if (!unique.includes(value)) {
+      unique.push(value);
+    }
+  });
+  unique.sort((a, b) => a - b);
+
+  return unique.map(value => ({
+    value,
+    fraction: toFraction(value),
+    text: value === 0 ? '0' : formatTick(value),
+  }));
+}
+
+/**
+ * Aggregates ME/DE/Accessory performed and programmed volume totals for each program week.
  *
  * @param workouts Workout hierarchy for the active program
  * @param exerciseData Map of exercise metadata for categorization
@@ -263,10 +566,16 @@ export function buildWeekVolumeTotals(
         dynamicEffortVolume: 0,
         accessoryVolume: 0,
         totalVolume: 0,
+        maxEffortProgrammedVolume: 0,
+        dynamicEffortProgrammedVolume: 0,
+        accessoryProgrammedVolume: 0,
+        totalProgrammedVolume: 0,
         performedSets: 0,
         targetSets: 0,
         completedWorkouts: 0,
         plannedWorkouts: 0,
+        maxEffortPeakWeightLbs: 0,
+        maxEffortPeakExerciseName: null,
       });
     }
 
@@ -277,28 +586,48 @@ export function buildWeekVolumeTotals(
       weekTotals.completedWorkouts += 1;
     }
 
+    const workoutName = replaceUnderscoresWithSpaces(workoutWithStages.workout.name);
+
     workoutWithStages.stages.forEach(stage => {
       stage.exercises.forEach(exerciseWithSchemes => {
+        const exerciseName = exerciseWithSchemes.exercise.exercise_name;
+        const exerciseInfo = exerciseData.get(exerciseName);
+
         exerciseWithSchemes.set_schemes.forEach(setScheme => {
-          const setVolume = computeSetVolume(setScheme, preferredUnit);
-          if (setVolume.hasTarget) {
+          const programmed = computeProgrammedSetVolume(setScheme, preferredUnit);
+          if (programmed.hasTarget) {
             weekTotals.targetSets += 1;
+            const programmedCategorized = categorizeExerciseVolume(
+              exerciseInfo,
+              workoutName,
+              programmed.volume
+            );
+            weekTotals.maxEffortProgrammedVolume += programmedCategorized.maxEffortVolume;
+            weekTotals.dynamicEffortProgrammedVolume += programmedCategorized.dynamicEffortVolume;
+            weekTotals.accessoryProgrammedVolume += programmedCategorized.accessoryVolume;
+            weekTotals.totalProgrammedVolume += programmed.volume;
           }
+
+          const setVolume = computeSetVolume(setScheme, preferredUnit);
           if (setVolume.hasPerformed) {
             weekTotals.performedSets += 1;
-
-            const exerciseName = exerciseWithSchemes.exercise.exercise_name;
-            const exerciseInfo = exerciseData.get(exerciseName);
             const categorized = categorizeExerciseVolume(
               exerciseInfo,
-              replaceUnderscoresWithSpaces(workoutWithStages.workout.name),
+              workoutName,
               setVolume.volume
             );
-
             weekTotals.maxEffortVolume += categorized.maxEffortVolume;
             weekTotals.dynamicEffortVolume += categorized.dynamicEffortVolume;
             weekTotals.accessoryVolume += categorized.accessoryVolume;
             weekTotals.totalVolume += setVolume.volume;
+
+            if (categorized.maxEffortVolume > 0 && setScheme.performed_weight) {
+              const peakWeightLbs = setScheme.performed_weight * KG_TO_LBS;
+              if (peakWeightLbs > weekTotals.maxEffortPeakWeightLbs) {
+                weekTotals.maxEffortPeakWeightLbs = peakWeightLbs;
+                weekTotals.maxEffortPeakExerciseName = exerciseName;
+              }
+            }
           }
         });
       });
@@ -312,6 +641,11 @@ export function buildWeekVolumeTotals(
       dynamicEffortVolume: Math.round(week.dynamicEffortVolume),
       accessoryVolume: Math.round(week.accessoryVolume),
       totalVolume: Math.round(week.totalVolume),
+      maxEffortProgrammedVolume: Math.round(week.maxEffortProgrammedVolume),
+      dynamicEffortProgrammedVolume: Math.round(week.dynamicEffortProgrammedVolume),
+      accessoryProgrammedVolume: Math.round(week.accessoryProgrammedVolume),
+      totalProgrammedVolume: Math.round(week.totalProgrammedVolume),
+      maxEffortPeakWeightLbs: Math.round(week.maxEffortPeakWeightLbs),
     }))
     .sort((a, b) => a.weekNumber - b.weekNumber);
 }
@@ -320,7 +654,7 @@ function getPeriodWindow(
   weekVolumes: WeekVolumeTotals[],
   currentWeek: number,
   period: VolumePeriod
-): { current: WeekVolumeTotals[]; prior: WeekVolumeTotals[]; targetSource: WeekVolumeTotals[] } {
+): { current: WeekVolumeTotals[]; prior: WeekVolumeTotals[] } {
   const byWeek = new Map(weekVolumes.map(week => [week.weekNumber, week]));
   const maxWeek = weekVolumes.length
     ? Math.max(...weekVolumes.map(week => week.weekNumber))
@@ -330,61 +664,187 @@ function getPeriodWindow(
   if (period === 'this_week') {
     const current = byWeek.has(activeWeek) ? [byWeek.get(activeWeek)!] : [];
     const prior = byWeek.has(activeWeek - 1) ? [byWeek.get(activeWeek - 1)!] : [];
-    const targetSource = weekVolumes.filter(
-      week => week.weekNumber >= activeWeek - LOOKBACK_WEEKS && week.weekNumber < activeWeek
-    );
-    return { current, prior, targetSource };
+    return { current, prior };
   }
 
   if (period === 'last_4_weeks') {
     const current = weekVolumes.filter(
-      week => week.weekNumber > activeWeek - LOOKBACK_WEEKS && week.weekNumber <= activeWeek
+      week => week.weekNumber > activeWeek - MESOCYCLE_WEEKS && week.weekNumber <= activeWeek
     );
     const prior = weekVolumes.filter(
       week =>
-        week.weekNumber > activeWeek - LOOKBACK_WEEKS * 2 &&
-        week.weekNumber <= activeWeek - LOOKBACK_WEEKS
+        week.weekNumber > activeWeek - MESOCYCLE_WEEKS * 2 &&
+        week.weekNumber <= activeWeek - MESOCYCLE_WEEKS
     );
-    const targetSource = prior.length > 0 ? prior : current;
-    return { current, prior, targetSource };
+    return { current, prior };
   }
 
   const midpoint = Math.ceil(weekVolumes.length / 2);
-  const current = weekVolumes;
-  const prior = weekVolumes.slice(0, midpoint);
-  const targetSource = weekVolumes.slice(0, Math.max(LOOKBACK_WEEKS, midpoint));
-  return { current, prior, targetSource };
+  return {
+    current: weekVolumes,
+    prior: weekVolumes.slice(0, midpoint),
+  };
+}
+
+function findOneRepMaxLbs(
+  userOneRepMaxes: UserOneRepMax[] | undefined,
+  exerciseName: string | null
+): number | null {
+  if (!userOneRepMaxes?.length || !exerciseName) {
+    return null;
+  }
+  const match = userOneRepMaxes.find(entry => entry.exercise_name === exerciseName);
+  if (!match) {
+    return null;
+  }
+  if (match.unit === 'LBS') {
+    return match.one_rep_max;
+  }
+  return match.one_rep_max * KG_TO_LBS;
+}
+
+export type VolumeTrendPoint = { x: string; y: number };
+
+/**
+ * Builds weekly ACWR points for the expanded trend dialog.
+ *
+ * @param weekVolumes Program week volume totals
+ * @param category Volume category
+ * @returns Points only for weeks with a computable chronic baseline
+ */
+export function buildWeeklyAcwrSeries(
+  weekVolumes: WeekVolumeTotals[],
+  category: VolumeCategory
+): VolumeTrendPoint[] {
+  const points: VolumeTrendPoint[] = [];
+  weekVolumes.forEach(week => {
+    const chronic = averageChronicVolume(weekVolumes, week.weekNumber, category);
+    const acute = getCategoryValue(week, category);
+    const { ratio } = computeAcwr(acute, chronic);
+    if (ratio != null) {
+      points.push({ x: `W${week.weekNumber}`, y: ratio });
+    }
+  });
+  return points;
+}
+
+/**
+ * Builds weekly ME intensity (% of 1RM) points for the expanded trend dialog.
+ *
+ * @param weekVolumes Program week volume totals
+ * @param userOneRepMaxes User 1RM records
+ * @returns Points for weeks with a peak ME load and matching 1RM
+ */
+export function buildWeeklyIntensitySeries(
+  weekVolumes: WeekVolumeTotals[],
+  userOneRepMaxes: UserOneRepMax[] | undefined
+): VolumeTrendPoint[] {
+  const points: VolumeTrendPoint[] = [];
+  weekVolumes.forEach(week => {
+    if (week.maxEffortPeakWeightLbs <= 0 || !week.maxEffortPeakExerciseName) {
+      return;
+    }
+    const oneRepMaxLbs = findOneRepMaxLbs(userOneRepMaxes, week.maxEffortPeakExerciseName);
+    if (oneRepMaxLbs == null || oneRepMaxLbs <= 0) {
+      return;
+    }
+    points.push({
+      x: `W${week.weekNumber}`,
+      y: Math.round((week.maxEffortPeakWeightLbs / oneRepMaxLbs) * 100),
+    });
+  });
+  return points;
 }
 
 function buildCategoryMetrics(
   category: VolumeCategory,
   currentWeeks: WeekVolumeTotals[],
   priorWeeks: WeekVolumeTotals[],
-  targetSourceWeeks: WeekVolumeTotals[],
-  period: VolumePeriod
+  weekVolumes: WeekVolumeTotals[],
+  currentWeek: number,
+  userOneRepMaxes: UserOneRepMax[] | undefined
 ): VolumeCategoryMetrics {
   const current = Math.round(sumCategory(currentWeeks, category));
-  const weeklyAverage = averageCategory(targetSourceWeeks, category);
-  const weekCount = Math.max(currentWeeks.length, 1);
-  const target =
-    period === 'this_week'
-      ? Math.round(weeklyAverage * TARGET_BUFFER)
-      : Math.round(weeklyAverage * TARGET_BUFFER * weekCount);
-  const hasBaseline = target > 0;
+  const target = Math.round(sumProgrammedCategory(currentWeeks, category));
+  const hasTarget = target > 0;
+  const slotAverage = averageSameWeekSlotVolume(weekVolumes, currentWeek, category);
+  const onTrackFloor = getCategoryOnTrackFloor(category);
+  const sameWeekSlotAverage = slotAverage.average;
+  const isDeloadLike =
+    hasTarget &&
+    sameWeekSlotAverage != null &&
+    sameWeekSlotAverage > 0 &&
+    target < sameWeekSlotAverage * DELOAD_PLAN_VS_AVG_RATIO;
+  const isOvershoot =
+    hasTarget &&
+    current > target * OVERSHOOT_RATIO &&
+    (isDeloadLike || current > target * 1.2);
 
-  const status = resolveVolumeStatus(current, target);
+  const performedSets = currentWeeks.reduce((sum, week) => sum + week.performedSets, 0);
+  const targetSets = currentWeeks.reduce((sum, week) => sum + week.targetSets, 0);
+  const completedWorkouts = currentWeeks.reduce((sum, week) => sum + week.completedWorkouts, 0);
+  const loggingIncomplete =
+    current <= 0 && targetSets > 0 && performedSets === 0 && completedWorkouts === 0;
+
+  const { poorEnd, okEnd, goodEnd, scaleMax } = buildBulletScale(
+    current,
+    target,
+    sameWeekSlotAverage,
+    onTrackFloor
+  );
+
+  const chronic = averageChronicVolume(weekVolumes, currentWeek, category);
+  const acwrResult = computeAcwr(current, chronic);
   const priorTotal = sumCategory(priorWeeks, category);
+
+  let intensityPercent: number | null = null;
+  let intensityLabel: string | null = null;
+  if (category === 'Max Effort' && currentWeeks.length > 0) {
+    const peakWeek = currentWeeks.reduce((best, week) =>
+      week.maxEffortPeakWeightLbs > best.maxEffortPeakWeightLbs ? week : best
+    );
+    const oneRepMaxLbs = findOneRepMaxLbs(
+      userOneRepMaxes,
+      peakWeek.maxEffortPeakExerciseName
+    );
+    if (peakWeek.maxEffortPeakWeightLbs > 0 && oneRepMaxLbs != null && oneRepMaxLbs > 0) {
+      intensityPercent = Math.round((peakWeek.maxEffortPeakWeightLbs / oneRepMaxLbs) * 100);
+      intensityLabel = peakWeek.maxEffortPeakExerciseName
+        ? replaceUnderscoresWithSpaces(peakWeek.maxEffortPeakExerciseName)
+        : null;
+    }
+  }
+
+  const status = resolveVolumeStatus(current, target, {
+    loggingIncomplete,
+    isOvershoot,
+    onTrackFloor,
+  });
 
   return {
     type: category,
     current,
     target,
-    hasBaseline,
+    hasTarget,
+    sameWeekSlotAverage,
+    sameWeekSlotSampleCount: slotAverage.sampleCount,
+    mesocycleWeekSlot: slotAverage.slot,
     status,
-    deltaAbsolute: hasBaseline ? current - target : 0,
-    deltaPercent: hasBaseline ? Math.round(((current - target) / target) * 100) : 0,
+    deltaAbsolute: hasTarget ? current - target : 0,
+    deltaPercent: hasTarget ? Math.round(((current - target) / target) * 100) : 0,
     priorPeriodDeltaPercent: priorWeeks.length > 0 ? percentChange(current, priorTotal) : null,
-    emptyMessage: getEmptyVolumeMessage(category, status),
+    onTrackFloor,
+    poorEnd,
+    okEnd,
+    goodEnd,
+    scaleMax,
+    loggingIncomplete,
+    isDeloadLike,
+    isOvershoot,
+    acwr: acwrResult.ratio,
+    acwrHigh: acwrResult.high,
+    intensityPercent,
+    intensityLabel,
   };
 }
 
@@ -434,7 +894,7 @@ function countRecentPrs(
 }
 
 /**
- * Builds the full volume overview model for KPI cards and the period summary strip.
+ * Builds the full volume overview model for KPI cards.
  *
  * @param userDataExport Full user export containing workouts and 1RMs
  * @param exerciseData Exercise metadata map
@@ -471,14 +931,19 @@ export function buildVolumeOverviewModel(
     return null;
   }
 
-  const { current, prior, targetSource } = getPeriodWindow(weekVolumes, currentWeek, period);
+  const { current, prior } = getPeriodWindow(weekVolumes, currentWeek, period);
+  const userOneRepMaxes = userDataExport?.user_one_rep_max as UserOneRepMax[] | undefined;
   const categories: VolumeCategoryMetrics[] = (
     ['Max Effort', 'Dynamic Effort', 'Accessory'] as VolumeCategory[]
-  ).map(category => buildCategoryMetrics(category, current, prior, targetSource, period));
-
-  const sharedScaleMax = Math.max(
-    ...categories.map(category => Math.max(category.current, category.target, 1)),
-    1
+  ).map(category =>
+    buildCategoryMetrics(
+      category,
+      current,
+      prior,
+      weekVolumes,
+      currentWeek,
+      userOneRepMaxes
+    )
   );
 
   const totalVolume = current.reduce((sum, week) => sum + week.totalVolume, 0);
@@ -488,19 +953,11 @@ export function buildVolumeOverviewModel(
   const periodLabel =
     period === 'this_week' ? 'This week' : period === 'last_4_weeks' ? 'Last 4 weeks' : 'Program';
 
-  const targetLabel =
-    period === 'this_week'
-      ? 'Target: avg of last 4 weeks +10%'
-      : period === 'last_4_weeks'
-        ? 'Target: prior 4-week avg +10%'
-        : 'Target: program weekly avg +10%';
-
   return {
     period,
-    targetLabel,
+    targetLabel: 'Target: programmed week volume',
     periodLabel,
     categories,
-    sharedScaleMax,
     weekVolumes,
     summary: {
       sessionsCompleted: current.reduce((sum, week) => sum + week.completedWorkouts, 0),

@@ -2,7 +2,7 @@ import MockAdapter from 'axios-mock-adapter';
 
 import { expectRequestError } from './apiRequestErrorTestUtils';
 import { ENDPOINT } from './endpoint';
-import { getSetSchemesByExercise, getSetScheme, updateSetScheme } from './setScheme';
+import { getSetSchemesByExercise, getSetScheme, updateSetScheme, createSetScheme } from './setScheme';
 import type { SetScheme } from './types';
 
 const mock = new MockAdapter(ENDPOINT);
@@ -181,6 +181,84 @@ describe('SetScheme API', () => {
 
       expect(mock.history.patch).toHaveLength(1);
       expect(mock.history.patch[0].url).not.toContain('band_weight_lbs');
+    });
+
+    it('should omit band_weight_lbs when null', async () => {
+      mock.onPatch(/\/set_scheme\/1/).reply(200, mockSetScheme);
+
+      await updateSetScheme(
+        1,
+        1,
+        1,
+        false,
+        false,
+        false,
+        undefined,
+        undefined,
+        undefined,
+        135,
+        135,
+        8,
+        8,
+        90,
+        'KG',
+        null
+      );
+
+      expect(mock.history.patch).toHaveLength(1);
+      expect(mock.history.patch[0].url).not.toContain('band_weight_lbs');
+    });
+  });
+
+  describe('createSetScheme', () => {
+    it('should include band_weight_lbs when provided', async () => {
+      mock.onPost(/\/set_scheme\//).reply(200, { ...mockSetScheme, band_weight_lbs: 60 });
+
+      await createSetScheme(
+        1,
+        1,
+        false,
+        false,
+        false,
+        undefined,
+        undefined,
+        undefined,
+        135,
+        135,
+        8,
+        8,
+        90,
+        'KG',
+        60
+      );
+
+      expect(mock.history.post).toHaveLength(1);
+      expect(mock.history.post[0].url).toContain('band_weight_lbs=60');
+    });
+
+    it('should omit band_weight_lbs when null', async () => {
+      mock.onPost(/\/set_scheme\//).reply(200, mockSetScheme);
+
+      await createSetScheme(
+        1,
+        1,
+        false,
+        false,
+        false,
+        undefined,
+        undefined,
+        undefined,
+        135,
+        135,
+        8,
+        8,
+        90,
+        'KG',
+        null
+      );
+
+      expect(mock.history.post).toHaveLength(1);
+      expect(mock.history.post[0].url).not.toContain('band_weight_lbs');
     });
   });
 });

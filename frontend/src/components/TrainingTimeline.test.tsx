@@ -341,7 +341,7 @@ describe('TrainingTimeline', () => {
     expect(screen.getByText('Workout 6')).toBeInTheDocument();
   });
 
-  it('displays adherence density and status hints when provided', () => {
+  it('displays exercise progress bar without session count subtext', () => {
     render(
       <TrainingTimeline
         {...defaultProps}
@@ -355,16 +355,19 @@ describe('TrainingTimeline', () => {
             isCompleted: false,
             completedWorkouts: 1,
             plannedWorkouts: 2,
-            totalVolume: 5000,
-            statusHint: '1 of 2 sessions · No ME volume',
+            completedExercises: 6,
+            totalExercises: 12,
           },
         ]}
       />
     );
 
-    expect(screen.getByTestId('week-adherence-1')).toBeInTheDocument();
-    expect(screen.getByTestId('week-volume-1')).toBeInTheDocument();
-    expect(screen.getByText('1 of 2 sessions · No ME volume')).toBeInTheDocument();
+    expect(screen.getByTestId('week-exercise-progress-1')).toBeInTheDocument();
+    expect(screen.getByTestId('week-exercise-progress-1')).toHaveAttribute(
+      'aria-label',
+      '6 of 12 exercises recorded'
+    );
+    expect(screen.queryByText(/of \d+ sessions/)).not.toBeInTheDocument();
   });
 
   it('does not show scroll arrows when all weeks fit in the container', () => {

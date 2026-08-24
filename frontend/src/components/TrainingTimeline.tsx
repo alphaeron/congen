@@ -20,8 +20,8 @@ interface TrainingTimelineProps {
     isCompleted: boolean;
     completedWorkouts: number;
     plannedWorkouts?: number;
-    totalVolume?: number;
-    statusHint?: string;
+    completedExercises?: number;
+    totalExercises?: number;
   }>;
   onWeekClick: (weekNumber: number) => void;
   currentWeek: number;
@@ -33,7 +33,7 @@ const WEEK_CARD_GAP = 16;
 /**
  * Training Timeline component for displaying workout weeks in a horizontal scrollable format.
  *
- * @param weeks Array of week data with workouts, completion, and optional volume hints
+ * @param weeks Array of week data with workouts, completion, and exercise progress
  * @param onWeekClick Function to call when a week is clicked
  * @param currentWeek Current active week number
  * @return Training Timeline component
@@ -49,10 +49,6 @@ export const TrainingTimeline: React.FC<TrainingTimelineProps> = ({
 
   const sortedWeeks = useMemo(() => {
     return [...weeks].sort((a, b) => b.weekNumber - a.weekNumber);
-  }, [weeks]);
-
-  const maxWeekVolume = useMemo(() => {
-    return Math.max(...weeks.map(item => item.totalVolume || 0), 1);
   }, [weeks]);
 
   const updateScrollButtons = useCallback(() => {
@@ -251,17 +247,12 @@ export const TrainingTimeline: React.FC<TrainingTimelineProps> = ({
               {sortedWeeks.map(week => {
                 const status = getWeekStatus(week);
                 const isCurrentWeek = week.weekNumber === currentWeek;
-                const plannedWorkouts = week.plannedWorkouts || week.workouts.length;
-                const adherencePercent =
-                  plannedWorkouts > 0
-                    ? Math.min(100, Math.round((week.completedWorkouts / plannedWorkouts) * 100))
+                const totalExercises = week.totalExercises ?? 0;
+                const completedExercises = week.completedExercises ?? 0;
+                const exerciseCompletionPercent =
+                  totalExercises > 0
+                    ? Math.min(100, Math.round((completedExercises / totalExercises) * 100))
                     : 0;
-                const volumePercent = Math.min(
-                  100,
-                  Math.round(((week.totalVolume || 0) / maxWeekVolume) * 100)
-                );
-                const statusHint =
-                  week.statusHint || `${week.completedWorkouts} of ${plannedWorkouts} sessions`;
 
                 return (
                   <motion.div
@@ -315,47 +306,23 @@ export const TrainingTimeline: React.FC<TrainingTimelineProps> = ({
 
                     <Box sx={{ mb: 1 }}>
                       <Box
-                        data-testid={`week-adherence-${week.weekNumber}`}
+                        data-testid={`week-exercise-progress-${week.weekNumber}`}
+                        aria-label={`${completedExercises} of ${totalExercises} exercises recorded`}
                         sx={{
                           height: 6,
                           borderRadius: 3,
                           backgroundColor: 'rgba(255,255,255,0.2)',
                           overflow: 'hidden',
-                          mb: 0.5,
                         }}
                       >
                         <Box
                           sx={{
-                            width: `${adherencePercent}%`,
+                            width: `${exerciseCompletionPercent}%`,
                             height: '100%',
                             backgroundColor: 'var(--game-cyan)',
                           }}
                         />
                       </Box>
-                      <Box
-                        data-testid={`week-volume-${week.weekNumber}`}
-                        sx={{
-                          height: 4,
-                          borderRadius: 2,
-                          backgroundColor: 'rgba(255,255,255,0.12)',
-                          overflow: 'hidden',
-                          mb: 0.5,
-                        }}
-                      >
-                        <Box
-                          sx={{
-                            width: `${volumePercent}%`,
-                            height: '100%',
-                            backgroundColor: 'rgba(255,255,255,0.55)',
-                          }}
-                        />
-                      </Box>
-                      <Typography
-                        variant="caption"
-                        sx={{ color: 'var(--game-white-muted)', fontSize: '0.7rem' }}
-                      >
-                        {statusHint}
-                      </Typography>
                     </Box>
 
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>

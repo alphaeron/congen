@@ -19,7 +19,6 @@ import {
   buildWeekProgressSummaries,
   getCurrentWeekFromProgress,
 } from '../utils/progressUtils';
-import { buildWeekVolumeTotals } from '../utils/volumeOverviewUtils';
 
 interface WorkoutsProps {
   selectedWorkout?: string | null;
@@ -182,17 +181,24 @@ export const Workouts: React.FC<WorkoutsProps> = () => {
       return [];
     }
 
-    const weekVolumes = buildWeekVolumeTotals(
-      activeProgramData.workouts,
-      exerciseData,
-      activeProgramPreferences.program_preferences.program_days_per_week,
-      preferredUnit
-    );
-    const volumeByWeek = new Map(weekVolumes.map(week => [week.weekNumber, week]));
+    const workoutsPerWeek = activeProgramPreferences.program_preferences.program_days_per_week;
 
     return weeks.map(week => {
-      const volume = volumeByWeek.get(week.weekNumber);
-      const meUnderHint = volume && volume.maxEffortVolume <= 0 ? ' · No ME volume' : '';
+      const weekWorkoutsWithStages = activeProgramData.workouts.filter(
+        workoutWithStages =>
+          Math.ceil(workoutWithStages.workout.day_number / workoutsPerWeek) === week.weekNumber
+      );
+      const exerciseProgresses = weekWorkoutsWithStages.map(workoutWithStages =>
+        calculateWorkoutProgress(workoutWithStages)
+      );
+      const completedExercises = exerciseProgresses.reduce(
+        (sum, progress) => sum + progress.completedExercises,
+        0
+      );
+      const totalExercises = exerciseProgresses.reduce(
+        (sum, progress) => sum + progress.totalExercises,
+        0
+      );
 
       return {
         weekNumber: week.weekNumber,
@@ -200,11 +206,11 @@ export const Workouts: React.FC<WorkoutsProps> = () => {
         isCompleted: week.isCompleted,
         completedWorkouts: week.completedWorkouts,
         plannedWorkouts: week.workoutCount,
-        totalVolume: volume?.totalVolume || 0,
-        statusHint: `${week.completedWorkouts} of ${week.workoutCount} sessions${meUnderHint}`,
+        completedExercises,
+        totalExercises,
       };
     });
-  }, [activeProgramData, activeProgramPreferences, weeks, exerciseData, preferredUnit]);
+  }, [activeProgramData, activeProgramPreferences, weeks]);
 
   const openWizard = (program: Program) => {
     setSelectedProgram(program);

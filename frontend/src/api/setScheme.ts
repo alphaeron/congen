@@ -84,7 +84,9 @@ export const updateSetScheme = (
   if (performedRepCount !== undefined)
     params.append('performed_rep_count', performedRepCount.toString());
   if (restSeconds !== undefined) params.append('rest_seconds', restSeconds.toString());
-  if (bandWeightLbs !== undefined) params.append('band_weight_lbs', bandWeightLbs.toString());
+  if (typeof bandWeightLbs === 'number') {
+    params.append('band_weight_lbs', bandWeightLbs.toString());
+  }
 
   return REQUEST({
     method: 'PATCH',
@@ -146,7 +148,9 @@ export const createSetScheme = (
   if (performedRepCount !== undefined)
     params.append('performed_rep_count', performedRepCount.toString());
   params.append('rest_seconds', (restSeconds ?? 60).toString());
-  if (bandWeightLbs !== undefined) params.append('band_weight_lbs', bandWeightLbs.toString());
+  if (typeof bandWeightLbs === 'number') {
+    params.append('band_weight_lbs', bandWeightLbs.toString());
+  }
 
   return REQUEST({
     method: 'POST',
