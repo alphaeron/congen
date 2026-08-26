@@ -6,50 +6,10 @@ import {
   buildCongenBulletRanges,
   resolveCongenBulletDomain,
 } from './CongenBullet';
+import { setupResizeObserverMock } from '../testUtils/setupResizeObserverMock';
 
 beforeAll(() => {
-  class ResizeObserverMock {
-    callback: ResizeObserverCallback;
-
-    constructor(callback: ResizeObserverCallback) {
-      this.callback = callback;
-    }
-
-    observe(target: Element) {
-      this.callback(
-        [
-          {
-            target,
-            contentRect: {
-              width: 320,
-              height: 88,
-              top: 0,
-              left: 0,
-              bottom: 88,
-              right: 320,
-              x: 0,
-              y: 0,
-              toJSON: () => ({}),
-            },
-            borderBoxSize: [],
-            contentBoxSize: [],
-            devicePixelContentBoxSize: [],
-          } as ResizeObserverEntry,
-        ],
-        this
-      );
-    }
-
-    unobserve() {}
-
-    disconnect() {}
-  }
-
-  Object.defineProperty(window, 'ResizeObserver', {
-    writable: true,
-    configurable: true,
-    value: ResizeObserverMock,
-  });
+  setupResizeObserverMock();
 });
 
 describe('CongenBullet helpers', () => {

@@ -498,10 +498,3 @@ export const CongenBullet: React.FC<CongenBulletProps> = ({
     </Box>
   );
 };
-
-/**
- * Responsive wrapper matching Nivo's ResponsiveBullet naming for drop-in use.
- */
-export const ResponsiveBullet: React.FC<CongenBulletProps> = props => (
-  <CongenBullet {...props} />
-);

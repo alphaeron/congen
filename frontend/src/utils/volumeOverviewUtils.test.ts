@@ -3,7 +3,6 @@ import {
   computeProgrammedSetVolume,
   formatCompactVolume,
   resolveVolumeStatus,
-  getVolumeStatusLabel,
   getMesocycleWeekSlot,
   getCategoryOnTrackFloor,
   averageSameWeekSlotVolume,
@@ -20,7 +19,11 @@ import {
   OVERSHOOT_RATIO,
 } from './volumeOverviewUtils';
 import type { WeekVolumeTotals } from './volumeOverviewUtils';
-import type { Exercise, ProgrammedWorkoutWithStages, UserDataExport } from '../api/types';
+import {
+  createVolumeExerciseData,
+  createVolumeUserDataExport,
+  createVolumeWorkout,
+} from '../testUtils/volumeOverviewFixtures';
 
 describe('volumeOverviewUtils', () => {
   describe('computeSetVolume', () => {
@@ -83,80 +86,56 @@ describe('volumeOverviewUtils', () => {
   });
 
   describe('formatCompactVolume', () => {
-    it('formats thousands with compact notation', () => {
-      expect(formatCompactVolume(4001, 'LBS')).toBe('4.0k lbs');
-      expect(formatCompactVolume(150, 'KG')).toBe('150 kg');
+    it.each([
+      [4001, 'LBS', '4.0k lbs'],
+      [150, 'KG', '150 kg'],
+    ] as const)('formats %s %s as %s', (volume, unit, expected) => {
+      expect(formatCompactVolume(volume, unit)).toBe(expected);
     });
   });
 
   describe('getMesocycleWeekSlot', () => {
-    it('maps 1-based week numbers into slots 1–4', () => {
+    it.each([
+      [1, 1],
+      [2, 2],
+      [4, 4],
+      [5, 1],
+      [6, 2],
+      [8, 4],
+      [0, 1],
+    ])('maps week %i to slot %i', (week, slot) => {
       expect(MESOCYCLE_WEEKS).toBe(4);
-      expect(getMesocycleWeekSlot(1)).toBe(1);
-      expect(getMesocycleWeekSlot(2)).toBe(2);
-      expect(getMesocycleWeekSlot(4)).toBe(4);
-      expect(getMesocycleWeekSlot(5)).toBe(1);
-      expect(getMesocycleWeekSlot(6)).toBe(2);
-      expect(getMesocycleWeekSlot(8)).toBe(4);
-    });
-
-    it('treats week 0 as slot 1', () => {
-      expect(getMesocycleWeekSlot(0)).toBe(1);
+      expect(getMesocycleWeekSlot(week)).toBe(slot);
     });
   });
 
   describe('getCategoryOnTrackFloor', () => {
-    it('uses tighter ME and wider accessory floors', () => {
-      expect(getCategoryOnTrackFloor('Max Effort')).toBe(0.9);
-      expect(getCategoryOnTrackFloor('Dynamic Effort')).toBe(0.85);
-      expect(getCategoryOnTrackFloor('Accessory')).toBe(0.75);
+    it.each([
+      ['Max Effort', 0.9],
+      ['Dynamic Effort', 0.85],
+      ['Accessory', 0.75],
+    ] as const)('%s floor is %s', (category, floor) => {
+      expect(getCategoryOnTrackFloor(category)).toBe(floor);
     });
   });
 
   describe('resolveVolumeStatus', () => {
-    it('returns no_volume when current is zero', () => {
-      expect(resolveVolumeStatus(0, 1000)).toBe('no_volume');
-    });
-
-    it('returns no_volume when logging is incomplete', () => {
-      expect(
-        resolveVolumeStatus(0, 1000, { loggingIncomplete: true })
-      ).toBe('no_volume');
-    });
-
-    it('returns overshoot when flagged', () => {
-      expect(
-        resolveVolumeStatus(2000, 1000, { isOvershoot: true })
-      ).toBe('overshoot');
-    });
-
-    it('returns on_track when current is positive but target is zero', () => {
-      expect(resolveVolumeStatus(1000, 0)).toBe('on_track');
-    });
-
-    it('returns exceeded when current is above target', () => {
-      expect(resolveVolumeStatus(2000, 1000)).toBe('exceeded');
-    });
-
-    it('returns on_track near target using category floor', () => {
-      expect(resolveVolumeStatus(900, 1000)).toBe('on_track');
-      expect(resolveVolumeStatus(880, 1000, { onTrackFloor: 0.9 })).toBe('under');
-      expect(resolveVolumeStatus(900, 1000, { onTrackFloor: 0.9 })).toBe('on_track');
-    });
-
-    it('returns under when meaningfully below target', () => {
-      expect(resolveVolumeStatus(500, 1000)).toBe('under');
-    });
-  });
-
-  describe('status labels', () => {
-    it('maps statuses to accessible labels', () => {
-      expect(getVolumeStatusLabel('exceeded')).toBe('Exceeded');
-      expect(getVolumeStatusLabel('on_track')).toBe('On track');
-      expect(getVolumeStatusLabel('under')).toBe('Under');
-      expect(getVolumeStatusLabel('no_volume')).toBe('No volume');
-      expect(getVolumeStatusLabel('overshoot')).toBe('Over plan');
-    });
+    it.each([
+      [0, 1000, undefined, 'no_volume'],
+      [0, 1000, { loggingIncomplete: true }, 'no_volume'],
+      [2000, 1000, { isOvershoot: true }, 'overshoot'],
+      [1000, 0, undefined, 'on_track'],
+      [2000, 1000, undefined, 'exceeded'],
+      [900, 1000, undefined, 'on_track'],
+      [880, 1000, { onTrackFloor: 0.9 }, 'under'],
+      [900, 1000, { onTrackFloor: 0.9 }, 'on_track'],
+      [500, 1000, undefined, 'under'],
+    ] as const)(
+      'current=%s target=%s options=%j → %s',
+      (current, target, options, expected) => {
+        expect(resolveVolumeStatus(current, target, options)).toBe(expected);
+      }
+    );
   });
 
   describe('buildBulletScale', () => {
@@ -185,7 +164,6 @@ describe('volumeOverviewUtils', () => {
         poorEnd: 8500,
         okEnd: 10000,
         goodEnd: 11500,
-        hasTarget: true,
         preferredUnit: 'LBS',
       });
 
@@ -200,15 +178,10 @@ describe('volumeOverviewUtils', () => {
         poorEnd: 4000,
         okEnd: 5000,
         goodEnd: 5750,
-        hasTarget: true,
         preferredUnit: 'LBS',
       });
 
-      expect(labels.some(label => label.value === 4000)).toBe(true);
-      expect(labels.some(label => label.value === 5000)).toBe(true);
-      expect(labels.some(label => label.value === 5750)).toBe(true);
-      expect(labels.some(label => label.value === 12000)).toBe(true);
-      expect(labels).toHaveLength(5);
+      expect(labels.map(label => label.value)).toEqual([0, 4000, 5000, 5750, 12000]);
     });
   });
 
@@ -225,10 +198,7 @@ describe('volumeOverviewUtils', () => {
   });
 
   describe('same-week slot and chronic averages', () => {
-    const emptyWeek = (
-      weekNumber: number,
-      maxEffortVolume: number
-    ): WeekVolumeTotals => ({
+    const emptyWeek = (weekNumber: number, maxEffortVolume: number): WeekVolumeTotals => ({
       weekNumber,
       maxEffortVolume,
       dynamicEffortVolume: 0,
@@ -311,88 +281,14 @@ describe('volumeOverviewUtils', () => {
   });
 
   describe('buildWeekVolumeTotals and buildVolumeOverviewModel', () => {
-    const exerciseData = new Map<string, Exercise>([
-      [
-        'Bench Press',
-        {
-          name: 'Bench Press',
-          description: 'Press',
-          movement_type: 'horizontal_press',
-          is_unilateral: false,
-          is_upper: true,
-          is_accessory: false,
-        },
-      ],
-    ]);
-
-    const createWorkout = (
-      id: number,
-      dayNumber: number,
-      name: string,
-      weight: number,
-      options?: { performed?: boolean; performedWeight?: number }
-    ): ProgrammedWorkoutWithStages => ({
-      workout: {
-        id,
-        program_id: 1,
-        day_number: dayNumber,
-        name,
-        created_at: new Date('2024-01-01T00:00:00.000Z'),
-        updated_at: new Date('2024-01-01T00:00:00.000Z'),
-      },
-      stages: [
-        {
-          stage: {
-            id,
-            programmed_workout_id: id,
-            stage_type_id: 1,
-            position: 1,
-            name: 'Main',
-            created_at: new Date('2024-01-01T00:00:00.000Z'),
-            updated_at: new Date('2024-01-01T00:00:00.000Z'),
-          },
-          exercises: [
-            {
-              exercise: {
-                id,
-                workout_stage_id: id,
-                exercise_name: 'Bench Press',
-                position: 1,
-                created_at: new Date('2024-01-01T00:00:00.000Z'),
-                updated_at: new Date('2024-01-01T00:00:00.000Z'),
-              },
-              set_schemes: [
-                {
-                  id,
-                  programmed_exercise_id: id,
-                  set_number: 1,
-                  is_amrap: false,
-                  is_emom: false,
-                  use_tempo: false,
-                  performed_weight:
-                    options?.performed === false
-                      ? undefined
-                      : (options?.performedWeight ?? weight),
-                  performed_rep_count: options?.performed === false ? undefined : 5,
-                  target_weight: weight,
-                  target_rep_count: 5,
-                  created_at: new Date('2024-01-01T00:00:00.000Z'),
-                  updated_at: new Date('2024-01-01T00:00:00.000Z'),
-                },
-              ],
-            },
-          ],
-        },
-      ],
-    });
-
-    const workouts: ProgrammedWorkoutWithStages[] = [
-      createWorkout(1, 1, 'ME Upper', 100),
-      createWorkout(2, 5, 'ME Upper', 110),
+    const exerciseData = createVolumeExerciseData();
+    const workouts = [
+      createVolumeWorkout(1, 1, 'ME Upper', 100),
+      createVolumeWorkout(2, 5, 'ME Upper', 110),
     ];
 
     it('aggregates zero performed volume for programmed but unlogged sets', () => {
-      const programmedOnlyWorkout = createWorkout(3, 1, 'ME Upper', 100, {
+      const programmedOnlyWorkout = createVolumeWorkout(3, 1, 'ME Upper', 100, {
         performed: false,
       });
 
@@ -414,30 +310,13 @@ describe('volumeOverviewUtils', () => {
     });
 
     it('uses programmed week volume as category target', () => {
-      const userDataExport = {
-        training_programs: [
-          {
-            program: {
-              id: 1,
-              user_id: 'u1',
-              name: 'Test',
-              is_active: true,
-              current_week_number: 1,
-              created_at: new Date('2024-01-01T00:00:00.000Z'),
-              updated_at: new Date('2024-01-01T00:00:00.000Z'),
-            },
-            workouts: [createWorkout(1, 1, 'ME Upper', 100, { performed: false })],
-          },
-        ],
-        user_one_rep_max: [],
-      } as unknown as UserDataExport;
-
       const model = buildVolumeOverviewModel(
-        userDataExport,
+        createVolumeUserDataExport(1, [
+          createVolumeWorkout(1, 1, 'ME Upper', 100, { performed: false }),
+        ]),
         exerciseData,
         4,
         1,
-        'this_week',
         'LBS'
       );
 
@@ -448,41 +327,19 @@ describe('volumeOverviewUtils', () => {
       expect(maxEffort?.loggingIncomplete).toBe(true);
       expect(maxEffort?.status).toBe('no_volume');
       expect(maxEffort?.sameWeekSlotAverage).toBeNull();
-      expect(model?.targetLabel).toContain('programmed week volume');
     });
 
     it('builds overview model with per-card scale and plan bands', () => {
-      const userDataExport = {
-        training_programs: [
-          {
-            program: {
-              id: 1,
-              user_id: 'u1',
-              name: 'Test',
-              is_active: true,
-              current_week_number: 2,
-              created_at: new Date('2024-01-01T00:00:00.000Z'),
-              updated_at: new Date('2024-01-01T00:00:00.000Z'),
-            },
-            workouts,
-          },
-        ],
-        user_one_rep_max: [],
-      } as unknown as UserDataExport;
-
       const model = buildVolumeOverviewModel(
-        userDataExport,
+        createVolumeUserDataExport(2, workouts),
         exerciseData,
         4,
         2,
-        'this_week',
         'LBS'
       );
 
       expect(model).not.toBeNull();
       expect(model?.categories).toHaveLength(3);
-      expect((model as { sharedScaleMax?: number } | null)?.sharedScaleMax).toBeUndefined();
-      expect(model?.summary.sessionsPlanned).toBeGreaterThan(0);
 
       const maxEffort = model?.categories.find(category => category.type === 'Max Effort');
       expect(maxEffort?.hasTarget).toBe(true);
@@ -494,35 +351,20 @@ describe('volumeOverviewUtils', () => {
       expect(maxEffort?.goodEnd).toBe(
         Math.round((maxEffort?.target ?? 0) * OVERSHOOT_RATIO)
       );
-      expect(maxEffort?.mesocycleWeekSlot).toBe(2);
     });
 
-    it('computes W{n} avg from prior mesocycle blocks and ACWR', () => {
+    it('computes W{n} avg from prior mesocycle blocks', () => {
       const multiBlockWorkouts = [
-        createWorkout(1, 1, 'ME Upper', 100),
-        createWorkout(2, 5, 'ME Upper', 100),
-        createWorkout(3, 9, 'ME Upper', 100),
-        createWorkout(4, 13, 'ME Upper', 100),
-        createWorkout(5, 17, 'ME Upper', 120),
-        createWorkout(6, 21, 'ME Upper', 110),
+        createVolumeWorkout(1, 1, 'ME Upper', 100),
+        createVolumeWorkout(2, 5, 'ME Upper', 100),
+        createVolumeWorkout(3, 9, 'ME Upper', 100),
+        createVolumeWorkout(4, 13, 'ME Upper', 100),
+        createVolumeWorkout(5, 17, 'ME Upper', 120),
+        createVolumeWorkout(6, 21, 'ME Upper', 110),
       ];
 
-      const userDataExport = {
-        training_programs: [
-          {
-            program: {
-              id: 1,
-              user_id: 'u1',
-              name: 'Test',
-              is_active: true,
-              current_week_number: 6,
-              created_at: new Date('2024-01-01T00:00:00.000Z'),
-              updated_at: new Date('2024-01-01T00:00:00.000Z'),
-            },
-            workouts: multiBlockWorkouts,
-          },
-        ],
-        user_one_rep_max: [
+      const model = buildVolumeOverviewModel(
+        createVolumeUserDataExport(6, multiBlockWorkouts, [
           {
             user_id: 'u1',
             exercise_name: 'Bench Press',
@@ -531,67 +373,46 @@ describe('volumeOverviewUtils', () => {
             created_at: new Date('2024-01-01T00:00:00.000Z'),
             updated_at: new Date('2024-01-01T00:00:00.000Z'),
           },
-        ],
-      } as unknown as UserDataExport;
-
-      const model = buildVolumeOverviewModel(
-        userDataExport,
+        ]),
         exerciseData,
         4,
         6,
-        'this_week',
         'LBS'
       );
 
       const maxEffort = model?.categories.find(category => category.type === 'Max Effort');
-      expect(maxEffort?.mesocycleWeekSlot).toBe(2);
       expect(maxEffort?.sameWeekSlotSampleCount).toBeGreaterThanOrEqual(1);
       expect(maxEffort?.sameWeekSlotAverage).not.toBeNull();
-      expect(maxEffort?.acwr).not.toBeNull();
-      expect(maxEffort?.intensityPercent).not.toBeNull();
-      expect(maxEffort?.intensityPercent).toBeGreaterThan(0);
-      expect(maxEffort?.intensityLabel).toContain('Bench');
+      expect(buildWeeklyIntensitySeries(model!.weekVolumes, [
+        {
+          user_id: 'u1',
+          exercise_name: 'Bench Press',
+          one_rep_max: 150,
+          unit: 'KG',
+          created_at: new Date('2024-01-01T00:00:00.000Z'),
+          updated_at: new Date('2024-01-01T00:00:00.000Z'),
+        },
+      ]).length).toBeGreaterThan(0);
     });
 
     it('flags overshoot on deload-like weeks when done exceeds plan', () => {
       const deloadWorkouts = [
-        createWorkout(1, 1, 'ME Upper', 100),
-        createWorkout(2, 5, 'ME Upper', 100),
-        createWorkout(3, 9, 'ME Upper', 100),
-        createWorkout(4, 13, 'ME Upper', 100),
-        createWorkout(5, 17, 'ME Upper', 40, { performedWeight: 100 }),
+        createVolumeWorkout(1, 1, 'ME Upper', 100),
+        createVolumeWorkout(2, 5, 'ME Upper', 100),
+        createVolumeWorkout(3, 9, 'ME Upper', 100),
+        createVolumeWorkout(4, 13, 'ME Upper', 100),
+        createVolumeWorkout(5, 17, 'ME Upper', 40, { performedWeight: 100 }),
       ];
 
-      const userDataExport = {
-        training_programs: [
-          {
-            program: {
-              id: 1,
-              user_id: 'u1',
-              name: 'Test',
-              is_active: true,
-              current_week_number: 5,
-              created_at: new Date('2024-01-01T00:00:00.000Z'),
-              updated_at: new Date('2024-01-01T00:00:00.000Z'),
-            },
-            workouts: deloadWorkouts,
-          },
-        ],
-        user_one_rep_max: [],
-      } as unknown as UserDataExport;
-
       const model = buildVolumeOverviewModel(
-        userDataExport,
+        createVolumeUserDataExport(5, deloadWorkouts),
         exerciseData,
         4,
         5,
-        'this_week',
         'LBS'
       );
 
       const maxEffort = model?.categories.find(category => category.type === 'Max Effort');
-      expect(maxEffort?.mesocycleWeekSlot).toBe(1);
-      expect(maxEffort?.isDeloadLike).toBe(true);
       expect(maxEffort?.current).toBeGreaterThan(
         (maxEffort?.target ?? 0) * OVERSHOOT_RATIO
       );

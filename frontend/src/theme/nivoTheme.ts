@@ -1,6 +1,7 @@
 import { brand, secondary, gray, green, warning } from '../theme';
 
 import type { PaletteMode } from '@mui/material';
+import type { CSSProperties } from 'react';
 
 /**
  * Creates a comprehensive Nivo theme that matches Congen's design system
@@ -145,6 +146,35 @@ export function createCongenNivoTheme(mode: PaletteMode) {
 
 // Legacy export for backward compatibility (defaults to dark mode)
 export const congenNivoTheme = createCongenNivoTheme('dark');
+
+export type CongenNivoTheme = ReturnType<typeof createCongenNivoTheme>;
+
+/**
+ * Builds inline styles for Congen Nivo chart tooltips.
+ *
+ * @param nivoTheme Theme from createCongenNivoTheme
+ * @param extras Optional style overrides (zIndex, pointerEvents, etc.)
+ * @returns CSS properties for a tooltip container
+ */
+export function getCongenNivoTooltipStyle(
+  nivoTheme: CongenNivoTheme,
+  extras?: CSSProperties
+): CSSProperties {
+  const container = nivoTheme.tooltip.container;
+  return {
+    padding: container.padding,
+    color: container.color,
+    background: container.background,
+    borderRadius: container.borderRadius,
+    boxShadow: container.boxShadow,
+    border: container.border,
+    whiteSpace: 'nowrap',
+    fontSize: container.fontSize,
+    fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
+    lineHeight: '1.45',
+    ...extras,
+  };
+}
 
 /**
  * Congen-specific color schemes for Nivo charts
