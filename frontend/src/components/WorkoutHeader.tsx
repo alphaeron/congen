@@ -131,14 +131,11 @@ export const WorkoutHeader: React.FC<WorkoutHeaderProps> = ({
             p: 3,
           }}
         >
-          {/* Left Section: Context Badge */}
-          <Box className={GAME_CLASSES.subCard} sx={{ p: 2, flexShrink: 0 }}>
             <GameText variant="h4" className={GAME_CLASSES.textBold}>
               {context === 'program' && `Week ${currentWeek}`}
               {context === 'week' && `Week ${weekNumber}`}
               {context === 'day' && `Day ${dayNumber}`}
             </GameText>
-          </Box>
 
           {/* Middle Section: Progress Bar (takes all available space) */}
           <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, mx: 3 }}>

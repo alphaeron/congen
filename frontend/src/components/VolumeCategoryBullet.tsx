@@ -48,10 +48,6 @@ export const VolumeCategoryBullet: React.FC<VolumeCategoryBulletProps> = ({
   const scaleMax = card.scaleMax;
   const markers: number[] = [];
   const markerColors: string[] = [];
-  if (card.hasTarget) {
-    markers.push(Math.min(card.target, scaleMax));
-    markerColors.push(VOLUME_MARKER_COLORS.plan);
-  }
   if (card.sameWeekSlotAverage != null && card.sameWeekSlotAverage > 0) {
     markers.push(Math.min(card.sameWeekSlotAverage, scaleMax));
     markerColors.push(VOLUME_MARKER_COLORS.weekAvg);
@@ -112,9 +108,7 @@ export const VolumeCategoryBullet: React.FC<VolumeCategoryBulletProps> = ({
             VOLUME_BAND_COLORS.overload,
           ]}
           measureColors={[measureColor]}
-          markerColors={
-            markerColors.length > 0 ? markerColors : [VOLUME_MARKER_COLORS.plan]
-          }
+          markerColors={markerColors}
           axisBottom={{
             tickValues: axisTickValues,
             format: axisFormat,

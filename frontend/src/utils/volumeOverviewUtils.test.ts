@@ -252,11 +252,19 @@ describe('volumeOverviewUtils', () => {
       expect(chronic).toBe(Math.round((2000 + 3000 + 4000 + 1500) / 4));
     });
 
-    it('builds weekly ACWR series for prior weeks with chronic history', () => {
+    it('builds weekly ACWR series with 0 on cold start and ratios once chronic exists', () => {
+      const twoWeeks = weeks.slice(0, 2);
+      const series = buildWeeklyAcwrSeries(twoWeeks, 'Max Effort');
+      expect(series).toHaveLength(2);
+      expect(series[0]).toEqual({ x: 'W1', y: 0 });
+      expect(series[1].y).toBeGreaterThan(0);
+    });
+
+    it('builds weekly ACWR series for all weeks when chronic history exists', () => {
       const series = buildWeeklyAcwrSeries(weeks, 'Max Effort');
-      expect(series.length).toBeGreaterThan(0);
+      expect(series).toHaveLength(weeks.length);
       expect(series.every(point => point.x.startsWith('W'))).toBe(true);
-      expect(series.every(point => typeof point.y === 'number')).toBe(true);
+      expect(series.filter(point => point.y > 0).length).toBeGreaterThan(0);
     });
 
     it('builds weekly intensity series from peak loads and 1RMs', () => {

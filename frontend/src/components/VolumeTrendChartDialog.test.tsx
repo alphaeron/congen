@@ -31,15 +31,58 @@ jest.mock('@nivo/line', () => ({
 
 describe('VolumeTrendChartDialog', () => {
   const nivoTheme = createCongenNivoTheme('dark');
+  const weekVolumes = [
+    {
+      weekNumber: 1,
+      maxEffortVolume: 1000,
+      dynamicEffortVolume: 0,
+      accessoryVolume: 0,
+      totalVolume: 1000,
+      maxEffortProgrammedVolume: 0,
+      dynamicEffortProgrammedVolume: 0,
+      accessoryProgrammedVolume: 0,
+      totalProgrammedVolume: 0,
+      performedSets: 1,
+      targetSets: 1,
+      completedWorkouts: 1,
+      plannedWorkouts: 1,
+      maxEffortPeakWeightLbs: 300,
+      maxEffortPeakExerciseName: 'Bench Press',
+    },
+    {
+      weekNumber: 2,
+      maxEffortVolume: 800,
+      dynamicEffortVolume: 0,
+      accessoryVolume: 0,
+      totalVolume: 800,
+      maxEffortProgrammedVolume: 0,
+      dynamicEffortProgrammedVolume: 0,
+      accessoryProgrammedVolume: 0,
+      totalProgrammedVolume: 0,
+      performedSets: 1,
+      targetSets: 1,
+      completedWorkouts: 1,
+      plannedWorkouts: 1,
+      maxEffortPeakWeightLbs: 280,
+      maxEffortPeakExerciseName: 'Bench Press',
+    },
+  ];
 
   it('renders legend and tooltip content when open', () => {
     render(
       <VolumeTrendChartDialog
         open={true}
         category="Max Effort"
-        volumeData={[{ x: 'W1', y: 1000 }]}
-        acwrData={[{ x: 'W1', y: 1.1 }]}
+        volumeData={[
+          { x: 'W1', y: 1000 },
+          { x: 'W2', y: 800 },
+        ]}
+        acwrData={[
+          { x: 'W1', y: 0 },
+          { x: 'W2', y: 0.8 },
+        ]}
         intensityData={[{ x: 'W1', y: 85 }]}
+        weekVolumes={weekVolumes}
         nivoTheme={nivoTheme}
         onClose={jest.fn()}
       />
@@ -49,10 +92,12 @@ describe('VolumeTrendChartDialog', () => {
     expect(screen.getByTestId('volume-trend-dialog-legend-Max Effort')).toHaveTextContent(
       'Volume'
     );
-    expect(screen.getByTestId('volume-trend-dialog-tooltip')).toHaveTextContent(/Week:/);
-    expect(screen.getByTestId('volume-trend-dialog-tooltip')).toHaveTextContent(/Volume:/);
-    expect(screen.getByTestId('volume-trend-dialog-tooltip')).toHaveTextContent(/ACWR:/);
-    expect(screen.getByTestId('volume-trend-dialog-tooltip')).toHaveTextContent(/Intensity:/);
+    const tooltip = screen.getByTestId('volume-trend-dialog-tooltip');
+    expect(tooltip).toHaveTextContent(/Week:/);
+    expect(tooltip).toHaveTextContent(/Volume:/);
+    expect(tooltip).toHaveTextContent(/ACWR:/);
+    expect(tooltip).toHaveTextContent(/no data/);
+    expect(tooltip).toHaveTextContent(/Intensity:/);
   });
 
   it('calls onClose when the close button is clicked', async () => {
@@ -62,8 +107,9 @@ describe('VolumeTrendChartDialog', () => {
         open={true}
         category="Max Effort"
         volumeData={[{ x: 'W1', y: 1000 }]}
-        acwrData={[]}
+        acwrData={[{ x: 'W1', y: 0 }]}
         intensityData={[]}
+        weekVolumes={weekVolumes.slice(0, 1)}
         nivoTheme={nivoTheme}
         onClose={onClose}
       />

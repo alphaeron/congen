@@ -625,26 +625,46 @@ function findOneRepMaxLbs(
 export type VolumeTrendPoint = { x: string; y: number };
 
 /**
+ * Computes ACWR ratio for one program week, or null when no chronic baseline exists.
+ *
+ * @param weekVolumes Program week volume totals
+ * @param weekNumber Week to evaluate
+ * @param category Volume category
+ * @returns Acute:chronic ratio or null on cold start
+ */
+export function getWeeklyAcwrRatio(
+  weekVolumes: WeekVolumeTotals[],
+  weekNumber: number,
+  category: VolumeCategory
+): number | null {
+  const week = weekVolumes.find(entry => entry.weekNumber === weekNumber);
+  if (!week) {
+    return null;
+  }
+  const chronic = averageChronicVolume(weekVolumes, weekNumber, category);
+  const acute = getCategoryValue(week, category);
+  return computeAcwr(acute, chronic).ratio;
+}
+
+/**
  * Builds weekly ACWR points for the expanded trend dialog.
+ * Weeks without a chronic baseline plot at 0 so the line connects to the first real ratio.
  *
  * @param weekVolumes Program week volume totals
  * @param category Volume category
- * @returns Points only for weeks with a computable chronic baseline
+ * @returns One point per program week aligned with volume weeks
  */
 export function buildWeeklyAcwrSeries(
   weekVolumes: WeekVolumeTotals[],
   category: VolumeCategory
 ): VolumeTrendPoint[] {
-  const points: VolumeTrendPoint[] = [];
-  weekVolumes.forEach(week => {
-    const chronic = averageChronicVolume(weekVolumes, week.weekNumber, category);
-    const acute = getCategoryValue(week, category);
-    const { ratio } = computeAcwr(acute, chronic);
-    if (ratio != null) {
-      points.push({ x: `W${week.weekNumber}`, y: ratio });
-    }
+  return weekVolumes.map(week => {
+    const ratio = getWeeklyAcwrRatio(weekVolumes, week.weekNumber, category);
+    return {
+      x: `W${week.weekNumber}`,
+      y: ratio ?? 0,
+    };
   });
-  return points;
 }
 
 /**

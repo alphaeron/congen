@@ -9,14 +9,20 @@ import {
   getCongenNivoTooltipStyle,
   type CongenNivoTheme,
 } from '../theme/nivoTheme';
-import type { VolumeTrendPoint } from '../utils/volumeOverviewUtils';
+import type {
+  VolumeCategory,
+  VolumeTrendPoint,
+  WeekVolumeTotals,
+} from '../utils/volumeOverviewUtils';
+import { getWeeklyAcwrRatio } from '../utils/volumeOverviewUtils';
 
 export interface VolumeTrendChartDialogProps {
   open: boolean;
-  category: string;
+  category: VolumeCategory;
   volumeData: VolumeTrendPoint[];
   acwrData: VolumeTrendPoint[];
   intensityData: VolumeTrendPoint[];
+  weekVolumes: WeekVolumeTotals[];
   nivoTheme: CongenNivoTheme;
   onClose: () => void;
 }
@@ -30,6 +36,7 @@ export const VolumeTrendChartDialog: React.FC<VolumeTrendChartDialogProps> = ({
   volumeData,
   acwrData,
   intensityData,
+  weekVolumes,
   nivoTheme,
   onClose,
 }) => {
@@ -79,12 +86,6 @@ export const VolumeTrendChartDialog: React.FC<VolumeTrendChartDialogProps> = ({
   const secondaryColors = secondarySeries.map(line =>
     line.id === 'Intensity' ? VOLUME_SERIES_COLORS.intensity : VOLUME_SERIES_COLORS.acwr
   );
-
-  const acwrByWeek = useMemo(() => {
-    const map = new Map<string, number>();
-    acwrData.forEach(point => map.set(point.x, point.y));
-    return map;
-  }, [acwrData]);
 
   const intensityByWeek = useMemo(() => {
     const map = new Map<string, number>();
@@ -159,7 +160,8 @@ export const VolumeTrendChartDialog: React.FC<VolumeTrendChartDialogProps> = ({
               tooltip={({ point }) => {
                 const week = String(point.data.x);
                 const volume = Number(point.data.y);
-                const acwr = acwrByWeek.get(week);
+                const weekNumber = Number(week.replace(/^W/, ''));
+                const acwr = getWeeklyAcwrRatio(weekVolumes, weekNumber, category);
                 const intensity = intensityByWeek.get(week);
                 return (
                   <div

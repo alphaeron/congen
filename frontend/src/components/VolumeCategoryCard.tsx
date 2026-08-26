@@ -154,6 +154,7 @@ export const VolumeCategoryCard: React.FC<VolumeCategoryCardProps> = ({
           volumeData={sparklineData}
           acwrData={acwrData}
           intensityData={intensityData}
+          weekVolumes={weekVolumes}
           nivoTheme={nivoTheme}
           onClose={() => setChartOpen(false)}
         />
