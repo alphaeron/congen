@@ -312,7 +312,7 @@ class SetSchemeDAL(
      * @param targetRepCount Target number of repetitions
      * @param performedRepCount Actual number of repetitions completed
      * @param restSeconds Rest period after the set in seconds
-     * @param band When non-null, updates band_weight_lbs; when null, preserves the existing value
+     * @param band The band information for Dynamic Effort exercises
      * @return Mono containing the updated set scheme
      * @throws ValidationException if set scheme data fails validation
      * @throws NoResultsFoundException if no set scheme exists with the given ID
