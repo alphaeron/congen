@@ -2,7 +2,7 @@ import { render, screen, fireEvent, act } from '@testing-library/react';
 
 import { TrainingTimeline } from './TrainingTimeline';
 
-import type React from 'react';
+import React from 'react';
 
 class ResizeObserverMock {
   observe() {}
