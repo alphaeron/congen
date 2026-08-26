@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router';
 
-import { ConjugateProgression } from './ConjugateProgression';
 import { ExerciseRotationVisualization } from './ExerciseRotationVisualization';
 import { GAME_CLASSES } from './GameTheme';
 import { OneRepMaxRecords } from './OneRepMaxRecords';
@@ -117,23 +116,17 @@ export const WorkoutsOverview: React.FC<WorkoutsOverviewProps> = ({ selectedWork
         newSearchParams.delete('exercise');
         break;
       case 1:
-        // Conjugate Progression
-        newSearchParams.set('subsection', 'progression');
-        newSearchParams.delete('category');
-        newSearchParams.delete('exercise');
-        break;
-      case 2:
         // Exercise Rotation
         newSearchParams.set('subsection', 'rotation');
         // Keep category and exercise if they exist
         break;
-      case 3:
+      case 2:
         // 1RM Records
         newSearchParams.set('subsection', 'records');
         newSearchParams.delete('category');
         newSearchParams.delete('exercise');
         break;
-      case 4:
+      case 3:
         // Workout Preferences
         newSearchParams.set('subsection', 'preferences');
         newSearchParams.delete('category');
@@ -150,17 +143,14 @@ export const WorkoutsOverview: React.FC<WorkoutsOverviewProps> = ({ selectedWork
     let newTabIndex = 0;
 
     switch (subsection) {
-      case 'progression':
+      case 'rotation':
         newTabIndex = 1;
         break;
-      case 'rotation':
+      case 'records':
         newTabIndex = 2;
         break;
-      case 'records':
-        newTabIndex = 3;
-        break;
       case 'preferences':
-        newTabIndex = 4;
+        newTabIndex = 3;
         break;
       default:
         newTabIndex = 0;
@@ -220,14 +210,9 @@ export const WorkoutsOverview: React.FC<WorkoutsOverviewProps> = ({ selectedWork
           }}
         >
           <Tab label="Workout Calendar" id="workout-tab-0" aria-controls="workout-tabpanel-0" />
-          <Tab
-            label="Conjugate Progression"
-            id="workout-tab-1"
-            aria-controls="workout-tabpanel-1"
-          />
-          <Tab label="Exercise Rotation" id="workout-tab-2" aria-controls="workout-tabpanel-2" />
-          <Tab label="1RM Records" id="workout-tab-3" aria-controls="workout-tabpanel-3" />
-          <Tab label="Workout Preferences" id="workout-tab-4" aria-controls="workout-tabpanel-4" />
+          <Tab label="Exercise Rotation" id="workout-tab-1" aria-controls="workout-tabpanel-1" />
+          <Tab label="1RM Records" id="workout-tab-2" aria-controls="workout-tabpanel-2" />
+          <Tab label="Workout Preferences" id="workout-tab-3" aria-controls="workout-tabpanel-3" />
         </Tabs>
       </motion.div>
 
@@ -327,18 +312,14 @@ export const WorkoutsOverview: React.FC<WorkoutsOverviewProps> = ({ selectedWork
         </TabPanel>
 
         <TabPanel value={activeTab} index={1} slideDirection={slideDirection}>
-          <ConjugateProgression />
-        </TabPanel>
-
-        <TabPanel value={activeTab} index={2} slideDirection={slideDirection}>
           <ExerciseRotationVisualization />
         </TabPanel>
 
-        <TabPanel value={activeTab} index={3} slideDirection={slideDirection}>
+        <TabPanel value={activeTab} index={2} slideDirection={slideDirection}>
           <OneRepMaxRecords />
         </TabPanel>
 
-        <TabPanel value={activeTab} index={4} slideDirection={slideDirection}>
+        <TabPanel value={activeTab} index={3} slideDirection={slideDirection}>
           <WorkoutPreferencesSection />
         </TabPanel>
       </motion.div>

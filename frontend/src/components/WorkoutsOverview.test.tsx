@@ -6,21 +6,18 @@ import { MemoryRouter } from 'react-router';
 import { WorkoutsOverview } from './WorkoutsOverview';
 import type { User } from '../api/types';
 
-// Mock the child components to prevent Nivo chart issues
 jest.mock('./Workouts', () => ({
   Workouts: () => <div data-testid="workouts">Mock Workouts Component</div>,
-}));
-
-jest.mock('./ConjugateProgression', () => ({
-  ConjugateProgression: () => (
-    <div data-testid="conjugate-progression">Mock Conjugate Progression</div>
-  ),
 }));
 
 jest.mock('./ExerciseRotationVisualization', () => ({
   ExerciseRotationVisualization: () => (
     <div data-testid="exercise-rotation">Mock Exercise Rotation</div>
   ),
+}));
+
+jest.mock('./OneRepMaxRecords', () => ({
+  OneRepMaxRecords: () => <div data-testid="one-rep-max-records">Mock 1RM Records</div>,
 }));
 
 jest.mock('./WorkoutPreferencesSection', () => ({
@@ -52,8 +49,8 @@ describe('WorkoutsOverview', () => {
     renderWithTheme(<WorkoutsOverview user={mockUser} />);
 
     expect(screen.getByText('Workout Calendar')).toBeInTheDocument();
-    expect(screen.getByText('Conjugate Progression')).toBeInTheDocument();
     expect(screen.getByText('Exercise Rotation')).toBeInTheDocument();
+    expect(screen.getByText('1RM Records')).toBeInTheDocument();
     expect(screen.getByText('Workout Preferences')).toBeInTheDocument();
   });
 
@@ -66,41 +63,33 @@ describe('WorkoutsOverview', () => {
   it('switches between tabs correctly', async () => {
     renderWithTheme(<WorkoutsOverview user={mockUser} />);
 
-    // Click on Conjugate Progression tab
-    const conjugateTab = screen.getByRole('tab', { name: /conjugate progression/i });
-    fireEvent.click(conjugateTab);
-
-    // Should show conjugate progression content
-    await waitFor(() => {
-      expect(conjugateTab).toHaveAttribute('aria-selected', 'true');
-      expect(screen.getByTestId('conjugate-progression')).toBeInTheDocument();
-    });
-
-    // Click on Exercise Rotation tab
     const rotationTab = screen.getByRole('tab', { name: /exercise rotation/i });
     fireEvent.click(rotationTab);
 
-    // Should show exercise rotation content
     await waitFor(() => {
       expect(rotationTab).toHaveAttribute('aria-selected', 'true');
       expect(screen.getByTestId('exercise-rotation')).toBeInTheDocument();
     });
 
-    // Click on Workout Preferences tab
+    const recordsTab = screen.getByRole('tab', { name: /1rm records/i });
+    fireEvent.click(recordsTab);
+
+    await waitFor(() => {
+      expect(recordsTab).toHaveAttribute('aria-selected', 'true');
+      expect(screen.getByTestId('one-rep-max-records')).toBeInTheDocument();
+    });
+
     const preferencesTab = screen.getByRole('tab', { name: /workout preferences/i });
     fireEvent.click(preferencesTab);
 
-    // Should show workout preferences content
     await waitFor(() => {
       expect(preferencesTab).toHaveAttribute('aria-selected', 'true');
       expect(screen.getByTestId('workout-preferences')).toBeInTheDocument();
     });
 
-    // Click back to Workout Calendar tab
     const calendarTab = screen.getByRole('tab', { name: /workout calendar/i });
     fireEvent.click(calendarTab);
 
-    // Should show workouts content
     await waitFor(() => {
       expect(calendarTab).toHaveAttribute('aria-selected', 'true');
       expect(screen.getByTestId('workouts')).toBeInTheDocument();
@@ -110,7 +99,6 @@ describe('WorkoutsOverview', () => {
   it('passes user prop to Workouts component', () => {
     renderWithTheme(<WorkoutsOverview user={mockUser} />);
 
-    // The Workouts component should be rendered (we can't easily test prop passing with mocks)
     expect(screen.getByTestId('workouts')).toBeInTheDocument();
   });
 });

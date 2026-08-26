@@ -48,13 +48,6 @@ jest.mock('./WorkoutWeekDetails', () => ({
   ),
 }));
 
-// Mock ConjugateProgression component to prevent Nivo chart issues
-jest.mock('./ConjugateProgression', () => ({
-  ConjugateProgression: () => (
-    <div data-testid="conjugate-progression">Mock Conjugate Progression</div>
-  ),
-}));
-
 // Mock ExerciseRotationVisualization component
 jest.mock('./ExerciseRotationVisualization', () => ({
   ExerciseRotationVisualization: () => (
