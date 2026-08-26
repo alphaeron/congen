@@ -10,7 +10,9 @@ import { RichTextDisplay } from './RichTextDisplay';
 import { WeightUnitPreferenceControls } from './WeightUnitPreferenceControls';
 import type { Exercise, ExerciseEquipment, ExerciseMuscle, Equipment, Muscle } from '../api/types';
 import { capitalizeEachWord, formatWeightWithUnit } from '../common/utils';
+import { useActiveProgramContext } from '../hooks/useActiveProgramContext';
 import { useData } from '../contexts/DataContext';
+import { buildExercisePerformanceHistory } from '../utils/performanceAnalyticsUtils';
 
 /**
  * Props for the ExerciseDetails component.
@@ -36,6 +38,7 @@ export function ExerciseDetails(
     userOneRepMaxes,
     weightUnitPreferences,
   } = useData();
+  const { userData, workoutsPerWeek, preferredUnit } = useActiveProgramContext();
   const [exercise, setExercise] = React.useState<Exercise | null>(null);
 
   const [exerciseMuscles, setExerciseMuscles] = React.useState<ExerciseMuscle[]>([]);
@@ -112,6 +115,20 @@ export function ExerciseDetails(
     if (!weightUnitPreferences || !exercise) return null;
     return weightUnitPreferences.find(pref => pref.exercise_name === exercise.name);
   }, [weightUnitPreferences, exercise]);
+
+  const performanceHistory = React.useMemo(() => {
+    if (!exercise) {
+      return [];
+    }
+    const exerciseData = new Map([[exercise.name, exercise]]);
+    return buildExercisePerformanceHistory(
+      userData,
+      exercise.name,
+      exerciseData,
+      workoutsPerWeek,
+      preferredUnit
+    );
+  }, [userData, exercise, workoutsPerWeek, preferredUnit]);
 
   if (isLoading || !props.exerciseName || !exercise) {
     return <LoadingSpinner message="Loading exercise details..." fullHeight={true} />;
@@ -377,7 +394,7 @@ export function ExerciseDetails(
                             </GameText>
                             <GameTextSecondary variant="body2">1RM Record</GameTextSecondary>
                             <GameTextSecondary variant="caption" className={GAME_CLASSES.textMuted}>
-                              {new Date(exerciseOneRepMax!.created_at).toLocaleDateString()}
+                              {new Date(exerciseOneRepMax!.updated_at).toLocaleDateString()}
                             </GameTextSecondary>
                           </React.Fragment>
                         ) : (
@@ -390,6 +407,43 @@ export function ExerciseDetails(
                           >
                             No One Rep Max Data...
                           </GameTextSecondary>
+                        )}
+                      </Box>
+
+                      <Box sx={{ mt: 2 }}>
+                        <GameText
+                          variant="subtitle2"
+                          className={GAME_CLASSES.textMedium}
+                          sx={{ mb: 1 }}
+                        >
+                          Logged History
+                        </GameText>
+                        {performanceHistory.length === 0 ? (
+                          <GameTextSecondary variant="body2" sx={{ fontStyle: 'italic' }}>
+                            No logged sets for this exercise yet.
+                          </GameTextSecondary>
+                        ) : (
+                          <Stack
+                            spacing={1}
+                            sx={{ maxHeight: 220, overflowY: 'auto' }}
+                            data-testid="exercise-performance-history"
+                          >
+                            {performanceHistory.map(session => (
+                              <Box
+                                key={`${session.workoutId}-${session.weekNumber}`}
+                                data-testid={`exercise-history-${session.workoutId}`}
+                              >
+                                <GameText variant="body2">
+                                  W{session.weekNumber} Day {session.dayNumber}
+                                </GameText>
+                                <GameTextSecondary variant="caption">
+                                  {session.category} •{' '}
+                                  {formatWeightWithUnit(session.topWeightKg, preferredUnit)} ×{' '}
+                                  {session.topReps}
+                                </GameTextSecondary>
+                              </Box>
+                            ))}
+                          </Stack>
                         )}
                       </Box>
                     </Box>

@@ -14,6 +14,9 @@ import {
   buildWeeklyIntensitySeries,
   buildWeekVolumeTotals,
   buildVolumeOverviewModel,
+  computePercentChange,
+  forEachProgramSetScheme,
+  getActiveProgramFromExport,
   MESOCYCLE_WEEKS,
   ACWR_HIGH_THRESHOLD,
   OVERSHOOT_RATIO,
@@ -213,6 +216,7 @@ describe('volumeOverviewUtils', () => {
       completedWorkouts: 1,
       plannedWorkouts: 1,
       maxEffortPeakWeightLbs: 0,
+      maxEffortPeakReps: 0,
       maxEffortPeakExerciseName: null,
     });
 
@@ -271,6 +275,7 @@ describe('volumeOverviewUtils', () => {
       const withPeaks = weeks.map(week => ({
         ...week,
         maxEffortPeakWeightLbs: 300,
+        maxEffortPeakReps: 3,
         maxEffortPeakExerciseName: 'Bench Press',
       }));
       const series = buildWeeklyIntensitySeries(withPeaks, [
@@ -426,6 +431,31 @@ describe('volumeOverviewUtils', () => {
       );
       expect(maxEffort?.isOvershoot).toBe(true);
       expect(maxEffort?.status).toBe('overshoot');
+    });
+  });
+
+  describe('program set scheme iteration helpers', () => {
+    it('getActiveProgramFromExport prefers the active program', () => {
+      const userData = createVolumeUserDataExport(1, []);
+      const active = getActiveProgramFromExport(userData);
+      expect(active?.program.is_active).toBe(true);
+    });
+
+    it('forEachProgramSetScheme visits every set scheme with workout context', () => {
+      const workouts = [createVolumeWorkout(1, 1, 'ME Upper Day', 100)];
+      const exerciseData = createVolumeExerciseData();
+      const visited: string[] = [];
+
+      forEachProgramSetScheme(workouts, exerciseData, 3, entry => {
+        visited.push(`${entry.weekNumber}:${entry.exerciseName}:${entry.setScheme.set_number}`);
+      });
+
+      expect(visited).toEqual(['1:Bench Press:1']);
+    });
+
+    it('computePercentChange returns signed percent deltas', () => {
+      expect(computePercentChange(120, 100)).toBe(20);
+      expect(computePercentChange(0, 0)).toBe(0);
     });
   });
 });

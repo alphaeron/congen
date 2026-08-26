@@ -47,6 +47,7 @@ describe('VolumeTrendChartDialog', () => {
       completedWorkouts: 1,
       plannedWorkouts: 1,
       maxEffortPeakWeightLbs: 300,
+      maxEffortPeakReps: 3,
       maxEffortPeakExerciseName: 'Bench Press',
     },
     {
@@ -64,6 +65,7 @@ describe('VolumeTrendChartDialog', () => {
       completedWorkouts: 1,
       plannedWorkouts: 1,
       maxEffortPeakWeightLbs: 280,
+      maxEffortPeakReps: 2,
       maxEffortPeakExerciseName: 'Bench Press',
     },
   ];
@@ -98,6 +100,8 @@ describe('VolumeTrendChartDialog', () => {
     expect(tooltip).toHaveTextContent(/ACWR:/);
     expect(tooltip).toHaveTextContent(/no data/);
     expect(tooltip).toHaveTextContent(/Intensity:/);
+    expect(tooltip).toHaveTextContent(/Peak lift:/);
+    expect(tooltip).toHaveTextContent(/Bench Press/);
   });
 
   it('calls onClose when the close button is clicked', async () => {

@@ -3,6 +3,7 @@ import type {
   Exercise,
   ProgramWithWorkouts,
   ProgrammedWorkoutWithStages,
+  SetScheme,
   UserDataExport,
   UserOneRepMax,
 } from '../api/types';
@@ -45,6 +46,7 @@ export interface WeekVolumeTotals {
   completedWorkouts: number;
   plannedWorkouts: number;
   maxEffortPeakWeightLbs: number;
+  maxEffortPeakReps: number;
   maxEffortPeakExerciseName: string | null;
 }
 
@@ -312,11 +314,139 @@ function sumProgrammedCategory(weeks: WeekVolumeTotals[], category: VolumeCatego
   return weeks.reduce((sum, week) => sum + getProgrammedCategoryValue(week, category), 0);
 }
 
-function percentChange(current: number, previous: number): number | null {
+/**
+ * Computes signed percent change between two values.
+ *
+ * @param current Current value
+ * @param previous Prior value
+ * @returns Rounded percent delta
+ */
+export function computePercentChange(current: number, previous: number): number {
   if (previous <= 0) {
     return current > 0 ? 100 : 0;
   }
   return Math.round(((current - previous) / previous) * 100);
+}
+
+/**
+ * Resolves the active program from a user export.
+ *
+ * @param userDataExport Full user export
+ * @returns Active program workouts container or null
+ */
+export function getActiveProgramFromExport(
+  userDataExport: UserDataExport | null
+): ProgramWithWorkouts | null {
+  if (!userDataExport?.training_programs?.length) {
+    return null;
+  }
+  return (
+    userDataExport.training_programs.find(program => program.program.is_active) ||
+    userDataExport.training_programs[0]
+  );
+}
+
+export interface ProgramSetSchemeContext {
+  workoutWithStages: ProgrammedWorkoutWithStages;
+  workoutId: number;
+  dayNumber: number;
+  weekNumber: number;
+  dayInWeek: number;
+  workoutName: string;
+  exerciseName: string;
+  exerciseInfo: Exercise | undefined;
+  setScheme: SetScheme;
+}
+
+export type ProgramSetSchemeFilter = {
+  weekNumber?: number;
+  exerciseName?: string;
+};
+
+/**
+ * Visits every set scheme in a program with workout and exercise context.
+ *
+ * @param workouts Program workouts to traverse
+ * @param exerciseData Exercise metadata map
+ * @param workoutsPerWeek Program days per week
+ * @param visit Callback invoked for each set scheme
+ * @param filter Optional week or exercise filter
+ */
+export function forEachProgramSetScheme(
+  workouts: ProgrammedWorkoutWithStages[],
+  exerciseData: Map<string, Exercise>,
+  workoutsPerWeek: number,
+  visit: (entry: ProgramSetSchemeContext) => void,
+  filter?: ProgramSetSchemeFilter
+): void {
+  if (workoutsPerWeek <= 0) {
+    return;
+  }
+
+  workouts.forEach(workoutWithStages => {
+    const dayNumber = workoutWithStages.workout.day_number;
+    const weekNumber = Math.ceil(dayNumber / workoutsPerWeek);
+    if (filter?.weekNumber != null && weekNumber !== filter.weekNumber) {
+      return;
+    }
+
+    const dayInWeek = dayNumber - workoutsPerWeek * (weekNumber - 1);
+    const workoutName = replaceUnderscoresWithSpaces(workoutWithStages.workout.name);
+
+    workoutWithStages.stages.forEach(stage => {
+      stage.exercises.forEach(exerciseWithSchemes => {
+        const exerciseName = exerciseWithSchemes.exercise.exercise_name;
+        if (filter?.exerciseName != null && exerciseName !== filter.exerciseName) {
+          return;
+        }
+
+        const exerciseInfo = exerciseData.get(exerciseName);
+        exerciseWithSchemes.set_schemes.forEach(setScheme => {
+          visit({
+            workoutWithStages,
+            workoutId: workoutWithStages.workout.id,
+            dayNumber,
+            weekNumber,
+            dayInWeek,
+            workoutName,
+            exerciseName,
+            exerciseInfo,
+            setScheme,
+          });
+        });
+      });
+    });
+  });
+}
+
+/**
+ * Maps a performed set to its ME/DE/Accessory category.
+ *
+ * @param exerciseInfo Exercise metadata
+ * @param workoutName Workout display name
+ * @param setScheme Set scheme with performed fields
+ * @param preferredUnit Display unit
+ * @returns Volume category or null when performed data is missing
+ */
+export function getVolumeCategoryForPerformedSet(
+  exerciseInfo: Exercise | undefined,
+  workoutName: string,
+  setScheme: SetSchemeVolumeFields,
+  preferredUnit: 'KG' | 'LBS' = 'LBS'
+): VolumeCategory | null {
+  const setVolume = computeSetVolume(setScheme, preferredUnit);
+  if (!setVolume.hasPerformed) {
+    return null;
+  }
+
+  const categorized = categorizeExerciseVolume(exerciseInfo, workoutName, setVolume.volume);
+  if (categorized.maxEffortVolume > 0) {
+    return 'Max Effort';
+  }
+  if (categorized.dynamicEffortVolume > 0) {
+    return 'Dynamic Effort';
+  }
+  return 'Accessory';
 }
 
 /**
@@ -497,9 +627,12 @@ export function buildWeekVolumeTotals(
   preferredUnit: 'KG' | 'LBS' = 'LBS'
 ): WeekVolumeTotals[] {
   const weekMap = new Map<number, WeekVolumeTotals>();
+  const visitedWorkouts = new Set<number>();
 
-  workouts.forEach(workoutWithStages => {
-    const weekNumber = Math.ceil(workoutWithStages.workout.day_number / workoutsPerWeek);
+  forEachProgramSetScheme(workouts, exerciseData, workoutsPerWeek, entry => {
+    const { workoutWithStages, weekNumber, workoutName, exerciseName, exerciseInfo, setScheme } =
+      entry;
+
     if (!weekMap.has(weekNumber)) {
       weekMap.set(weekNumber, {
         weekNumber,
@@ -516,63 +649,54 @@ export function buildWeekVolumeTotals(
         completedWorkouts: 0,
         plannedWorkouts: 0,
         maxEffortPeakWeightLbs: 0,
+        maxEffortPeakReps: 0,
         maxEffortPeakExerciseName: null,
       });
     }
 
     const weekTotals = weekMap.get(weekNumber)!;
-    weekTotals.plannedWorkouts += 1;
 
-    if (calculateWorkoutProgress(workoutWithStages).status === 'completed') {
-      weekTotals.completedWorkouts += 1;
+    if (!visitedWorkouts.has(workoutWithStages.workout.id)) {
+      visitedWorkouts.add(workoutWithStages.workout.id);
+      weekTotals.plannedWorkouts += 1;
+      if (calculateWorkoutProgress(workoutWithStages).status === 'completed') {
+        weekTotals.completedWorkouts += 1;
+      }
     }
 
-    const workoutName = replaceUnderscoresWithSpaces(workoutWithStages.workout.name);
+    const programmed = computeProgrammedSetVolume(setScheme, preferredUnit);
+    if (programmed.hasTarget) {
+      weekTotals.targetSets += 1;
+      const programmedCategorized = categorizeExerciseVolume(
+        exerciseInfo,
+        workoutName,
+        programmed.volume
+      );
+      weekTotals.maxEffortProgrammedVolume += programmedCategorized.maxEffortVolume;
+      weekTotals.dynamicEffortProgrammedVolume += programmedCategorized.dynamicEffortVolume;
+      weekTotals.accessoryProgrammedVolume += programmedCategorized.accessoryVolume;
+      weekTotals.totalProgrammedVolume += programmed.volume;
+    }
 
-    workoutWithStages.stages.forEach(stage => {
-      stage.exercises.forEach(exerciseWithSchemes => {
-        const exerciseName = exerciseWithSchemes.exercise.exercise_name;
-        const exerciseInfo = exerciseData.get(exerciseName);
+    const setVolume = computeSetVolume(setScheme, preferredUnit);
+    if (setVolume.hasPerformed) {
+      weekTotals.performedSets += 1;
+      const categorized = categorizeExerciseVolume(exerciseInfo, workoutName, setVolume.volume);
+      weekTotals.maxEffortVolume += categorized.maxEffortVolume;
+      weekTotals.dynamicEffortVolume += categorized.dynamicEffortVolume;
+      weekTotals.accessoryVolume += categorized.accessoryVolume;
+      weekTotals.totalVolume += setVolume.volume;
 
-        exerciseWithSchemes.set_schemes.forEach(setScheme => {
-          const programmed = computeProgrammedSetVolume(setScheme, preferredUnit);
-          if (programmed.hasTarget) {
-            weekTotals.targetSets += 1;
-            const programmedCategorized = categorizeExerciseVolume(
-              exerciseInfo,
-              workoutName,
-              programmed.volume
-            );
-            weekTotals.maxEffortProgrammedVolume += programmedCategorized.maxEffortVolume;
-            weekTotals.dynamicEffortProgrammedVolume += programmedCategorized.dynamicEffortVolume;
-            weekTotals.accessoryProgrammedVolume += programmedCategorized.accessoryVolume;
-            weekTotals.totalProgrammedVolume += programmed.volume;
-          }
-
-          const setVolume = computeSetVolume(setScheme, preferredUnit);
-          if (setVolume.hasPerformed) {
-            weekTotals.performedSets += 1;
-            const categorized = categorizeExerciseVolume(
-              exerciseInfo,
-              workoutName,
-              setVolume.volume
-            );
-            weekTotals.maxEffortVolume += categorized.maxEffortVolume;
-            weekTotals.dynamicEffortVolume += categorized.dynamicEffortVolume;
-            weekTotals.accessoryVolume += categorized.accessoryVolume;
-            weekTotals.totalVolume += setVolume.volume;
-
-            if (categorized.maxEffortVolume > 0 && setScheme.performed_weight) {
-              const peakWeightLbs = setScheme.performed_weight * KG_TO_LBS;
-              if (peakWeightLbs > weekTotals.maxEffortPeakWeightLbs) {
-                weekTotals.maxEffortPeakWeightLbs = peakWeightLbs;
-                weekTotals.maxEffortPeakExerciseName = exerciseName;
-              }
-            }
-          }
-        });
-      });
-    });
+      if (categorized.maxEffortVolume > 0 && setScheme.performed_weight) {
+        const peakWeightLbs = setScheme.performed_weight * KG_TO_LBS;
+        const performedReps = setScheme.performed_rep_count ?? 0;
+        if (peakWeightLbs > weekTotals.maxEffortPeakWeightLbs) {
+          weekTotals.maxEffortPeakWeightLbs = peakWeightLbs;
+          weekTotals.maxEffortPeakReps = performedReps;
+          weekTotals.maxEffortPeakExerciseName = exerciseName;
+        }
+      }
+    }
   });
 
   return Array.from(weekMap.values())
@@ -747,7 +871,7 @@ function buildCategoryMetrics(
     sameWeekSlotAverage,
     sameWeekSlotSampleCount: slotAverage.sampleCount,
     status,
-    priorPeriodDeltaPercent: priorWeeks.length > 0 ? percentChange(current, priorTotal) : null,
+    priorPeriodDeltaPercent: priorWeeks.length > 0 ? computePercentChange(current, priorTotal) : null,
     onTrackFloor,
     poorEnd,
     okEnd,
@@ -775,9 +899,7 @@ export function buildVolumeOverviewModel(
   currentWeek: number,
   preferredUnit: 'KG' | 'LBS' = 'LBS'
 ): VolumeOverviewModel | null {
-  const activeProgram: ProgramWithWorkouts | undefined =
-    userDataExport?.training_programs?.find(program => program.program.is_active) ||
-    userDataExport?.training_programs?.[0];
+  const activeProgram = getActiveProgramFromExport(userDataExport);
 
   if (!activeProgram?.workouts?.length || workoutsPerWeek <= 0) {
     return null;

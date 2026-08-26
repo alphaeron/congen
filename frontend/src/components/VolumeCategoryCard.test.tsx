@@ -93,6 +93,7 @@ describe('VolumeCategoryCard', () => {
       completedWorkouts: 1,
       plannedWorkouts: 1,
       maxEffortPeakWeightLbs: 300,
+      maxEffortPeakReps: 3,
       maxEffortPeakExerciseName: 'Bench Press',
     },
   ];

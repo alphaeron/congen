@@ -39,10 +39,17 @@ const mockUseData = {
   ],
   loadUserOneRepMaxes: jest.fn(),
   getDefaultWeightUnit: jest.fn(() => 'KG'),
+  programPreferences: [],
 };
 
 jest.mock('../contexts/DataContext', () => ({
   useData: jest.fn(() => mockUseData),
+}));
+
+const mockUseActiveProgramContext = jest.fn();
+
+jest.mock('../hooks/useActiveProgramContext', () => ({
+  useActiveProgramContext: () => mockUseActiveProgramContext(),
 }));
 
 // Mock notistack
@@ -79,6 +86,7 @@ jest.mock('@tanstack/react-table', () => ({
   },
   createColumnHelper: () => ({
     accessor: () => ({}),
+    display: () => ({}),
   }),
 }));
 
@@ -87,6 +95,14 @@ jest.mock('@tanstack/react-virtual', () => ({
     getVirtualItems: () => [],
     getTotalSize: () => 0,
   }),
+}));
+
+jest.mock('./VolumeTrendSparkline', () => ({
+  VolumeTrendSparkline: () => <div data-testid="logged-trend-sparkline" />,
+}));
+
+jest.mock('@nivo/line', () => ({
+  ResponsiveLine: () => <div data-testid="responsive-line" />,
 }));
 
 // Mock components
@@ -164,6 +180,16 @@ jest.mock('./GameTheme', () => {
 describe('OneRepMaxRecords', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockUseActiveProgramContext.mockImplementation(() => {
+      const data = jest.mocked(jest.requireMock('../contexts/DataContext').useData)();
+      return {
+        userData: data.userData,
+        workoutsPerWeek: 3,
+        activeProgramPreferences: null,
+        activeProgramData: null,
+        preferredUnit: 'LBS' as const,
+      };
+    });
   });
 
   it('renders empty state when no records exist', async () => {

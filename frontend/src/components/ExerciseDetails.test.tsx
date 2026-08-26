@@ -21,6 +21,11 @@ jest.mock('../contexts/DataContext', () => ({
   DataProvider: ({ children }: { children: React.ReactNode }) => children,
 }));
 
+const mockUseActiveProgramContext = jest.fn();
+jest.mock('../hooks/useActiveProgramContext', () => ({
+  useActiveProgramContext: () => mockUseActiveProgramContext(),
+}));
+
 // Mock AuthContext
 const mockUseAuth = jest.fn();
 jest.mock('../contexts/AuthContext', () => ({
@@ -90,9 +95,17 @@ describe('ExerciseDetails component', () => {
       loadAllEquipment: jest.fn(),
       loadUserExercisePreferences: jest.fn().mockResolvedValue([]),
       loadUserWeightUnitPreferences: jest.fn().mockResolvedValue([]),
+      programPreferences: [],
     };
 
     mockUseData.mockReturnValue(defaultMockDataContext);
+    mockUseActiveProgramContext.mockReturnValue({
+      userData: null,
+      workoutsPerWeek: 3,
+      preferredUnit: 'LBS',
+      activeProgramPreferences: null,
+      activeProgramData: null,
+    });
 
     // Set up mock auth context
     mockUseAuth.mockReturnValue({
@@ -202,6 +215,7 @@ describe('ExerciseDetails component', () => {
       loadAllEquipment: jest.fn(),
       loadUserExercisePreferences: jest.fn().mockResolvedValue([]),
       loadUserWeightUnitPreferences: jest.fn().mockResolvedValue([]),
+      programPreferences: [],
     });
 
     await renderExerciseDetails();
@@ -214,5 +228,77 @@ describe('ExerciseDetails component', () => {
       'aria-pressed',
       'false'
     );
+  });
+
+  it('renders logged performance history when workout data exists', async () => {
+    const { createVolumeUserDataExport, createVolumeWorkout } = await import(
+      '../testUtils/volumeOverviewFixtures'
+    );
+    const benchExercise = { ...EXERCISE, name: 'Bench Press' };
+    const userData = createVolumeUserDataExport(1, [
+      createVolumeWorkout(1, 1, 'ME Upper Day', 100, { performedWeight: 100 }),
+    ]);
+
+    mockUseActiveProgramContext.mockReturnValue({
+      userData,
+      workoutsPerWeek: 3,
+      preferredUnit: 'LBS',
+      activeProgramPreferences: {
+        program: { id: 1, name: 'Test', is_active: true, current_week_number: 1, user_id: 'u1' },
+        program_preferences: { program_days_per_week: 3 },
+      },
+      activeProgramData: userData.training_programs[0],
+    });
+
+    mockUseData.mockReturnValue({
+      userData,
+      exerciseMuscleData: new Map(),
+      weightUnitPreferences: [],
+      userExercisePreferences: [],
+      userOneRepMaxes: [],
+      programPreferences: [
+        {
+          program: { id: 1, name: 'Test', is_active: true, current_week_number: 1, user_id: 'u1' },
+          program_preferences: { program_days_per_week: 3 },
+        },
+      ],
+      exerciseData: new Map(),
+      exerciseEquipmentData: new Map(),
+      muscleData: new Map(),
+      equipmentData: new Map(),
+      programData: new Map(),
+      allExercises: [],
+      allMuscles: [],
+      allEquipment: [],
+      isLoading: false,
+      error: null,
+      refreshData: jest.fn(),
+      refreshSpecificData: jest.fn(),
+      isDataStale: false,
+      getExercise: jest.fn().mockResolvedValue(benchExercise),
+      getExerciseMuscles: jest.fn().mockResolvedValue([EXERCISE_MUSCLE]),
+      getExerciseEquipmentData: jest.fn().mockResolvedValue([EXERCISE_EQUIPMENT]),
+      getMuscle: jest.fn().mockResolvedValue(MUSCLE),
+      getEquipment: jest.fn().mockResolvedValue(EQUIPMENT),
+      getProgram: jest.fn(),
+      loadAllExercises: jest.fn(),
+      loadAllMuscles: jest.fn(),
+      loadAllEquipment: jest.fn(),
+      loadUserExercisePreferences: jest.fn().mockResolvedValue([]),
+      loadUserWeightUnitPreferences: jest.fn().mockResolvedValue([]),
+    });
+
+    await act(async () => {
+      render(
+        <QueryClientProvider client={queryClient}>
+          <SnackbarProvider>
+            <ExerciseDetails exerciseName="Bench Press" />
+          </SnackbarProvider>
+        </QueryClientProvider>
+      );
+    });
+
+    expect(screen.getByTestId('exercise-performance-history')).toBeInTheDocument();
+    expect(screen.getByTestId('exercise-history-1')).toBeInTheDocument();
   });
 });

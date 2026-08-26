@@ -10,7 +10,8 @@ export interface VolumeTrendSparklineProps {
   data: VolumeTrendPoint[];
   nivoTheme: CongenNivoTheme;
   ariaLabel: string;
-  onClick: () => void;
+  onClick?: () => void;
+  interactive?: boolean;
 }
 
 /**
@@ -39,35 +40,46 @@ export const VolumeTrendSparkline: React.FC<VolumeTrendSparklineProps> = ({
   nivoTheme,
   ariaLabel,
   onClick,
-}) => (
-  <Tooltip title="Click to expand" arrow>
+  interactive = true,
+}) => {
+  const sparkline = (
     <Box
       sx={{
         width: 88,
         height: 28,
         flexShrink: 0,
-        ml: 'auto',
-        cursor: 'pointer',
+        ml: interactive ? 'auto' : 0,
+        cursor: interactive ? 'pointer' : 'default',
         borderRadius: 1,
-        '&:hover': {
-          backgroundColor: 'rgba(0, 188, 212, 0.08)',
-        },
+        '&:hover': interactive
+          ? {
+              backgroundColor: 'rgba(0, 188, 212, 0.08)',
+            }
+          : undefined,
       }}
       data-testid="volume-trend-sparkline"
-      role="button"
-      tabIndex={0}
+      role={interactive ? 'button' : undefined}
+      tabIndex={interactive ? 0 : undefined}
       aria-label={ariaLabel}
-      onClick={(event: React.MouseEvent) => {
-        event.stopPropagation();
-        onClick();
-      }}
-      onKeyDown={(event: React.KeyboardEvent) => {
-        if (event.key === 'Enter' || event.key === ' ') {
-          event.preventDefault();
-          event.stopPropagation();
-          onClick();
-        }
-      }}
+      onClick={
+        interactive
+          ? (event: React.MouseEvent) => {
+              event.stopPropagation();
+              onClick?.();
+            }
+          : undefined
+      }
+      onKeyDown={
+        interactive
+          ? (event: React.KeyboardEvent) => {
+              if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                event.stopPropagation();
+                onClick?.();
+              }
+            }
+          : undefined
+      }
     >
       <ResponsiveLine
         data={[{ id: 'trend', data }]}
@@ -91,5 +103,15 @@ export const VolumeTrendSparkline: React.FC<VolumeTrendSparklineProps> = ({
         motionConfig="gentle"
       />
     </Box>
-  </Tooltip>
-);
+  );
+
+  if (!interactive) {
+    return sparkline;
+  }
+
+  return (
+    <Tooltip title="Click to expand" arrow>
+      {sparkline}
+    </Tooltip>
+  );
+};

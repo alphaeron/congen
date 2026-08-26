@@ -15,6 +15,7 @@ import type {
   WeekVolumeTotals,
 } from '../utils/volumeOverviewUtils';
 import { getWeeklyAcwrRatio } from '../utils/volumeOverviewUtils';
+import { formatWeightWithUnit, KG_TO_LBS } from '../common/utils';
 
 export interface VolumeTrendChartDialogProps {
   open: boolean;
@@ -24,6 +25,7 @@ export interface VolumeTrendChartDialogProps {
   intensityData: VolumeTrendPoint[];
   weekVolumes: WeekVolumeTotals[];
   nivoTheme: CongenNivoTheme;
+  preferredUnit?: 'KG' | 'LBS';
   onClose: () => void;
 }
 
@@ -38,6 +40,7 @@ export const VolumeTrendChartDialog: React.FC<VolumeTrendChartDialogProps> = ({
   intensityData,
   weekVolumes,
   nivoTheme,
+  preferredUnit = 'LBS',
   onClose,
 }) => {
   const series = useMemo(() => {
@@ -93,6 +96,27 @@ export const VolumeTrendChartDialog: React.FC<VolumeTrendChartDialogProps> = ({
     return map;
   }, [intensityData]);
 
+  const weekTotalsByLabel = useMemo(() => {
+    const map = new Map<string, WeekVolumeTotals>();
+    weekVolumes.forEach(week => map.set(`W${week.weekNumber}`, week));
+    return map;
+  }, [weekVolumes]);
+
+  const formatPeakLoad = (week: WeekVolumeTotals | undefined): string | null => {
+    if (
+      category !== 'Max Effort' ||
+      !week ||
+      week.maxEffortPeakWeightLbs <= 0 ||
+      !week.maxEffortPeakExerciseName
+    ) {
+      return null;
+    }
+    const weightKg = week.maxEffortPeakWeightLbs / KG_TO_LBS;
+    const weightLabel = formatWeightWithUnit(weightKg, preferredUnit);
+    const repsLabel = week.maxEffortPeakReps > 0 ? ` × ${week.maxEffortPeakReps}` : '';
+    return `${week.maxEffortPeakExerciseName}: ${weightLabel}${repsLabel}`;
+  };
+
   return (
     <Dialog
       open={open}
@@ -101,8 +125,9 @@ export const VolumeTrendChartDialog: React.FC<VolumeTrendChartDialogProps> = ({
       fullWidth
       aria-labelledby="volume-trend-dialog-title"
       data-testid={`volume-trend-dialog-${category}`}
+      sx={{ '& .MuiDialog-paper': { overflow: 'visible' } }}
     >
-      <Box sx={{ position: 'relative', p: 2, pt: 2.5 }}>
+      <Box sx={{ position: 'relative', p: 2, pt: 2.5, overflow: 'visible' }}>
         <IconButton
           aria-label="Close volume trend chart"
           onClick={onClose}
@@ -125,10 +150,18 @@ export const VolumeTrendChartDialog: React.FC<VolumeTrendChartDialogProps> = ({
           {category} weekly trend
         </GameText>
         <Box
-          sx={{ height: 260, width: '100%', position: 'relative' }}
+          sx={{
+            height: 260,
+            width: '100%',
+            position: 'relative',
+            overflow: 'visible',
+            '& > div, & > div > div': {
+              overflow: 'visible !important',
+            },
+          }}
           data-testid={`volume-trend-dialog-chart-${category}`}
         >
-          <Box sx={{ position: 'absolute', inset: 0 }}>
+          <Box sx={{ position: 'absolute', inset: 0, overflow: 'visible' }}>
             <ResponsiveLine
               data={[{ id: 'Volume', data: volumeData }]}
               margin={{ top: 28, right: 48, bottom: 40, left: 48 }}
@@ -163,10 +196,12 @@ export const VolumeTrendChartDialog: React.FC<VolumeTrendChartDialogProps> = ({
                 const weekNumber = Number(week.replace(/^W/, ''));
                 const acwr = getWeeklyAcwrRatio(weekVolumes, weekNumber, category);
                 const intensity = intensityByWeek.get(week);
+                const weekTotals = weekTotalsByLabel.get(week);
+                const peakLoad = formatPeakLoad(weekTotals);
                 return (
                   <div
                     data-testid="volume-trend-dialog-tooltip"
-                    style={getCongenNivoTooltipStyle(nivoTheme)}
+                    style={getCongenNivoTooltipStyle(nivoTheme, { zIndex: 2000 })}
                   >
                     <div>
                       Week: <strong>{week}</strong>
@@ -182,6 +217,11 @@ export const VolumeTrendChartDialog: React.FC<VolumeTrendChartDialogProps> = ({
                       Intensity:{' '}
                       <strong>{intensity != null ? `${intensity}%` : 'no data'}</strong>
                     </div>
+                    {peakLoad ? (
+                      <div>
+                        Peak lift: <strong>{peakLoad}</strong>
+                      </div>
+                    ) : null}
                   </div>
                 );
               }}

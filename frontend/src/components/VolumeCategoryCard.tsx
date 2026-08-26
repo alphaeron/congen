@@ -156,6 +156,7 @@ export const VolumeCategoryCard: React.FC<VolumeCategoryCardProps> = ({
           intensityData={intensityData}
           weekVolumes={weekVolumes}
           nivoTheme={nivoTheme}
+          preferredUnit={preferredUnit}
           onClose={() => setChartOpen(false)}
         />
       </motion.div>

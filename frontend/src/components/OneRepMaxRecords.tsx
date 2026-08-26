@@ -1,4 +1,4 @@
-import { Box, CardContent, Button } from '@mui/material';
+import { Box, CardContent, Button, useTheme } from '@mui/material';
 import { useField } from '@tanstack/react-form';
 import {
   useReactTable,
@@ -17,9 +17,14 @@ import { FormField } from './FormField';
 import { GameCard, GameText, GameTextField, GAME_CLASSES } from './GameTheme';
 import { LoadingSpinner } from './LoadingSpinner';
 import { NumericStepInput } from './NumericStepInput';
+import { VolumeTrendSparkline } from './VolumeTrendSparkline';
 import type { UserOneRepMax } from '../api/types';
 import { formatWeightWithUnit, KG_TO_LBS } from '../common/utils';
+import { useActiveProgramContext } from '../hooks/useActiveProgramContext';
 import { useData } from '../contexts/DataContext';
+import { createCongenNivoTheme } from '../theme/nivoTheme';
+import { buildAllExerciseWorkoutTrends } from '../utils/performanceAnalyticsUtils';
+import type { VolumeTrendPoint } from '../utils/volumeOverviewUtils';
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 interface OneRepMaxRecordsProps {
@@ -38,8 +43,9 @@ interface OneRepMaxRecordsProps {
  * @return OneRepMaxRecords component
  */
 export const OneRepMaxRecords: React.FC<OneRepMaxRecordsProps> = () => {
+  const theme = useTheme();
+  const nivoTheme = createCongenNivoTheme(theme.palette.mode);
   const {
-    userData,
     weightUnitPreferences,
     isLoading: isDataLoading,
     upsertUserOneRepMax,
@@ -48,6 +54,7 @@ export const OneRepMaxRecords: React.FC<OneRepMaxRecordsProps> = () => {
     userOneRepMaxes,
     loadUserOneRepMaxes,
   } = useData();
+  const { userData, workoutsPerWeek } = useActiveProgramContext();
   const { enqueueSnackbar } = useSnackbar();
 
   const [isLoading, setIsLoading] = useState(true);
@@ -145,37 +152,74 @@ export const OneRepMaxRecords: React.FC<OneRepMaxRecordsProps> = () => {
     loadUserOneRepMaxes,
   ]);
 
-  // Table configuration
-  const columnHelper = createColumnHelper<{
+  const exerciseDataMap = useMemo(() => {
+    const map = new Map(allExercises.map(exercise => [exercise.name, exercise]));
+    return map;
+  }, [allExercises]);
+
+  const workoutTrends = useMemo(() => {
+    return buildAllExerciseWorkoutTrends(userData, exerciseDataMap, workoutsPerWeek);
+  }, [userData, exerciseDataMap, workoutsPerWeek]);
+
+  type OneRepMaxTableRow = {
     exerciseName: string;
     oneRepMax: number;
     displayWeight: string;
     updatedAt: Date;
-  }>();
+    trendData: VolumeTrendPoint[];
+  };
 
-  const columns = [
-    columnHelper.accessor('exerciseName', {
-      header: 'Exercise',
-      cell: info => <ExerciseName exerciseName={info.getValue()} variant="body2" />,
-    }),
-    columnHelper.accessor('oneRepMax', {
-      header: '1RM',
-      cell: info => (
-        <div style={{ textAlign: 'center', width: '100%' }}>{info.row.original.displayWeight}</div>
-      ),
-    }),
-    columnHelper.accessor('updatedAt', {
-      header: 'Last Updated',
-      cell: info => (
-        <div style={{ textAlign: 'right', width: '100%' }}>
-          {new Date(info.getValue()).toLocaleDateString()}
-        </div>
-      ),
-    }),
-  ];
+  const columnHelper = createColumnHelper<OneRepMaxTableRow>();
 
-  // Process 1RM data for table (normalize to kg, then use common formatter)
-  const tableData = useMemo(() => {
+  const columns = useMemo(
+    () => [
+      columnHelper.accessor('exerciseName', {
+        header: 'Exercise',
+        cell: info => <ExerciseName exerciseName={info.getValue()} variant="body2" />,
+      }),
+      columnHelper.accessor('oneRepMax', {
+        header: '1RM',
+        cell: info => (
+          <div style={{ textAlign: 'center', width: '100%' }}>{info.row.original.displayWeight}</div>
+        ),
+      }),
+      columnHelper.display({
+        id: 'loggedTrend',
+        header: 'Logged Trend',
+        cell: info => {
+          const trendData = info.row.original.trendData;
+          if (trendData.length < 2) {
+            return (
+              <div style={{ textAlign: 'center', width: '100%' }} data-testid="one-rm-no-trend">
+                —
+              </div>
+            );
+          }
+          return (
+            <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+              <VolumeTrendSparkline
+                data={trendData}
+                nivoTheme={nivoTheme}
+                ariaLabel={`${info.row.original.exerciseName} weekly peak logged weight trend`}
+                interactive={false}
+              />
+            </Box>
+          );
+        },
+      }),
+      columnHelper.accessor('updatedAt', {
+        header: 'Last Updated',
+        cell: info => (
+          <div style={{ textAlign: 'right', width: '100%' }}>
+            {new Date(info.getValue()).toLocaleDateString()}
+          </div>
+        ),
+      }),
+    ],
+    [columnHelper, nivoTheme]
+  );
+
+  const tableData = useMemo((): OneRepMaxTableRow[] => {
     return oneRepMaxes.map(oneRepMax => {
       const weightUnitPreference = weightUnitPreferences.find(
         pref => pref.exercise_name === oneRepMax.exercise_name
@@ -186,15 +230,25 @@ export const OneRepMaxRecords: React.FC<OneRepMaxRecordsProps> = () => {
       const displayWeight = formatWeightWithUnit(weightInKg, preferredUnit);
       const oneRepMaxNumeric =
         parseFloat(formatWeightWithUnit(weightInKg, preferredUnit, false)) || 0;
+      const trendPoints = workoutTrends.get(oneRepMax.exercise_name) ?? [];
+      const trendData: VolumeTrendPoint[] = trendPoints.map(point => {
+        const displayWeightValue =
+          preferredUnit === 'LBS' ? point.peakWeightKg * KG_TO_LBS : point.peakWeightKg;
+        return {
+          x: point.weekLabel,
+          y: Math.round(displayWeightValue * 10) / 10,
+        };
+      });
 
       return {
         exerciseName: oneRepMax.exercise_name,
         oneRepMax: oneRepMaxNumeric,
         displayWeight,
         updatedAt: new Date(oneRepMax.updated_at),
+        trendData,
       };
     });
-  }, [oneRepMaxes, weightUnitPreferences]);
+  }, [oneRepMaxes, weightUnitPreferences, workoutTrends]);
 
   const table = useReactTable({
     data: tableData,
@@ -323,7 +377,12 @@ export const OneRepMaxRecords: React.FC<OneRepMaxRecordsProps> = () => {
                           <th
                             key={header.id}
                             style={{
-                              textAlign: index === 1 ? 'center' : index === 2 ? 'right' : 'left', // Center 1RM, right-align Last Updated, left-align Exercise
+                              textAlign:
+                                index === 1 || index === 2
+                                  ? 'center'
+                                  : index === 3
+                                    ? 'right'
+                                    : 'left',
                               padding: '12px 16px',
                               borderBottom: '2px solid rgba(0, 188, 212, 0.3)',
                               fontWeight: '600',
@@ -332,7 +391,14 @@ export const OneRepMaxRecords: React.FC<OneRepMaxRecordsProps> = () => {
                               fontSize: '0.875rem',
                               textTransform: 'uppercase',
                               letterSpacing: '0.5px',
-                              width: index === 0 ? '40%' : index === 1 ? '30%' : '30%', // Match column widths
+                              width:
+                                index === 0
+                                  ? '34%'
+                                  : index === 1
+                                    ? '18%'
+                                    : index === 2
+                                      ? '24%'
+                                      : '24%',
                             }}
                           >
                             {flexRender(header.column.columnDef.header, header.getContext())}
@@ -380,9 +446,20 @@ export const OneRepMaxRecords: React.FC<OneRepMaxRecordsProps> = () => {
                                   color: '#ffffff',
                                   transition: 'background-color 0.2s ease',
                                   textAlign:
-                                    index === 1 ? 'center' : index === 2 ? 'right' : 'left', // Match header alignment
+                                    index === 1 || index === 2
+                                      ? 'center'
+                                      : index === 3
+                                        ? 'right'
+                                        : 'left',
                                   display: 'table-cell',
-                                  width: index === 0 ? '40%' : index === 1 ? '30%' : '30%', // Set column widths
+                                  width:
+                                    index === 0
+                                      ? '34%'
+                                      : index === 1
+                                        ? '18%'
+                                        : index === 2
+                                          ? '24%'
+                                          : '24%',
                                 }}
                                 onMouseEnter={e => {
                                   e.currentTarget.style.backgroundColor = 'rgba(0, 188, 212, 0.15)';

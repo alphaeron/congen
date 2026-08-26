@@ -20,6 +20,12 @@ jest.mock('./SunburstChart', () => ({
   ),
 }));
 
+jest.mock('./WeekKeyResultsSummary', () => ({
+  WeekKeyResultsSummary: (): React.ReactElement => (
+    <div data-testid="week-key-results-summary">Mock Week Key Results</div>
+  ),
+}));
+
 // Mock DataContext
 const mockUseData = jest.fn();
 jest.mock('../contexts/DataContext', () => ({
@@ -65,8 +71,7 @@ describe('WorkoutWeekDetails', () => {
   };
 
   beforeEach(() => {
-    // Set up default mock data for DataContext
-    const defaultMockDataContext = {
+    defaultMockDataContext = {
       userData: {
         training_programs: [
           {

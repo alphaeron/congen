@@ -11,16 +11,21 @@ import { GameCard, GameText, GAME_CLASSES } from './GameTheme';
 import { LoadingSpinner } from './LoadingSpinner';
 import { RadarChart } from './RadarChart';
 import { SunburstChart } from './SunburstChart';
+import { WeekKeyResultsSummary } from './WeekKeyResultsSummary';
 import { WorkoutHeader } from './WorkoutHeader';
 import type {
   Exercise,
   ProgrammedWorkoutWithStages,
   WorkoutStageWithExercises,
 } from '../api/types';
+import { encodeExerciseName } from '../api/endpoint';
 import { replaceUnderscoresWithSpaces } from '../common/utils';
+import { useActiveProgramContext } from '../hooks/useActiveProgramContext';
 import { useData } from '../contexts/DataContext';
 import { exportWeekToPDF } from '../utils/exportUtils';
+import { buildWeekKeyResults } from '../utils/performanceAnalyticsUtils';
 import { calculateWeekProgress, calculateWorkoutProgress } from '../utils/progressUtils';
+import { buildWeekVolumeTotals } from '../utils/volumeOverviewUtils';
 
 interface WorkoutWeekDetailsProps {
   selectedWorkout?: string | null;
@@ -40,14 +45,16 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
   const [searchParams] = useSearchParams();
   const { enqueueSnackbar } = useSnackbar();
   const {
-    userData,
     exerciseMuscleData,
-    weightUnitPreferences,
+    weightUnitPreferences = [],
     isLoading: isDataLoading,
     getExercise,
     loadProgramPreferences,
     programPreferences = [],
+    userOneRepMaxes,
   } = useData();
+  const { userData, workoutsPerWeek, preferredUnit, activeProgramPreferences: activeProgram } =
+    useActiveProgramContext();
 
   const [isLoading, setIsLoading] = useState(true);
   const [exerciseData, setExerciseData] = useState<Map<string, Exercise>>(new Map());
@@ -96,7 +103,41 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
     loadAdditionalData();
   }, [userData, programPreferences.length, enqueueSnackbar, getExercise, loadProgramPreferences]);
 
-  const activeProgram = programPreferences?.find(program => program.program.is_active);
+  const weekKeyResults = useMemo(() => {
+    return buildWeekKeyResults(
+      userData,
+      exerciseData,
+      workoutsPerWeek,
+      weekNumber,
+      preferredUnit
+    );
+  }, [userData, exerciseData, workoutsPerWeek, weekNumber, preferredUnit]);
+
+  const totalVolumeTrend = useMemo(() => {
+    if (!activeProgram || !userData?.training_programs?.length) {
+      return [];
+    }
+    const activeProgramData = userData.training_programs.find(
+      program => program.program.id === activeProgram.program.id
+    );
+    if (!activeProgramData) {
+      return [];
+    }
+    const weekVolumes = buildWeekVolumeTotals(
+      activeProgramData.workouts,
+      exerciseData,
+      workoutsPerWeek,
+      preferredUnit
+    );
+    return weekVolumes.map(week => ({
+      x: `W${week.weekNumber}`,
+      y: week.totalVolume,
+    }));
+  }, [activeProgram, userData, exerciseData, workoutsPerWeek, preferredUnit]);
+
+  const handleExerciseClick = (exerciseName: string) => {
+    navigate(`/exercises/${encodeExerciseName(exerciseName)}`);
+  };
 
   const weekWorkouts = useMemo(() => {
     if (!activeProgram || !userData?.training_programs?.length) return [];
@@ -294,16 +335,24 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
             }}
           >
             <Grid container spacing={3}>
-              {/* Workout List - 2/3 width */}
+              {/* Workout list and key results - 2/3 width */}
               <Grid size={{ xs: 12, lg: 8 }}>
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4, delay: 0.2 }}
-                  whileHover={{ y: -8 }}
+                <Box
+                  sx={{
+                    mt: 3,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 3,
+                  }}
                 >
-                  <GameCard className="glassmorphism-card" sx={{ mt: 3 }}>
-                    <Box sx={{ p: 2 }}>
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4, delay: 0.2 }}
+                    whileHover={{ y: -8 }}
+                  >
+                    <GameCard className="glassmorphism-card">
+                      <Box sx={{ p: 2 }}>
                       <Box
                         sx={{
                           display: 'flex',
@@ -454,6 +503,24 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
                     </Box>
                   </GameCard>
                 </motion.div>
+                {weekWorkouts.length > 0 && weekKeyResults ? (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4, delay: 0.25 }}
+                    whileHover={{ y: -8 }}
+                  >
+                    <WeekKeyResultsSummary
+                      results={weekKeyResults}
+                      preferredUnit={preferredUnit}
+                      userOneRepMaxes={userOneRepMaxes}
+                      totalVolumeTrend={totalVolumeTrend}
+                      onWorkoutClick={onWorkoutClick || handleWorkoutClick}
+                      onExerciseClick={handleExerciseClick}
+                    />
+                  </motion.div>
+                ) : null}
+                </Box>
               </Grid>
 
               {/* Charts - 1/3 width */}
