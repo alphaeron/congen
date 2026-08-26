@@ -131,11 +131,11 @@ export const WorkoutHeader: React.FC<WorkoutHeaderProps> = ({
             p: 3,
           }}
         >
-            <GameText variant="h4" className={GAME_CLASSES.textBold}>
-              {context === 'program' && `Week ${currentWeek}`}
-              {context === 'week' && `Week ${weekNumber}`}
-              {context === 'day' && `Day ${dayNumber}`}
-            </GameText>
+          <GameText variant="h4" className={GAME_CLASSES.textBold}>
+            {context === 'program' && `Week ${currentWeek}`}
+            {context === 'week' && `Week ${weekNumber}`}
+            {context === 'day' && `Day ${dayNumber}`}
+          </GameText>
 
           {/* Middle Section: Progress Bar (takes all available space) */}
           <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, mx: 3 }}>

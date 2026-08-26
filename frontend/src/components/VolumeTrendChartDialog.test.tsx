@@ -91,9 +91,7 @@ describe('VolumeTrendChartDialog', () => {
     );
 
     expect(screen.getByTestId('volume-trend-dialog-Max Effort')).toBeInTheDocument();
-    expect(screen.getByTestId('volume-trend-dialog-legend-Max Effort')).toHaveTextContent(
-      'Volume'
-    );
+    expect(screen.getByTestId('volume-trend-dialog-legend-Max Effort')).toHaveTextContent('Volume');
     const tooltip = screen.getByTestId('volume-trend-dialog-tooltip');
     expect(tooltip).toHaveTextContent(/Week:/);
     expect(tooltip).toHaveTextContent(/Volume:/);

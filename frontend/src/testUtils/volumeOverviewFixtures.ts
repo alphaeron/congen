@@ -76,9 +76,7 @@ export function createVolumeWorkout(
                 is_emom: false,
                 use_tempo: false,
                 performed_weight:
-                  options?.performed === false
-                    ? undefined
-                    : (options?.performedWeight ?? weight),
+                  options?.performed === false ? undefined : (options?.performedWeight ?? weight),
                 performed_rep_count: options?.performed === false ? undefined : 5,
                 target_weight: weight,
                 target_rep_count: 5,

@@ -5,17 +5,14 @@ import React, { useMemo } from 'react';
 
 import { GameText, GAME_CLASSES } from './GameTheme';
 import { VOLUME_SERIES_COLORS } from './volumeOverviewTheme';
-import {
-  getCongenNivoTooltipStyle,
-  type CongenNivoTheme,
-} from '../theme/nivoTheme';
+import { formatWeightWithUnit, KG_TO_LBS } from '../common/utils';
+import { getCongenNivoTooltipStyle, type CongenNivoTheme } from '../theme/nivoTheme';
 import type {
   VolumeCategory,
   VolumeTrendPoint,
   WeekVolumeTotals,
 } from '../utils/volumeOverviewUtils';
 import { getWeeklyAcwrRatio } from '../utils/volumeOverviewUtils';
-import { formatWeightWithUnit, KG_TO_LBS } from '../common/utils';
 
 export interface VolumeTrendChartDialogProps {
   open: boolean;
@@ -210,12 +207,10 @@ export const VolumeTrendChartDialog: React.FC<VolumeTrendChartDialogProps> = ({
                       Volume: <strong>{Math.round(volume).toLocaleString()}</strong>
                     </div>
                     <div>
-                      ACWR:{' '}
-                      <strong>{acwr != null ? acwr.toFixed(2) : 'no data'}</strong>
+                      ACWR: <strong>{acwr != null ? acwr.toFixed(2) : 'no data'}</strong>
                     </div>
                     <div>
-                      Intensity:{' '}
-                      <strong>{intensity != null ? `${intensity}%` : 'no data'}</strong>
+                      Intensity: <strong>{intensity != null ? `${intensity}%` : 'no data'}</strong>
                     </div>
                     {peakLoad ? (
                       <div>

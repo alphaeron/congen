@@ -1,23 +1,15 @@
 import RemoveIcon from '@mui/icons-material/Remove';
 import TrendingDownIcon from '@mui/icons-material/TrendingDown';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
-import {
-  Box,
-  CardContent,
-  Chip,
-  Divider,
-  Grid,
-  Tooltip,
-  useTheme,
-} from '@mui/material';
+import { Box, CardContent, Chip, Divider, Grid, Tooltip, useTheme } from '@mui/material';
 import React, { useMemo } from 'react';
 
 import { GameCard, GameText, GameTextSecondary, GAME_CLASSES } from './GameTheme';
-import { VolumeTrendSparkline } from './VolumeTrendSparkline';
 import { VOLUME_SERIES_COLORS } from './volumeOverviewTheme';
+import { VolumeTrendSparkline } from './VolumeTrendSparkline';
+import type { UserOneRepMax } from '../api/types';
 import { replaceUnderscoresWithSpaces, formatWeightWithUnit } from '../common/utils';
 import { createCongenNivoTheme } from '../theme/nivoTheme';
-import type { UserOneRepMax } from '../api/types';
 import type { MeTopSetResult, WeekKeyResults } from '../utils/performanceAnalyticsUtils';
 import {
   computeMeSetIntensityPercent,
@@ -51,10 +43,19 @@ const CATEGORY_VOLUME_ROWS: Array<{
     key: 'dynamicEffort',
     color: VOLUME_SERIES_COLORS.acwr,
   },
-  { label: 'Accessory', shortLabel: 'Acc', key: 'accessory', color: VOLUME_SERIES_COLORS.intensity },
+  {
+    label: 'Accessory',
+    shortLabel: 'Acc',
+    key: 'accessory',
+    color: VOLUME_SERIES_COLORS.intensity,
+  },
 ];
 
-function DeltaIcon({ tone }: { tone: ReturnType<typeof getVolumeDeltaTone> }): React.ReactElement | null {
+function DeltaIcon({
+  tone,
+}: {
+  tone: ReturnType<typeof getVolumeDeltaTone>;
+}): React.ReactElement | null {
   if (tone === 'positive') {
     return <TrendingUpIcon sx={{ fontSize: 16 }} />;
   }
@@ -82,7 +83,12 @@ function VolumeComparisonBar({
 
   return (
     <Box
-      sx={{ position: 'relative', height: 6, borderRadius: 999, backgroundColor: 'rgba(255,255,255,0.08)' }}
+      sx={{
+        position: 'relative',
+        height: 6,
+        borderRadius: 999,
+        backgroundColor: 'rgba(255,255,255,0.08)',
+      }}
       aria-hidden="true"
     >
       {prior > 0 ? (
@@ -338,7 +344,11 @@ export const WeekKeyResultsSummary: React.FC<WeekKeyResultsSummaryProps> = ({
               title="Compares logged volume to the previous calendar week. Rotation may affect DE and accessory totals."
               arrow
             >
-              <GameText variant="subtitle2" className={GAME_CLASSES.marginBottom1} sx={{ width: 'fit-content' }}>
+              <GameText
+                variant="subtitle2"
+                className={GAME_CLASSES.marginBottom1}
+                sx={{ width: 'fit-content' }}
+              >
                 Logged Volume · vs Last Week
               </GameText>
             </Tooltip>

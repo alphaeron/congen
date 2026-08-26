@@ -5,16 +5,10 @@ import React, { useMemo, useState } from 'react';
 import { GameCard, GameText, GAME_CLASSES } from './GameTheme';
 import { VolumeCategoryBullet } from './VolumeCategoryBullet';
 import { VolumeTrendChartDialog } from './VolumeTrendChartDialog';
-import {
-  getVolumeSparklineAriaLabel,
-  VolumeTrendSparkline,
-} from './VolumeTrendSparkline';
+import { getVolumeSparklineAriaLabel, VolumeTrendSparkline } from './VolumeTrendSparkline';
 import type { UserOneRepMax } from '../api/types';
 import type { CongenNivoTheme } from '../theme/nivoTheme';
-import type {
-  VolumeCategoryMetrics,
-  WeekVolumeTotals,
-} from '../utils/volumeOverviewUtils';
+import type { VolumeCategoryMetrics, WeekVolumeTotals } from '../utils/volumeOverviewUtils';
 import {
   buildWeeklyAcwrSeries,
   buildWeeklyIntensitySeries,
@@ -62,9 +56,7 @@ export const VolumeCategoryCard: React.FC<VolumeCategoryCardProps> = ({
 
   const intensityData = useMemo(
     () =>
-      card.type === 'Max Effort'
-        ? buildWeeklyIntensitySeries(weekVolumes, userOneRepMaxes)
-        : [],
+      card.type === 'Max Effort' ? buildWeeklyIntensitySeries(weekVolumes, userOneRepMaxes) : [],
     [weekVolumes, userOneRepMaxes, card.type]
   );
 
@@ -122,10 +114,7 @@ export const VolumeCategoryCard: React.FC<VolumeCategoryCardProps> = ({
               <VolumeTrendSparkline
                 data={sparklineData}
                 nivoTheme={nivoTheme}
-                ariaLabel={getVolumeSparklineAriaLabel(
-                  card.type,
-                  card.priorPeriodDeltaPercent
-                )}
+                ariaLabel={getVolumeSparklineAriaLabel(card.type, card.priorPeriodDeltaPercent)}
                 onClick={() => setChartOpen(true)}
               />
             </Box>

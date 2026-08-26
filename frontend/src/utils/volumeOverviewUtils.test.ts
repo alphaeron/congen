@@ -133,12 +133,9 @@ describe('volumeOverviewUtils', () => {
       [880, 1000, { onTrackFloor: 0.9 }, 'under'],
       [900, 1000, { onTrackFloor: 0.9 }, 'on_track'],
       [500, 1000, undefined, 'under'],
-    ] as const)(
-      'current=%s target=%s options=%j → %s',
-      (current, target, options, expected) => {
-        expect(resolveVolumeStatus(current, target, options)).toBe(expected);
-      }
-    );
+    ] as const)('current=%s target=%s options=%j → %s', (current, target, options, expected) => {
+      expect(resolveVolumeStatus(current, target, options)).toBe(expected);
+    });
   });
 
   describe('buildBulletScale', () => {
@@ -361,9 +358,7 @@ describe('volumeOverviewUtils', () => {
         Math.round((maxEffort?.target ?? 0) * (maxEffort?.onTrackFloor ?? 0.9))
       );
       expect(maxEffort?.okEnd).toBe(maxEffort?.target);
-      expect(maxEffort?.goodEnd).toBe(
-        Math.round((maxEffort?.target ?? 0) * OVERSHOOT_RATIO)
-      );
+      expect(maxEffort?.goodEnd).toBe(Math.round((maxEffort?.target ?? 0) * OVERSHOOT_RATIO));
     });
 
     it('computes W{n} avg from prior mesocycle blocks', () => {
@@ -396,16 +391,18 @@ describe('volumeOverviewUtils', () => {
       const maxEffort = model?.categories.find(category => category.type === 'Max Effort');
       expect(maxEffort?.sameWeekSlotSampleCount).toBeGreaterThanOrEqual(1);
       expect(maxEffort?.sameWeekSlotAverage).not.toBeNull();
-      expect(buildWeeklyIntensitySeries(model!.weekVolumes, [
-        {
-          user_id: 'u1',
-          exercise_name: 'Bench Press',
-          one_rep_max: 150,
-          unit: 'KG',
-          created_at: new Date('2024-01-01T00:00:00.000Z'),
-          updated_at: new Date('2024-01-01T00:00:00.000Z'),
-        },
-      ]).length).toBeGreaterThan(0);
+      expect(
+        buildWeeklyIntensitySeries(model!.weekVolumes, [
+          {
+            user_id: 'u1',
+            exercise_name: 'Bench Press',
+            one_rep_max: 150,
+            unit: 'KG',
+            created_at: new Date('2024-01-01T00:00:00.000Z'),
+            updated_at: new Date('2024-01-01T00:00:00.000Z'),
+          },
+        ]).length
+      ).toBeGreaterThan(0);
     });
 
     it('flags overshoot on deload-like weeks when done exceeds plan', () => {
@@ -426,9 +423,7 @@ describe('volumeOverviewUtils', () => {
       );
 
       const maxEffort = model?.categories.find(category => category.type === 'Max Effort');
-      expect(maxEffort?.current).toBeGreaterThan(
-        (maxEffort?.target ?? 0) * OVERSHOOT_RATIO
-      );
+      expect(maxEffort?.current).toBeGreaterThan((maxEffort?.target ?? 0) * OVERSHOOT_RATIO);
       expect(maxEffort?.isOvershoot).toBe(true);
       expect(maxEffort?.status).toBe('overshoot');
     });

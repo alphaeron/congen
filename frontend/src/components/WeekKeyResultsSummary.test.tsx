@@ -80,7 +80,9 @@ describe('WeekKeyResultsSummary', () => {
     expect(screen.getByText(/Bench Press/)).toBeInTheDocument();
     expect(screen.getByText(/45% 1RM/)).toBeInTheDocument();
     expect(screen.getByTestId('week-volume-row-max-effort')).toHaveTextContent('+20%');
-    expect(screen.getByTestId('week-volume-row-max-effort')).toHaveTextContent('vs 1.0k lbs prior week');
+    expect(screen.getByTestId('week-volume-row-max-effort')).toHaveTextContent(
+      'vs 1.0k lbs prior week'
+    );
     expect(screen.getByTestId('volume-trend-sparkline')).toBeInTheDocument();
   });
 
@@ -93,7 +95,9 @@ describe('WeekKeyResultsSummary', () => {
     });
 
     expect(
-      screen.getByText('No ME top sets logged yet. Complete a max effort day to see your peak lifts here.')
+      screen.getByText(
+        'No ME top sets logged yet. Complete a max effort day to see your peak lifts here.'
+      )
     ).toBeInTheDocument();
   });
 

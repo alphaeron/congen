@@ -2,7 +2,12 @@ import MockAdapter from 'axios-mock-adapter';
 
 import { expectRequestError } from './apiRequestErrorTestUtils';
 import { ENDPOINT } from './endpoint';
-import { getSetSchemesByExercise, getSetScheme, updateSetScheme, createSetScheme } from './setScheme';
+import {
+  getSetSchemesByExercise,
+  getSetScheme,
+  updateSetScheme,
+  createSetScheme,
+} from './setScheme';
 import type { SetScheme } from './types';
 
 const mock = new MockAdapter(ENDPOINT);

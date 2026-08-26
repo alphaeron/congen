@@ -10,8 +10,8 @@ import { RichTextDisplay } from './RichTextDisplay';
 import { WeightUnitPreferenceControls } from './WeightUnitPreferenceControls';
 import type { Exercise, ExerciseEquipment, ExerciseMuscle, Equipment, Muscle } from '../api/types';
 import { capitalizeEachWord, formatWeightWithUnit } from '../common/utils';
-import { useActiveProgramContext } from '../hooks/useActiveProgramContext';
 import { useData } from '../contexts/DataContext';
+import { useActiveProgramContext } from '../hooks/useActiveProgramContext';
 import { buildExercisePerformanceHistory } from '../utils/performanceAnalyticsUtils';
 
 /**

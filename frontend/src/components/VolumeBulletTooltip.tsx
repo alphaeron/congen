@@ -1,9 +1,6 @@
 import React from 'react';
 
-import {
-  getCongenNivoTooltipStyle,
-  type CongenNivoTheme,
-} from '../theme/nivoTheme';
+import { getCongenNivoTooltipStyle, type CongenNivoTheme } from '../theme/nivoTheme';
 import type { VolumeCategoryMetrics } from '../utils/volumeOverviewUtils';
 import { formatCompactVolume } from '../utils/volumeOverviewUtils';
 

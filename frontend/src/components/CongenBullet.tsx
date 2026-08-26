@@ -46,9 +46,7 @@ export interface CongenBulletProps {
   measureSize?: number;
   markerSize?: number;
   axisBottom?: CongenBulletAxisConfig | null;
-  tooltip?:
-    | React.ComponentType<CongenBulletTooltipProps>
-    | (() => React.ReactNode);
+  tooltip?: React.ComponentType<CongenBulletTooltipProps> | (() => React.ReactNode);
   role?: string;
 }
 
@@ -204,9 +202,7 @@ export const CongenBullet: React.FC<CongenBulletProps> = ({
     }
     const updateSize = (width: number, height: number) => {
       setSize(previous =>
-        previous.width === width && previous.height === height
-          ? previous
-          : { width, height }
+        previous.width === width && previous.height === height ? previous : { width, height }
       );
     };
     const rect = node.getBoundingClientRect();
@@ -235,17 +231,13 @@ export const CongenBullet: React.FC<CongenBulletProps> = ({
     if (domain.maxValue <= domain.minValue) {
       return 0;
     }
-    const fraction =
-      (value - domain.minValue) / (domain.maxValue - domain.minValue);
+    const fraction = (value - domain.minValue) / (domain.maxValue - domain.minValue);
     return Math.min(innerWidth, Math.max(0, fraction * innerWidth));
   };
 
   const hideTooltip = () => setTooltipState(null);
 
-  const showTooltip = (
-    event: React.MouseEvent,
-    content: React.ReactNode
-  ) => {
+  const showTooltip = (event: React.MouseEvent, content: React.ReactNode) => {
     const node = containerRef.current;
     if (!node) {
       return;
@@ -258,17 +250,12 @@ export const CongenBullet: React.FC<CongenBulletProps> = ({
     });
   };
 
-  const renderTooltipContent = (
-    props: CongenBulletTooltipProps
-  ): React.ReactNode => {
+  const renderTooltipContent = (props: CongenBulletTooltipProps): React.ReactNode => {
     if (!tooltip) {
       return null;
     }
     if (typeof tooltip === 'function') {
-      return React.createElement(
-        tooltip as React.FC<CongenBulletTooltipProps>,
-        props
-      );
+      return React.createElement(tooltip as React.FC<CongenBulletTooltipProps>, props);
     }
     const TooltipComponent = tooltip;
     return <TooltipComponent {...props} />;
@@ -388,10 +375,7 @@ export const CongenBullet: React.FC<CongenBulletProps> = ({
                 />
 
                 {(datum.markers ?? []).map((marker, markerIndex) => {
-                  const clamped = Math.min(
-                    domain.maxValue,
-                    Math.max(domain.minValue, marker)
-                  );
+                  const clamped = Math.min(domain.maxValue, Math.max(domain.minValue, marker));
                   const x = margin.left + scaleX(clamped);
                   const color = pickColor(markerColors, markerIndex, 'var(--game-cyan)');
                   return (

@@ -522,25 +522,15 @@ export function buildBulletScale(
   onTrackFloor: number
 ): { poorEnd: number; okEnd: number; goodEnd: number; scaleMax: number } {
   const hasTarget = target > 0;
-  const goodEndCandidate = hasTarget
-    ? Math.round(target * OVERSHOOT_RATIO)
-    : 0;
-  const references = [
-    current,
-    target,
-    sameWeekSlotAverage ?? 0,
-    goodEndCandidate,
-    1,
-  ];
+  const goodEndCandidate = hasTarget ? Math.round(target * OVERSHOOT_RATIO) : 0;
+  const references = [current, target, sameWeekSlotAverage ?? 0, goodEndCandidate, 1];
   const rawMax = Math.max(...references);
   const scaleMax = Math.max(1, Math.round(rawMax * 1.18));
   const poorEnd = hasTarget
     ? Math.round(target * onTrackFloor)
     : Math.round(scaleMax * onTrackFloor);
   const okEnd = hasTarget ? target : Math.round(scaleMax * 0.5);
-  const goodEnd = hasTarget
-    ? goodEndCandidate
-    : Math.round(scaleMax * 0.75);
+  const goodEnd = hasTarget ? goodEndCandidate : Math.round(scaleMax * 0.75);
 
   const clampedPoor = Math.min(Math.max(poorEnd, 0), scaleMax);
   const clampedOk = Math.min(Math.max(okEnd, clampedPoor), scaleMax);
@@ -838,9 +828,7 @@ function buildCategoryMetrics(
     sameWeekSlotAverage > 0 &&
     target < sameWeekSlotAverage * DELOAD_PLAN_VS_AVG_RATIO;
   const isOvershoot =
-    hasTarget &&
-    current > target * OVERSHOOT_RATIO &&
-    (isDeloadLike || current > target * 1.2);
+    hasTarget && current > target * OVERSHOOT_RATIO && (isDeloadLike || current > target * 1.2);
 
   const performedSets = currentWeeks.reduce((sum, week) => sum + week.performedSets, 0);
   const targetSets = currentWeeks.reduce((sum, week) => sum + week.targetSets, 0);
@@ -871,7 +859,8 @@ function buildCategoryMetrics(
     sameWeekSlotAverage,
     sameWeekSlotSampleCount: slotAverage.sampleCount,
     status,
-    priorPeriodDeltaPercent: priorWeeks.length > 0 ? computePercentChange(current, priorTotal) : null,
+    priorPeriodDeltaPercent:
+      priorWeeks.length > 0 ? computePercentChange(current, priorTotal) : null,
     onTrackFloor,
     poorEnd,
     okEnd,
@@ -919,9 +908,7 @@ export function buildVolumeOverviewModel(
   const { current, prior } = getThisWeekWindow(weekVolumes, currentWeek);
   const categories: VolumeCategoryMetrics[] = (
     ['Max Effort', 'Dynamic Effort', 'Accessory'] as VolumeCategory[]
-  ).map(category =>
-    buildCategoryMetrics(category, current, prior, weekVolumes, currentWeek)
-  );
+  ).map(category => buildCategoryMetrics(category, current, prior, weekVolumes, currentWeek));
 
   return {
     categories,

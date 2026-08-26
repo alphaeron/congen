@@ -20,8 +20,8 @@ import { NumericStepInput } from './NumericStepInput';
 import { VolumeTrendSparkline } from './VolumeTrendSparkline';
 import type { UserOneRepMax } from '../api/types';
 import { formatWeightWithUnit, KG_TO_LBS } from '../common/utils';
-import { useActiveProgramContext } from '../hooks/useActiveProgramContext';
 import { useData } from '../contexts/DataContext';
+import { useActiveProgramContext } from '../hooks/useActiveProgramContext';
 import { createCongenNivoTheme } from '../theme/nivoTheme';
 import { buildAllExerciseWorkoutTrends } from '../utils/performanceAnalyticsUtils';
 import type { VolumeTrendPoint } from '../utils/volumeOverviewUtils';
@@ -180,7 +180,9 @@ export const OneRepMaxRecords: React.FC<OneRepMaxRecordsProps> = () => {
       columnHelper.accessor('oneRepMax', {
         header: '1RM',
         cell: info => (
-          <div style={{ textAlign: 'center', width: '100%' }}>{info.row.original.displayWeight}</div>
+          <div style={{ textAlign: 'center', width: '100%' }}>
+            {info.row.original.displayWeight}
+          </div>
         ),
       }),
       columnHelper.display({

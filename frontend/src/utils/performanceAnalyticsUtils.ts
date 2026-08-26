@@ -1,5 +1,3 @@
-import type { Exercise, UserDataExport, UserOneRepMax } from '../api/types';
-import { KG_TO_LBS } from '../common/utils';
 import type { VolumeCategory } from './volumeOverviewUtils';
 import {
   buildWeekVolumeTotals,
@@ -10,6 +8,8 @@ import {
   getVolumeCategoryForPerformedSet,
   type WeekVolumeTotals,
 } from './volumeOverviewUtils';
+import type { Exercise, UserDataExport, UserOneRepMax } from '../api/types';
+import { KG_TO_LBS } from '../common/utils';
 
 export interface ExercisePerformanceSession {
   weekNumber: number;
@@ -495,8 +495,7 @@ export function computeMeSetIntensityPercent(
   if (!match || match.one_rep_max <= 0) {
     return null;
   }
-  const oneRepMaxKg =
-    match.unit === 'KG' ? match.one_rep_max : match.one_rep_max / KG_TO_LBS;
+  const oneRepMaxKg = match.unit === 'KG' ? match.one_rep_max : match.one_rep_max / KG_TO_LBS;
   return Math.round((weightKg / oneRepMaxKg) * 100);
 }
 

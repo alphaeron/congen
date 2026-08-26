@@ -1,10 +1,7 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import React from 'react';
 
-import {
-  getVolumeSparklineAriaLabel,
-  VolumeTrendSparkline,
-} from './VolumeTrendSparkline';
+import { getVolumeSparklineAriaLabel, VolumeTrendSparkline } from './VolumeTrendSparkline';
 import { createCongenNivoTheme } from '../theme/nivoTheme';
 
 jest.mock('@nivo/line', () => ({

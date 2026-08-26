@@ -1,11 +1,7 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import React from 'react';
 
-import {
-  CongenBullet,
-  buildCongenBulletRanges,
-  resolveCongenBulletDomain,
-} from './CongenBullet';
+import { CongenBullet, buildCongenBulletRanges, resolveCongenBulletDomain } from './CongenBullet';
 import { setupResizeObserverMock } from '../testUtils/setupResizeObserverMock';
 
 beforeAll(() => {
@@ -14,12 +10,12 @@ beforeAll(() => {
 
 describe('CongenBullet helpers', () => {
   it('builds exactly four bands from four cumulative ends', () => {
-    const bands = buildCongenBulletRanges(
-      [3100, 3500, 4025, 4700],
-      0,
-      4700,
-      ['#a', '#b', '#c', '#d']
-    );
+    const bands = buildCongenBulletRanges([3100, 3500, 4025, 4700], 0, 4700, [
+      '#a',
+      '#b',
+      '#c',
+      '#d',
+    ]);
 
     expect(bands).toHaveLength(4);
     expect(bands[0]).toMatchObject({ v0: 0, v1: 3100, color: '#a' });
@@ -42,11 +38,7 @@ describe('CongenBullet helpers', () => {
 
   it('resolves an explicit domain without expansion', () => {
     expect(
-      resolveCongenBulletDomain(
-        [{ id: 'x', ranges: [1, 2, 3], measures: [1] }],
-        0,
-        4700
-      )
+      resolveCongenBulletDomain([{ id: 'x', ranges: [1, 2, 3], measures: [1] }], 0, 4700)
     ).toEqual({ minValue: 0, maxValue: 4700 });
   });
 });

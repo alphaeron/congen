@@ -13,15 +13,15 @@ import { RadarChart } from './RadarChart';
 import { SunburstChart } from './SunburstChart';
 import { WeekKeyResultsSummary } from './WeekKeyResultsSummary';
 import { WorkoutHeader } from './WorkoutHeader';
+import { encodeExerciseName } from '../api/endpoint';
 import type {
   Exercise,
   ProgrammedWorkoutWithStages,
   WorkoutStageWithExercises,
 } from '../api/types';
-import { encodeExerciseName } from '../api/endpoint';
 import { replaceUnderscoresWithSpaces } from '../common/utils';
-import { useActiveProgramContext } from '../hooks/useActiveProgramContext';
 import { useData } from '../contexts/DataContext';
+import { useActiveProgramContext } from '../hooks/useActiveProgramContext';
 import { exportWeekToPDF } from '../utils/exportUtils';
 import { buildWeekKeyResults } from '../utils/performanceAnalyticsUtils';
 import { calculateWeekProgress, calculateWorkoutProgress } from '../utils/progressUtils';
@@ -53,8 +53,12 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
     programPreferences = [],
     userOneRepMaxes,
   } = useData();
-  const { userData, workoutsPerWeek, preferredUnit, activeProgramPreferences: activeProgram } =
-    useActiveProgramContext();
+  const {
+    userData,
+    workoutsPerWeek,
+    preferredUnit,
+    activeProgramPreferences: activeProgram,
+  } = useActiveProgramContext();
 
   const [isLoading, setIsLoading] = useState(true);
   const [exerciseData, setExerciseData] = useState<Map<string, Exercise>>(new Map());
@@ -104,13 +108,7 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
   }, [userData, programPreferences.length, enqueueSnackbar, getExercise, loadProgramPreferences]);
 
   const weekKeyResults = useMemo(() => {
-    return buildWeekKeyResults(
-      userData,
-      exerciseData,
-      workoutsPerWeek,
-      weekNumber,
-      preferredUnit
-    );
+    return buildWeekKeyResults(userData, exerciseData, workoutsPerWeek, weekNumber, preferredUnit);
   }, [userData, exerciseData, workoutsPerWeek, weekNumber, preferredUnit]);
 
   const totalVolumeTrend = useMemo(() => {
@@ -353,173 +351,173 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
                   >
                     <GameCard className="glassmorphism-card">
                       <Box sx={{ p: 2 }}>
-                      <Box
-                        sx={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 1,
-                          mb: 2,
-                        }}
-                      >
-                        <GameText variant="h6">Workouts</GameText>
-                        {weekWorkouts.length > 0 && (
-                          <Box
-                            sx={{
-                              backgroundColor: 'primary.main',
-                              color: 'primary.contrastText',
-                              borderRadius: '50%',
-                              width: 24,
-                              height: 24,
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              fontSize: '0.75rem',
-                              fontWeight: 'bold',
-                            }}
-                          >
-                            {weekWorkouts.length}
+                        <Box
+                          sx={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 1,
+                            mb: 2,
+                          }}
+                        >
+                          <GameText variant="h6">Workouts</GameText>
+                          {weekWorkouts.length > 0 && (
+                            <Box
+                              sx={{
+                                backgroundColor: 'primary.main',
+                                color: 'primary.contrastText',
+                                borderRadius: '50%',
+                                width: 24,
+                                height: 24,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                fontSize: '0.75rem',
+                                fontWeight: 'bold',
+                              }}
+                            >
+                              {weekWorkouts.length}
+                            </Box>
+                          )}
+                        </Box>
+                        <GameText
+                          variant="body2"
+                          textVariant="secondary"
+                          className={GAME_CLASSES.marginBottom2}
+                        >
+                          Week {weekNumber} of{' '}
+                          {Math.max(activeProgram.program.current_week_number, 1)} • Click any
+                          workout to view details
+                        </GameText>
+                        {isLoading ? (
+                          <Box display="flex" justifyContent="center" p={3}>
+                            <LoadingSpinner message="Loading workouts..." size={40} />
                           </Box>
+                        ) : weekWorkouts.length === 0 ? (
+                          <Box sx={{ textAlign: 'center', py: 4 }}>
+                            <GameText variant="body2" textVariant="secondary">
+                              No workouts found for Week {weekNumber}.
+                            </GameText>
+                          </Box>
+                        ) : (
+                          <List>
+                            {weekWorkouts.map((weekWorkout, index) => {
+                              // Calculate workout progress using proper logic
+                              const workoutProgress = calculateWorkoutProgress(weekWorkout.workout);
+                              return (
+                                <motion.div
+                                  key={weekWorkout.workout.workout.id}
+                                  initial={{ opacity: 0, x: -20 }}
+                                  animate={{ opacity: 1, x: 0 }}
+                                  transition={{ duration: 0.3, delay: index * 0.1 }}
+                                  whileHover={{ x: 4, scale: 1.02 }}
+                                  whileTap={{ scale: 0.98 }}
+                                >
+                                  <ListItem
+                                    disablePadding
+                                    sx={{
+                                      cursor: 'pointer',
+                                      borderRadius: 1,
+                                      mb: 1,
+                                      px: 1,
+                                      py: 0.5,
+                                      border: 1,
+                                      borderColor: 'divider',
+                                      backgroundColor: 'transparent',
+                                      '&:hover': {
+                                        backgroundColor: 'action.hover',
+                                        boxShadow: 'var(--game-cyan-shadow)',
+                                        borderColor: 'var(--game-cyan)',
+                                      },
+                                    }}
+                                    onClick={() =>
+                                      (onWorkoutClick || handleWorkoutClick)(
+                                        weekWorkout.workout.workout.id
+                                      )
+                                    }
+                                  >
+                                    <ListItemText
+                                      primary={
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                          <GameText
+                                            variant="subtitle1"
+                                            className={GAME_CLASSES.textMedium}
+                                          >
+                                            Day {weekWorkout.dayInWeek}
+                                          </GameText>
+                                          {workoutProgress.status === 'completed' ? (
+                                            <CheckCircleIcon
+                                              sx={{
+                                                fontSize: 18,
+                                                color: 'success.main',
+                                              }}
+                                            />
+                                          ) : workoutProgress.status === 'in-progress' ? (
+                                            <ScheduleIcon
+                                              sx={{
+                                                fontSize: 18,
+                                                color: 'warning.main',
+                                              }}
+                                            />
+                                          ) : (
+                                            <PauseCircleIcon
+                                              sx={{
+                                                fontSize: 18,
+                                                color: 'text.disabled',
+                                              }}
+                                            />
+                                          )}
+                                        </Box>
+                                      }
+                                      secondary={
+                                        <React.Fragment>
+                                          <GameText
+                                            variant="body2"
+                                            textVariant="secondary"
+                                            component="span"
+                                          >
+                                            {replaceUnderscoresWithSpaces(
+                                              weekWorkout.workout.workout.name ||
+                                                `Workout ${weekWorkout.workout.workout.day_number}`
+                                            )}
+                                          </GameText>
+                                          <GameText
+                                            variant="caption"
+                                            textVariant="secondary"
+                                            component="span"
+                                            sx={{ ml: 0.5 }}
+                                          >
+                                            • {workoutProgress.completedExercises}/
+                                            {workoutProgress.totalExercises} exercises
+                                          </GameText>
+                                        </React.Fragment>
+                                      }
+                                    />
+                                  </ListItem>
+                                </motion.div>
+                              );
+                            })}
+                          </List>
                         )}
                       </Box>
-                      <GameText
-                        variant="body2"
-                        textVariant="secondary"
-                        className={GAME_CLASSES.marginBottom2}
-                      >
-                        Week {weekNumber} of{' '}
-                        {Math.max(activeProgram.program.current_week_number, 1)} • Click any workout
-                        to view details
-                      </GameText>
-                      {isLoading ? (
-                        <Box display="flex" justifyContent="center" p={3}>
-                          <LoadingSpinner message="Loading workouts..." size={40} />
-                        </Box>
-                      ) : weekWorkouts.length === 0 ? (
-                        <Box sx={{ textAlign: 'center', py: 4 }}>
-                          <GameText variant="body2" textVariant="secondary">
-                            No workouts found for Week {weekNumber}.
-                          </GameText>
-                        </Box>
-                      ) : (
-                        <List>
-                          {weekWorkouts.map((weekWorkout, index) => {
-                            // Calculate workout progress using proper logic
-                            const workoutProgress = calculateWorkoutProgress(weekWorkout.workout);
-                            return (
-                              <motion.div
-                                key={weekWorkout.workout.workout.id}
-                                initial={{ opacity: 0, x: -20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ duration: 0.3, delay: index * 0.1 }}
-                                whileHover={{ x: 4, scale: 1.02 }}
-                                whileTap={{ scale: 0.98 }}
-                              >
-                                <ListItem
-                                  disablePadding
-                                  sx={{
-                                    cursor: 'pointer',
-                                    borderRadius: 1,
-                                    mb: 1,
-                                    px: 1,
-                                    py: 0.5,
-                                    border: 1,
-                                    borderColor: 'divider',
-                                    backgroundColor: 'transparent',
-                                    '&:hover': {
-                                      backgroundColor: 'action.hover',
-                                      boxShadow: 'var(--game-cyan-shadow)',
-                                      borderColor: 'var(--game-cyan)',
-                                    },
-                                  }}
-                                  onClick={() =>
-                                    (onWorkoutClick || handleWorkoutClick)(
-                                      weekWorkout.workout.workout.id
-                                    )
-                                  }
-                                >
-                                  <ListItemText
-                                    primary={
-                                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                        <GameText
-                                          variant="subtitle1"
-                                          className={GAME_CLASSES.textMedium}
-                                        >
-                                          Day {weekWorkout.dayInWeek}
-                                        </GameText>
-                                        {workoutProgress.status === 'completed' ? (
-                                          <CheckCircleIcon
-                                            sx={{
-                                              fontSize: 18,
-                                              color: 'success.main',
-                                            }}
-                                          />
-                                        ) : workoutProgress.status === 'in-progress' ? (
-                                          <ScheduleIcon
-                                            sx={{
-                                              fontSize: 18,
-                                              color: 'warning.main',
-                                            }}
-                                          />
-                                        ) : (
-                                          <PauseCircleIcon
-                                            sx={{
-                                              fontSize: 18,
-                                              color: 'text.disabled',
-                                            }}
-                                          />
-                                        )}
-                                      </Box>
-                                    }
-                                    secondary={
-                                      <React.Fragment>
-                                        <GameText
-                                          variant="body2"
-                                          textVariant="secondary"
-                                          component="span"
-                                        >
-                                          {replaceUnderscoresWithSpaces(
-                                            weekWorkout.workout.workout.name ||
-                                              `Workout ${weekWorkout.workout.workout.day_number}`
-                                          )}
-                                        </GameText>
-                                        <GameText
-                                          variant="caption"
-                                          textVariant="secondary"
-                                          component="span"
-                                          sx={{ ml: 0.5 }}
-                                        >
-                                          • {workoutProgress.completedExercises}/
-                                          {workoutProgress.totalExercises} exercises
-                                        </GameText>
-                                      </React.Fragment>
-                                    }
-                                  />
-                                </ListItem>
-                              </motion.div>
-                            );
-                          })}
-                        </List>
-                      )}
-                    </Box>
-                  </GameCard>
-                </motion.div>
-                {weekWorkouts.length > 0 && weekKeyResults ? (
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.4, delay: 0.25 }}
-                    whileHover={{ y: -8 }}
-                  >
-                    <WeekKeyResultsSummary
-                      results={weekKeyResults}
-                      preferredUnit={preferredUnit}
-                      userOneRepMaxes={userOneRepMaxes}
-                      totalVolumeTrend={totalVolumeTrend}
-                      onWorkoutClick={onWorkoutClick || handleWorkoutClick}
-                      onExerciseClick={handleExerciseClick}
-                    />
+                    </GameCard>
                   </motion.div>
-                ) : null}
+                  {weekWorkouts.length > 0 && weekKeyResults ? (
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.4, delay: 0.25 }}
+                      whileHover={{ y: -8 }}
+                    >
+                      <WeekKeyResultsSummary
+                        results={weekKeyResults}
+                        preferredUnit={preferredUnit}
+                        userOneRepMaxes={userOneRepMaxes}
+                        totalVolumeTrend={totalVolumeTrend}
+                        onWorkoutClick={onWorkoutClick || handleWorkoutClick}
+                        onExerciseClick={handleExerciseClick}
+                      />
+                    </motion.div>
+                  ) : null}
                 </Box>
               </Grid>
 

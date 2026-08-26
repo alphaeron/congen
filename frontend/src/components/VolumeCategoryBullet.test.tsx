@@ -2,8 +2,8 @@ import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import React from 'react';
 
 import { VolumeCategoryBullet } from './VolumeCategoryBullet';
-import { createCongenNivoTheme } from '../theme/nivoTheme';
 import { setupResizeObserverMock } from '../testUtils/setupResizeObserverMock';
+import { createCongenNivoTheme } from '../theme/nivoTheme';
 import type { VolumeCategoryMetrics } from '../utils/volumeOverviewUtils';
 
 beforeAll(() => {
