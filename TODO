@@ -40,27 +40,3 @@ Write a gradle task to check for all component updates and apply them
 forgot my username and forgot my password reset links / emails.
 
 If muscle imbalance, prefer unilateral accessories
-
-remove unneeded endpoints
-
-
-
-
-
-stop minikube
-delete it
-start minikube with --driver=docker
-do a full deployment using the gradle task deployAll for the local environment
-Stop all currently running kubectl port-forward processes
-Port forward frontend, keycloak, and backend
-
-
-
-Run the integration tests one by one
-Fix each integration test individually.
-Once you have fixed one integration test, move onto the next.
-Iterate in this fashion, one by one, until all the integration tests pass.
-Do not run all the integration tests at once because it is too slow.
-Only touch the integration test files, do not modify the source code in any way
-DO NOT MODIFY THE SOURCE FILES!!!
-only fix the integration test files
