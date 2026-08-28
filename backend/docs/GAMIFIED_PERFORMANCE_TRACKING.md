@@ -1,20 +1,20 @@
-# 🎮 Gamified Performance Tracking System
+# Gamified Performance Tracking System
 
 A comprehensive fitness tracking system that gamifies workout performance using RPG-style mechanics, inspired by Solo Leveling and modern fitness apps. The system transforms raw performance metrics into engaging visualizations and progress tracking.
 
-## 🌟 Features Overview
+## Features Overview
 
-### 📊 Performance Metrics & Athleticism Score
+### Performance Metrics & Athleticism Score
 - **6 Core Performance Domains**: Strength, Power, Endurance, Recovery, Stamina, Speed
 - **Non-linear Scoring**: Logarithmic and tanh scaling for realistic difficulty curves
 - **Athleticism Level**: 1-20+ levels with diminishing returns at higher levels
 - **Real-time Calculations**: Automatic score updates based on test results
 
-### ❤️ HP / 🔷 MP / ⚡ Fatigue System
+### HP / MP / Fatigue System
 
 The system tracks three distinct metrics inspired by RPG mechanics, each with unique characteristics:
 
-#### ❤️ HP (Health Points) - Long-term Physical Durability
+#### HP (Health Points) - Long-term Physical Durability
 - **Represents**: Structural/tissue level wear and tear
 - **Scope**: Cumulative mechanical stress, injury, overtraining
 - **Primary Sources**: Cumulative strain (Whoop), long-term performance drop, injury flags
@@ -22,7 +22,7 @@ The system tracks three distinct metrics inspired by RPG mechanics, each with un
 - **Calculation**: `previous_hp - (strain > 12 ? (strain - 12) * 0.5 : 0) + recovery_score * 0.1`
 - **Analogy**: Body's armor / structural integrity
 
-#### 🔷 MP (Magic Points) - Short-term Neurological/Cognitive Energy
+#### MP (Magic Points) - Short-term Neurological/Cognitive Energy
 - **Represents**: CNS & mental readiness
 - **Scope**: Neurological and cognitive energy
 - **Primary Sources**: Current HRV, sleep stages (REM/deep), recovery score
@@ -30,7 +30,7 @@ The system tracks three distinct metrics inspired by RPG mechanics, each with un
 - **Calculation**: `max(0, min(100, (hrv - 30) * 3 + rem_sleep * 0.5))`
 - **Analogy**: Mind's energy bar / casting power
 
-#### ⚡ Fatigue - Immediate Performance Inhibition
+#### Fatigue - Immediate Performance Inhibition
 - **Represents**: Session-to-session exhaustion
 - **Scope**: Acute workload, energy depletion
 - **Primary Sources**: Acute strain, session RPE, hours of sleep, subjective tiredness
@@ -38,30 +38,30 @@ The system tracks three distinct metrics inspired by RPG mechanics, each with un
 - **Calculation**: `min(100, strain * 5 + subjective_tiredness * 10)`
 - **Analogy**: Body's status effect / temporary debuff
 
-#### 🔄 How They Interact
-- **After a heavy leg day**: HP ↓ Slightly, MP ↓ Moderate, Fatigue 🔻 High
-- **After 3 weeks of no deload**: HP ↓ Significantly, MP ↓ Low, Fatigue 🔺 Baseline
-- **After a night of poor sleep**: HP ↔️ No change, MP ↓ Big drop, Fatigue 🔻 Moderate
-- **Sick or injured**: HP 🔻 Major drop, MP ↓ Likely, Fatigue 🔻 High
-- **After a full rest day with great sleep**: HP ↑ Slightly, MP ↑ Full, Fatigue 🔺 Recovered
+#### How They Interact
+- **After a heavy leg day**: HP down slightly, MP down moderately, Fatigue high
+- **After 3 weeks of no deload**: HP down significantly, MP low, Fatigue at baseline
+- **After a night of poor sleep**: HP unchanged, MP down significantly, Fatigue moderate
+- **Sick or injured**: HP down significantly, MP likely down, Fatigue high
+- **After a full rest day with great sleep**: HP up slightly, MP fully recovered, Fatigue recovered
 
-### 🧭 RPG-Style Adventurer Status Card
+### RPG-Style Adventurer Status Card
 - **Character Profile**: Name, class, level, rank, guild
 - **Status Bars**: HP/MP/Fatigue with tooltips and color coding
 - **Core Stats**: VO₂ Max, Wilks score, jump height, HRV, sleep, recovery
 - **Collapsible Sections**: Skills, equipment, weekly quests
 
-### 🎯 Smart Skill Generation
+### Smart Skill Generation
 - **Threshold-based Skills**: Auto-generated based on performance levels
 - **Progress Tracking**: Visual progress bars for skill development
 - **Motivational System**: Unlock new skills as performance improves
 
-### 📈 Performance Visualization
+### Performance Visualization
 - **Radar Chart**: 6-domain performance visualization with fitness terminology
 - **Status Bars**: RPG-style HP/MP/Fatigue indicators
 - **Progress Tracking**: Weekly test completion and skill advancement
 
-## 🧮 Scoring Algorithms
+## Scoring Algorithms
 
 ### Individual Metric Scoring
 
@@ -135,7 +135,7 @@ level = 1 + (log(athleticismScore / 5 + 1) / log(2)) * 3
 - Tanh scaling for final score with diminishing returns
 - Logarithmic level progression (1-20+)
 
-## 🎮 Gamification Elements
+## Gamification Elements
 
 ### Skill System
 - **Basic Skills**: Performance levels (40-59 score)
@@ -149,7 +149,7 @@ level = 1 + (log(athleticismScore / 5 + 1) / log(2)) * 3
 - **Recovery Targets**: Achieve high-recovery days
 - **Level Progression**: Reach specific athleticism levels
 
-## 📊 Analytics & Insights
+## Analytics & Insights
 
 ### Performance Trends
 - Track athleticism score over time
@@ -166,7 +166,7 @@ level = 1 + (log(athleticismScore / 5 + 1) / log(2)) * 3
 - Skill unlock frequency
 - User engagement patterns
 
-## 🔮 Future Enhancements
+## Future Enhancements
 
 ### Advanced Features
 - **PvP Challenges**: Compare performance with other users
@@ -183,7 +183,7 @@ level = 1 + (log(athleticismScore / 5 + 1) / log(2)) * 3
 - **Injury Prevention**: Identify overtraining risks
 - **Optimization**: Suggest training adjustments
 
-## 🎯 Success Metrics
+## Success Metrics
 
 ### User Engagement
 - Daily active users on performance dashboard

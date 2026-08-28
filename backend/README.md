@@ -2,7 +2,7 @@
 
 A Kotlin-based Spring Boot application that generates personalized workout programs using the conjugate method with advanced movement balance constraints. This application provides a RESTful API for managing exercises, programs, users, and their preferences, featuring intelligent exercise selection, balanced movement patterns, and gamified performance tracking.
 
-## 🏗️ Architecture
+## Architecture
 
 The backend follows a layered architecture pattern:
 
@@ -29,7 +29,7 @@ The backend follows a layered architecture pattern:
 - **Generator**: Conjugate workout generation algorithms
 - **Performance Tracking**: Gamified fitness metrics and scoring
 
-## 🚀 Backend Quick Start
+## Backend Quick Start
 
 ### Prerequisites
 
@@ -148,7 +148,7 @@ The backend is designed to run on Kubernetes with environment-specific configura
 
 For detailed Kubernetes deployment instructions, see [../k8s/README.md](../k8s/README.md).
 
-## 🔒 Security
+## Security
 
 ### CORS Configuration
 
@@ -191,7 +191,7 @@ cors.max-age=7200
 
 For detailed CORS configuration and troubleshooting, see [CORS_SECURITY.md](CORS_SECURITY.md).
 
-## 📚 API Documentation
+## API Documentation
 
 ### Base URL
 ```
@@ -215,7 +215,7 @@ Authentication is implemented using Keycloak
 
 For detailed API documentation, see [docs/API_DOCUMENTATION.md](docs/API_DOCUMENTATION.md).
 
-## 📖 Documentation Generation
+## Documentation Generation
 
 ### Overview
 
@@ -334,7 +334,7 @@ kubectl get pods -n congen  # Ensure PostgreSQL is running
 
 For detailed integration testing and documentation procedures, see [docs/INTEGRATION_TESTING_KUBERNETES.md](docs/INTEGRATION_TESTING_KUBERNETES.md).
 
-## 🎯 Movement Balance
+## Movement Balance
 
 The backend implements intelligent movement balance constraints to ensure balanced workout programs and prevent muscle imbalances:
 
@@ -349,13 +349,13 @@ The backend implements intelligent movement balance constraints to ensure balanc
 - **Scoring Algorithm**: Exercises are scored based on their contribution to movement balance
 - **Integration**: Movement balance is integrated into primary, secondary, and accessory exercise selection
 
-## 🎮 Gamified Performance Tracking
+## Gamified Performance Tracking
 
 The backend includes a comprehensive gamified performance tracking system that converts fitness metrics into RPG-style scores and levels.
 
 For more information, see [GAMIFIED_PERFORMANCE_TRACKING.md](./GAMIFIED_PERFORMANCE_TRACKING.md)
 
-## ⚖️ Weight Selection
+## Weight Selection
 
 The backend automatically rounds calculated weights to match available equipment sizes, ensuring users can achieve the target weight using standard weightlifting equipment.
 
@@ -400,7 +400,7 @@ The backend automatically rounds calculated weights to match available equipment
 // Result: 30lb dumbbells (rounded to nearest 5lb)
 ```
 
-## 🧪 Testing
+## Testing
 
 ### Test Structure
 
@@ -444,7 +444,7 @@ The integration tests automatically set up a Kubernetes environment with Postgre
 
 Integration tests use a PostgreSQL database running in Kubernetes. The test database is automatically set up and cleaned between test runs using the `application-integration-test.properties` configuration with the `integration-test` profile.
 
-## 🗄️ Database
+## Database
 
 ### Schema Overview
 
@@ -473,7 +473,7 @@ For detailed information about the migration system, see [resources/migrations/R
 
 **Quick Reference**: [docs/MIGRATION_QUICK_REFERENCE.md](docs/MIGRATION_QUICK_REFERENCE.md)
 
-## 🔧 Development
+## Development
 
 ### Code Style
 
@@ -513,7 +513,7 @@ The backend follows Kotlin coding conventions and uses ktlint for code formattin
 docker build -t congen .
 ```
 
-## 📁 Backend Directory Structure
+## Backend Directory Structure
 
 ```
 backend/
@@ -538,7 +538,7 @@ backend/
 └── build.gradle            # Backend Gradle build file
 ```
 
-## 🤝 Contributing
+## Contributing
 
 - Write tests for new features
 - Follow existing code style
@@ -546,7 +546,7 @@ backend/
 - Add migration scripts for database changes
 - Ensure all tests pass before submitting PR
 
-## 📄 License
+## License
 
 This project is licensed under the MIT License - see the [LICENSE](../LICENSE) file for details.
 

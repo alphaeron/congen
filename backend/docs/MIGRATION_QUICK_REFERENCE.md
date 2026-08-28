@@ -2,7 +2,7 @@
 
 This is a quick reference guide for common database migration operations in the Congen application.
 
-## 🚀 Quick Commands
+## Quick Commands
 
 ### Build and Deploy with Migrations
 ```bash
@@ -25,7 +25,7 @@ kubectl logs job/liquibase-migration -n congen
 kubectl exec -n congen deployment/postgres -- psql -U postgres -d postgres -c "SELECT ID, AUTHOR, FILENAME, DATEEXECUTED FROM DATABASECHANGELOG ORDER BY DATEEXECUTED DESC;"
 ```
 
-## 📝 Creating New Migrations
+## Creating New Migrations
 
 ### 1. Create Migration File
 ```bash
@@ -59,7 +59,7 @@ CREATE TABLE example_table (
 ./gradlew createMigrationsConfigMap deployToLocal
 ```
 
-## 🔍 Troubleshooting
+## Troubleshooting
 
 ### Migration Job Failed
 ```bash
@@ -91,7 +91,7 @@ kubectl describe configmap migrations-config -n congen
 kubectl get configmap migrations-config -n congen -o yaml
 ```
 
-## 📊 Monitoring
+## Monitoring
 
 ### Migration History
 ```bash
@@ -122,7 +122,7 @@ WHERE EXECTYPE = 'EXECUTED'
 ORDER BY DATEEXECUTED DESC;"
 ```
 
-## 🛠️ Environment-Specific
+## Environment-Specific
 
 ### Local Development
 ```bash
@@ -152,7 +152,7 @@ kubectl apply -k k8s/overlays/production
 kubectl logs job/liquibase-migration -n congen -f
 ```
 
-## 🔄 Rollback Operations
+## Rollback Operations
 
 ### Check Rollback Capability
 ```bash
@@ -178,7 +178,7 @@ psql -h localhost -p 5432 -U postgres -d postgres
 -- (Execute the rollback SQL from the ROLLBACK column)
 ```
 
-## 📋 Common Patterns
+## Common Patterns
 
 ### Adding a New Table
 ```sql
@@ -224,7 +224,7 @@ INSERT INTO reference_table (name, description) VALUES
 --rollback DELETE FROM reference_table WHERE name IN ('Option 1', 'Option 2');
 ```
 
-## ⚠️ Important Notes
+## Important Notes
 
 - **Always test migrations in development first**
 - **Include rollback statements when possible**
@@ -232,6 +232,6 @@ INSERT INTO reference_table (name, description) VALUES
 - **Check migration logs after deployment**
 - **Never modify existing migration files in production**
 
-## 📚 Full Documentation
+## Full Documentation
 
 For complete documentation, see [DATABASE_MIGRATIONS.md](DATABASE_MIGRATIONS.md). 
