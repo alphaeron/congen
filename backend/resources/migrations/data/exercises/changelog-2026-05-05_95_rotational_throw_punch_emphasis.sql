@@ -1,6 +1,6 @@
 --liquibase formatted sql
 
---changeset John Matty:1 labels:prod,test
+--changeset alphaeron:1 labels:prod,test
 --comment: Add exercise Rotational Throw (Punch Emphasis)
 --rollback SELECT 1
 

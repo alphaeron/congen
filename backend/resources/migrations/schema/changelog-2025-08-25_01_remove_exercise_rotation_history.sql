@@ -1,6 +1,6 @@
 --liquibase formatted sql
 
---changeset John Matty:8 labels:prod,test
+--changeset alphaeron:8 labels:prod,test
 --comment: Remove exercise_rotation_history table as it is unused.
 
 -- Drop indexes first

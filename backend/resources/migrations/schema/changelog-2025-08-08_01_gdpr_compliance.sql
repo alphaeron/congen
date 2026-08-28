@@ -1,6 +1,6 @@
 --liquibase formatted sql
 
---changeset John Matty:gdpr_compliance labels:prod,test
+--changeset alphaeron:gdpr_compliance labels:prod,test
 --comment: Add comprehensive GDPR compliance infrastructure including user consent table, audit logging, and data retention policies
 
 -- Create GDPR audit log table for compliance tracking

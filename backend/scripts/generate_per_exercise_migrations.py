@@ -337,7 +337,7 @@ def main() -> int:
     )
     parser.add_argument(
         "--author",
-        default=os.environ.get("CONGEN_MIGRATION_AUTHOR", "John Matty"),
+        default=os.environ.get("CONGEN_MIGRATION_AUTHOR", "alphaeron"),
         help="Liquibase changeset author",
     )
     args = parser.parse_args()
@@ -354,7 +354,7 @@ def main() -> int:
     if not re.match(r"^[0-9]{4}-[0-9]{2}-[0-9]{2}$", day):
         print("Error: --date must be YYYY-MM-DD", file=sys.stderr)
         return 2
-    author = (args.author or "").strip() or "John Matty"
+    author = (args.author or "").strip() or "alphaeron"
 
     if not os.path.isdir(data_dir):
         print(f"Error: data migrations directory not found: {data_dir}", file=sys.stderr)

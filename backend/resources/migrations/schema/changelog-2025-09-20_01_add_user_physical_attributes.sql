@@ -1,6 +1,6 @@
 --liquibase formatted sql
 
---changeset John Matty:15 labels:prod,test
+--changeset alphaeron:15 labels:prod,test
 --comment: Add age, weight, height, and gender columns to user table for physical attributes tracking.
 
 -- Add age column (encrypted string, stores encrypted integer values)

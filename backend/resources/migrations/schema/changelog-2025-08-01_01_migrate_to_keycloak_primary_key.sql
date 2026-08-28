@@ -1,6 +1,6 @@
 --liquibase formatted sql
 
---changeset John Matty:14 labels:prod,test
+--changeset alphaeron:14 labels:prod,test
 --comment: Migrate user table to use Keycloak ID as primary key and update all foreign key relationships.
 
 -- Step 1: Add new keycloak_id column to user table (will become the new primary key)

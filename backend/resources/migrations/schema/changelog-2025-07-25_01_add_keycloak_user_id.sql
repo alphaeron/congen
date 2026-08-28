@@ -1,6 +1,6 @@
 --liquibase formatted sql
 
---changeset John Matty:13 labels:prod,test
+--changeset alphaeron:13 labels:prod,test
 --comment: Add keycloak_user_id column to user table for Keycloak integration.
 
 ALTER TABLE "user" ADD COLUMN keycloak_user_id VARCHAR(255) NOT NULL;

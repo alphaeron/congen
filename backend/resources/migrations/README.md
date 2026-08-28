@@ -23,7 +23,7 @@ This directory contains all database migration files for the project, managed wi
 
 ### Changeset ID Conventions
 
-- **Author**: Use your full name (e.g., "John Matty")
+- **Author**: Use your full name (e.g., "alphaeron")
 - **ID**: Use sequential numbers starting from 1 for each author
 - **Labels**: Always use `labels:prod,test` for environment control
 - **Comments**: Provide clear descriptions of what the changeset does

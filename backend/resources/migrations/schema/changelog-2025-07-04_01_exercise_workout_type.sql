@@ -1,6 +1,6 @@
 --liquibase formatted sql
 
---changeset John Matty:2 labels:prod,test
+--changeset alphaeron:2 labels:prod,test
 --comment: Add exercise_workout_type relationship for dynamic_effort and maximal_effort workouts, with movement_type.
 
 CREATE TABLE exercise_workout_type (

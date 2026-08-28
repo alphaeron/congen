@@ -1,6 +1,6 @@
 --liquibase formatted sql
 
---changeset John Matty:1 labels:prod,test
+--changeset alphaeron:1 labels:prod,test
 --comment: Add exercise Continuous Banded Bench Press
 --rollback SELECT 1
 

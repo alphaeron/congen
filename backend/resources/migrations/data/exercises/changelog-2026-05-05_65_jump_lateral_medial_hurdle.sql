@@ -1,6 +1,6 @@
 --liquibase formatted sql
 
---changeset John Matty:1 labels:prod,test
+--changeset alphaeron:1 labels:prod,test
 --comment: Add exercise Jump - Lateral + Medial Hurdle
 --rollback SELECT 1
 

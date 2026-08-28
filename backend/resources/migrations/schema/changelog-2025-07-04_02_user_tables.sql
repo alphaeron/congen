@@ -1,6 +1,6 @@
 --liquibase formatted sql
 
---changeset John Matty:3 labels:prod,test
+--changeset alphaeron:3 labels:prod,test
 --comment: Add user, user_equipment, user_program_preferences, and user_exercise_preference tables for user-specific workout generation.
 
 CREATE TABLE "user" (

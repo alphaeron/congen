@@ -1,6 +1,6 @@
 --liquibase formatted sql
 
---changeset John Matty:1 labels:prod,test
+--changeset alphaeron:1 labels:prod,test
 --comment: Initial changeset for browsing exercise data.
 -- Fake rollback - the initial changelog does not make sense to roll back
 --rollback SELECT 1

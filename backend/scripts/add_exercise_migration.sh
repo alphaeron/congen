@@ -6,7 +6,7 @@
 # NN increments per calendar day when multiple migrations share the same date.
 #
 # Usage: add_exercise_migration.sh [--date YYYY-MM-DD] [--dry-run]
-# Env:   CONGEN_MIGRATION_AUTHOR (default: John Matty)
+# Env:   CONGEN_MIGRATION_AUTHOR (default: alphaeron)
 
 set -u
 
@@ -190,10 +190,10 @@ main() {
   fi
 
   local author
-  author=${CONGEN_MIGRATION_AUTHOR:-John Matty}
+  author=${CONGEN_MIGRATION_AUTHOR:-alphaeron}
   author=$(trim "$author")
   if [ -z "$author" ]; then
-    author="John Matty"
+    author="alphaeron"
   fi
 
   echo "New exercise data migration (Liquibase / PostgreSQL)."

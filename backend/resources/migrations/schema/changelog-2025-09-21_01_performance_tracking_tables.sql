@@ -1,6 +1,6 @@
 --liquibase formatted sql
 
---changeset John Matty:16 labels:prod,test
+--changeset alphaeron:16 labels:prod,test
 --comment: Add performance tracking tables for gamified fitness metrics and weekly test protocol.
 
 -- Create user_performance_metrics table for storing daily wearable and subjective data
